@@ -1,0 +1,48 @@
+import Foundation
+import Observation
+
+/// The host's two-way line to the chat view: it asks for a chat to be opened (a notification was clicked), says whether the
+/// OS blocks notifications (drawn as a banner above the chat) and is told what the user picks there.
+/// Ported from: lib/features/chat/presentation/widgets/chat_notification_banner.dart
+@MainActor @Observable
+public final class ChatShellEvents {
+    /// A chat the view should open as soon as it can; the view clears it once it has.
+    public var pendingChatGid: String?
+    /// Message notifications are on in the app but blocked by the OS: shows the warning strip.
+    public var notificationsBlocked = false
+    /// "Turn on" in the warning strip.
+    @ObservationIgnored public var onEnableNotifications: (() -> Void)?
+    /// "View profile" in your own profile dialog (opens the account's page).
+    @ObservationIgnored public var onViewProfile: ((_ accountId: String) -> Void)?
+
+    /// "Manage" in a chat's storage card: opens the app's storage page.
+    @ObservationIgnored public var onOpenStorage: (() -> Void)?
+
+    private let openStore = OpenChatBox()
+
+    /// The chat the view has open right now (nil: none, or the chat view is not shown). Reported by the view; readable from any
+    /// thread, because the notification bridge asks it for every incoming message: only that chat's notification is dropped
+    /// (when the app is in front and "notify while viewing" is off) — the others still come through.
+    public nonisolated var openChat: (accountId: String, chatGid: String)? { openStore.value }
+
+    public init() {}
+
+    /// Called by the view as the open chat changes (nil: no chat is open any more).
+    func reportOpenChat(accountId: String, chatGid: String?) {
+        openStore.value = chatGid.map { (accountId, $0) }
+    }
+
+    /// Opens `chatGid` in the view (what `ChatFeature.open(accountId:chatGid:)` calls).
+    public func open(chatGid: String) { pendingChatGid = chatGid }
+}
+
+
+/// The open chat, guarded by a lock so the bridge may read it off the main actor.
+private final class OpenChatBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stored: (accountId: String, chatGid: String)?
+    var value: (accountId: String, chatGid: String)? {
+        get { lock.lock(); defer { lock.unlock() }; return stored }
+        set { lock.lock(); stored = newValue; lock.unlock() }
+    }
+}

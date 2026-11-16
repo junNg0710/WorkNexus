@@ -1,0 +1,590 @@
+{
+  "accentColor": {
+    "en": "Accent color",
+    "vi": "Màu nhấn"
+  },
+  "accounts": {
+    "en": "Accounts",
+    "vi": "Tài khoản"
+  },
+  "add": {
+    "en": "Add",
+    "vi": "Thêm"
+  },
+  "allSettings": {
+    "en": "All settings",
+    "vi": "Tất cả cài đặt"
+  },
+  "appIdentity": {
+    "en": "App name and icon",
+    "vi": "Tên và biểu tượng ứng dụng"
+  },
+  "approvalsLeftOne": {
+    "en": "Requires 1 more approval",
+    "vi": "Cần thêm 1 lượt phê duyệt"
+  },
+  "approvalsLeftOther": {
+    "en": "Requires %1$@ more approvals",
+    "vi": "Cần thêm %1$@ lượt phê duyệt"
+  },
+  "attachmentCache": {
+    "en": "Downloaded attachments",
+    "vi": "Tệp đính kèm đã tải"
+  },
+  "attachmentCacheHint": {
+    "en": "Kept for this session only.",
+    "vi": "Chỉ giữ trong phiên này."
+  },
+  "boardLayout": {
+    "en": "Ticket lists",
+    "vi": "Danh sách phiếu"
+  },
+  "chatAppearanceCard": {
+    "en": "Chat appearance",
+    "vi": "Giao diện chat"
+  },
+  "chatCacheLimit": {
+    "en": "Cache size limit",
+    "vi": "Giới hạn bộ nhớ đệm"
+  },
+  "chatHideInfo": {
+    "en": "Hide chat info",
+    "vi": "Ẩn thông tin chat"
+  },
+  "chatHideList": {
+    "en": "Hide chat list",
+    "vi": "Ẩn danh sách chat"
+  },
+  "chatLoadFailed": {
+    "en": "Could not load messages",
+    "vi": "Không thể tải tin nhắn"
+  },
+  "chatMessaging": {
+    "en": "Messaging",
+    "vi": "Nhắn tin"
+  },
+  "chatNewMessage": {
+    "en": "New message",
+    "vi": "Tin nhắn mới"
+  },
+  "chatNotify": {
+    "en": "Notify about new messages",
+    "vi": "Thông báo tin nhắn mới"
+  },
+  "chatNotifyViewing": {
+    "en": "Also while I'm looking at the chat",
+    "vi": "Cả khi tôi đang xem chat"
+  },
+  "chatPhoto": {
+    "en": "Photo",
+    "vi": "Ảnh"
+  },
+  "chatSendMarkdown": {
+    "en": "Send messages as Markdown",
+    "vi": "Gửi tin nhắn dạng Markdown"
+  },
+  "chatSendTyping": {
+    "en": "Let others see when I'm typing",
+    "vi": "Cho người khác thấy khi tôi đang gõ"
+  },
+  "chatShowInfo": {
+    "en": "Show chat info",
+    "vi": "Hiện thông tin chat"
+  },
+  "chatShowList": {
+    "en": "Show chat list",
+    "vi": "Hiện danh sách chat"
+  },
+  "chatStyle": {
+    "en": "Style",
+    "vi": "Kiểu"
+  },
+  "chatUnavailable": {
+    "en": "Chat isn't available right now.",
+    "vi": "Chat hiện chưa khả dụng."
+  },
+  "chooseIcon": {
+    "en": "Choose icon…",
+    "vi": "Chọn biểu tượng…"
+  },
+  "cleared": {
+    "en": "Cleared",
+    "vi": "Đã xóa"
+  },
+  "commitsBehindTargetOne": {
+    "en": "The source branch is 1 commit behind the target branch.",
+    "vi": "Nhánh nguồn đang chậm hơn nhánh đích 1 commit."
+  },
+  "commitsBehindTargetOther": {
+    "en": "The source branch is %1$@ commits behind the target branch.",
+    "vi": "Nhánh nguồn đang chậm hơn nhánh đích %1$@ commit."
+  },
+  "connectToStart": {
+    "en": "Connect an account to get started",
+    "vi": "Kết nối một tài khoản để bắt đầu"
+  },
+  "connectionsAllFieldsRequired": {
+    "en": "All fields are required",
+    "vi": "Vui lòng điền đầy đủ các trường"
+  },
+  "connectionsChooseWorkspace": {
+    "en": "Choose or create a workspace",
+    "vi": "Chọn hoặc tạo một workspace"
+  },
+  "connectionsConnectedSyncFailed": {
+    "en": "Connected, but sync failed: %@",
+    "vi": "Đã kết nối, nhưng đồng bộ thất bại: %@"
+  },
+  "connectionsConnectionFailed": {
+    "en": "Connection failed",
+    "vi": "Kết nối thất bại"
+  },
+  "createAndJoinWorkspace": {
+    "en": "Create & join",
+    "vi": "Tạo và tham gia"
+  },
+  "detailTabbed": {
+    "en": "Tabs",
+    "vi": "Thẻ"
+  },
+  "detailTwoPane": {
+    "en": "Two panes",
+    "vi": "Hai khung"
+  },
+  "dropFilesToAttach": {
+    "en": "Drop files to attach",
+    "vi": "Thả tệp để đính kèm"
+  },
+  "editorToolAlignCenter": {
+    "en": "Align center",
+    "vi": "Căn giữa"
+  },
+  "editorToolAlignLeft": {
+    "en": "Align left",
+    "vi": "Căn trái"
+  },
+  "editorToolAlignRight": {
+    "en": "Align right",
+    "vi": "Căn phải"
+  },
+  "editorToolApply": {
+    "en": "Apply",
+    "vi": "Áp dụng"
+  },
+  "editorToolBulletedList": {
+    "en": "Bulleted list",
+    "vi": "Danh sách dấu đầu dòng"
+  },
+  "editorToolClearFormatting": {
+    "en": "Clear formatting",
+    "vi": "Xóa định dạng"
+  },
+  "editorToolCode": {
+    "en": "Code",
+    "vi": "Mã"
+  },
+  "editorToolCodeBlock": {
+    "en": "Code block",
+    "vi": "Khối mã"
+  },
+  "editorToolDefaultColor": {
+    "en": "Default colour",
+    "vi": "Màu mặc định"
+  },
+  "editorToolImage": {
+    "en": "Image",
+    "vi": "Hình ảnh"
+  },
+  "editorToolNoHighlight": {
+    "en": "No highlight",
+    "vi": "Không tô nổi bật"
+  },
+  "editorToolNumberedList": {
+    "en": "Numbered list",
+    "vi": "Danh sách đánh số"
+  },
+  "editorToolOutdent": {
+    "en": "Outdent",
+    "vi": "Giảm thụt lề"
+  },
+  "editorToolParagraph": {
+    "en": "Paragraph",
+    "vi": "Đoạn văn"
+  },
+  "editorToolStrikethrough": {
+    "en": "Strikethrough",
+    "vi": "Gạch ngang"
+  },
+  "followSystem": {
+    "en": "Follow system appearance",
+    "vi": "Theo giao diện hệ thống"
+  },
+  "fontSystem": {
+    "en": "System",
+    "vi": "Hệ thống"
+  },
+  "general": {
+    "en": "General",
+    "vi": "Chung"
+  },
+  "githubColIssue": {
+    "en": "Issue",
+    "vi": "Issue"
+  },
+  "githubColPr": {
+    "en": "PR",
+    "vi": "PR"
+  },
+  "githubConfirmCloseBody": {
+    "en": "The pull request will be closed without merging. You can reopen it later.",
+    "vi": "Pull request sẽ được đóng mà không merge. Bạn có thể mở lại sau."
+  },
+  "githubConfirmCloseTitle": {
+    "en": "Close #%1$@?",
+    "vi": "Đóng #%1$@?"
+  },
+  "githubConfirmMergeBody": {
+    "en": "This merges %1$@ into %2$@ and cannot be undone from here.",
+    "vi": "Thao tác này merge %1$@ vào %2$@ và không thể hoàn tác từ đây."
+  },
+  "githubConfirmMergeTitle": {
+    "en": "Merge #%1$@?",
+    "vi": "Merge #%1$@?"
+  },
+  "githubConfirmUpdateBody": {
+    "en": "The base branch is merged into the pull request's branch.",
+    "vi": "Nhánh gốc sẽ được merge vào nhánh của pull request."
+  },
+  "githubConfirmUpdateTitle": {
+    "en": "Update branch of #%1$@?",
+    "vi": "Cập nhật nhánh của #%1$@?"
+  },
+  "githubNoIssues": {
+    "en": "No issues in this view",
+    "vi": "Không có issue nào trong chế độ xem này"
+  },
+  "githubNoPullRequests": {
+    "en": "No pull requests in this view",
+    "vi": "Không có pull request nào trong chế độ xem này"
+  },
+  "gitlabColMr": {
+    "en": "MR",
+    "vi": "MR"
+  },
+  "gitlabConfirmCloseBody": {
+    "en": "The merge request will be closed without merging. You can reopen it later.",
+    "vi": "Merge request sẽ được đóng mà không merge. Bạn có thể mở lại sau."
+  },
+  "gitlabConfirmCloseTitle": {
+    "en": "Close !%1$@?",
+    "vi": "Đóng !%1$@?"
+  },
+  "gitlabConfirmMergeBody": {
+    "en": "This merges %1$@ into %2$@ and cannot be undone from here.",
+    "vi": "Thao tác này merge %1$@ vào %2$@ và không thể hoàn tác từ đây."
+  },
+  "gitlabConfirmMergeTitle": {
+    "en": "Merge !%1$@?",
+    "vi": "Merge !%1$@?"
+  },
+  "gitlabConfirmRebaseBody": {
+    "en": "The source branch is rebased onto the target branch. Its commits get new hashes.",
+    "vi": "Nhánh nguồn sẽ được rebase lên nhánh đích. Các commit của nó sẽ có hash mới."
+  },
+  "gitlabConfirmRebaseTitle": {
+    "en": "Rebase !%1$@?",
+    "vi": "Rebase !%1$@?"
+  },
+  "gitlabConfirmRemoveBranch": {
+    "en": "The source branch is deleted.",
+    "vi": "Nhánh nguồn sẽ bị xóa."
+  },
+  "gitlabConfirmSquash": {
+    "en": "The commits are squashed.",
+    "vi": "Các commit sẽ được squash."
+  },
+  "gitlabNoIssues": {
+    "en": "No issues in this view",
+    "vi": "Không có issue nào trong chế độ xem này"
+  },
+  "gitlabNoMergeRequests": {
+    "en": "No merge requests in this view",
+    "vi": "Không có merge request nào trong chế độ xem này"
+  },
+  "localCache": {
+    "en": "Local data",
+    "vi": "Dữ liệu cục bộ"
+  },
+  "miniAppAddTitle": {
+    "en": "Add a mini app",
+    "vi": "Thêm mini app"
+  },
+  "miniAppCloseTab": {
+    "en": "Close tab",
+    "vi": "Đóng tab"
+  },
+  "miniAppLiveLimit": {
+    "en": "Pages kept running",
+    "vi": "Số trang giữ chạy"
+  },
+  "miniAppNewTab": {
+    "en": "New tab",
+    "vi": "Tab mới"
+  },
+  "miniAppNotify": {
+    "en": "Notifications from background pages",
+    "vi": "Thông báo từ các trang chạy nền"
+  },
+  "miniApps": {
+    "en": "Mini apps",
+    "vi": "Mini app"
+  },
+  "newBugOrTask": {
+    "en": "New bug or task…",
+    "vi": "Lỗi hoặc công việc mới…"
+  },
+  "newWorkspaceEntry": {
+    "en": "New workspace…",
+    "vi": "Workspace mới…"
+  },
+  "noToolForAccount": {
+    "en": "No tool for this account",
+    "vi": "Không có công cụ cho tài khoản này"
+  },
+  "noWorkspace": {
+    "en": "No workspace yet",
+    "vi": "Chưa có không gian làm việc"
+  },
+  "openCodeLinked": {
+    "en": "OpenCode is signed in.",
+    "vi": "OpenCode đã đăng nhập."
+  },
+  "openCodeNotLinked": {
+    "en": "OpenCode isn't signed in. Run `opencode auth login` in a terminal.",
+    "vi": "OpenCode chưa đăng nhập. Chạy `opencode auth login` trong terminal."
+  },
+  "openInAnotherApp": {
+    "en": "Open in another app",
+    "vi": "Mở bằng ứng dụng khác"
+  },
+  "personalWorkspace": {
+    "en": "Personal workspace",
+    "vi": "Không gian cá nhân"
+  },
+  "railConnect": {
+    "en": "Connect",
+    "vi": "Kết nối"
+  },
+  "reset": {
+    "en": "Reset",
+    "vi": "Đặt lại"
+  },
+  "reviewerSingular": {
+    "en": "Reviewer",
+    "vi": "Người review"
+  },
+  "saved": {
+    "en": "Saved",
+    "vi": "Đã lưu"
+  },
+  "searchTickets": {
+    "en": "Search",
+    "vi": "Tìm kiếm"
+  },
+  "settingsLayout": {
+    "en": "Layout",
+    "vi": "Bố cục"
+  },
+  "somethingWentWrong": {
+    "en": "Something went wrong",
+    "vi": "Đã xảy ra lỗi"
+  },
+  "statusBlocked": {
+    "en": "Blocked",
+    "vi": "Bị chặn"
+  },
+  "statusClosed": {
+    "en": "Closed",
+    "vi": "Đã đóng"
+  },
+  "statusDone": {
+    "en": "Done",
+    "vi": "Hoàn thành"
+  },
+  "statusInProgress": {
+    "en": "In progress",
+    "vi": "Đang thực hiện"
+  },
+  "statusInbox": {
+    "en": "Inbox",
+    "vi": "Hộp thư đến"
+  },
+  "statusMerged": {
+    "en": "Merged",
+    "vi": "Đã merge"
+  },
+  "statusOpen": {
+    "en": "Open",
+    "vi": "Đang mở"
+  },
+  "statusReview": {
+    "en": "Review",
+    "vi": "Đang review"
+  },
+  "statusTodo": {
+    "en": "To do",
+    "vi": "Cần làm"
+  },
+  "syncFailedBanner": {
+    "en": "Couldn't sync %1$@: %2$@",
+    "vi": "Không thể đồng bộ %1$@: %2$@"
+  },
+  "syncOfflineBanner": {
+    "en": "You're offline. Showing what was saved on this device.",
+    "vi": "Bạn đang ngoại tuyến. Đang hiển thị dữ liệu đã lưu trên thiết bị."
+  },
+  "syncOfflineEmpty": {
+    "en": "You're offline and nothing is saved for this account yet.",
+    "vi": "Bạn đang ngoại tuyến và chưa có dữ liệu nào được lưu cho tài khoản này."
+  },
+  "title": {
+    "en": "Title",
+    "vi": "Tiêu đề"
+  },
+  "translation": {
+    "en": "Translation",
+    "vi": "Dịch"
+  },
+  "translationApiEnabled": {
+    "en": "Use this API",
+    "vi": "Dùng API này"
+  },
+  "translationBackend": {
+    "en": "Backend",
+    "vi": "Backend"
+  },
+  "translationBaseUrl": {
+    "en": "Base URL",
+    "vi": "URL gốc"
+  },
+  "translationModel": {
+    "en": "Model",
+    "vi": "Mô hình"
+  },
+  "translationModelHint": {
+    "en": "Leave empty to let the backend choose.",
+    "vi": "Để trống để backend tự chọn."
+  },
+  "translationNone": {
+    "en": "Not translated yet.",
+    "vi": "Chưa được dịch."
+  },
+  "translationProvider": {
+    "en": "Provider",
+    "vi": "Nhà cung cấp"
+  },
+  "translationRetranslate": {
+    "en": "Retranslate",
+    "vi": "Dịch lại"
+  },
+  "translationStateDone": {
+    "en": "Translated",
+    "vi": "Đã dịch"
+  },
+  "translationStateError": {
+    "en": "Failed",
+    "vi": "Thất bại"
+  },
+  "translationStateLoading": {
+    "en": "Translating…",
+    "vi": "Đang dịch…"
+  },
+  "translationStateNone": {
+    "en": "Not translated",
+    "vi": "Chưa dịch"
+  },
+  "translationStateOutdated": {
+    "en": "Out of date",
+    "vi": "Đã lỗi thời"
+  },
+  "translationTarget": {
+    "en": "Translate into",
+    "vi": "Dịch sang"
+  },
+  "translationTranslate": {
+    "en": "Translate",
+    "vi": "Dịch"
+  },
+  "updateChecking": {
+    "en": "Checking…",
+    "vi": "Đang kiểm tra…"
+  },
+  "updateFound": {
+    "en": "A new version is available.",
+    "vi": "Có phiên bản mới."
+  },
+  "updateRailAvailable": {
+    "en": "Update available",
+    "vi": "Có bản cập nhật"
+  },
+  "updateRailLabel": {
+    "en": "Update",
+    "vi": "Cập nhật"
+  },
+  "updateUpToDate": {
+    "en": "You're up to date.",
+    "vi": "Bạn đang dùng bản mới nhất."
+  },
+  "videoNeedsExternalApp": {
+    "en": "This video format can't be played here",
+    "vi": "Không thể phát định dạng video này tại đây"
+  },
+  "workspaceBadge": {
+    "en": "Badge letters",
+    "vi": "Chữ trên huy hiệu"
+  },
+  "workspaceDetails": {
+    "en": "Details",
+    "vi": "Chi tiết"
+  },
+  "workspaceName": {
+    "en": "Name",
+    "vi": "Tên"
+  },
+  "workspaceSettings": {
+    "en": "Workspace settings",
+    "vi": "Cài đặt không gian làm việc"
+  },
+  "zentaoExecutionGone": {
+    "en": "This execution no longer exists",
+    "vi": "Sprint này không còn tồn tại"
+  },
+  "zentaoNoProductsFound": {
+    "en": "No products found",
+    "vi": "Không tìm thấy sản phẩm nào"
+  },
+  "zentaoNoProjectsFound": {
+    "en": "No projects found",
+    "vi": "Không tìm thấy dự án nào"
+  },
+  "zentaoPickerMine": {
+    "en": "Mine",
+    "vi": "Của tôi"
+  },
+  "zentaoPickerOthers": {
+    "en": "Others",
+    "vi": "Khác"
+  },
+  "zentaoSearchProject": {
+    "en": "Search project…",
+    "vi": "Tìm dự án…"
+  },
+  "zentaoSelectProduct": {
+    "en": "Select Product",
+    "vi": "Chọn sản phẩm"
+  },
+  "zentaoSelectProject": {
+    "en": "Select Project",
+    "vi": "Chọn dự án"
+  }
+}

@@ -1,0 +1,39 @@
+# WorkNexusOnlyMacOS
+
+Bản Swift/SwiftUI native cho macOS của WorkNexus (port từ app Flutter ở thư mục cha). Thư mục này độc lập: upstream không bao giờ sửa nó, nên sync fork không conflict.
+
+```bash
+brew install xcodegen            # một lần
+Scripts/sync-assets.sh && python3 Scripts/gen-l10n.py   # font/logo/sticker + chuỗi l10n từ lib/
+xcodegen generate && open WorkNexusOnlyMacOS.xcodeproj
+(cd Packages/WorkNexusKit && swift test)
+```
+
+**Theo dõi upstream:** `Scripts/upstream-diff.sh` liệt kê file Dart đổi kể từ `UPSTREAM_PORTED`, kèm file Swift tương ứng (`PORT_MAP.md`). Port xong thì `Scripts/upstream-diff.sh --mark`.
+
+Quy ước kiến trúc và cách port: [PORTING.md](PORTING.md).
+
+## Status (integration pass)
+
+`App/Sources` is the composition root: `CompositionRoot` builds the database (every module's migration), repositories, `SyncCoordinator` (adapter registry dispatching to the ZenTao / GitLab / GitHub factories), the ZenTao wiring and the optional `AppServices.zentao*` hooks, the `ToolRegistry` (ZenTao, GitLab, GitHub), and all features. `HostWiring` fills `ShellModel.host` (slots of `SharedKit/Presentation/Shell/ShellHost.swift`) so the shell itself imports no tool or feature.
+
+| Area | State |
+|---|---|
+| Rail (workspace, chat + unread, accounts + chat badge, Connect, mini apps + Add, bell, update, settings) | wired, seen in screenshots |
+| Workspace pages: overview / integrations / members / workspace settings | wired (overview, connect dialog seen) |
+| ZenTao / GitLab / GitHub tool modules, detail slide-over (`.detailOverlay`), ticket editor route | wired (ZenTao + GitLab sections, detail, editor error state seen); needs real servers for data |
+| Chat (repository, services, unread counter, notification bridge -> `DesktopNotifier` / Dock badge, avatars via `\.personAvatar` / `\.personChip`) | wired; offline state seen, never connected to a server |
+| Translation (service, chat adapter, ticket Translation tab, card dot, settings) | wired; no real backend run |
+| Mini apps (rail, host stack, Add dialog) | wired; add dialog / pages not exercised |
+| Notifications (bell, panel, poller, Dock badge), app update (banner, rail button, settings) | wired; need ZenTao / GitHub to produce data |
+| Settings: general, appearance, chat, translation, local data; quick settings popover | wired; appearance + quick settings seen |
+| Platform: tray + close-to-tray, window placement, app icon / name, resume counter | wired (off in demo mode) |
+| Not ported / simplified | mini-app edit / icon picker / cookie-import dialogs, update release-notes dialog, workspace colour/icon editor on the workspace settings page, global search (⌘K field is inert), workspace switcher |
+
+Deviations from the Dart rail: ZenTao has one rail button per account (its Tasks / Bugs / Docs sections are tabs in the nav pane) instead of section buttons; the chat view carries its own conversation list so the Chat place has no separate pane (an account list appears with several ZenTao accounts).
+
+### Demo mode (DEBUG builds)
+`WN_DEMO=1` runs on fake accounts / tickets, an in-memory credential store and no network jobs. `WN_DB_PATH` (database file), `WN_SUPPORT_DIR` (every per-user file), `WN_DEMO_NAV` (`workspace[:section]`, `account:<id>[:section]`, `settings[:section]`, `chat`, `editor:bug|task`, `ticket:<id>`, `connect`), `WN_DEMO_THEME`, `WN_DEMO_SIZE` (`1000x700`).
+
+### Build
+`xcodegen generate && xcodebuild -project WorkNexusOnlyMacOS.xcodeproj -scheme WorkNexus -configuration Debug build`. Extra l10n keys that are not in `lib/l10n/*.arb` live in `App/Resources/Localizable.extra.json`; `Scripts/gen-l10n.py` merges them.

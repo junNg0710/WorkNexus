@@ -1,0 +1,20 @@
+/// Ported from: lib/features/mini_apps/data/mappers/mini_app_mapper.dart, mini_app_permission_mapper.dart
+extension MiniApp {
+    init(row r: MiniAppRow) { self.init(id: r.id, name: r.name, url: r.url, iconPath: r.iconPath, lastUrl: r.lastUrl, position: r.position) }
+}
+
+extension MiniAppRow {
+    init(app a: MiniApp) { self.init(id: a.id, name: a.name, url: a.url, iconPath: a.iconPath, lastUrl: a.lastUrl, position: a.position) }
+}
+
+extension MiniAppPermissionGrant {
+    /// A row naming a kind this build does not know (written by a newer one) is skipped.
+    init?(row r: MiniAppPermissionRow) {
+        guard let kind = MiniAppPermissionKind(rawValue: r.kind) else { return nil }
+        self.init(miniAppId: r.miniAppId, kind: kind, decision: r.allowed ? .allow : .block)
+    }
+}
+
+extension MiniAppPermissionRow {
+    init(grant g: MiniAppPermissionGrant) { self.init(miniAppId: g.miniAppId, kind: g.kind.rawValue, allowed: g.decision == .allow) }
+}

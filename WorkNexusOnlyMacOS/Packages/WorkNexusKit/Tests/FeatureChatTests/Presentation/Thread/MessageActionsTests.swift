@@ -1,0 +1,141 @@
+/// Ported from: test/features/chat/presentation/message_actions_test.dart + message_translation_controller_test.dart
+import CoreDomain
+import XCTest
+@testable import FeatureChat
+
+final class StubTranslations: MessageTranslationRepository, @unchecked Sendable {
+    var stored: ChatMessageTranslation?
+    var hidden: [String] = []
+    func find(accountId: String, gid: String, targetLang: String) async -> Outcome<ChatMessageTranslation?> { .success(stored) }
+    func watch(accountId: String, gid: String, targetLang: String) -> AsyncStream<ChatMessageTranslation?> { AsyncStream { $0.finish() } }
+    func setVisible(accountId: String, gid: String, targetLang: String, visible: Bool) async -> Outcome<Void> { if !visible { hidden.append(gid) }; return .success(()) }
+    func save(_ translation: ChatMessageTranslation) async -> Outcome<Void> { stored = translation; return .success(()) }
+}
+
+struct StubTranslator: ChatTextTranslator {
+    var result: Outcome<(text: String, model: String?)> = .success(("Xin chao", "m1"))
+    func translateText(key: String, text: String, targetLang: String, model: String?) async -> Outcome<(text: String, model: String?)> { result }
+}
+
+@MainActor
+final class MessageActionsTests: XCTestCase {
+    private func context(chat: ChatConversation = Make.chat("g"), translate: Bool = false, forward: Bool = false, selfId: Int? = 1,
+                         account: String? = nil, store: StubTranslations = StubTranslations()) -> ThreadContext {
+        let state = ChatThreadState(accountId: "a", chat: chat, selfAccount: account)
+        state.selfUserId = selfId
+        let services = ChatServices(chat: StubChatRepository(), translations: translate ? store : nil, translator: translate ? StubTranslator() : nil)
+        let model = MessageTimelineModel(state: state, services: services)
+        return ThreadContext(model: model, actions: ChatThreadActions(forward: forward ? { _ in } : nil, saveAsSticker: { _ in }))
+    }
+    private func ids(_ ctx: ThreadContext, _ m: ChatMessage, inThread: Bool = false) -> [String] {
+        ctx.actions(for: m, settings: ChatSettings(), inThread: inThread).map(\.id)
+    }
+
+    func testStoredTextOffersReplyAndCopy() {
+        let m = Make.message(content: .text("hi"), serverId: 5)
+        XCTAssertEqual(ids(context(), m), ["reply", "copy"])
+    }
+
+    func testPendingMessageCannotBeRepliedTo() {
+        XCTAssertEqual(ids(context(), Make.message(content: .text("hi"), state: .pending)), ["copy"])
+    }
+
+    func testThreadActionOnlyInAThread() {
+        let m = Make.message(serverId: 5, replyTo: 2)
+        XCTAssertEqual(ids(context(), m, inThread: true), ["reply", "thread", "copy"])
+        XCTAssertEqual(ids(context(), m, inThread: false), ["reply", "copy"])
+    }
+
+    func testForwardNeedsTheHookAndASentMessage() {
+        XCTAssertTrue(ids(context(forward: true), Make.message(serverId: 5)).contains("forward"))
+        XCTAssertFalse(ids(context(forward: false), Make.message(serverId: 5)).contains("forward"))
+        XCTAssertFalse(ids(context(forward: true), Make.message(state: .failed)).contains("forward"))
+    }
+
+    func testRetractOnlyOwnRecentMessagesAndItComesLast() {
+        let a = context().actions(for: Make.message(at: Date(), content: .text("oops"), mine: true, serverId: 5), settings: ChatSettings(), inThread: false)
+        XCTAssertEqual(a.last?.id, "retract")
+        XCTAssertTrue(a.last?.destructive ?? false)
+        let old = Make.message(at: Make.t0, content: .text("old"), mine: true, serverId: 5)
+        XCTAssertFalse(ids(context(), old).contains("retract"), "after two minutes")
+        XCTAssertFalse(ids(context(), Make.message(at: Date(), serverId: 5)).contains("retract"), "not mine")
+    }
+
+    func testCopyTextTurnsMentionsIntoAtNames() {
+        let ctx = context()
+        let m = Make.message(content: .text("hi [@Ann](@#7)"), serverId: 5)
+        XCTAssertEqual(ChatTextLabels.copyText("hi [@Ann](@#7)"), "hi @Ann")
+        XCTAssertTrue(ids(ctx, m).contains("copy"))
+        XCTAssertFalse(ids(ctx, Make.message(content: .emoji("👍"), serverId: 5)).contains("copy"))
+        XCTAssertTrue(ids(ctx, Make.message(content: .code("x", language: nil, name: nil), serverId: 5)).contains("copy"))
+        XCTAssertFalse(ids(ctx, Make.message(content: .text("x"), serverId: 5, deleted: true)).contains("copy"))
+    }
+
+    func testPinOnlyWhereAllowed() {
+        let direct = context(chat: Make.chat("g", type: .one2one))
+        XCTAssertTrue(ids(direct, Make.message(serverId: 5)).contains("pin"))
+        let group = context(chat: Make.chat("g", type: .group))
+        XCTAssertFalse(ids(group, Make.message(serverId: 5)).contains("pin"), "group pins are for admins and the owner")
+        var admin = Make.chat("g", type: .group); admin.adminIds = [1]
+        XCTAssertTrue(ids(context(chat: admin), Make.message(serverId: 5)).contains("pin"))
+        var pinned = Make.chat("g", type: .one2one); pinned.pinnedMessageIds = [5]
+        let a = context(chat: pinned).actions(for: Make.message(serverId: 5), settings: ChatSettings(), inThread: false)
+        XCTAssertEqual(a.first { $0.id == "pin" }?.title, "Unpin")
+    }
+
+    func testStickerActionForImages() {
+        let image = MessageContent.image(ImageContent(fileId: 3, name: "a.png", size: 1, time: 1))
+        XCTAssertTrue(ids(context(), Make.message(content: image, serverId: 5)).contains("sticker"))
+    }
+
+    func testTranslateActionsFollowTheTranslationState() async {
+        let ctx = context(translate: true)
+        let m = Make.message("t1", content: .text("hello"), serverId: 5)
+        XCTAssertTrue(ids(ctx, m).contains("translate"))
+        XCTAssertFalse(ids(ctx, m).contains("retranslate"))
+        XCTAssertEqual(ctx.actions(for: m, settings: ChatSettings(), inThread: false).first { $0.id == "translate" }?.title, "Translate")
+        await ctx.model.translation.translate(m, lang: "vi", model: "")
+        XCTAssertEqual(ctx.model.translation.entries["t1"].map { if case .done(let t) = $0 { t.text } else { "?" } }, "Xin chao")
+        XCTAssertTrue(ids(ctx, m).contains("retranslate"))
+        XCTAssertEqual(ctx.actions(for: m, settings: ChatSettings(), inThread: false).first { $0.id == "translate" }?.title, "Hide translation")
+        XCTAssertFalse(ids(context(translate: false), m).contains("translate"), "no translator wired")
+    }
+
+    func testTranslationFailureIsShownAndHidingKeepsItStored() async {
+        let store = StubTranslations()
+        let state = ChatThreadState(accountId: "a", chat: Make.chat("g"))
+        let services = ChatServices(chat: StubChatRepository(), translations: store, translator: StubTranslator(result: .failure(.network("offline"))))
+        let controller = MessageTranslationController(services: services)
+        let m = Make.message("t2", content: .text("hello"), serverId: 6)
+        _ = state
+        await controller.translate(m, lang: "vi", model: "")
+        XCTAssertEqual(controller.entries["t2"], .failed("offline"))
+        XCTAssertTrue(controller.isShown("t2"))
+        await controller.hide(m, lang: "vi")
+        XCTAssertFalse(controller.isShown("t2"))
+        XCTAssertEqual(store.hidden, ["t2"])
+    }
+
+    func testStoredVisibleTranslationComesBackWhenTheMessageIsShown() async {
+        let store = StubTranslations()
+        store.stored = ChatMessageTranslation(accountId: "a", gid: "t3", targetLang: "vi", text: "Chao", createdAt: Make.t0, visible: true)
+        let ctx = context(translate: true, store: store)
+        let m = Make.message("t3", content: .text("hello"), serverId: 7)
+        await ctx.model.translation.restore(m, lang: "vi")
+        XCTAssertTrue(ctx.model.translation.hasDone("t3"))
+        store.stored?.visible = false
+        let other = Make.message("t4", content: .text("hello"), serverId: 8)
+        await ctx.model.translation.restore(other, lang: "vi")
+        XCTAssertFalse(ctx.model.translation.isShown("t4"), "a hidden translation stays hidden")
+    }
+
+    func testReactOnlyWhenReactionsAreOnAndTheMessageIsStored() {
+        let ctx = context()
+        XCTAssertFalse(ctx.canReact(to: Make.message(serverId: 5)), "reactions are off by default")
+        ctx.model.reactionsOn = true
+        XCTAssertTrue(ctx.canReact(to: Make.message(serverId: 5)))
+        XCTAssertFalse(ctx.canReact(to: Make.message()), "not stored yet")
+        XCTAssertFalse(ctx.canReact(to: Make.message(content: .emoji("👍"), serverId: 5, replyTo: 2)), "a reaction itself")
+        XCTAssertFalse(ctx.canReact(to: Make.message(serverId: 5, deleted: true)))
+    }
+}
