@@ -6,6 +6,7 @@ DST="$ROOT/WorkNexusOnlyMacOS/App/Resources"
 mkdir -p "$DST"
 rsync -a --delete "$ROOT/assets/fonts/" "$DST/Fonts/"
 rsync -a --delete "$ROOT/assets/brands/" "$DST/Brands/"
-rsync -a --delete "$ROOT/assets/stickers/" "$DST/Stickers/"
+# HyperRabbit is a macOS-only pack: not in the Flutter assets, so it is kept (an excluded folder is not deleted).
+rsync -a --delete --exclude 'HyperRabbit' "$ROOT/assets/stickers/" "$DST/Stickers/"
 rsync -a --delete --exclude '*.ico' "$ROOT/assets/tray/" "$DST/Tray/"
 echo "assets synced -> $DST"

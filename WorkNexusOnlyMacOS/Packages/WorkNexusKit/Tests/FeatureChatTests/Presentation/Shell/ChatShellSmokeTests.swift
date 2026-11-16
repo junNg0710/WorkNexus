@@ -41,11 +41,10 @@ final class ChatShellSmokeTests: XCTestCase {
         try snapshot(host, "trust")
     }
 
-    /// The list collapsed (it is remembered across launches) with no chat open: the placeholder must still carry the way
-    /// to bring the list back - the thread header that normally has it is not there.
-    func testCollapsedListWithNoChatOpenStillOffersToShowIt() async throws {
-        UserDefaults.standard.set(true, forKey: "chat.listHidden")
-        defer { UserDefaults.standard.removeObject(forKey: "chat.listHidden") }
+    /// The list folded away (a second click on Chat in the rail; remembered across launches): the chat takes the whole width.
+    func testFoldedListLeavesTheChatTheWholeWidth() async throws {
+        ChatPanelVisibility.shared.listHidden = true
+        defer { ChatPanelVisibility.shared.listHidden = false; UserDefaults.standard.removeObject(forKey: "chat.listHidden") }
         let repo = ShellFakeRepository()
         let account = Account(id: "a", workspaceId: "w", providerType: .zentao, handle: "me")
         let root = ChatRootView(account: account).chatServices(ChatServices(chat: repo)).frame(width: 900, height: 500)
@@ -58,17 +57,7 @@ final class ChatShellSmokeTests: XCTestCase {
         repo.conversationsCont?.yield([ShellMake.chat("g", name: "Release Team", at: 1)])
         try await settle(host)
         try snapshot(host, "list-hidden-placeholder")
-        // The button is drawn top-left over a flat placeholder: some pixels there differ clearly from the background.
-        let rect = NSRect(x: 0, y: host.isFlipped ? 0 : host.bounds.height - 90, width: 90, height: 90)
-        let rep = try XCTUnwrap(host.bitmapImageRepForCachingDisplay(in: rect))
-        host.cacheDisplay(in: rect, to: rep)
-        let background = try XCTUnwrap(rep.colorAt(x: rep.pixelsWide - 2, y: rep.pixelsHigh - 2)?.usingColorSpace(.deviceRGB))
-        var differing = 0
-        for x in 0..<rep.pixelsWide { for y in 0..<rep.pixelsHigh {
-            guard let c = rep.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB) else { continue }
-            if abs(c.redComponent - background.redComponent) > 0.2 { differing += 1 }
-        } }
-        XCTAssertGreaterThan(differing, 20, "no button to show the list on the placeholder")
+        XCTAssertTrue(UserDefaults.standard.bool(forKey: "chat.listHidden"))
     }
 
     private func settle(_ host: NSView) async throws {

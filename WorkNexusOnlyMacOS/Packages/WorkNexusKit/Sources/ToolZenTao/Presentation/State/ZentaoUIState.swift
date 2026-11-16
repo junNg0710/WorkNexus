@@ -16,6 +16,9 @@ public final class ZentaoUIState {
     @ObservationIgnored public let bugBoard: BoardController
     @ObservationIgnored public let bugStreams: PagedViewsController<ZenTaoBugStream>
     @ObservationIgnored public let taskStreams: PagedViewsController<ZenTaoTaskColumn>
+    /// What each board derives from its tickets, kept until an input changes (`ZentaoBoardCache`).
+    @ObservationIgnored let taskCache = ZentaoBoardCache()
+    @ObservationIgnored let bugCache = ZentaoBoardCache()
 
     // MARK: Selection
     public internal(set) var product: ZentaoProductSelection?

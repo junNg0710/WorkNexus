@@ -9,8 +9,10 @@ public struct FilterChipOption: Identifiable {
     public var onTap: () -> Void
     public var dotColor: Color?
     public var count: Int?
-    public init(label: String, active: Bool, onTap: @escaping () -> Void, dotColor: Color? = nil, count: Int? = nil) {
-        self.label = label; self.active = active; self.onTap = onTap; self.dotColor = dotColor; self.count = count
+    /// What the chip does, said when the pointer rests on it.
+    public var help: String?
+    public init(label: String, active: Bool, onTap: @escaping () -> Void, dotColor: Color? = nil, count: Int? = nil, help: String? = nil) {
+        self.label = label; self.active = active; self.onTap = onTap; self.dotColor = dotColor; self.count = count; self.help = help
     }
 }
 
@@ -45,6 +47,7 @@ public struct FilterOptionChip: View {
             }
             .padding(.horizontal, theme.spacing.s12)
         }
+        .help(option.help ?? "")
     }
 }
 

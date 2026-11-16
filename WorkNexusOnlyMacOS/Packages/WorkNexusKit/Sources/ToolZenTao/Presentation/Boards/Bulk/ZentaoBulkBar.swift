@@ -63,11 +63,16 @@ struct ZentaoBulkBar: View {
         Text(appFormat("leaderSelected", "%1$@ selected", "\(targets.count)")).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx)
         Divider().frame(height: theme.sizes.icon14)
         AppButton(appString("leaderBulkAssign", "Assign…"), systemImage: "person.badge.plus", kind: .ghost) { dialog = .assign }.disabled(targets.isEmpty)
+            .help(appString("tipBulkAssign", "Give every selected ticket to one person"))
         AppButton(appString("leaderBulkPriority", "Priority…"), systemImage: "flag", kind: .ghost) { dialog = .priority }.disabled(targets.isEmpty)
+            .help(appString("tipBulkPriority", "Set the priority of every selected ticket"))
         AppButton(appString("leaderBulkClose", "Close…"), systemImage: "checkmark.circle", kind: .ghost) { dialog = .close }.disabled(targets.isEmpty)
+            .help(appString("tipBulkClose", "Close the selected tickets ZenTao lets be closed (a resolved bug, a finished or cancelled task); the others are skipped"))
         Divider().frame(height: theme.sizes.icon14)
         AppButton(appString("leaderSelectAll", "Select all shown"), kind: .ghost) { state.selectAllShown(bugs: bugs) }
+            .help(appString("tipBulkSelectAll", "Select every ticket the board shows now"))
         AppButton(appString("leaderClearSelection", "Clear"), kind: .ghost) { board.clearSelection() }
+            .help(appString("tipBulkClear", "Drop the selection (Esc)"))
     }
 }
 
@@ -79,5 +84,6 @@ private struct ZentaoBulkRunning: View {
         Text(appFormat("leaderBulkRunning", "%1$@ of %2$@", "\(progress.done)", "\(progress.total)")).font(theme.typography.bodyStrong)
             .foregroundStyle(theme.colors.tx)
         AppButton(appString("leaderBulkStop", "Stop"), kind: .ghost, action: onStop)
+            .help(appString("tipBulkStop", "Stop after the ticket being changed; the rest stay as they are"))
     }
 }

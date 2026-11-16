@@ -34,6 +34,7 @@ struct ZentaoSectionHeader: View {
             Text(caption).font(theme.typography.body).foregroundStyle(theme.colors.tx3).lineLimit(1)
             Spacer(minLength: 0)
             AppButton(bugs ? appString("newBug", "New bug") : appString("newTask", "New task"), systemImage: "plus", kind: .primary, action: create)
+                .help(bugs ? appString("tipNewBug", "File a new bug in the open product") : appString("tipNewTask", "Create a new task in the open execution"))
         }
         .padding(.horizontal, theme.spacing.s20).padding(.vertical, theme.spacing.s10)
         .frame(maxWidth: .infinity, alignment: .leading)

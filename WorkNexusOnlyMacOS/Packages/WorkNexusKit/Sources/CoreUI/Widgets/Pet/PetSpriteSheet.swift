@@ -8,6 +8,8 @@ public struct PetSpriteSheet: @unchecked Sendable {
     public static let columns = 8, rows = 9
 
     private let frames: [PetAnimation: [CGImage]]
+    /// The whole sheet: a layer shows one cell of it (`unitRect`) without cutting or scaling anything per frame.
+    public let atlas: CGImage
 
     /// Nil when `atlas` is smaller than the 8 x 9 cells it should hold.
     public init?(atlas: CGImage) {
@@ -19,6 +21,15 @@ public struct PetSpriteSheet: @unchecked Sendable {
             }
         }
         frames = cut
+        self.atlas = atlas
+    }
+
+    /// The cell of `animation`'s frame `index` in the atlas, in unit coordinates (what `CALayer.contentsRect` takes).
+    public func unitRect(_ animation: PetAnimation, _ index: Int) -> CGRect {
+        let count = max(animation.frames, 1), col = ((index % count) + count) % count
+        let w = CGFloat(atlas.width), h = CGFloat(atlas.height)
+        return CGRect(x: CGFloat(col * Self.cellWidth) / w, y: CGFloat(animation.row * Self.cellHeight) / h,
+                      width: CGFloat(Self.cellWidth) / w, height: CGFloat(Self.cellHeight) / h)
     }
 
     public func frame(_ animation: PetAnimation, _ index: Int) -> CGImage? {

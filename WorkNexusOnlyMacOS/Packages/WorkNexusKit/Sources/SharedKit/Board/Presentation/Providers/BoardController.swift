@@ -47,6 +47,12 @@ public final class BoardController {
     public private(set) var scoped: [Ticket] = []
     public private(set) var board: BoardModel = .empty
     public private(set) var resultCount = 0
+    /// Goes up each time the tickets in scope or the filter change: what derived from them can be kept until it does.
+    public private(set) var revision = 0
+    /// False while the board's section is kept mounted behind another one: it then stops recomputing on every ticket
+    /// change (a sync writes many) and catches up once when it is shown again.
+    public var isActive = true { didSet { if isActive, !oldValue, stale { recompute() } } }
+    @ObservationIgnored private var stale = false
 
     /// Tickets picked for a bulk action (⌘-click, ⇧-click); cards and rows draw them selected.
     public internal(set) var selectedIds: Set<String> = []
@@ -119,6 +125,9 @@ public final class BoardController {
     }
 
     func recompute() {
+        guard isActive else { stale = true; return }
+        stale = false
+        revision &+= 1
         scoped = scopedTicketsOverride ?? scopeTickets?(tickets) ?? tickets
         board = BuildBoard()(boardQuery)
         resultCount = board.total

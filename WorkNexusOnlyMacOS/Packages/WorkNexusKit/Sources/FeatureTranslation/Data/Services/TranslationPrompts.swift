@@ -6,6 +6,8 @@ import Foundation
 func ticketPrompt(_ s: TicketSource, _ languageName: String) -> String {
     "Translate this software ticket into natural, technical \(languageName). "
         + "Preserve code, identifiers, file paths, URLs and Markdown. "
+        // A ZenTao body is HTML: its tags are the layout (lists, bold, images) and must come back as they went.
+        + "If the body is HTML, keep every tag and attribute exactly as it is and translate only the text between the tags. "
         + "Return ONLY a JSON object with keys \"title\" and \"body\".\n"
         + "Title: <<<\(s.title)>>>\nBody: <<<\(s.body)>>>"
 }

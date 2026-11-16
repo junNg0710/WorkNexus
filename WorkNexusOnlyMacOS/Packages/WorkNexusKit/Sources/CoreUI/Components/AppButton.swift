@@ -55,6 +55,8 @@ public struct AppIconButton: View {
     @Environment(\.appTheme) private var theme
     @State private var hovering = false
     let systemImage: String
+    /// Set for a button that folds or unfolds a side panel: its icon is drawn by `PanelToggleGlyph`, not an SF Symbol.
+    var panel: (action: PanelToggleGlyph.Action, side: HorizontalEdge)?
     var help: String?
     var outlined: Bool
     var action: () -> Void
@@ -63,9 +65,17 @@ public struct AppIconButton: View {
     public init(_ systemImage: String, help: String? = nil, outlined: Bool = false, action: @escaping () -> Void) {
         self.systemImage = systemImage; self.help = help; self.outlined = outlined; self.action = action
     }
+    /// A button that folds (`.collapse`) or unfolds (`.expand`) the panel on `side`.
+    public init(panel action: PanelToggleGlyph.Action, side: HorizontalEdge = .leading, help: String? = nil, outlined: Bool = false,
+                perform: @escaping () -> Void) {
+        systemImage = ""; panel = (action, side); self.help = help; self.outlined = outlined; self.action = perform
+    }
     public var body: some View {
         Button(action: action) {
-            Image(systemName: systemImage).font(.system(size: theme.sizes.icon16))
+            Group {
+                if let panel { PanelToggleGlyph(panel.action, side: panel.side, size: theme.sizes.icon16) }
+                else { Image(systemName: systemImage).font(.system(size: theme.sizes.icon16)) }
+            }
                 .foregroundStyle(hovering ? theme.colors.tx : theme.colors.tx2)
                 .frame(width: theme.sizes.control32, height: theme.sizes.control32)
                 .background(hovering ? theme.colors.tx.opacity(0.08) : .clear, in: shape)

@@ -150,6 +150,25 @@ final class BoardControllerTests: XCTestCase {
         c.stop()
     }
 
+    /// A board kept mounted behind another section does no work for ticket changes, and catches up once when shown.
+    func testAHiddenBoardWaitsAndCatchesUpWhenShown() async {
+        let (c, _) = make(tickets: [makeTicket("a"), makeTicket("b")])
+        c.start()
+        await waitFor { c.board.total == 2 }
+        c.isActive = false
+        let revision = c.revision
+        c.togglePriority(.urgent); c.setSearch("zzz"); c.clearAll(); c.togglePriority(.urgent)
+        XCTAssertEqual(c.revision, revision, "nothing is recomputed while hidden")
+        XCTAssertEqual(c.resultCount, 2, "and it still shows what it had")
+        c.isActive = true
+        XCTAssertEqual(c.revision, revision + 1, "one recompute for everything that changed meanwhile")
+        XCTAssertEqual(c.resultCount, 0)
+        // Shown again with nothing changed: no work.
+        c.isActive = false; c.isActive = true
+        XCTAssertEqual(c.revision, revision + 1)
+        c.stop()
+    }
+
     func testBoardKeyFollowsTheNavLocation() {
         let (c, _) = make(tickets: [])
         XCTAssertEqual(c.currentBoardKey, "default")

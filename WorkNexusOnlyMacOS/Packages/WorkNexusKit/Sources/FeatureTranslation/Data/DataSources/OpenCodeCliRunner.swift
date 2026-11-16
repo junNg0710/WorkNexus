@@ -7,15 +7,33 @@ import Foundation
 public final class OpenCodeCliRunner: OpenCodeCli, @unchecked Sendable {
     private let runner: CliRunner
     private let queryTimeout: TimeInterval
+    private let authFile: OpenCodeAuthFile
 
-    public init(runner: CliRunner = CliRunner(), queryTimeout: TimeInterval = 25) {
-        self.runner = runner; self.queryTimeout = queryTimeout
+    public init(runner: CliRunner = CliRunner(), queryTimeout: TimeInterval = 25, authFile: OpenCodeAuthFile = OpenCodeAuthFile()) {
+        self.runner = runner; self.queryTimeout = queryTimeout; self.authFile = authFile
     }
 
     public func hasAuthenticatedProvider() async -> Bool {
-        guard let out = await query(["auth", "list"]) else { return false }
-        if let n = Self.credentialCount(out) { return n > 0 }
-        return out.contains("●")   // fallback: a provider bullet is present
+        if let out = await query(["auth", "list"]), let known = Self.isAuthenticated(listing: out) { return known }
+        // The listing says nothing we recognise (a newer CLI words it differently): the credential file is the truth.
+        return ((try? authFile.read()) ?? [:]).isEmpty == false
+    }
+
+    /// Whether `opencode auth list` names a provider with a credential; nil when its wording is not one this knows.
+    /// Older CLIs print `N credentials` and a `●` line per provider; newer ones, when piped, a table row per stored
+    /// credential (`OpenCode Console  API key  stored`) and no count at all.
+    static func isAuthenticated(listing out: String) -> Bool? {
+        let text = stripAnsi(out)
+        if let n = credentialCount(text) { return n > 0 }
+        if text.contains("●") { return true }
+        let rows = text.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        // A credential row ends in how it is kept (`stored`), or says it comes from the environment.
+        if rows.contains(where: { $0.range(of: #"\s(stored|env|environment)$"#, options: [.regularExpression, .caseInsensitive]) != nil }) { return true }
+        return nil
+    }
+
+    private static func stripAnsi(_ s: String) -> String {
+        s.replacingOccurrences(of: "\u{1B}\\[[0-9;]*[a-zA-Z]", with: "", options: .regularExpression)
     }
 
     public func listModels() async -> [String] {

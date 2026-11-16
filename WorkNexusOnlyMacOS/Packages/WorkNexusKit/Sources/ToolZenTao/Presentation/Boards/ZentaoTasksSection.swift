@@ -9,6 +9,7 @@ import SwiftUI
 /// Due this week, filters, view mode) and the board or the list. Tasks are listed per execution only.
 public struct ZentaoTasksSection: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.sectionIsActive) private var sectionActive
     let deps: ZentaoDependencies; let state: ZentaoUIState; let account: Account; let location: ToolLocation
 
     public init(deps: ZentaoDependencies, state: ZentaoUIState, account: Account, location: ToolLocation) {
@@ -31,9 +32,11 @@ public struct ZentaoTasksSection: View {
             ZentaoBoardToolbar(
                 state: state, bugs: false,
                 scopes: [
-                    AppSegmentedTab(label: appString("viewAll", "All"), active: !isRelated) { board.leaveOwnView() },
+                    AppSegmentedTab(label: appString("viewAll", "All"), active: !isRelated,
+                                    help: appString("tipScopeAll", "Every ticket of this execution, whoever holds it")) { board.leaveOwnView() },
                     // Related to me is a filter of its own: the others are set aside (All brings them back).
-                    AppSegmentedTab(label: appString("relatedToMe", "Related to me"), active: isRelated) { board.enterOwnView(.related) },
+                    AppSegmentedTab(label: appString("relatedToMe", "Related to me"), active: isRelated,
+                                    help: appString("tipScopeRelated", "Only tickets that concern you: assigned to you, opened by you or resolved by you")) { board.enterOwnView(.related) },
                 ],
                 modes: ZentaoSectionMode.modes, viewMode: viewMode,
                 onViewMode: { deps.nav.setViewMode($0, section: ZentaoSection.tasks, accountId: account.id) },
@@ -42,6 +45,8 @@ public struct ZentaoTasksSection: View {
             ZentaoTasksBody(state: state, account: account, location: location, list: viewMode == "list")
         }
         .background(theme.colors.bg)
+        // Kept mounted behind another section, the board stops recomputing on every ticket change and catches up when shown.
+        .onChange(of: sectionActive, initial: true) { _, on in state.taskBoard.isActive = on }
         .environment(\.zentaoState, state)
         .overlay { ZentaoBulkBar(deps: deps, state: state, bugs: false) }
         .task(id: loadSignature) {

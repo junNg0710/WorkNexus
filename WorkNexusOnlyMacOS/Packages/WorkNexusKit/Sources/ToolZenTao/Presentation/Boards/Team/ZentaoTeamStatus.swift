@@ -26,6 +26,7 @@ struct ZentaoTeamStatus: View {
                             return "\(login): \(reason)"
                         }.joined(separator: "\n"))
                     AppButton(appString("retry", "Retry"), kind: .ghost) { state.loadTeam(bugs: bugs, only: Set(failed)) }
+                        .help(appString("tipTeamRetry", "Read the work of the people that failed once more"))
                 }
                 if team.truncated && !team.isLoading {
                     Text(appFormat("leaderTeamTruncated", "Newest %1$@ per person", "\(ZentaoUIState.teamReadCap)"))

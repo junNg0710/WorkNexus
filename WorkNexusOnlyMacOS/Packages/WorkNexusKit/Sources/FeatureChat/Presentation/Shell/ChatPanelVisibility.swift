@@ -3,9 +3,13 @@ import SwiftUI
 
 /// Whether the chat list and the info panel are collapsed. Both are user choices that survive relaunch: collapsing them is
 /// how you keep names, avatars and member lists off the screen (screen sharing, someone looking over your shoulder).
+///
+/// The list has no button of its own: a second click on Chat in the app's rail folds it away and brings it back, so the
+/// host sets `listHidden` on the one instance every chat view reads (`shared`).
 @MainActor @Observable
-final class ChatPanelVisibility {
-    var listHidden: Bool { didSet { UserDefaults.standard.set(listHidden, forKey: Self.listKey) } }
+public final class ChatPanelVisibility {
+    public static let shared = ChatPanelVisibility()
+    public var listHidden: Bool { didSet { UserDefaults.standard.set(listHidden, forKey: Self.listKey) } }
     var infoHidden: Bool { didSet { UserDefaults.standard.set(infoHidden, forKey: Self.infoKey) } }
 
     private static let listKey = "chat.listHidden"
@@ -18,7 +22,7 @@ final class ChatPanelVisibility {
 }
 
 private struct ChatPanelVisibilityKey: EnvironmentKey {
-    @MainActor static let defaultValue = ChatPanelVisibility()
+    @MainActor static let defaultValue = ChatPanelVisibility.shared
 }
 extension EnvironmentValues {
     var chatPanelVisibility: ChatPanelVisibility {

@@ -73,6 +73,7 @@ struct FixtureInstalled: InstalledAppsSource {
 struct NativeHarness {
     let model: NativeAppsModel
     let launcher = FakeLauncher()
+    let dock = FakeDock()
     let repository: GRDBNativeAppRepository
     let dir = nativeTempDir()
 
@@ -81,7 +82,7 @@ struct NativeHarness {
         repository = GRDBNativeAppRepository(database: db)
         let reader = PlistAppBundleReader()
         model = NativeAppsModel(repository: repository, add: AddNativeApp(repository, reader), remove: RemoveNativeApp(repository),
-                                move: MoveNativeApp(repository), installed: FixtureInstalled(apps: installed), launcher: launcher)
+                                move: MoveNativeApp(repository), installed: FixtureInstalled(apps: installed), launcher: launcher, dock: dock)
     }
 
     func settle(_ ok: @MainActor () -> Bool) async {
@@ -94,4 +95,14 @@ struct NativeHarness {
         model.start()
         await settle { model.apps.count == apps.count }
     }
+}
+
+/// The Dock's badges, as a test sets them.
+@MainActor
+final class FakeDock: DockBadgeSource {
+    var isAllowed = true
+    var asked = 0
+    var byPath: [String: String] = [:]
+    func requestAccess() { asked += 1 }
+    func badges() -> [String: String] { isAllowed ? byPath : [:] }
 }

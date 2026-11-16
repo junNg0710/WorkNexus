@@ -29,6 +29,20 @@ struct ZentaoQuickChips: View {
         }
     }
 
+    /// What the chip keeps, for its tooltip.
+    static func help(_ chip: ZenTaoQuickFilter) -> String {
+        switch chip {
+        case .overdue: appString("tipChipOverdue", "Open tickets whose deadline day has passed")
+        case .dueSoon: appFormat("tipChipDueSoon", "Open tickets due today or within the next %1$@ days", "\(ZenTaoLeaderFilter.soonDays)")
+        case .dueThisWeek: appString("tipChipWeek", "Open tickets due this week, Monday to Sunday")
+        case .noDeadline: appString("tipChipNoDeadline", "Open tickets with no deadline set")
+        case .unassigned: appString("tipChipUnassigned", "Open tickets nobody holds")
+        case .highPriority: appString("tipChipHigh", "Open tickets of priority 1 or 2")
+        case .stale: appFormat("tipChipStale", "Open tickets not updated for %1$@ days or more", "\(ZenTaoLeaderFilter.staleDays)")
+        case .noEstimate: appString("tipChipNoEstimate", "Tasks with no estimate in hours")
+        }
+    }
+
     private func dot(_ chip: ZenTaoQuickFilter) -> Color? {
         switch chip {
         case .overdue: theme.colors.red
@@ -45,12 +59,14 @@ struct ZentaoQuickChips: View {
                 ForEach(chips.filter { (counts[$0] ?? 0) > 0 || leader.quick.contains($0) }, id: \.self) { chip in
                     FilterOptionChip(FilterChipOption(label: Self.label(chip), active: leader.quick.contains(chip),
                                                       onTap: { state.updateLeader(bugs: bugs) { $0 = $0.toggled(chip) } },
-                                                      dotColor: dot(chip), count: counts[chip] ?? 0))
+                                                      dotColor: dot(chip), count: counts[chip] ?? 0,
+                                                      help: Self.help(chip) + " " + appString("tipChipSuffix", "The number is how many it would keep; click again to turn it off.")))
                 }
                 if leader.isActive {
                     AppButton(appString("clearAllFilters", "Clear all filters"), kind: .ghost) {
                         state.setLeader(ZenTaoLeaderFilter(), bugs: bugs)
                     }
+                    .help(appString("tipClearLeader", "Turn off the picked people, the chips and the typed filter"))
                 }
             }
         }

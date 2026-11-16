@@ -3,36 +3,62 @@ import Observation
 
 /// What the TBChat character is doing: which animation and frame, and where it stands. It idles, waves when poked, jumps
 /// when something is celebrated, shows how the app is doing (working / offline / in trouble), and now and then walks to
-/// another spot or does a little something. The view drives it with `tick()` once per frame (`frameDuration`).
+/// another spot or does a little something.
+///
+/// Two clocks: the sprite's frames advance with `tick()` (once per `frameDuration`), while its place while walking is a
+/// function of time (`x(at:)`), read at the display's rate - so it glides instead of stepping once per sprite frame.
 @MainActor @Observable
 public final class PetDirector {
     /// How the app is doing, which sets what the character does when nothing else is going on.
     public enum Mood: Equatable, Sendable { case calm, busy, offline, trouble }
 
+    /// A walk under way: from where to where, and when.
+    public struct Walk: Equatable, Sendable {
+        public var from: Double, to: Double
+        public var start: Date
+        public var duration: TimeInterval
+
+        /// Where the character is at `date`: it eases away from `from` and into `to` (no jolt at either end).
+        public func x(at date: Date) -> Double {
+            let t = min(max(date.timeIntervalSince(start) / max(duration, 0.001), 0), 1)
+            let eased = t * t * (3 - 2 * t)
+            return from + (to - from) * eased
+        }
+        public func isOver(at date: Date) -> Bool { date.timeIntervalSince(start) >= duration }
+    }
+
     public private(set) var animation: PetAnimation = .idle
     public private(set) var frame = 0
-    /// Where the character stands: 0...1 across the room it has, left to right, and 0 (top) to 1 (bottom).
+    /// Where the character stands when it is not walking: 0...1 across the room it has, left to right, and 0 (top) to 1 (bottom).
     public var x = 0.92
     public var y = 1.0
+    /// The walk under way; nil while it stands.
+    public private(set) var walk: Walk?
     public var mood: Mood = .calm { didSet { if mood != oldValue { moodChanged() } } }
     /// With reduced motion the character keeps still: its first frame, no walking, no gestures.
     public var reduceMotion = false
+    /// How wide the room is, in points (the view says): a walk's time comes from its length on screen, so the character
+    /// walks at one pace whatever the window's width.
+    public var roomWidth: Double = 800
 
-    /// How far it walks per second, as a fraction of the room.
-    static let walkSpeed = 0.12
+    /// Walking pace, in points per second.
+    static let walkSpeed = 90.0
     /// Seconds of idling before it does something of its own.
     static let flourishAfter: ClosedRange<Double> = 18...40
 
-    @ObservationIgnored private var walkTarget: Double?
     @ObservationIgnored private var idleFor = 0.0
     @ObservationIgnored private var nextFlourish: Double
     @ObservationIgnored private var gestureCycles = 0
     @ObservationIgnored private let random: () -> Double
+    @ObservationIgnored private let now: () -> Date
 
-    public init(random: @escaping () -> Double = { Double.random(in: 0..<1) }) {
-        self.random = random
+    public init(random: @escaping () -> Double = { Double.random(in: 0..<1) }, now: @escaping () -> Date = { Date() }) {
+        self.random = random; self.now = now
         nextFlourish = Self.flourishAfter.lowerBound + random() * (Self.flourishAfter.upperBound - Self.flourishAfter.lowerBound)
     }
+
+    /// Where the character is at `date`, walking or not.
+    public func x(at date: Date) -> Double { walk?.x(at: date) ?? x }
 
     public var frameDuration: TimeInterval { animation.frameDuration }
     public var isWalking: Bool { animation == .runningLeft || animation == .runningRight }
@@ -48,7 +74,7 @@ public final class PetDirector {
     /// Dragged to a spot: stays there.
     public func place(x: Double, y: Double) {
         self.x = min(max(x, 0), 1); self.y = min(max(y, 0), 1)
-        walkTarget = nil
+        walk = nil
         if isWalking { setBase() }
     }
 
@@ -59,10 +85,8 @@ public final class PetDirector {
         guard !reduceMotion else { frame = 0; return }
         let dt = animation.frameDuration
         frame += 1
-        if let target = walkTarget, isWalking {
-            let step = Self.walkSpeed * dt, d = target - x
-            if abs(d) <= step { x = target; walkTarget = nil; setBase() } else { x += d > 0 ? step : -step }
-        }
+        // The walk is over once its time is up: the character is at its target and goes back to what it was doing.
+        if let w = walk, w.isOver(at: now()) { x = w.to; walk = nil; setBase(); return }
         if animation == .idle { idleFor += dt }
         if frame >= animation.frames { frame = 0; cycleEnded() }
     }
@@ -84,12 +108,13 @@ public final class PetDirector {
         var target = random()
         // At least a short way, so it is seen to go somewhere.
         if abs(target - x) < 0.15 { target = x > 0.5 ? max(x - 0.3, 0) : min(x + 0.3, 1) }
-        walkTarget = target
+        let points = abs(target - x) * max(roomWidth, 1)
+        walk = Walk(from: x, to: target, start: now(), duration: max(points / Self.walkSpeed, 0.6))
         start(target > x ? .runningRight : .runningLeft)
     }
 
     private func gesture(_ a: PetAnimation, cycles: Int) {
-        walkTarget = nil
+        stopWalking()
         gestureCycles = cycles
         start(a)
     }
@@ -100,8 +125,13 @@ public final class PetDirector {
         else if !animation.isGesture { setBase() }   // a gesture under way ends first, then settles into the new mood
     }
 
+    /// A walk cut short leaves the character where it had got to.
+    private func stopWalking() {
+        if let w = walk { x = w.x(at: now()); walk = nil }
+    }
+
     private func setBase() {
-        walkTarget = nil
+        stopWalking()
         switch mood {
         case .calm, .trouble: start(.idle)
         case .busy: start(.running)

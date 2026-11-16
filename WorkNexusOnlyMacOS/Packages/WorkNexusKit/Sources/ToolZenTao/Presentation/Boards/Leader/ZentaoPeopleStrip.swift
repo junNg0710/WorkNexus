@@ -21,7 +21,8 @@ struct ZentaoPeopleStrip: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: theme.spacing.s6) {
                     PersonChipBody(name: appString("leaderEveryone", "Everyone"), count: total, overdue: 0, accountId: nil, login: "",
-                                   active: leader.people.isEmpty, help: nil) {
+                                   active: leader.people.isEmpty,
+                                   help: appString("tipEveryone", "Show everyone's tickets. The number is how many are still open")) {
                         state.updateLeader(bugs: bugs) { $0.people = [] }
                     }
                     ForEach(rows) { row in

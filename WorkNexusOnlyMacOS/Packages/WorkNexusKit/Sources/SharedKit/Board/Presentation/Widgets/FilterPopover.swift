@@ -31,6 +31,7 @@ public struct FiltersButton: View {
                 }
                 .padding(.horizontal, compact ? theme.spacing.s8 : theme.spacing.s12)
             }
+            .help(appString("tipFilters", "Filter by status, assignee, priority, module…"))
             .popover(isPresented: $open, arrowEdge: .bottom) {
                 FilterPopover(controller: controller, statusOption: statusOption, catalog: catalog, onPick: onPick)
             }

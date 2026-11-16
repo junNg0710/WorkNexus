@@ -31,11 +31,6 @@ public func zentaoDeadlineState(_ ticket: Ticket, now: Date = Date(), calendar: 
     return days == 0 ? .today : .upcoming(days: days)
 }
 
-private func isTask(_ ticket: Ticket) -> Bool {
-    if case .zentaoTask? = ticket.providerEntity { return true }
-    return (ticket.externalType ?? "").lowercased() == "task"
-}
-
 /// Narrows tickets by a leader's filter. `names` maps a login to the name the person goes by, so a keyword finds a
 /// ticket by who holds it however they are written.
 public struct ApplyLeaderFilter: Sendable {
@@ -57,40 +52,74 @@ public struct ApplyLeaderFilter: Sendable {
     }
 
     static func matchesQuick(_ t: Ticket, _ chips: Set<ZenTaoQuickFilter>, now: Date, calendar: Calendar) -> Bool {
-        if chips.isEmpty { return true }
-        let time = chips.filter(\.isAboutTime)
-        if !time.isEmpty, !time.contains(where: { matches(t, $0, now: now, calendar: calendar) }) { return false }
-        return chips.filter { !$0.isAboutTime }.allSatisfy { matches(t, $0, now: now, calendar: calendar) }
+        chips.isEmpty || ZenTaoLeaderFacts(t, now: now, calendar: calendar).matches(all: chips)
     }
 
     public static func matches(_ t: Ticket, _ chip: ZenTaoQuickFilter, now: Date = Date(), calendar: Calendar = .current) -> Bool {
+        ZenTaoLeaderFacts(t, now: now, calendar: calendar).matches(chip)
+    }
+}
+
+/// What the leader's chips ask of one ticket, worked out once: its deadline is parsed a single time however many chips,
+/// counts and workload rows then read it.
+public struct ZenTaoLeaderFacts: Sendable {
+    public let open: Bool
+    public let deadline: ZenTaoDeadlineState
+    public let dueThisWeek: Bool
+    public let unassigned: Bool
+    public let highPriority: Bool
+    public let stale: Bool
+    public let noEstimate: Bool
+    public let hoursLeft: Double
+
+    public init(_ t: Ticket, now: Date = Date(), calendar: Calendar = .current) {
+        let open = zentaoIsOpen(t)
+        self.open = open
+        let due = open ? extractZenTaoDeadline(t) : nil
+        if !open { deadline = .finished }
+        else if let due {
+            let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: calendar.startOfDay(for: due)).day ?? 0
+            deadline = days < 0 ? .overdue(days: -days) : (days == 0 ? .today : .upcoming(days: days))
+        } else { deadline = .none }
+        dueThisWeek = due.map { IsDueThisWeek()($0, now: now) } ?? false
+        unassigned = open && (t.assignee ?? "").isEmpty
+        highPriority = open && t.priority.level <= Priority.high.level
+        if open, let updated = t.updatedAt {
+            let idle = calendar.dateComponents([.day], from: calendar.startOfDay(for: updated), to: calendar.startOfDay(for: now)).day ?? 0
+            stale = idle >= ZenTaoLeaderFilter.staleDays
+        } else { stale = false }
+        if case .zentaoTask(let task)? = t.providerEntity {
+            noEstimate = open && (task.estimate ?? 0) <= 0
+            hoursLeft = open ? (task.left ?? 0) : 0
+        } else { noEstimate = false; hoursLeft = 0 }
+    }
+
+    public func matches(_ chip: ZenTaoQuickFilter) -> Bool {
         switch chip {
-        case .overdue:
-            if case .overdue = zentaoDeadlineState(t, now: now, calendar: calendar) { return true }
-            return false
+        case .overdue: deadline.isOverdue
         case .dueSoon:
-            switch zentaoDeadlineState(t, now: now, calendar: calendar) {
-            case .today: return true
-            case .upcoming(let days): return days <= ZenTaoLeaderFilter.soonDays
-            default: return false
+            switch deadline {
+            case .today: true
+            case .upcoming(let days): days <= ZenTaoLeaderFilter.soonDays
+            default: false
             }
-        case .dueThisWeek:
-            guard zentaoIsOpen(t), let d = extractZenTaoDeadline(t) else { return false }
-            return IsDueThisWeek()(d, now: now)
-        case .noDeadline:
-            return zentaoDeadlineState(t, now: now, calendar: calendar) == .none
-        case .unassigned:
-            return zentaoIsOpen(t) && (t.assignee ?? "").isEmpty
-        case .highPriority:
-            return zentaoIsOpen(t) && t.priority.level <= Priority.high.level
-        case .stale:
-            guard zentaoIsOpen(t), let updated = t.updatedAt else { return false }
-            let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: updated), to: calendar.startOfDay(for: now)).day ?? 0
-            return days >= ZenTaoLeaderFilter.staleDays
-        case .noEstimate:
-            guard zentaoIsOpen(t), case .zentaoTask(let task)? = t.providerEntity else { return false }
-            return (task.estimate ?? 0) <= 0
+        case .dueThisWeek: dueThisWeek
+        case .noDeadline: deadline == .none
+        case .unassigned: unassigned
+        case .highPriority: highPriority
+        case .stale: stale
+        case .noEstimate: noEstimate
         }
+    }
+
+    /// The chips about time are alternatives to each other; every other chip narrows further.
+    public func matches(all chips: Set<ZenTaoQuickFilter>) -> Bool {
+        var anyTime = false, timeHit = false
+        for chip in chips {
+            if chip.isAboutTime { anyTime = true; if !timeHit && matches(chip) { timeHit = true } }
+            else if !matches(chip) { return false }
+        }
+        return !anyTime || timeHit
     }
 }
 
@@ -98,9 +127,10 @@ public struct ApplyLeaderFilter: Sendable {
 public struct CountQuickFilters: Sendable {
     public init() {}
     public func callAsFunction(_ tickets: [Ticket], now: Date = Date(), calendar: Calendar = .current) -> [ZenTaoQuickFilter: Int] {
-        var out: [ZenTaoQuickFilter: Int] = [:]
-        for chip in ZenTaoQuickFilter.allCases {
-            out[chip] = tickets.reduce(0) { $0 + (ApplyLeaderFilter.matches($1, chip, now: now, calendar: calendar) ? 1 : 0) }
+        var out = Dictionary(uniqueKeysWithValues: ZenTaoQuickFilter.allCases.map { ($0, 0) })
+        for t in tickets {
+            let facts = ZenTaoLeaderFacts(t, now: now, calendar: calendar)
+            for chip in ZenTaoQuickFilter.allCases where facts.matches(chip) { out[chip, default: 0] += 1 }
         }
         return out
     }
@@ -129,14 +159,16 @@ public struct SummarizeWorkload: Sendable {
     public func callAsFunction(_ tickets: [Ticket], roster: [String] = [], now: Date = Date(), calendar: Calendar = .current) -> [ZenTaoWorkload] {
         var rows: [String: ZenTaoWorkload] = [:]
         for login in roster where !login.isEmpty { rows[login] = ZenTaoWorkload(login: login) }
-        for t in tickets where zentaoIsOpen(t) {
+        for t in tickets {
+            let facts = ZenTaoLeaderFacts(t, now: now, calendar: calendar)
+            guard facts.open else { continue }
             let login = t.assignee ?? ""
             var row = rows[login] ?? ZenTaoWorkload(login: login)
             row.open += 1
-            if ApplyLeaderFilter.matches(t, .overdue, now: now, calendar: calendar) { row.overdue += 1 }
-            if ApplyLeaderFilter.matches(t, .dueSoon, now: now, calendar: calendar) { row.dueSoon += 1 }
-            if t.priority.level <= Priority.high.level { row.highPriority += 1 }
-            if isTask(t), case .zentaoTask(let task)? = t.providerEntity { row.hoursLeft += task.left ?? 0 }
+            if facts.matches(.overdue) { row.overdue += 1 }
+            if facts.matches(.dueSoon) { row.dueSoon += 1 }
+            if facts.highPriority { row.highPriority += 1 }
+            row.hoursLeft += facts.hoursLeft
             rows[login] = row
         }
         return rows.values.sorted { a, b in

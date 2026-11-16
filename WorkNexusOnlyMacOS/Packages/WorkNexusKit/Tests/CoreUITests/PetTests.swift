@@ -57,14 +57,19 @@ final class PetTests: XCTestCase {
 
     // MARK: What it does
 
+    /// A clock the test moves: every `tick` is one sprite frame later.
+    private final class Clock { var date = Date(timeIntervalSince1970: 1_000_000) }
+    private let clock = Clock()
+
     private func director(_ rolls: [Double] = []) -> PetDirector {
         var queue = rolls
-        return PetDirector(random: { queue.isEmpty ? 0.5 : queue.removeFirst() })
+        let clock = clock
+        return PetDirector(random: { queue.isEmpty ? 0.5 : queue.removeFirst() }, now: { clock.date })
     }
 
     /// Ticks until `done`, at most `limit` frames.
     private func tick(_ d: PetDirector, limit: Int = 4000, until done: () -> Bool) {
-        for _ in 0..<limit where !done() { d.tick() }
+        for _ in 0..<limit where !done() { clock.date += d.frameDuration; d.tick() }
     }
 
     func testItIdlesAndLoopsItsFrames() {
@@ -111,25 +116,68 @@ final class PetTests: XCTestCase {
     func testAfterAWhileIdlingItWalksSomewhereElseAndStopsThere() {
         // Rolls: the first wait, the next wait (set when it acts), then "walk" and where to.
         let d = director([0.0, 0.5, 0.1, 0.1])
+        d.roomWidth = 900
         d.place(x: 0.9, y: 1)
         tick(d) { d.isWalking }
         XCTAssertEqual(d.animation, .runningLeft)         // the target is to its left
-        let start = d.x
+        let walk = try! XCTUnwrap(d.walk)
+        XCTAssertEqual(walk.to, 0.1, accuracy: 0.001)
+        // 0.8 of a 900 pt room at 90 pt/s: it takes 8 s whatever the window's width.
+        XCTAssertEqual(walk.duration, 8, accuracy: 0.01)
         tick(d) { !d.isWalking }
         XCTAssertEqual(d.animation, .idle)
-        XCTAssertLessThan(d.x, start - 0.1)
+        XCTAssertNil(d.walk)
         XCTAssertEqual(d.x, 0.1, accuracy: 0.001)
     }
 
-    func testPlacingItStopsAWalkWhereItIs() {
+    /// Its place while walking is a smooth function of time: it never jumps, never goes back, eases out of the start and
+    /// into the end, and is exactly at the target when the walk is over.
+    func testAWalkGlidesFromStartToTarget() {
+        let start = Date(timeIntervalSince1970: 0)
+        let walk = PetDirector.Walk(from: 0.2, to: 0.8, start: start, duration: 4)
+        XCTAssertEqual(walk.x(at: start), 0.2)
+        XCTAssertEqual(walk.x(at: start + 2), 0.5, accuracy: 0.0001)
+        XCTAssertEqual(walk.x(at: start + 4), 0.8, accuracy: 0.0001)
+        XCTAssertEqual(walk.x(at: start + 99), 0.8)                       // and stays there
+        XCTAssertEqual(walk.x(at: start - 1), 0.2)
+        var last = 0.2, biggest = 0.0
+        for i in 1...480 {                                               // 120 frames a second
+            let x = walk.x(at: start + Double(i) / 120)
+            XCTAssertGreaterThanOrEqual(x, last)
+            biggest = max(biggest, x - last); last = x
+        }
+        XCTAssertLessThan(biggest, 0.002, "no frame moves it more than a hair")
+        // It starts and ends slowly: the first and last tenth of a second cover less ground than one in the middle.
+        let early = walk.x(at: start + 0.1) - 0.2, middle = walk.x(at: start + 2.05) - walk.x(at: start + 1.95)
+        XCTAssertLessThan(early, middle / 4)
+        XCTAssertFalse(walk.isOver(at: start + 3.9)); XCTAssertTrue(walk.isOver(at: start + 4))
+    }
+
+    func testPlacingOrPokingItMidWalkLeavesItWhereItHadGotTo() {
         let d = director([0.0, 0.5, 0.1, 0.1])
+        d.roomWidth = 900
         d.place(x: 0.9, y: 1)
         tick(d) { d.isWalking }
-        d.place(x: 0.5, y: 0.7)
-        XCTAssertFalse(d.isWalking)
-        XCTAssertEqual(d.x, 0.5); XCTAssertEqual(d.y, 0.7)
+        clock.date += 4                                                   // half way
+        let midway = d.x(at: clock.date)
+        XCTAssertEqual(midway, 0.5, accuracy: 0.01)
+        d.poke()
+        XCTAssertEqual(d.animation, .waving)
+        XCTAssertNil(d.walk)
+        XCTAssertEqual(d.x, midway, accuracy: 0.0001, "it does not jump back to where it set off, nor ahead to its target")
         d.place(x: 4, y: -2)
         XCTAssertEqual(d.x, 1); XCTAssertEqual(d.y, 0)
+    }
+
+    func testTheSheetCellOfAFrame() throws {
+        let sheet = try XCTUnwrap(PetSpriteSheet(atlas: blankAtlas()))
+        let first = sheet.unitRect(.idle, 0)
+        XCTAssertEqual(first, CGRect(x: 0, y: 0, width: 1.0 / 8, height: 1.0 / 9))
+        let waving = sheet.unitRect(.waving, 2)
+        XCTAssertEqual(waving.minX, 2.0 / 8, accuracy: 1e-9); XCTAssertEqual(waving.minY, 3.0 / 9, accuracy: 1e-9)
+        XCTAssertEqual(sheet.unitRect(.waving, 4), sheet.unitRect(.waving, 0))   // frames wrap
+        // A layer counts rows from the bottom.
+        XCTAssertEqual(PetSpriteLayer.layerRect(first).minY, 8.0 / 9, accuracy: 1e-9)
     }
 
     func testReducedMotionKeepsItStill() {

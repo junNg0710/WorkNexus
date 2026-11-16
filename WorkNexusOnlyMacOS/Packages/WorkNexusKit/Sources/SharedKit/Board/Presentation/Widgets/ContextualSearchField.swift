@@ -69,6 +69,7 @@ public struct ContextualSearchField: View {
                     .buttonStyle(.plain)
             }
         }
+        .help(appString("tipSearch", "Quick search of the tickets already loaded (⌘K). Type an id such as #123 and press Return to look it up on the server"))
         .padding(.horizontal, theme.spacing.s6).frame(height: theme.sizes.control32)
         .background(c.panel, in: RoundedRectangle(cornerRadius: theme.radii.md))
         .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(c.line, lineWidth: theme.borders.hairline))

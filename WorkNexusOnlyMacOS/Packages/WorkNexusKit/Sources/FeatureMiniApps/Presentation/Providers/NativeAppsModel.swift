@@ -13,6 +13,14 @@ public struct NativeAppRailItem: Identifiable, Equatable, Sendable {
     public var running: Bool
     /// The `.app` is no longer where it was (moved or uninstalled).
     public var missing: Bool
+    /// What the Dock shows on the app's icon (an unread count, usually); nil when it shows nothing or cannot be read.
+    public var badge: String?
+
+    /// The badge as a count for the rail: the number it shows, or 1 for a badge that is not a number (a dot).
+    public var badgeCount: Int {
+        guard let badge, !badge.isEmpty else { return 0 }
+        return Int(badge.filter(\.isNumber)) ?? 1
+    }
 }
 
 /// New feature, no Dart counterpart. The rail's Mac apps: the list, adding / removing / reordering, opening one (or bringing it
@@ -28,6 +36,12 @@ public final class NativeAppsModel {
     /// The installed apps, by name; empty until `loadInstalled()` is done.
     public private(set) var installed: [AppBundleInfo] = []
     public private(set) var loadingInstalled = false
+    /// The Dock's badge of each app that has one, by app id.
+    public private(set) var badges: [String: String] = [:]
+    /// Whether macOS lets the app read the Dock's badges (Privacy & Security → Accessibility).
+    public private(set) var badgesAllowed = false
+    /// How often the Dock is read for badges.
+    static let badgeInterval: Duration = .seconds(4)
 
     private let repository: NativeAppRepository
     private let addApp: AddNativeApp
@@ -35,14 +49,15 @@ public final class NativeAppsModel {
     private let moveApp: MoveNativeApp
     private let installedSource: InstalledAppsSource
     private let launcher: AppLauncher
+    private let dock: DockBadgeSource?
     @ObservationIgnored private var started = false
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
     @ObservationIgnored private var icons: [String: NSImage] = [:]
 
     init(repository: NativeAppRepository, add: AddNativeApp, remove: RemoveNativeApp, move: MoveNativeApp,
-         installed: InstalledAppsSource, launcher: AppLauncher) {
+         installed: InstalledAppsSource, launcher: AppLauncher, dock: DockBadgeSource? = nil) {
         self.repository = repository; addApp = add; removeApp = remove; moveApp = move
-        installedSource = installed; self.launcher = launcher
+        installedSource = installed; self.launcher = launcher; self.dock = dock
     }
 
     /// Starts watching the database and the running apps. Idempotent.
@@ -57,7 +72,32 @@ public final class NativeAppsModel {
         tasks.append(Task { [weak self] in
             for await event in events { self?.apply(event) }
         })
+        // The Dock has no "badge changed" event to listen to: it is read every few seconds, and only while there is an app to show it on.
+        tasks.append(Task { [weak self] in
+            while !Task.isCancelled {
+                // Not while the window cannot be seen (hidden to the tray, minimised, covered).
+                if AppVisibility.isOnScreen { self?.refreshBadges() }
+                try? await Task.sleep(for: Self.badgeInterval)
+            }
+        })
     }
+
+    /// Reads the Dock's badges of the rail's apps now.
+    public func refreshBadges() {
+        guard let dock else { return }
+        let allowed = dock.isAllowed
+        if allowed != badgesAllowed { badgesAllowed = allowed }
+        guard allowed, !apps.isEmpty else { if !badges.isEmpty { badges = [:] }; return }
+        let byPath = dock.badges()
+        var next: [String: String] = [:]
+        for app in apps { if let label = byPath[DockBadgeReader.normalized(app.path)] { next[app.id] = label } }
+        if next != badges { badges = next }
+    }
+
+    /// Asks macOS to let the app read the Dock (the user ticks it in System Settings); badges appear once it is allowed.
+    public func requestBadgeAccess() { dock?.requestAccess() }
+    /// Whether badges can be offered at all (a Dock reader is wired).
+    public var canShowBadges: Bool { dock != nil }
 
     public func stop() {
         tasks.forEach { $0.cancel() }; tasks = []
@@ -68,7 +108,7 @@ public final class NativeAppsModel {
 
     public var railItems: [NativeAppRailItem] {
         apps.map { NativeAppRailItem(id: $0.id, name: $0.name, path: $0.path, running: runningBundleIds.contains($0.bundleId),
-                                     missing: missingIds.contains($0.id)) }
+                                     missing: missingIds.contains($0.id), badge: badges[$0.id]) }
     }
 
     /// Checks again which apps are still installed (the window came forward: the user may have moved one meanwhile).

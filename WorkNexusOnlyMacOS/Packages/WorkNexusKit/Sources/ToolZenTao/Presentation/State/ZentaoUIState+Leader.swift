@@ -40,9 +40,11 @@ extension ZentaoUIState {
 
     /// The board's tickets after its own filters but before the leader's: what the people strip and chips count.
     public func leaderPool(bugs: Bool) -> [Ticket] {
-        let type = bugs ? "bug" : "task"
-        return FilterTickets()((bugs ? bugBoard : taskBoard).boardQuery)
-            .filter { $0.providerType == .zentao && ($0.externalType ?? "").lowercased() == type }
+        (bugs ? bugCache : taskCache).pool(cacheKey(bugs: bugs)) {
+            let type = bugs ? "bug" : "task"
+            return FilterTickets()((bugs ? bugBoard : taskBoard).boardQuery)
+                .filter { $0.providerType == .zentao && ($0.externalType ?? "").lowercased() == type }
+        }
     }
 
     /// The pool narrowed by everything the leader picked except the part being counted.
@@ -55,12 +57,16 @@ extension ZentaoUIState {
     /// Each person's load under the chips and keyword picked (the people pick itself does not narrow it, so a
     /// person can be swapped for another). Members of the board are listed even when they hold nothing.
     public func workload(bugs: Bool) -> [ZenTaoWorkload] {
-        SummarizeWorkload()(narrowed(bugs: bugs) { $0.people = [] }, roster: boardMembers.map(\.account))
+        (bugs ? bugCache : taskCache).workload(cacheKey(bugs: bugs)) {
+            SummarizeWorkload()(narrowed(bugs: bugs) { $0.people = [] }, roster: boardMembers.map(\.account))
+        }
     }
 
     /// What each quick chip would keep, under the people and keyword picked.
     public func quickCounts(bugs: Bool) -> [ZenTaoQuickFilter: Int] {
-        CountQuickFilters()(narrowed(bugs: bugs) { $0.quick = [] })
+        (bugs ? bugCache : taskCache).counts(cacheKey(bugs: bugs)) {
+            CountQuickFilters()(narrowed(bugs: bugs) { $0.quick = [] })
+        }
     }
 
     // MARK: Loading everything

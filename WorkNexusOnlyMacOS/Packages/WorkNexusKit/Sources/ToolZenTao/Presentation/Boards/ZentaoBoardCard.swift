@@ -58,8 +58,13 @@ struct ZentaoCardTopLine: View {
     var body: some View {
         HStack(spacing: theme.spacing.s6) {
             Text("#\(ticket.externalKey)").font(theme.typography.mono).foregroundStyle(theme.colors.tx3)
-            if let s = ticket.severity { SeverityTag(s) }
-            if hasExplicitPriority(ticket) { PriorityTag(ticket.providerType, ticket.priority) }
+            if let s = ticket.severity {
+                SeverityTag(s).help(appFormat("tipSeverity", "Severity: %1$@", zentaoSeverityLabel(s) ?? "\(s)"))
+            }
+            if hasExplicitPriority(ticket) {
+                PriorityTag(ticket.providerType, ticket.priority)
+                    .help(appFormat("tipPriority", "Priority %1$@ (1 is the most urgent)", "\(ticket.priority.level + 1)"))
+            }
             Spacer(minLength: 0)
             if let age = Self.age(ticket.updatedAt) { Text(age).font(theme.typography.caption).foregroundStyle(theme.colors.tx3) }
         }
@@ -81,9 +86,11 @@ struct ZentaoDelayTag: View {
     @Environment(\.appTheme) private var theme
     let text: String
     var tint: Color?
+    /// What the tag says, for its tooltip.
+    var help = ""
     var body: some View {
         let color = tint ?? theme.colors.red
-        Text(text).font(theme.typography.caption.weight(.semibold)).foregroundStyle(color)
+        Text(text).font(theme.typography.caption.weight(.semibold)).foregroundStyle(color).help(help)
             .padding(.horizontal, theme.spacing.s6).padding(.vertical, theme.spacing.s2)
             .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: theme.radii.xs))
     }
@@ -97,11 +104,14 @@ struct ZentaoDeadlineTag: View {
     var body: some View {
         switch zentaoDeadlineState(ticket) {
         case .overdue(let days):
-            ZentaoDelayTag(text: days == 1 ? appString("zentaoDelayOneDay", "Delay 1 day") : appFormat("zentaoDelayDays", "Delay %1$@ days", "\(days)"))
+            ZentaoDelayTag(text: days == 1 ? appString("zentaoDelayOneDay", "Delay 1 day") : appFormat("zentaoDelayDays", "Delay %1$@ days", "\(days)"),
+                           help: appString("tipDelay", "Past its deadline: the deadline day has gone by"))
         case .today:
-            ZentaoDelayTag(text: appString("zentaoDueToday", "Due today"), tint: theme.colors.amber)
+            ZentaoDelayTag(text: appString("zentaoDueToday", "Due today"), tint: theme.colors.amber,
+                           help: appString("tipDueToday", "The deadline is today"))
         case .upcoming(let days) where days <= ZenTaoLeaderFilter.soonDays:
-            ZentaoDelayTag(text: days == 1 ? appString("zentaoDueTomorrow", "Due tomorrow") : appFormat("leaderDueSoon", "Due in %1$@ days", "\(days)"), tint: theme.colors.amber)
+            ZentaoDelayTag(text: days == 1 ? appString("zentaoDueTomorrow", "Due tomorrow") : appFormat("leaderDueSoon", "Due in %1$@ days", "\(days)"), tint: theme.colors.amber,
+                           help: appString("tipDueSoon", "The deadline is close"))
         default:
             EmptyView()
         }
@@ -115,6 +125,7 @@ struct ZentaoCardHoursLeft: View {
     var body: some View {
         if case .zentaoTask(let t)? = ticket.providerEntity, let left = t.left, left > 0, zentaoIsOpen(ticket) {
             Text(appFormat("taskHoursLeft", "%1$@ h left", zentaoHoursText(left))).font(theme.typography.caption).foregroundStyle(theme.colors.tx3)
+                .help(appString("tipHoursLeft", "Hours still to do on this task"))
         }
     }
 }

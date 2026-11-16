@@ -783,6 +783,10 @@
     "en": "Added",
     "vi": "Đã thêm"
   },
+  "nativeAppBadgeTip": {
+    "en": "%1$@ · %2$@ in its Dock badge",
+    "vi": "%1$@ · badge trên Dock: %2$@"
+  },
   "nativeAppChooseOther": {
     "en": "Choose other…",
     "vi": "Chọn ứng dụng khác…"
@@ -855,6 +859,10 @@
     "en": "Mac apps",
     "vi": "Ứng dụng Mac"
   },
+  "nativeAppShowBadges": {
+    "en": "Show notification badges…",
+    "vi": "Hiện badge thông báo…"
+  },
   "newBugOrTask": {
     "en": "New bug or task…",
     "vi": "Lỗi hoặc công việc mới…"
@@ -890,6 +898,14 @@
   "railConnect": {
     "en": "Connect",
     "vi": "Kết nối"
+  },
+  "railHidePanel": {
+    "en": "click again to hide the side panel",
+    "vi": "bấm lần nữa để ẩn bảng bên cạnh"
+  },
+  "railShowPanel": {
+    "en": "click again to show the side panel",
+    "vi": "bấm lần nữa để mở bảng bên cạnh"
   },
   "reset": {
     "en": "Reset",
@@ -978,6 +994,154 @@
   "tableColumnHours": {
     "en": "Left / est.",
     "vi": "Còn lại / ước lượng"
+  },
+  "tipBulkAssign": {
+    "en": "Give every selected ticket to one person",
+    "vi": "Giao mọi ticket đã chọn cho một người"
+  },
+  "tipBulkClear": {
+    "en": "Drop the selection (Esc)",
+    "vi": "Bỏ chọn (Esc)"
+  },
+  "tipBulkClose": {
+    "en": "Close the selected tickets ZenTao lets be closed (a resolved bug, a finished or cancelled task); the others are skipped",
+    "vi": "Đóng các ticket đã chọn mà ZenTao cho đóng (bug đã resolve, task đã xong hoặc đã hủy); còn lại bị bỏ qua"
+  },
+  "tipBulkPriority": {
+    "en": "Set the priority of every selected ticket",
+    "vi": "Đặt độ ưu tiên cho mọi ticket đã chọn"
+  },
+  "tipBulkSelectAll": {
+    "en": "Select every ticket the board shows now",
+    "vi": "Chọn mọi ticket board đang hiện"
+  },
+  "tipBulkStop": {
+    "en": "Stop after the ticket being changed; the rest stay as they are",
+    "vi": "Dừng sau ticket đang đổi; phần còn lại giữ nguyên"
+  },
+  "tipChipDueSoon": {
+    "en": "Open tickets due today or within the next %1$@ days",
+    "vi": "Ticket còn mở đến hạn hôm nay hoặc trong %1$@ ngày tới"
+  },
+  "tipChipHigh": {
+    "en": "Open tickets of priority 1 or 2",
+    "vi": "Ticket còn mở có ưu tiên 1 hoặc 2"
+  },
+  "tipChipNoDeadline": {
+    "en": "Open tickets with no deadline set",
+    "vi": "Ticket còn mở chưa đặt hạn"
+  },
+  "tipChipNoEstimate": {
+    "en": "Tasks with no estimate in hours",
+    "vi": "Task chưa ước lượng giờ"
+  },
+  "tipChipOverdue": {
+    "en": "Open tickets whose deadline day has passed",
+    "vi": "Ticket còn mở đã quá ngày hạn"
+  },
+  "tipChipStale": {
+    "en": "Open tickets not updated for %1$@ days or more",
+    "vi": "Ticket còn mở không cập nhật từ %1$@ ngày trở lên"
+  },
+  "tipChipSuffix": {
+    "en": "The number is how many it would keep; click again to turn it off.",
+    "vi": "Con số là số ticket còn lại nếu bấm; bấm lần nữa để tắt."
+  },
+  "tipChipUnassigned": {
+    "en": "Open tickets nobody holds",
+    "vi": "Ticket còn mở chưa giao cho ai"
+  },
+  "tipChipWeek": {
+    "en": "Open tickets due this week, Monday to Sunday",
+    "vi": "Ticket còn mở đến hạn trong tuần này, thứ Hai đến Chủ nhật"
+  },
+  "tipClearLeader": {
+    "en": "Turn off the picked people, the chips and the typed filter",
+    "vi": "Tắt người đã chọn, các chip và chữ đã gõ"
+  },
+  "tipDelay": {
+    "en": "Past its deadline: the deadline day has gone by",
+    "vi": "Quá hạn: đã qua ngày hạn"
+  },
+  "tipDueSoon": {
+    "en": "The deadline is close",
+    "vi": "Sắp đến hạn"
+  },
+  "tipDueToday": {
+    "en": "The deadline is today",
+    "vi": "Hạn là hôm nay"
+  },
+  "tipEveryone": {
+    "en": "Show everyone's tickets. The number is how many are still open",
+    "vi": "Hiện ticket của mọi người. Con số là số còn mở"
+  },
+  "tipFilters": {
+    "en": "Filter by status, assignee, priority, module…",
+    "vi": "Lọc theo trạng thái, người nhận, độ ưu tiên, module…"
+  },
+  "tipHoursLeft": {
+    "en": "Hours still to do on this task",
+    "vi": "Số giờ còn phải làm của task này"
+  },
+  "tipLeaderFilter": {
+    "en": "Narrows the board as you type: by id, title or the person who holds it",
+    "vi": "Thu hẹp board khi gõ: theo id, tiêu đề hoặc người đang giữ"
+  },
+  "tipLoadAll": {
+    "en": "Read the rest of the open views, so the counts and filters cover every ticket and not only the first pages",
+    "vi": "Đọc nốt các view đang mở để số đếm và bộ lọc tính trên mọi ticket, không chỉ các trang đầu"
+  },
+  "tipNewBug": {
+    "en": "File a new bug in the open product",
+    "vi": "Tạo bug mới trong product đang mở"
+  },
+  "tipNewTask": {
+    "en": "Create a new task in the open execution",
+    "vi": "Tạo task mới trong execution đang mở"
+  },
+  "tipPet": {
+    "en": "TBChat: click to wave, drag to move it. Turn it off in Settings",
+    "vi": "TBChat: bấm để vẫy tay, kéo để đổi chỗ. Tắt trong Cài đặt"
+  },
+  "tipPriority": {
+    "en": "Priority %1$@ (1 is the most urgent)",
+    "vi": "Ưu tiên %1$@ (1 là gấp nhất)"
+  },
+  "tipScopeAll": {
+    "en": "Every ticket of this execution, whoever holds it",
+    "vi": "Mọi ticket của execution này, của bất kỳ ai"
+  },
+  "tipScopeAllBugs": {
+    "en": "Every bug of this product that is not closed",
+    "vi": "Mọi bug chưa đóng của product này"
+  },
+  "tipScopeRelated": {
+    "en": "Only tickets that concern you: assigned to you, opened by you or resolved by you",
+    "vi": "Chỉ ticket liên quan đến bạn: giao cho bạn, bạn tạo hoặc bạn đã resolve"
+  },
+  "tipScopeWithClosed": {
+    "en": "Also show the closed bugs, in the Closed column",
+    "vi": "Hiện cả bug đã đóng, trong cột Closed"
+  },
+  "tipSearch": {
+    "en": "Quick search of the tickets already loaded (⌘K). Type an id such as #123 and press Return to look it up on the server",
+    "vi": "Tìm nhanh trong ticket đã tải (⌘K). Gõ id như #123 rồi nhấn Return để tìm trên máy chủ"
+  },
+  "tipSeverity": {
+    "en": "Severity: %1$@",
+    "vi": "Mức nghiêm trọng: %1$@"
+  },
+  "tipTeamRetry": {
+    "en": "Read the work of the people that failed once more",
+    "vi": "Đọc lại việc của những người bị lỗi"
+  },
+  "tipViewBoard": {
+    "en": "Show as a kanban board: a column per status",
+    "vi": "Hiện dạng bảng kanban: mỗi trạng thái một cột"
+  },
+  "tipViewList": {
+    "en": "Show as a table with sortable columns",
+    "vi": "Hiện dạng bảng, các cột sắp xếp được"
   },
   "title": {
     "en": "Title",

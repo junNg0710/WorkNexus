@@ -29,7 +29,11 @@ public struct BoardToolbar<Filters: View, Refresh: View, Below: View>: View {
     }
 
     private var modeTabs: [AppSegmentedTab] {
-        modes.map { m in AppSegmentedTab(label: appString(m.label, m.label), active: m.id == viewMode, icon: m.systemImage) { onViewMode(m.id) } }
+        modes.map { m in
+            AppSegmentedTab(label: appString(m.label, m.label), active: m.id == viewMode, icon: m.systemImage,
+                            help: m.id == "list" ? appString("tipViewList", "Show as a table with sortable columns")
+                                  : (m.id == "board" ? appString("tipViewBoard", "Show as a kanban board: a column per status") : nil)) { onViewMode(m.id) }
+        }
     }
 
     public var body: some View {

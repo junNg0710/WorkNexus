@@ -47,15 +47,9 @@ public struct ZentaoDocLibsPane: View {
         let libName = Dictionary(libs.map { ($0.id, $0.name) }, uniquingKeysWith: { a, _ in a })
         let open = docs.openDoc(for: account.id)
         return VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                ScopeFilterField(text: Binding(get: { docs.filter(for: account.id) }, set: { docs.setFilter($0, accountId: account.id) }),
-                                 prompt: appString("docsFilterLibraries", "Filter libraries"))
-                ZentaoDocToolButton(systemImage: AppPanelIcon.collapse(.leading), help: appString("paneCollapse", "Collapse sidebar"), small: true) {
-                    docs.setPane(collapsed: true, accountId: account.id, section: location.section)
-                }
-                .padding(.trailing, theme.spacing.s6)
-            }
-            .padding(.top, theme.spacing.s6)
+            ScopeFilterField(text: Binding(get: { docs.filter(for: account.id) }, set: { docs.setFilter($0, accountId: account.id) }),
+                             prompt: appString("docsFilterLibraries", "Filter libraries"))
+                .padding(.top, theme.spacing.s6)
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if !pinnedDocs.isEmpty || !pinnedLibs.isEmpty {

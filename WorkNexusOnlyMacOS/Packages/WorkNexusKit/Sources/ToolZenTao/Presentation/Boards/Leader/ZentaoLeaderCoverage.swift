@@ -19,6 +19,7 @@ struct ZentaoLeaderCoverage: View {
                     .font(theme.typography.meta).foregroundStyle(theme.colors.tx3).lineLimit(1)
                 if !loading {
                     AppButton(appString("leaderLoadAll", "Load all"), kind: .ghost) { state.loadEverything(bugs: bugs) }
+                        .help(appString("tipLoadAll", "Read the rest of the open views, so the counts and filters cover every ticket and not only the first pages"))
                 }
             }
             .fixedSize()

@@ -46,7 +46,7 @@ struct TranslationTabView: View {
                                       ?? appString("translationFailed", "Translation failed"), hue: theme.colors.red)
                 }
                 if (state == .done || state == .outdated), let record {
-                    TranslatedRecord(record: record, images: images).opacity(state == .outdated ? 0.62 : 1)
+                    TranslatedRecord(record: record, ticket: ticket, images: images).opacity(state == .outdated ? 0.62 : 1)
                     if state == .done {
                         HStack(spacing: theme.spacing.s6) {
                             Circle().fill(theme.colors.green).frame(width: theme.spacing.s6, height: theme.spacing.s6)
@@ -109,17 +109,23 @@ private struct TranslationBanner: View {
     }
 }
 
-/// The translated title and its body under a "Description" label.
+/// The translated title and its body, laid out as the Original tab lays the source out: under the same heading ("Repro
+/// steps" for a bug) and through the same renderer. A ZenTao body is HTML and comes back from the translator as HTML, so it
+/// is drawn as HTML (lists, bold, images) - shown as Markdown its tags were printed as text.
 private struct TranslatedRecord: View {
     @Environment(\.appTheme) private var theme
     let record: TranslationRecord
+    let ticket: Ticket
     let images: BodyImageHooks
 
     var body: some View {
+        let isBug: Bool = { if case .zentaoBug? = ticket.providerEntity { true } else { false } }()
         VStack(alignment: .leading, spacing: 0) {
             Text(record.translatedTitle).font(theme.typography.title).foregroundStyle(theme.colors.tx).lineSpacing(theme.spacing.s4).textSelection(.enabled)
-            SectionLabel(appString("description", "Description")).padding(.top, theme.spacing.s12).padding(.bottom, theme.spacing.s8)
-            MarkdownText(record.translatedBody, fontSize: 15, images: images).textSelection(.enabled)
+            DetailSectionTitle(isBug ? appString("fieldSteps", "Repro steps") : appString("description", "Description"))
+                .padding(.top, theme.spacing.s16)
+            RichBodyText(record.translatedBody, html: isHtmlBody(ticket.providerType, record.translatedBody), fontSize: 15, height: 1.6, images: images)
+                .textSelection(.enabled)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

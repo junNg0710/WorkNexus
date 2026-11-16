@@ -20,7 +20,7 @@ struct NativeAppRailButtons: View {
     var body: some View {
         VStack(spacing: theme.spacing.s2) {
             ForEach(model.railItems) { item in
-                RailLabeledButton(label: item.name, help: help(item)) {
+                RailLabeledButton(label: item.name, badge: item.badgeCount, help: help(item)) {
                     open(item)
                 } leading: {
                     NativeAppRailIcon(icon: model.icon(forPath: item.path), running: item.running, missing: item.missing)
@@ -37,7 +37,9 @@ struct NativeAppRailButtons: View {
             }
         }
         .task { model.start() }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in model.refreshMissing() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            model.refreshMissing(); model.refreshBadges()
+        }
         .appConfirmDialog(isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
                           title: appFormat("miniAppRemoveTitle", "Remove %1$@?", removing?.name ?? ""),
                           message: appString("nativeAppRemoveMessage", "It only leaves the rail. The app itself is not affected."),
@@ -48,7 +50,9 @@ struct NativeAppRailButtons: View {
     }
 
     private func help(_ item: NativeAppRailItem) -> String {
-        item.missing ? appFormat("nativeAppMissing", "%1$@ was not found. It may have been moved or uninstalled.", item.name) : item.name
+        if item.missing { return appFormat("nativeAppMissing", "%1$@ was not found. It may have been moved or uninstalled.", item.name) }
+        if let badge = item.badge, !badge.isEmpty { return appFormat("nativeAppBadgeTip", "%1$@ · %2$@ in its Dock badge", item.name, badge) }
+        return item.name
     }
 
     private func app(_ item: NativeAppRailItem) -> NativeApp? { model.apps.first { $0.id == item.id } }
@@ -65,6 +69,9 @@ struct NativeAppRailButtons: View {
     @ViewBuilder
     private func menu(_ item: NativeAppRailItem) -> some View {
         Button(appString("nativeAppOpen", "Open")) { open(item) }.disabled(item.missing)
+        if model.canShowBadges && !model.badgesAllowed {
+            Button(appString("nativeAppShowBadges", "Show notification badges…")) { model.requestBadgeAccess() }
+        }
         if item.missing {
             Button(appString("nativeAppLocate", "Locate…")) { locate(item) }
         } else {

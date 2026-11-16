@@ -9,6 +9,7 @@ import SwiftUI
 /// filters, view mode) and the board or the list. Bugs are listed per product only.
 public struct ZentaoBugsSection: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.sectionIsActive) private var sectionActive
     let deps: ZentaoDependencies; let state: ZentaoUIState; let account: Account; let location: ToolLocation
 
     public init(deps: ZentaoDependencies, state: ZentaoUIState, account: Account, location: ToolLocation) {
@@ -24,13 +25,16 @@ public struct ZentaoBugsSection: View {
             ZentaoBoardToolbar(
                 state: state, bugs: true,
                 scopes: [
-                    AppSegmentedTab(label: appString("viewAll", "All"), active: !isRelated && state.bugTab != .all) {
+                    AppSegmentedTab(label: appString("viewAll", "All"), active: !isRelated && state.bugTab != .all,
+                                    help: appString("tipScopeAllBugs", "Every bug of this product that is not closed")) {
                         board.leaveOwnView(); state.setBugTab(.unclosed)
                     },
-                    AppSegmentedTab(label: appString("bugsWithClosed", "With closed"), active: !isRelated && state.bugTab == .all) {
+                    AppSegmentedTab(label: appString("bugsWithClosed", "With closed"), active: !isRelated && state.bugTab == .all,
+                                    help: appString("tipScopeWithClosed", "Also show the closed bugs, in the Closed column")) {
                         board.leaveOwnView(); state.setBugTab(.all)
                     },
-                    AppSegmentedTab(label: appString("relatedToMe", "Related to me"), active: isRelated) {
+                    AppSegmentedTab(label: appString("relatedToMe", "Related to me"), active: isRelated,
+                                    help: appString("tipScopeRelated", "Only tickets that concern you: assigned to you, opened by you or resolved by you")) {
                         board.enterOwnView(.related); state.setBugTab(.relatedToMe)
                     },
                 ],
@@ -42,6 +46,8 @@ public struct ZentaoBugsSection: View {
             ZentaoBugsBody(deps: deps, state: state, list: viewMode == "list")
         }
         .background(theme.colors.bg)
+        // Kept mounted behind another section, the board stops recomputing on every ticket change and catches up when shown.
+        .onChange(of: sectionActive, initial: true) { _, on in state.bugBoard.isActive = on }
         .environment(\.zentaoState, state)
         .overlay { ZentaoBulkBar(deps: deps, state: state, bugs: true) }
         .task(id: "\(account.id)|\(location.scopeId ?? "")|\(state.products[account.id]?.value?.count ?? -1)") {

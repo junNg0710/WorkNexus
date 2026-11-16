@@ -8,12 +8,16 @@ import SharedKit
 enum ZentaoBoards {
     /// The bug board's columns after the filters (the Closed column only on the All tab).
     static func bugBoard(_ s: ZentaoUIState) -> ZenTaoBugBoardModel {
-        BuildZenTaoBugBoard(includeClosed: s.bugTab == .all, leader: s.leader(bugs: true), names: s.memberNames,
-                            sort: s.columnSort)(s.bugBoard.boardQuery)
+        s.bugCache.bugBoard(s.cacheKey(bugs: true)) {
+            BuildZenTaoBugBoard(includeClosed: s.bugTab == .all, leader: s.leader(bugs: true), names: s.memberNames,
+                                sort: s.columnSort)(s.bugBoard.boardQuery)
+        }
     }
 
     static func taskBoard(_ s: ZentaoUIState) -> ZenTaoTaskBoardModel {
-        BuildZenTaoTaskBoard(leader: s.leader(bugs: false), names: s.memberNames, sort: s.columnSort)(s.taskBoard.boardQuery)
+        s.taskCache.taskBoard(s.cacheKey(bugs: false)) {
+            BuildZenTaoTaskBoard(leader: s.leader(bugs: false), names: s.memberNames, sort: s.columnSort)(s.taskBoard.boardQuery)
+        }
     }
 
     /// The task board as one table: status by status, each status view's tasks showing once the statuses before it are

@@ -13,7 +13,8 @@ public enum RunningAppEvent: Sendable, Equatable {
 public protocol AppLauncher: AnyObject {
     /// The bundle identifiers of the apps running now.
     func runningBundleIds() -> Set<String>
-    /// Opens the app at `path`, or — when it is already running — brings it forward and un-hides it.
+    /// Opens the app at `path`, or — when it is already running — brings it forward, un-hides it and, if it has no window
+    /// left, has it open one (as a Dock click does).
     func launch(path: String, bundleId: String) async -> Outcome<Void>
     /// Shows the app's bundle in Finder.
     func reveal(path: String)
@@ -34,13 +35,18 @@ public final class WorkspaceAppLauncher: AppLauncher {
 
     public func launch(path: String, bundleId: String) async -> Outcome<Void> {
         guard exists(path: path) else { return .failure(.notFound("The app is not at \(path)")) }
-        if let running = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).first(where: { !$0.isTerminated }) {
-            running.unhide()
-            running.activate(options: [.activateAllWindows])
-            return .success(())
-        }
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = true
+        if let running = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).first(where: { !$0.isTerminated }) {
+            running.unhide()
+            // `activate` only brings forward the windows an app has: one whose window was closed (the red button) stays
+            // windowless. Opening the app again is what a Dock click does - it sends the app its "reopen" event, which
+            // is when an app makes a window - and it also brings the app forward.
+            if (try? await NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: path), configuration: configuration)) == nil {
+                running.activate(options: [.activateAllWindows])
+            }
+            return .success(())
+        }
         do {
             _ = try await NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: path), configuration: configuration)
             return .success(())

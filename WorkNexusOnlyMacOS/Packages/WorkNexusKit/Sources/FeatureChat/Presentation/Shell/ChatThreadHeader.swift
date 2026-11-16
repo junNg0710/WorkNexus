@@ -18,9 +18,6 @@ struct ChatThreadHeader: View {
         let withPeer = chat.type == .one2one && !chat.isMyCloud
         let presence = withPeer ? ChatShellLabels.presence(users, chat.peerUserId) : nil
         HStack {
-            if visibility.listHidden {
-                AppIconButton(AppPanelIcon.expand(.leading), help: shellString("chatShowList", "Show chat list")) { visibility.listHidden = false }
-            }
             Button(action: showInfo) {
                 HStack(spacing: theme.spacing.s12) {
                     ChatAvatarView(chat: chat, title: title, users: users, size: .large)
@@ -36,7 +33,7 @@ struct ChatThreadHeader: View {
             AppIconButton("magnifyingglass", help: shellString("chatSearchMessages", "Search in conversation…")) { session.toggleSearch() }
                 .background(session.search.isOpen ? theme.colors.sel : .clear, in: RoundedRectangle(cornerRadius: theme.radii.md))
             ChatMuteToggle(model: model, chat: chat)
-            AppIconButton(infoShown ? AppPanelIcon.collapse(.trailing) : AppPanelIcon.expand(.trailing), help: infoToggleHelp) { toggleInfo() }
+            AppIconButton(panel: infoShown ? .collapse : .expand, side: .trailing, help: infoToggleHelp) { toggleInfo() }
         }
         .padding(.horizontal, theme.spacing.s20)
         .frame(height: ChatShellLayout.headerHeight)

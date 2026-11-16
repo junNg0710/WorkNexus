@@ -2,25 +2,9 @@ import CoreTools
 import CoreUI
 import SwiftUI
 
-private struct PaneCollapseKey: EnvironmentKey { static let defaultValue: (() -> Void)? = nil }
-public extension EnvironmentValues {
-    /// Folds the pane the shell hosts into its strip (`ToolModule.paneCollapsible`); nil when the pane cannot fold.
-    /// `ToolPaneScaffold` draws the collapse button in its header while this is set.
-    var paneCollapse: (() -> Void)? {
-        get { self[PaneCollapseKey.self] }
-        set { self[PaneCollapseKey.self] = newValue }
-    }
-}
-
-public extension View {
-    /// Lets the pane under this view fold itself (`\.paneCollapse`).
-    func paneCollapse(_ action: @escaping () -> Void) -> some View { environment(\.paneCollapse, action) }
-}
-
 /// Ported from: shared/shell_pane (ToolPaneScaffold, FeatureTabStrip, ScopeFilterField, ScopeRow).
 public struct ToolPaneScaffold<Content: View>: View {
     @Environment(\.appTheme) private var theme
-    @Environment(\.paneCollapse) private var collapse
     let title: String; let subtitle: String?; let content: Content
     public init(title: String, subtitle: String? = nil, @ViewBuilder content: () -> Content) {
         self.title = title; self.subtitle = subtitle; self.content = content()
@@ -33,7 +17,6 @@ public struct ToolPaneScaffold<Content: View>: View {
                     if let subtitle { Text(subtitle).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx) }
                 }
                 Spacer(minLength: 0)
-                if let collapse { AppIconButton(AppPanelIcon.collapse(.leading), help: appString("paneCollapse", "Collapse sidebar"), action: collapse) }
             }
             .padding(theme.spacing.s12)
             Divider().overlay(theme.colors.line)

@@ -31,6 +31,29 @@ extension ShellModel {
     }
 
     /// Opens `section` of a rail-section tool on the remembered (else first) account.
+    /// The key of the nav pane of the place on screen (`AppNavController.collapsedPanes`): each place folds on its own.
+    public var currentPaneKey: String {
+        switch nav.state.rail {
+        case .workspace: "workspace"
+        case .settings: "settings"
+        case .chat: "chat"
+        case .account(let id): AppNavController.paneKey(id, nav.location(for: id).section)
+        }
+    }
+
+    public var currentPaneFolded: Bool { nav.isPaneCollapsed(currentPaneKey) }
+
+    /// Folds the nav pane of the place on screen away, or brings it back: what a second click on the place's rail button does.
+    public func toggleCurrentPane() {
+        let key = currentPaneKey
+        nav.setPane(key, collapsed: !nav.isPaneCollapsed(key))
+    }
+
+    /// A click on a rail button: it goes to its place, or - when that place is the one on screen - folds / unfolds its pane.
+    public func railTap(isCurrent: Bool, go: () -> Void) {
+        if isCurrent && !miniAppOnScreen { toggleCurrentPane() } else { go() }
+    }
+
     public func openRailSection(_ section: SectionID, tool: any ToolModule, accounts ofTool: [Account]) {
         let id = railAccountMemory[tool.providerType].flatMap { r in ofTool.contains { $0.id == r } ? r : nil } ?? ofTool[0].id
         nav.select(.account(id))

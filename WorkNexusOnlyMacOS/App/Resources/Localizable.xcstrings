@@ -27677,6 +27677,23 @@
         }
       }
     },
+    "nativeAppBadgeTip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ in its Dock badge"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · badge trên Dock: %2$@"
+          }
+        }
+      }
+    },
     "nativeAppChooseOther": {
       "extractionState": "manual",
       "localizations": {
@@ -27983,6 +28000,23 @@
         }
       }
     },
+    "nativeAppShowBadges": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show notification badges…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện badge thông báo…"
+          }
+        }
+      }
+    },
     "newBugOrTask": {
       "extractionState": "manual",
       "localizations": {
@@ -28132,6 +28166,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kết nối"
+          }
+        }
+      }
+    },
+    "railHidePanel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "click again to hide the side panel"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bấm lần nữa để ẩn bảng bên cạnh"
+          }
+        }
+      }
+    },
+    "railShowPanel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "click again to show the side panel"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bấm lần nữa để mở bảng bên cạnh"
           }
         }
       }
@@ -28506,6 +28574,635 @@
           "stringUnit": {
             "state": "translated",
             "value": "Còn lại / ước lượng"
+          }
+        }
+      }
+    },
+    "tipBulkAssign": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give every selected ticket to one person"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giao mọi ticket đã chọn cho một người"
+          }
+        }
+      }
+    },
+    "tipBulkClear": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop the selection (Esc)"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bỏ chọn (Esc)"
+          }
+        }
+      }
+    },
+    "tipBulkClose": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close the selected tickets ZenTao lets be closed (a resolved bug, a finished or cancelled task); the others are skipped"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đóng các ticket đã chọn mà ZenTao cho đóng (bug đã resolve, task đã xong hoặc đã hủy); còn lại bị bỏ qua"
+          }
+        }
+      }
+    },
+    "tipBulkPriority": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set the priority of every selected ticket"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đặt độ ưu tiên cho mọi ticket đã chọn"
+          }
+        }
+      }
+    },
+    "tipBulkSelectAll": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select every ticket the board shows now"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chọn mọi ticket board đang hiện"
+          }
+        }
+      }
+    },
+    "tipBulkStop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop after the ticket being changed; the rest stay as they are"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dừng sau ticket đang đổi; phần còn lại giữ nguyên"
+          }
+        }
+      }
+    },
+    "tipChipDueSoon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open tickets due today or within the next %1$@ days"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket còn mở đến hạn hôm nay hoặc trong %1$@ ngày tới"
+          }
+        }
+      }
+    },
+    "tipChipHigh": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open tickets of priority 1 or 2"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket còn mở có ưu tiên 1 hoặc 2"
+          }
+        }
+      }
+    },
+    "tipChipNoDeadline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open tickets with no deadline set"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket còn mở chưa đặt hạn"
+          }
+        }
+      }
+    },
+    "tipChipNoEstimate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks with no estimate in hours"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task chưa ước lượng giờ"
+          }
+        }
+      }
+    },
+    "tipChipOverdue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open tickets whose deadline day has passed"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket còn mở đã quá ngày hạn"
+          }
+        }
+      }
+    },
+    "tipChipStale": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open tickets not updated for %1$@ days or more"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket còn mở không cập nhật từ %1$@ ngày trở lên"
+          }
+        }
+      }
+    },
+    "tipChipSuffix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The number is how many it would keep; click again to turn it off."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con số là số ticket còn lại nếu bấm; bấm lần nữa để tắt."
+          }
+        }
+      }
+    },
+    "tipChipUnassigned": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open tickets nobody holds"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket còn mở chưa giao cho ai"
+          }
+        }
+      }
+    },
+    "tipChipWeek": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open tickets due this week, Monday to Sunday"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket còn mở đến hạn trong tuần này, thứ Hai đến Chủ nhật"
+          }
+        }
+      }
+    },
+    "tipClearLeader": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off the picked people, the chips and the typed filter"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tắt người đã chọn, các chip và chữ đã gõ"
+          }
+        }
+      }
+    },
+    "tipDelay": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Past its deadline: the deadline day has gone by"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quá hạn: đã qua ngày hạn"
+          }
+        }
+      }
+    },
+    "tipDueSoon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The deadline is close"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sắp đến hạn"
+          }
+        }
+      }
+    },
+    "tipDueToday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The deadline is today"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hạn là hôm nay"
+          }
+        }
+      }
+    },
+    "tipEveryone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show everyone's tickets. The number is how many are still open"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện ticket của mọi người. Con số là số còn mở"
+          }
+        }
+      }
+    },
+    "tipFilters": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by status, assignee, priority, module…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lọc theo trạng thái, người nhận, độ ưu tiên, module…"
+          }
+        }
+      }
+    },
+    "tipHoursLeft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hours still to do on this task"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Số giờ còn phải làm của task này"
+          }
+        }
+      }
+    },
+    "tipLeaderFilter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Narrows the board as you type: by id, title or the person who holds it"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thu hẹp board khi gõ: theo id, tiêu đề hoặc người đang giữ"
+          }
+        }
+      }
+    },
+    "tipLoadAll": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the rest of the open views, so the counts and filters cover every ticket and not only the first pages"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đọc nốt các view đang mở để số đếm và bộ lọc tính trên mọi ticket, không chỉ các trang đầu"
+          }
+        }
+      }
+    },
+    "tipNewBug": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File a new bug in the open product"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tạo bug mới trong product đang mở"
+          }
+        }
+      }
+    },
+    "tipNewTask": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a new task in the open execution"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tạo task mới trong execution đang mở"
+          }
+        }
+      }
+    },
+    "tipPet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TBChat: click to wave, drag to move it. Turn it off in Settings"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TBChat: bấm để vẫy tay, kéo để đổi chỗ. Tắt trong Cài đặt"
+          }
+        }
+      }
+    },
+    "tipPriority": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priority %1$@ (1 is the most urgent)"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ưu tiên %1$@ (1 là gấp nhất)"
+          }
+        }
+      }
+    },
+    "tipScopeAll": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every ticket of this execution, whoever holds it"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mọi ticket của execution này, của bất kỳ ai"
+          }
+        }
+      }
+    },
+    "tipScopeAllBugs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every bug of this product that is not closed"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mọi bug chưa đóng của product này"
+          }
+        }
+      }
+    },
+    "tipScopeRelated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only tickets that concern you: assigned to you, opened by you or resolved by you"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chỉ ticket liên quan đến bạn: giao cho bạn, bạn tạo hoặc bạn đã resolve"
+          }
+        }
+      }
+    },
+    "tipScopeWithClosed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also show the closed bugs, in the Closed column"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện cả bug đã đóng, trong cột Closed"
+          }
+        }
+      }
+    },
+    "tipSearch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick search of the tickets already loaded (⌘K). Type an id such as #123 and press Return to look it up on the server"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tìm nhanh trong ticket đã tải (⌘K). Gõ id như #123 rồi nhấn Return để tìm trên máy chủ"
+          }
+        }
+      }
+    },
+    "tipSeverity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Severity: %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mức nghiêm trọng: %1$@"
+          }
+        }
+      }
+    },
+    "tipTeamRetry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the work of the people that failed once more"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đọc lại việc của những người bị lỗi"
+          }
+        }
+      }
+    },
+    "tipViewBoard": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show as a kanban board: a column per status"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện dạng bảng kanban: mỗi trạng thái một cột"
+          }
+        }
+      }
+    },
+    "tipViewList": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show as a table with sortable columns"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện dạng bảng, các cột sắp xếp được"
           }
         }
       }

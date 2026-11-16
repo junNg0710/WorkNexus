@@ -27,6 +27,7 @@ struct ZentaoLeaderBar: View {
                 AppSearchField(text: keyword, hint: appString("leaderFilterHint", "Filter by id, title or person"),
                                height: theme.sizes.control32 - theme.spacing.s4)
                     .frame(minWidth: 150, idealWidth: 220, maxWidth: 260)
+                    .help(appString("tipLeaderFilter", "Narrows the board as you type: by id, title or the person who holds it"))
             }
         }
         .padding(.top, theme.spacing.s6)

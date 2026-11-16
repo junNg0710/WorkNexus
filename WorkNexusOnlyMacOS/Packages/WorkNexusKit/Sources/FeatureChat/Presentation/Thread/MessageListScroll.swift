@@ -63,6 +63,10 @@ struct MessageListScroll: View {
                 }
                 .scrollTargetLayout()
                 .padding(.vertical, theme.spacing.s16)
+                // A readable column: on a wide window the messages stay together in the middle instead of one side
+                // clinging to each edge. The wallpaper and the scroll bar keep the full width.
+                .frame(maxWidth: ChatShellLayout.messageColumnWidth)
+                .frame(maxWidth: .infinity)
             }
             .defaultScrollAnchor(.bottom)
             .onScrollTargetVisibilityChange(idType: String.self, threshold: 0.1) { visibleIds = Set($0) }

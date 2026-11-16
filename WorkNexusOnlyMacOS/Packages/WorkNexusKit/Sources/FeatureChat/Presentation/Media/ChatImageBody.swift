@@ -27,8 +27,8 @@ struct ChatImageBody: View {
     private var isSticker: Bool {
         let ext = (image.name as NSString).pathExtension.lowercased()
         if ext == "tgs" { return true }
-        guard ext == "webp", let w = image.width, let h = image.height else { return false }
-        return max(w, h) <= 512   // a sticker-sized webp (Telegram stickers are 512 px at most)
+        guard ext == "webp" || ext == "gif", let w = image.width, let h = image.height else { return false }
+        return max(w, h) <= 512   // a sticker-sized webp / gif (Telegram stickers are 512 px at most)
     }
 
     /// The image scaled down (never up) into the max box, or a fixed placeholder when the sender did not record a size.
@@ -61,6 +61,8 @@ struct ChatImageBody: View {
     @ViewBuilder private var content: some View {
         if let data {
             if isSticker { StickerBytesView(data: data, animated: true) }
+            // A GIF (or an animated WebP) sent as a picture plays in the chat.
+            else if StickerDecoder.isAnimated(data) { FrameAnimatedImage(data: data, animated: true) }
             else if let img = Self.downsampled(data, maxPixel: size.width * 2) { Image(nsImage: img).resizable().scaledToFill() }
             else { Placeholder(broken: true) }
         } else {

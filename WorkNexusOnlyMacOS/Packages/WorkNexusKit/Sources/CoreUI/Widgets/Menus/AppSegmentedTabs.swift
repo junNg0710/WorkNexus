@@ -13,9 +13,12 @@ public struct AppSegmentedTab: Identifiable {
     public var loading: Bool
     /// SF Symbol shown before the label when set.
     public var icon: String?
+    /// What the tab shows, said when the pointer rests on it.
+    public var help: String?
 
-    public init(label: String, active: Bool, count: Int? = nil, loading: Bool = false, icon: String? = nil, onTap: @escaping () -> Void) {
-        self.label = label; self.active = active; self.count = count; self.loading = loading; self.icon = icon; self.onTap = onTap
+    public init(label: String, active: Bool, count: Int? = nil, loading: Bool = false, icon: String? = nil, help: String? = nil,
+                onTap: @escaping () -> Void) {
+        self.label = label; self.active = active; self.count = count; self.loading = loading; self.icon = icon; self.help = help; self.onTap = onTap
     }
 }
 
@@ -52,6 +55,6 @@ private struct SegmentView: View {
             }
             .padding(.horizontal, theme.spacing.s12).frame(maxHeight: .infinity)
         }
-        .help(iconOnly && tab.icon != nil ? tab.label : "")
+        .help(tab.help ?? (iconOnly && tab.icon != nil ? tab.label : ""))
     }
 }

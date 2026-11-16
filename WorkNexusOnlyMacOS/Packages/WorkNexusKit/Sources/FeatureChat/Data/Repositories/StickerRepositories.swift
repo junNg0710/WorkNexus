@@ -67,8 +67,10 @@ final class LocalStickerRepository: StickerRepository, @unchecked Sendable {
     func add(bytes: Data, name: String) async -> Outcome<ChatSticker> {
         guard !bytes.isEmpty else { return .failure(.unexpected("Cannot keep an empty sticker")) }
         var data = bytes, fileName = name
+        // An animated image (a GIF, an animated WebP) is kept as it came: fitting it would keep one frame.
+        let frames = CGImageSourceCreateWithData(bytes as CFData, nil).map(CGImageSourceGetCount) ?? 0
         // An image that cannot be fitted is still worth keeping as it came.
-        if let fitted = await converter?.imageToWebp(image: bytes).value {
+        if frames <= 1, let fitted = await converter?.imageToWebp(image: bytes).value {
             data = fitted
             fileName = ((name as NSString).deletingPathExtension) + ".png"
         }

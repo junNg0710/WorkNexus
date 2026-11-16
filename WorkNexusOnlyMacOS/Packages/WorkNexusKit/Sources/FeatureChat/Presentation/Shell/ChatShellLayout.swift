@@ -10,6 +10,8 @@ struct ChatShellLayout: Equatable {
     static let messagesMinWidth: CGFloat = 520
     static let panelRoom: CGFloat = 380
     static let sidePanelWidth: CGFloat = 340
+    /// The widest the column of messages grows; beyond it the window's extra width is margin.
+    static let messageColumnWidth: CGFloat = 1040
     static let headerHeight: CGFloat = 68
     static let subHeaderHeight: CGFloat = 56
 

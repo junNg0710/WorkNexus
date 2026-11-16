@@ -6,7 +6,6 @@ import SwiftUI
 /// Ported from: lib/features/chat/presentation/widgets/conversation_list_pane.dart
 struct ConversationListPane: View {
     @Environment(\.appTheme) private var theme
-    @Environment(\.chatPanelVisibility) private var visibility
     let model: ChatShellModel
     let compact: Bool
 
@@ -22,7 +21,6 @@ struct ConversationListPane: View {
                 }
                 .disabled(model.selfUserId == nil)
                 AppIconButton("square.and.pencil", help: shellString("chatNewChat", "New chat")) { model.showNewChat = true }
-                AppIconButton(AppPanelIcon.collapse(.leading), help: shellString("chatHideList", "Hide chat list")) { visibility.listHidden = true }
             }
             .padding(.horizontal, compact ? theme.spacing.s12 : theme.spacing.s20).padding(.vertical, theme.spacing.s12)
             Divider().overlay(theme.colors.line)

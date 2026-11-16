@@ -122,4 +122,51 @@ final class ZentaoTeamStateTests: XCTestCase {
         await env.wait { env.state.taskTeam == nil }
         XCTAssertNil(env.state.taskTeam)
     }
+
+    // MARK: Derived values are worked out once per change
+
+    func testTheBoardIsBuiltOnceHoweverManyViewsAskAndAgainWhenAnInputChanges() async {
+        let env = await env()
+        env.state.openExecution(env.execution("e1", "Sprint 1"))
+        env.pages.script = ["wait": [boardTask("4", execution: "e1", assignee: "an")], "doing": [boardTask("1", execution: "e1", providerStatus: "doing", status: .inprogress, assignee: "an")]]
+        env.state.reopenTaskStreams()
+        await env.wait { env.state.taskBoard.scoped.count == 2 }
+        let cache = env.state.taskCache
+        let before = cache.builds
+        // The columns, the header's count, the bulk bar, the people strip and the chips all ask on one redraw.
+        for _ in 0..<20 {
+            _ = ZentaoBoards.taskBoard(env.state); _ = env.state.shownTickets(bugs: false)
+            _ = env.state.workload(bugs: false); _ = env.state.quickCounts(bugs: false); _ = env.state.leaderPool(bugs: false)
+        }
+        XCTAssertEqual(cache.builds - before, 4, "board, pool, workload and counts: once each")
+        // A chip is an input: everything is worked out again, once.
+        env.state.updateLeader(bugs: false) { $0.quick = [.unassigned] }
+        let afterChip = cache.builds
+        for _ in 0..<5 { _ = ZentaoBoards.taskBoard(env.state); _ = env.state.quickCounts(bugs: false) }
+        XCTAssertEqual(cache.builds - afterChip, 3, "board, counts and the pool they narrow")
+        XCTAssertEqual(ZentaoBoards.taskBoard(env.state).total, 0)
+        // And so is the order of the cards.
+        env.state.updateLeader(bugs: false) { $0.quick = [] }
+        env.state.columnSort = .deadline
+        let afterSort = cache.builds
+        _ = ZentaoBoards.taskBoard(env.state); _ = ZentaoBoards.taskBoard(env.state)
+        XCTAssertEqual(cache.builds - afterSort, 1)
+        XCTAssertEqual(ZentaoBoards.taskBoard(env.state).total, 2)
+    }
+
+    /// 5 000 tickets through every chip count and the workload: one pass each, well inside a frame or two.
+    func testCountingManyTicketsIsQuick() {
+        let today = AppDateFormatBridge.iso(Date())
+        let many = (0..<5_000).map { i in
+            boardTask("\(i)", providerStatus: i % 3 == 0 ? "doing" : "wait", status: i % 3 == 0 ? .inprogress : .todo, deadline: i % 4 == 0 ? today : nil,
+                      assignee: ["an", "binh", "chi", nil][i % 4])
+        }
+        let started = Date()
+        let counts = CountQuickFilters()(many)
+        let load = SummarizeWorkload()(many)
+        let took = Date().timeIntervalSince(started)
+        XCTAssertEqual(counts[.unassigned], 1_250)
+        XCTAssertEqual(load.reduce(0) { $0 + $1.open }, 5_000)
+        XCTAssertLessThan(took, 0.5, "took \(took)s")
+    }
 }

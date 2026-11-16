@@ -89,7 +89,7 @@ private struct MessageBubbleBody: View {
                 if let footer { footer.padding(.top, theme.spacing.s4) }
             }
             .padding(.leading, gutter.leading).padding(.trailing, gutter.trailing)
-            .frame(maxWidth: BubbleLayout.maxMediaWidth, alignment: l.alignEnd ? .trailing : .leading)
+            .hugging(maxWidth: BubbleLayout.maxMediaWidth)
         } else {
             let wide = ChatTextLabels.showsWide(message)
             MessageBubbleBox(
@@ -104,7 +104,7 @@ private struct MessageBubbleBody: View {
             }
             // A tailed box makes its own room for the tail.
             .padding(.leading, l.tailed ? 0 : gutter.leading).padding(.trailing, l.tailed ? 0 : gutter.trailing)
-            .frame(maxWidth: wide ? style.maxWidth * BubbleLayout.wideBubbleFactor : style.maxWidth, alignment: l.alignEnd ? .trailing : .leading)
+            .hugging(maxWidth: wide ? style.maxWidth * BubbleLayout.wideBubbleFactor : style.maxWidth)
         }
     }
 }

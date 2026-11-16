@@ -35,7 +35,7 @@ struct ChatStickerGrid: View {
                         }.aspectRatio(1, contentMode: .fit)
                     }
                     ForEach(stickers) { s in
-                        StickerTile(help: s.name, action: { onPick(s) }) { ChatStickerImage(sticker: s).padding(theme.spacing.s4) }
+                        StickerTile(help: s.name, action: { onPick(s) }) { ChatStickerImage(sticker: s, animated: true).padding(theme.spacing.s4) }
                             .aspectRatio(1, contentMode: .fit)
                             .contextMenu {
                                 if editable {

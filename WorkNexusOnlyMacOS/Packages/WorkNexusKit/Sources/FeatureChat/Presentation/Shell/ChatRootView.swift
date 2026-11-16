@@ -33,7 +33,7 @@ public struct ChatRootView: View {
 struct ChatShellView: View {
     @Environment(\.appTheme) private var theme
     @State private var model: ChatShellModel
-    @State private var visibility = ChatPanelVisibility()
+    private let visibility = ChatPanelVisibility.shared
     let openChat: Binding<String?>?
 
     init(account: Account, services: ChatServices, events: ChatShellEvents?, openChat: Binding<String?>?) {
@@ -94,7 +94,6 @@ struct ChatShellView: View {
 /// Right of the list: the open chat, a spinner while its conversation is not known yet, or the "select" hint.
 private struct ChatThreadArea: View {
     @Environment(\.appTheme) private var theme
-    @Environment(\.chatPanelVisibility) private var visibility
     let model: ChatShellModel
 
     var body: some View {
@@ -109,12 +108,5 @@ private struct ChatThreadArea: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(theme.colors.bg)
-        // With the list collapsed and no chat open there is no thread header to bring the list back from.
-        .overlay(alignment: .topLeading) {
-            if visibility.listHidden && model.thread == nil {
-                AppIconButton(AppPanelIcon.expand(.leading), help: shellString("chatShowList", "Show chat list")) { visibility.listHidden = false }
-                    .padding(theme.spacing.s12)
-            }
-        }
     }
 }

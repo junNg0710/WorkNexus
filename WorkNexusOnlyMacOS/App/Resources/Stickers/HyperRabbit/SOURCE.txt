@@ -1,0 +1,4 @@
+Hyper Rabbit - 29 animated stickers.
+Source: https://getstickerpack.com/stickers/hyper-rabbit-1 (publisher ashleypy94 on getstickerpack.com).
+The artwork belongs to its author. The originals (512x512 GIF) were converted to 256x256 animated WebP to keep the app small.
+This folder is macOS-only: Scripts/sync-assets.sh leaves it alone when it syncs the Flutter app's stickers.
