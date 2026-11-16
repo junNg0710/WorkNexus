@@ -117,7 +117,8 @@ public final class MiniAppsFeature: @unchecked Sendable {
         let nativeRepo = GRDBNativeAppRepository(database: database)
         let nativeApps = NativeAppsModel(repository: nativeRepo, add: AddNativeApp(nativeRepo, appBundleReader), remove: RemoveNativeApp(nativeRepo),
                                          move: MoveNativeApp(nativeRepo), installed: installedApps ?? InstalledAppsScanner(reader: appBundleReader),
-                                         launcher: launcher ?? WorkspaceAppLauncher(), dock: DockBadgeReader())
+                                         launcher: launcher ?? WorkspaceAppLauncher(), dock: DockBadgeReader(),
+                                         offerMemory: UserDefaultsBadgeOfferMemory())
         return MiniAppsFeature(model: model, nativeApps: nativeApps, apps: apps, permissions: permissions, trusted: trusted, cookieImports: imports,
                                browserCookies: LocalBrowserCookieRepository(chromium: chromium, firefox: FirefoxCookieReader(), safari: SafariCookieReader()),
                                webViewCookies: webViewCookies, browsingData: WKMiniAppBrowsingDataRepository(), add: add, update: update,

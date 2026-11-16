@@ -31,6 +31,7 @@ struct ThreadScrollMetrics: Equatable {
 /// pages added above leave the reader where they were.
 struct MessageListScroll: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.chatShellLayout) private var layout
     let ctx: ThreadContext
     let showSenders: Bool
     @State private var metrics = ThreadScrollMetrics()
@@ -65,7 +66,7 @@ struct MessageListScroll: View {
                 .padding(.vertical, theme.spacing.s16)
                 // A readable column: on a wide window the messages stay together in the middle instead of one side
                 // clinging to each edge. The wallpaper and the scroll bar keep the full width.
-                .frame(maxWidth: ChatShellLayout.messageColumnWidth)
+                .frame(maxWidth: layout.messageColumn)
                 .frame(maxWidth: .infinity)
             }
             .defaultScrollAnchor(.bottom)

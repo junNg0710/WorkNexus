@@ -2,7 +2,8 @@
 import CoreUI
 import SwiftUI
 
-/// Every sticker set: the grid of the chosen set over the bar of sets. A click sends (`onPick`).
+/// Every sticker set: the grid of the chosen set over the bar of sets. A click sends (`onPick`). The bar starts with the
+/// stickers sent lately (not in the Flutter app), once there are any.
 struct ChatStickerPanel: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatServices) private var services
@@ -38,16 +39,24 @@ struct ChatStickerPanel: View {
 
     var body: some View {
         let sets = sets
+        let recents = store.recents(in: stickers)
+        let recentPack = StickerStore.recentPack
+        let known: (String) -> Bool = { $0.isEmpty || sets.all[$0] != nil || ($0 == recentPack && !recents.isEmpty) }
         let last = store.lastPack
-        let current = pack ?? (last.map { $0.isEmpty || sets.all[$0] != nil ? $0 : nil } ?? nil)
+        let current = (pack.flatMap { known($0) ? $0 : nil }) ?? (last.flatMap { known($0) ? $0 : nil })
             ?? (sets.mine.isEmpty && !sets.all.isEmpty ? (sets.imported + sets.bundled).first!.0 : "")
+        let onRecent = current == recentPack
         VStack(spacing: 0) {
-            ChatStickerGrid(stickers: current.isEmpty ? sets.mine : sets.all[current] ?? [], editable: current.isEmpty, store: store,
-                            onPick: { store.remember($0.pack); onPick($0) }, onError: onError)
+            ChatStickerGrid(stickers: onRecent ? recents : current.isEmpty ? sets.mine : sets.all[current] ?? [], editable: current.isEmpty, store: store,
+                            // Sent from the recent ones, the bar stays on them; from a set, that set is the one to reopen on.
+                            onPick: { if !onRecent { store.remember($0.pack) }; store.noteSent($0); onPick($0) }, onError: onError)
+                // The recent grid keeps its identity while its order changes (the sticker just sent moves to the front).
                 .id(current)
             Rectangle().fill(theme.colors.line).frame(height: theme.borders.hairline)
             ChatStickerPackBar(
-                packs: [ChatStickerPackCover(pack: "", title: nil, cover: nil, removable: false)]
+                packs: (recents.isEmpty ? [] : [ChatStickerPackCover(pack: recentPack, title: appString("chatRecentStickers", "Recently sent"),
+                                                                     cover: nil, removable: false, symbol: "clock.arrow.circlepath")])
+                    + [ChatStickerPackCover(pack: "", title: nil, cover: nil, removable: false)]
                     + sets.imported.map { ChatStickerPackCover(pack: $0.0, title: $0.1.first?.packTitle, cover: $0.1.first, removable: true) }
                     + sets.bundled.map { ChatStickerPackCover(pack: $0.0, title: nil, cover: $0.1.first, removable: false) },
                 importing: jobs.running, selected: current,

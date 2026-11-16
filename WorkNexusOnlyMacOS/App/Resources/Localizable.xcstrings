@@ -24787,6 +24787,23 @@
         }
       }
     },
+    "chatRecentStickers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently sent"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã gửi gần đây"
+          }
+        }
+      }
+    },
     "chatSelectMultiple": {
       "extractionState": "manual",
       "localizations": {
@@ -27809,6 +27826,125 @@
           "stringUnit": {
             "state": "translated",
             "value": "Đã thêm"
+          }
+        }
+      }
+    },
+    "nativeAppBadgeOfferLost": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS stopped letting WorkNexus read the Dock's badges - an update counts as a new app. In Privacy & Security → Accessibility, remove WorkNexusMac with −, then add it again and turn it on."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS đã ngừng cho WorkNexus đọc badge trên Dock - mỗi bản cập nhật được coi là một app mới. Trong Privacy & Security → Accessibility, xoá WorkNexusMac bằng nút −, rồi thêm lại và bật lên."
+          }
+        }
+      }
+    },
+    "nativeAppBadgeOfferMessage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Mac apps on the rail can show the same unread count as their Dock icon. macOS allows that only to apps turned on under Privacy & Security → Accessibility."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Các app Mac trên rail có thể hiện số chưa đọc giống icon trên Dock. macOS chỉ cho phép khi WorkNexusMac được bật trong Privacy & Security → Accessibility."
+          }
+        }
+      }
+    },
+    "nativeAppBadgeOfferTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show notification badges on the rail?"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện badge thông báo trên rail?"
+          }
+        }
+      }
+    },
+    "nativeAppBadgeOpenSettings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open System Settings"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở System Settings"
+          }
+        }
+      }
+    },
+    "nativeAppBadgeSettingsOff": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off: macOS has not let WorkNexus read the Dock. Turn WorkNexusMac on under Privacy & Security → Accessibility. Already on there? Remove it with − and add it again - an update counts as a new app."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang tắt: macOS chưa cho WorkNexus đọc Dock. Bật WorkNexusMac trong Privacy & Security → Accessibility. Đã bật rồi? Xoá bằng nút − và thêm lại - mỗi bản cập nhật được coi là một app mới."
+          }
+        }
+      }
+    },
+    "nativeAppBadgeSettingsOn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The rail shows each app's Dock badge."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rail đang hiện badge Dock của từng app."
+          }
+        }
+      }
+    },
+    "nativeAppBadgeSettingsTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notification badges"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Badge thông báo"
           }
         }
       }

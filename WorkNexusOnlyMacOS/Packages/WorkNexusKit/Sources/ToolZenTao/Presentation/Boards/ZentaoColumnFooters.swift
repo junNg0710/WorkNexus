@@ -22,10 +22,14 @@ struct ZentaoTaskColumnFooter: View {
     let state: ZentaoUIState; let column: ZenTaoTaskColumn; let visible: Int
 
     var body: some View {
-        PagedColumnFooter(stream: state.taskStream(column), visible: visible, filtered: state.taskBoard.filter.narrowsTickets,
-                          errorText: appString("taskColumnLoadFailed", "Couldn't load tasks"),
-                          onLoadMore: { Task { await state.taskStreams.loadMore(column, visible: visible) } },
-                          onRetry: { Task { await state.taskStreams.retry(column) } })
+        // A status the filter leaves out can show nothing however many pages are read: its view is not scanned.
+        let statuses = state.taskBoard.filter.zentaoStatuses
+        if statuses.isEmpty || statuses.contains(column.name) {
+            PagedColumnFooter(stream: state.taskStream(column), visible: visible, filtered: state.taskBoard.filter.narrowsTickets,
+                              errorText: appString("taskColumnLoadFailed", "Couldn't load tasks"),
+                              onLoadMore: { Task { await state.taskStreams.loadMore(column, visible: visible) } },
+                              onRetry: { Task { await state.taskStreams.retry(column) } })
+        }
     }
 }
 

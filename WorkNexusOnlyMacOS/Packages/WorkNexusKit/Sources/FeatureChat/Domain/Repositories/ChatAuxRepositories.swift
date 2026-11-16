@@ -42,6 +42,15 @@ public protocol StickerRepository: Sendable {
     func removePack(_ pack: String) async -> Outcome<Void>
     func lastPack() async -> Outcome<String?>
     func rememberPack(_ pack: String) async -> Outcome<Void>
+    /// The stickers sent lately (`ChatSticker.recentKey`), newest first.
+    func recentStickers() async -> Outcome<[String]>
+    func rememberRecentStickers(_ keys: [String]) async -> Outcome<Void>
+}
+
+public extension StickerRepository {
+    /// A store that keeps none.
+    func recentStickers() async -> Outcome<[String]> { .success([]) }
+    func rememberRecentStickers(_ keys: [String]) async -> Outcome<Void> { .success(()) }
 }
 
 /// Ported from: lib/features/chat/domain/repositories/wallpaper_repository.dart

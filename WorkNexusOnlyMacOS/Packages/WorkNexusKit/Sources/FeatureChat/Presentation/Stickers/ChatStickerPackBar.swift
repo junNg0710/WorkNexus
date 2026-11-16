@@ -8,6 +8,8 @@ struct ChatStickerPackCover: Identifiable, Equatable {
     var title: String?
     var cover: ChatSticker?
     var removable: Bool
+    /// The symbol a button without a cover shows (nil: the heart of the user's own stickers).
+    var symbol: String?
     var id: String { pack }
 }
 
@@ -25,7 +27,7 @@ struct ChatStickerPackBar: View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: theme.spacing.s4) {
-                    ForEach(Array(packs.enumerated()), id: \.element.id) { i, p in
+                    ForEach(packs) { p in
                         PackButton(pack: p, selected: p.pack == selected) { onSelect(p.pack) }
                             .id(p.pack)
                             .contextMenu {
@@ -33,7 +35,8 @@ struct ChatStickerPackBar: View {
                                     Button(role: .destructive) { onRemove(p) } label: { Label(appString("stickerPackRemove", "Remove sticker set"), systemImage: "trash") }
                                 }
                             }
-                        if i == 0 { ForEach(importing) { ImportingChip(job: $0) } }
+                        // Imports in progress follow the user's own stickers (the set with no id).
+                        if p.pack.isEmpty { ForEach(importing) { ImportingChip(job: $0) } }
                     }
                     ComposerToolButton(systemImage: "plus", help: appString("stickerImportTitle", "Add a Telegram sticker set"), action: onImport)
                 }
@@ -56,14 +59,14 @@ private struct PackButton: View {
         Button(action: action) {
             Group {
                 if let cover = pack.cover { ChatStickerImage(sticker: cover).padding(theme.spacing.s4) }
-                else { Image(systemName: "heart").foregroundStyle(selected ? theme.colors.accent : theme.colors.tx2) }
+                else { Image(systemName: pack.symbol ?? "heart").foregroundStyle(selected ? theme.colors.accent : theme.colors.tx2) }
             }
             .frame(width: theme.sizes.control36, height: theme.sizes.control36)
             .background(selected ? theme.colors.sel : .clear, in: RoundedRectangle(cornerRadius: theme.radii.md))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help(pack.cover == nil ? appString("chatMyStickers", "My stickers") : (pack.title ?? pack.pack))
+        .help(pack.title ?? (pack.cover == nil ? appString("chatMyStickers", "My stickers") : pack.pack))
     }
 }
 

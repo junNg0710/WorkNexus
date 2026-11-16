@@ -6,7 +6,7 @@ import SwiftUI
 
 /// Ported from: lib/shared/detail/presentation/widgets/{detail_header,detail_header_top_bar,detail_header_title,detail_back_button,
 /// detail_header_more_button}.dart
-/// Top of the detail panel: breadcrumb (workspace / ref) with back, edit, open-in-browser, more and close; the title;
+/// Top of the detail panel: breadcrumb (workspace / ref) with back, edit, copy-link, open-in-browser, more and close; the title;
 /// the people (assigned to / opened by) and the tool's action buttons; the tool's header extras above the title.
 public struct DetailHeader: View {
     @Environment(\.appTheme) private var theme
@@ -56,6 +56,8 @@ struct DetailHeaderTopBar: View {
                 AppIconButton("pencil", help: appString("edit", "Edit"), outlined: true) { controller.nav.openEditor(route) }
             }
             if !url.isEmpty {
+                // Its own button, as on a merge request's header: the link is what gets pasted into chat all day.
+                CopyLinkButton(url: url)
                 AppIconButton("arrow.up.right.square", help: appString("openInBrowser", "Open in browser"), outlined: true) {
                     if let open = controller.extensions.openLink { open(url) } else { openLinkExternally(url, inApp: false) }
                 }
@@ -80,9 +82,6 @@ struct DetailHeaderMoreButton: View {
         Menu {
             Button { model.refresh(ticket) } label: { Label(appString("refresh", "Refresh"), systemImage: "arrow.triangle.2.circlepath") }
             Button { copy(ticketTitleWithRef(ticket), appString("titleCopied", "Title copied")) } label: { Label(appString("copyTitle", "Copy title"), systemImage: "doc.on.doc") }
-            if let url = ticket.url, !url.isEmpty {
-                Button { copy(url, appString("linkCopied", "Copied!")) } label: { Label(appString("copyLink", "Copy link"), systemImage: "link") }
-            }
         } label: {
             Image(systemName: "ellipsis").font(.system(size: theme.sizes.icon16)).foregroundStyle(theme.colors.tx2)
                 .frame(width: theme.sizes.control32, height: theme.sizes.control32)

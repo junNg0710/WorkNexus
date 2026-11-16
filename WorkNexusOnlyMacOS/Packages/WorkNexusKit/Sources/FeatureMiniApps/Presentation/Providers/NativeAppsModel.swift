@@ -40,6 +40,8 @@ public final class NativeAppsModel {
     public private(set) var badges: [String: String] = [:]
     /// Whether macOS lets the app read the Dock's badges (Privacy & Security → Accessibility).
     public private(set) var badgesAllowed = false
+    /// The offer to turn the badges on, when one is due (see `BadgeOffer`); nil once answered or while they work.
+    public private(set) var badgeOffer: BadgeOffer?
     /// How often the Dock is read for badges.
     static let badgeInterval: Duration = .seconds(4)
 
@@ -50,14 +52,17 @@ public final class NativeAppsModel {
     private let installedSource: InstalledAppsSource
     private let launcher: AppLauncher
     private let dock: DockBadgeSource?
+    private let offerMemory: BadgeOfferMemory
     @ObservationIgnored private var started = false
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
     @ObservationIgnored private var icons: [String: NSImage] = [:]
 
     init(repository: NativeAppRepository, add: AddNativeApp, remove: RemoveNativeApp, move: MoveNativeApp,
-         installed: InstalledAppsSource, launcher: AppLauncher, dock: DockBadgeSource? = nil) {
+         installed: InstalledAppsSource, launcher: AppLauncher, dock: DockBadgeSource? = nil,
+         offerMemory: BadgeOfferMemory? = nil) {
         self.repository = repository; addApp = add; removeApp = remove; moveApp = move
         installedSource = installed; self.launcher = launcher; self.dock = dock
+        self.offerMemory = offerMemory ?? InMemoryBadgeOfferMemory()
     }
 
     /// Starts watching the database and the running apps. Idempotent.
@@ -87,15 +92,30 @@ public final class NativeAppsModel {
         guard let dock else { return }
         let allowed = dock.isAllowed
         if allowed != badgesAllowed { badgesAllowed = allowed }
+        if allowed, !offerMemory.wasAllowed { offerMemory.wasAllowed = true }
+        // Offered only once there is an app to show a badge on: asked once, and again whenever access that worked is lost.
+        let offer: BadgeOffer? = allowed || apps.isEmpty ? nil : offerMemory.wasAllowed ? .lost : offerMemory.declined ? nil : .first
+        if offer != badgeOffer { badgeOffer = offer }
         guard allowed, !apps.isEmpty else { if !badges.isEmpty { badges = [:] }; return }
         let byPath = dock.badges()
         var next: [String: String] = [:]
-        for app in apps { if let label = byPath[DockBadgeReader.normalized(app.path)] { next[app.id] = label } }
+        for app in apps {
+            if let label = byPath[DockBadgeReader.normalized(app.path)] ?? byPath[DockBadgeKey.bundle(app.bundleId)] { next[app.id] = label }
+        }
         if next != badges { badges = next }
     }
 
-    /// Asks macOS to let the app read the Dock (the user ticks it in System Settings); badges appear once it is allowed.
-    public func requestBadgeAccess() { dock?.requestAccess() }
+    /// Asks macOS to let the app read the Dock and opens the page of System Settings where the user ticks it; badges
+    /// appear once it is allowed (the Dock is read again every few seconds). Answers the offer.
+    public func requestBadgeAccess() {
+        dock?.requestAccess(); dock?.openSettings()
+        declineBadgeOffer()
+    }
+    /// "Not now": the offer is not made again (the settings card still has the switch), until access that worked is lost.
+    public func declineBadgeOffer() {
+        offerMemory.declined = true; offerMemory.wasAllowed = false
+        badgeOffer = nil
+    }
     /// Whether badges can be offered at all (a Dock reader is wired).
     public var canShowBadges: Bool { dock != nil }
 

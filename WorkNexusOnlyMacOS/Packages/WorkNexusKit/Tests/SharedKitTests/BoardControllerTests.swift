@@ -69,6 +69,22 @@ final class BoardControllerTests: XCTestCase {
         XCTAssertEqual(c.filter.severities, [1])
     }
 
+    func testAZenTaoTaskBoardOpensOnTheWorkStillToDoAndKeepsWhatTheUserMadeOfIt() {
+        let (c, _) = make(tickets: [])
+        c.openBoard("zentao.tasks|a|5")
+        XCTAssertEqual(c.filter.zentaoStatuses, ["notStarted", "inProgress", "paused"])
+        XCTAssertEqual(c.filter.activeTokenCount, 3)
+        // Cleared by the user: it stays cleared when the board is left and opened again.
+        c.clearAll()
+        c.openBoard("zentao.bugs|a|1")
+        XCTAssertTrue(c.filter.zentaoStatuses.isEmpty, "bugs open on every status of their tab")
+        c.openBoard("zentao.tasks|a|5")
+        XCTAssertTrue(c.filter.zentaoStatuses.isEmpty)
+        // Another execution is another board: it starts on the default.
+        c.openBoard("zentao.tasks|a|6")
+        XCTAssertEqual(c.filter.zentaoStatuses, BoardController.openTaskStatuses)
+    }
+
     func testOwnViewSetsFilterAsideAndRestoresIt() {
         let (c, _) = make(tickets: [])
         c.openBoard("k")

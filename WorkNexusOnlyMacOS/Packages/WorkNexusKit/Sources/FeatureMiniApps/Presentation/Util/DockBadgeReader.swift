@@ -10,7 +10,10 @@ public protocol DockBadgeSource: AnyObject {
     var isAllowed: Bool { get }
     /// Asks macOS to show its "allow accessibility" prompt (it opens System Settings; the user ticks the app there).
     func requestAccess()
-    /// The badge of each app in the Dock that has one, by the app's path. Empty when not allowed.
+    /// Opens Privacy & Security → Accessibility in System Settings.
+    func openSettings()
+    /// The badge of each app in the Dock that has one, by the app's path and by `DockBadgeKey.bundle(id)` (the same app
+    /// can be on the rail under another path: a link, another volume name). Empty when not allowed.
     func badges() -> [String: String]
 }
 
@@ -25,6 +28,11 @@ public final class DockBadgeReader: DockBadgeSource {
         _ = AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
     }
 
+    public func openSettings() {
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") else { return }
+        NSWorkspace.shared.open(url)
+    }
+
     public func badges() -> [String: String] {
         guard isAllowed, let dock = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.dock").first else { return [:] }
         let app = AXUIElementCreateApplication(dock.processIdentifier)
@@ -33,8 +41,9 @@ public final class DockBadgeReader: DockBadgeSource {
         for list in children(of: app) {
             for item in children(of: list) {
                 guard let label = string(item, "AXStatusLabel"), !label.isEmpty, let url = attribute(item, kAXURLAttribute) else { continue }
-                let path = (url as? URL)?.path ?? (url as? NSURL)?.path
-                if let path { out[Self.normalized(path)] = label }
+                guard let path = (url as? URL)?.path ?? (url as? NSURL)?.path else { continue }
+                out[Self.normalized(path)] = label
+                if let id = Bundle(path: path)?.bundleIdentifier { out[DockBadgeKey.bundle(id)] = label }
             }
         }
         return out
@@ -49,4 +58,9 @@ public final class DockBadgeReader: DockBadgeSource {
     }
     private func string(_ element: AXUIElement, _ name: String) -> String? { attribute(element, name) as? String }
     private func children(of element: AXUIElement) -> [AXUIElement] { (attribute(element, kAXChildrenAttribute) as? [AXUIElement]) ?? [] }
+}
+
+/// How a Dock badge is found for an app whose path the Dock writes differently.
+public enum DockBadgeKey {
+    public static func bundle(_ id: String) -> String { "bundle:" + id.lowercased() }
 }

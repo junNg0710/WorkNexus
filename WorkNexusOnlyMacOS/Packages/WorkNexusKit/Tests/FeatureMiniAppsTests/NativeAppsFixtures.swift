@@ -74,6 +74,7 @@ struct NativeHarness {
     let model: NativeAppsModel
     let launcher = FakeLauncher()
     let dock = FakeDock()
+    let offers = InMemoryBadgeOfferMemory()
     let repository: GRDBNativeAppRepository
     let dir = nativeTempDir()
 
@@ -82,7 +83,7 @@ struct NativeHarness {
         repository = GRDBNativeAppRepository(database: db)
         let reader = PlistAppBundleReader()
         model = NativeAppsModel(repository: repository, add: AddNativeApp(repository, reader), remove: RemoveNativeApp(repository),
-                                move: MoveNativeApp(repository), installed: FixtureInstalled(apps: installed), launcher: launcher, dock: dock)
+                                move: MoveNativeApp(repository), installed: FixtureInstalled(apps: installed), launcher: launcher, dock: dock, offerMemory: offers)
     }
 
     func settle(_ ok: @MainActor () -> Bool) async {
@@ -103,6 +104,8 @@ final class FakeDock: DockBadgeSource {
     var isAllowed = true
     var asked = 0
     var byPath: [String: String] = [:]
+    var opened = 0
     func requestAccess() { asked += 1 }
+    func openSettings() { opened += 1 }
     func badges() -> [String: String] { isAllowed ? byPath : [:] }
 }

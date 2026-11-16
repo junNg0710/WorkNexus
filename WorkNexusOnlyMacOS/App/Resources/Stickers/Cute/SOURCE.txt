@@ -1,0 +1,4 @@
+Cute - 21 stickers (photographs used as reaction stickers).
+Source: https://getstickerpack.com/stickers/cute-14 (publisher Hilmiishukrii on getstickerpack.com).
+The pictures belong to their owners. The originals (512x512 PNG) were converted to 256x256 WebP to keep the app small.
+This folder is macOS-only: Scripts/sync-assets.sh leaves it alone when it syncs the Flutter app's stickers.

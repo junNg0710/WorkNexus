@@ -19,8 +19,9 @@ struct NativeAppSettingsList: View {
             }
             AppButton(appString("nativeAppAddMenuMac", "Add Mac app…"), systemImage: "plus", kind: .secondary) { adding = true }
                 .padding(.top, theme.spacing.s6)
+            if model.canShowBadges, !model.apps.isEmpty { NativeAppBadgeAccessRow(model: model).padding(.top, theme.spacing.s12) }
         }
-        .task { model.start() }
+        .task { model.start(); model.refreshBadges() }
         .appDialog(isPresented: $adding) { NativeAppPickerDialog(model: model) { adding = false } }
         .appConfirmDialog(isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
                           title: appFormat("miniAppRemoveTitle", "Remove %1$@?", removing?.name ?? ""),
@@ -52,5 +53,29 @@ private struct NativeAppSettingsRow: View {
             AppIconButton("trash", help: appString("miniAppRemove", "Remove from rail"), action: onRemove)
         }
         .padding(.vertical, theme.spacing.s4)
+    }
+}
+
+/// Whether the rail can show the Dock's badges, and the way to System Settings while it cannot.
+private struct NativeAppBadgeAccessRow: View {
+    @Environment(\.appTheme) private var theme
+    let model: NativeAppsModel
+
+    var body: some View {
+        HStack(alignment: .top, spacing: theme.spacing.s12) {
+            Image(systemName: model.badgesAllowed ? "checkmark.circle.fill" : "exclamationmark.circle")
+                .font(.system(size: theme.sizes.icon16)).foregroundStyle(model.badgesAllowed ? theme.colors.green : theme.colors.amber)
+            VStack(alignment: .leading, spacing: theme.spacing.s4) {
+                Text(appString("nativeAppBadgeSettingsTitle", "Notification badges")).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx)
+                Text(model.badgesAllowed
+                     ? appString("nativeAppBadgeSettingsOn", "The rail shows each app's Dock badge.")
+                     : appString("nativeAppBadgeSettingsOff", "Off: macOS has not let WorkNexus read the Dock. Turn WorkNexusMac on under Privacy & Security → Accessibility. Already on there? Remove it with − and add it again - an update counts as a new app."))
+                    .font(theme.typography.meta).foregroundStyle(theme.colors.tx3).fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            if !model.badgesAllowed {
+                AppButton(appString("nativeAppBadgeOpenSettings", "Open System Settings"), kind: .secondary) { model.requestBadgeAccess() }
+            }
+        }
     }
 }

@@ -40,6 +40,15 @@ struct NativeAppRailButtons: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refreshMissing(); model.refreshBadges()
         }
+        // Badges need Accessibility access, which nobody goes looking for: said once, when there is an app to show one on.
+        .appConfirmDialog(isPresented: Binding(get: { model.badgeOffer != nil }, set: { if !$0 { model.declineBadgeOffer() } }),
+                          title: appString("nativeAppBadgeOfferTitle", "Show notification badges on the rail?"),
+                          message: model.badgeOffer == .lost
+                              ? appString("nativeAppBadgeOfferLost", "macOS stopped letting WorkNexus read the Dock's badges - an update counts as a new app. In Privacy & Security → Accessibility, remove WorkNexusMac with −, then add it again and turn it on.")
+                              : appString("nativeAppBadgeOfferMessage", "The Mac apps on the rail can show the same unread count as their Dock icon. macOS allows that only to apps turned on under Privacy & Security → Accessibility."),
+                          confirmLabel: appString("nativeAppBadgeOpenSettings", "Open System Settings")) {
+            model.requestBadgeAccess()
+        }
         .appConfirmDialog(isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
                           title: appFormat("miniAppRemoveTitle", "Remove %1$@?", removing?.name ?? ""),
                           message: appString("nativeAppRemoveMessage", "It only leaves the rail. The app itself is not affected."),

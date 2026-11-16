@@ -103,6 +103,10 @@
     "en": "Photo",
     "vi": "Ảnh"
   },
+  "chatRecentStickers": {
+    "en": "Recently sent",
+    "vi": "Đã gửi gần đây"
+  },
   "chatSelectMultiple": {
     "en": "Select multiple",
     "vi": "Chọn nhiều"
@@ -814,6 +818,34 @@
   "nativeAppAdded": {
     "en": "Added",
     "vi": "Đã thêm"
+  },
+  "nativeAppBadgeOfferLost": {
+    "en": "macOS stopped letting WorkNexus read the Dock's badges - an update counts as a new app. In Privacy & Security → Accessibility, remove WorkNexusMac with −, then add it again and turn it on.",
+    "vi": "macOS đã ngừng cho WorkNexus đọc badge trên Dock - mỗi bản cập nhật được coi là một app mới. Trong Privacy & Security → Accessibility, xoá WorkNexusMac bằng nút −, rồi thêm lại và bật lên."
+  },
+  "nativeAppBadgeOfferMessage": {
+    "en": "The Mac apps on the rail can show the same unread count as their Dock icon. macOS allows that only to apps turned on under Privacy & Security → Accessibility.",
+    "vi": "Các app Mac trên rail có thể hiện số chưa đọc giống icon trên Dock. macOS chỉ cho phép khi WorkNexusMac được bật trong Privacy & Security → Accessibility."
+  },
+  "nativeAppBadgeOfferTitle": {
+    "en": "Show notification badges on the rail?",
+    "vi": "Hiện badge thông báo trên rail?"
+  },
+  "nativeAppBadgeOpenSettings": {
+    "en": "Open System Settings",
+    "vi": "Mở System Settings"
+  },
+  "nativeAppBadgeSettingsOff": {
+    "en": "Off: macOS has not let WorkNexus read the Dock. Turn WorkNexusMac on under Privacy & Security → Accessibility. Already on there? Remove it with − and add it again - an update counts as a new app.",
+    "vi": "Đang tắt: macOS chưa cho WorkNexus đọc Dock. Bật WorkNexusMac trong Privacy & Security → Accessibility. Đã bật rồi? Xoá bằng nút − và thêm lại - mỗi bản cập nhật được coi là một app mới."
+  },
+  "nativeAppBadgeSettingsOn": {
+    "en": "The rail shows each app's Dock badge.",
+    "vi": "Rail đang hiện badge Dock của từng app."
+  },
+  "nativeAppBadgeSettingsTitle": {
+    "en": "Notification badges",
+    "vi": "Badge thông báo"
   },
   "nativeAppBadgeTip": {
     "en": "%1$@ · %2$@ in its Dock badge",

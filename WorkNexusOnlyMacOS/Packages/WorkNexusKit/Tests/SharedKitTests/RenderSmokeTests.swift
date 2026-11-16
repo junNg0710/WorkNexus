@@ -87,6 +87,7 @@ final class RenderSmokeTests: XCTestCase {
         let t = makeTicket("d1", account: "ztB", provider: .zentao, key: "101", status: .inprogress, priority: .high, title: "Login crashes on submit",
                            labels: ["ui", "zentao-product:3"], assignee: "Thanh", type: "Bug", entity: .zentaoBug(ZenTaoBugEntity(openedBy: "Ryan")))
         var body = t; body.body = "<p>Steps to reproduce:</p><ol><li>Open the app</li><li>Tap <b>Login</b></li></ol>"
+        body.url = "https://zentao.example.com/bug-view-101.html"   // with a link: the header's copy-link and open-in-browser buttons
         store.tickets["d1"] = body
         store.accounts["ztB"] = Account(id: "ztB", workspaceId: "w1", providerType: .zentao, handle: "thanh")
         store.comments["c1"] = Comment(id: "c1", ticketId: "d1", authorName: "Ryan", body: "<p>Reproduced on 2.1</p>", createdAt: Date().addingTimeInterval(-3600))

@@ -29,6 +29,21 @@ final class BundledStickerPacksTests: XCTestCase {
         // The other packs are still there.
         XCTAssertEqual(Set(all.map(\.pack)).isSuperset(of: ["Pepe", "PepeAnim", "WorkNexus"]), true)
     }
+
+    /// Cute (getstickerpack.com): 21 still stickers, each a small image the chat can send; its source note is not one of them.
+    func testCuteIsInTheChatAsStillStickers() async throws {
+        let repo = LocalStickerRepository(bundleRoot: stickersRoot, directory: FileManager.default.temporaryDirectory.appendingPathComponent("st_\(UUID().uuidString)"))
+        let cute = try await repo.stickers().get().filter { $0.pack == "Cute" }
+        XCTAssertEqual(cute.map(\.name), (1...21).map { String(format: "%03d.webp", $0) })
+        XCTAssertFalse(cute.contains { $0.custom })
+        for s in cute {
+            let source = try XCTUnwrap(CGImageSourceCreateWithURL(URL(fileURLWithPath: s.location) as CFURL, nil), s.name)
+            let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil), s.name)
+            XCTAssertEqual(image.width, 256); XCTAssertEqual(image.height, 256)
+            let size = try XCTUnwrap(try FileManager.default.attributesOfItem(atPath: s.location)[.size] as? Int)
+            XCTAssertLessThan(size, 60_000, "\(s.name) is too heavy for a sticker")
+        }
+    }
 }
 
 /// Animated stickers really play: AppKit's `NSImage` sees the frames of a GIF only, so an animated WebP used to stand still.

@@ -14,7 +14,7 @@ final class LocalStickerRepository: StickerRepository, @unchecked Sendable {
     private let bundleRoot: URL?
     private let directory: URL
     private let converter: StickerConverter?
-    private static let packMeta = "pack.json", lastPackName = "last_pack"
+    private static let packMeta = "pack.json", lastPackName = "last_pack", recentName = "recent_stickers.json"
     private var fm: FileManager { .default }
 
     init(bundleRoot: URL?, directory: URL, converter: StickerConverter? = nil) {
@@ -115,6 +115,19 @@ final class LocalStickerRepository: StickerRepository, @unchecked Sendable {
             try pack.write(to: directory.appendingPathComponent(Self.lastPackName), atomically: true, encoding: .utf8)
             return .success(())
         } catch { return .failure(.storage("Could not keep the last sticker set: \(error.localizedDescription)")) }
+    }
+
+    func recentStickers() async -> Outcome<[String]> {
+        guard let data = try? Data(contentsOf: directory.appendingPathComponent(Self.recentName)) else { return .success([]) }
+        return .success((try? JSONDecoder().decode([String].self, from: data)) ?? [])
+    }
+
+    func rememberRecentStickers(_ keys: [String]) async -> Outcome<Void> {
+        do {
+            try fm.createDirectory(at: directory, withIntermediateDirectories: true)
+            try JSONEncoder().encode(keys).write(to: directory.appendingPathComponent(Self.recentName), options: .atomic)
+            return .success(())
+        } catch { return .failure(.storage("Could not keep the recent stickers: \(error.localizedDescription)")) }
     }
 }
 
