@@ -20,10 +20,12 @@ public struct ToolSection: Identifiable, Sendable {
     public let scopeKind: ScopeKind
     public let viewModes: [ToolViewMode]
     public let available: Bool
+    /// The section's unread count, read each time the tab strip draws (Dart `ToolSection.unreadCount`); nil: no badge.
+    public let unreadCount: (@MainActor @Sendable () -> Int)?
     public init(id: SectionID, label: String, systemImage: String, scopeKind: ScopeKind,
-                viewModes: [ToolViewMode] = [], available: Bool = true) {
+                viewModes: [ToolViewMode] = [], available: Bool = true, unreadCount: (@MainActor @Sendable () -> Int)? = nil) {
         self.id = id; self.label = label; self.systemImage = systemImage; self.scopeKind = scopeKind
-        self.viewModes = viewModes; self.available = available
+        self.viewModes = viewModes; self.available = available; self.unreadCount = unreadCount
     }
 }
 

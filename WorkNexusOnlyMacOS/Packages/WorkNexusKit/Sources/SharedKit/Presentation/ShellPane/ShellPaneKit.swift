@@ -58,6 +58,7 @@ public struct FeatureTabStrip: View {
                         HStack(spacing: theme.spacing.s6) {
                             Image(systemName: s.systemImage).font(.system(size: theme.sizes.icon14))
                             Text(LocalizedStringKey(s.label)).font(theme.typography.label)
+                            if let unread = s.unreadCount?(), unread > 0 { UnreadBadge(count: unread) }
                         }
                         .padding(.horizontal, theme.spacing.s10).frame(height: theme.sizes.control32)
                         .foregroundStyle(s.id == selected ? theme.colors.accent : theme.colors.tx2)
@@ -71,15 +72,23 @@ public struct FeatureTabStrip: View {
     }
 }
 
+/// A filter field with a 150 ms debounce: typing updates `text` after the pause (clearing is immediate), and a change
+/// of `text` from outside (a reset) is shown at once.
 public struct ScopeFilterField: View {
     @Environment(\.appTheme) private var theme
     @Binding var text: String
-    let prompt: String
-    public init(text: Binding<String>, prompt: String) { _text = text; self.prompt = prompt }
+    @State private var draft: String
+    @State private var debounce = FilterDebounce()
+    let prompt: String; let delay: Duration
+    public init(text: Binding<String>, prompt: String, delay: Duration = FilterDebounce.defaultDelay) {
+        _text = text; self.prompt = prompt; self.delay = delay; _draft = State(initialValue: text.wrappedValue)
+    }
     public var body: some View {
         HStack(spacing: theme.spacing.s6) {
             Image(systemName: "magnifyingglass").foregroundStyle(theme.colors.tx3).font(.system(size: theme.sizes.icon14))
-            TextField(prompt, text: $text).textFieldStyle(.plain).font(theme.typography.body)
+            TextField(prompt, text: $draft).textFieldStyle(.plain).font(theme.typography.body)
+                .onChange(of: draft) { _, new in debounce.submit(new, delay: delay) { text = $0 } }
+                .onChange(of: text) { _, new in if new != draft { debounce.cancel(); draft = new } }
         }
         .padding(.horizontal, theme.spacing.s10).frame(height: theme.sizes.control32)
         .background(theme.colors.panel2, in: RoundedRectangle(cornerRadius: theme.radii.md))

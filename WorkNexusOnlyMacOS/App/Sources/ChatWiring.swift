@@ -27,6 +27,7 @@ final class ChatWiring {
     private var bridge: ChatNotificationBridge?
     private var counters: [String: Task<Void, Never>] = [:]
     private var watcher: Task<Void, Never>?
+    private var activeObserver: NSObjectProtocol?
 
     init(db: AppDatabase, services appServices: AppServices, shell: ShellModel, notifier: DesktopNotifier,
          translation: TranslationFeature, live: LiveSettings, isDemo: Bool) {
@@ -53,6 +54,22 @@ final class ChatWiring {
         relay.handler = { [weak self] accountId, gid in Task { @MainActor in self?.show(accountId: accountId, chatGid: gid) } }
         events.onViewProfile = { _ in nav.setWorkspaceSection("integrations") }
         events.onOpenStorage = { nav.select(.settings); nav.setSettingsSection("cache") }
+        events.onEnableNotifications = { [weak self] in Task { await self?.turnOnNotifications() } }
+    }
+
+    /// Whether the warning strip ("notifications are blocked") shows: chat notifications are on in the app but the OS does not
+    /// let the app raise them (`DesktopNotifier.permissionGranted` is nil when that cannot be known: no strip then).
+    func refreshNotificationPermission(wanted: Bool? = nil) async {
+        guard !isDemo else { return }
+        let wanted = wanted ?? live.value.chatNotifications
+        let granted = wanted ? await notifier.permissionGranted() : nil
+        events.notificationsBlocked = wanted && granted == false
+    }
+
+    /// "Turn on" in the strip: ask again, or — as macOS asks only once — open System Settings (chat_notification_banner.dart `_turnOn`).
+    private func turnOnNotifications() async {
+        if !(await notifier.requestPermission()) { notifier.openSystemSettings() }
+        await refreshNotificationPermission()
     }
 
     /// Signs every chat account out and in again — after the local chat cache was cleared, so the conversations, contacts and
@@ -71,6 +88,7 @@ final class ChatWiring {
         repository.setCacheLimit(bytes: s.chatCacheLimitMb * 1024 * 1024)
         repository.setVideoAutoDownloadLimit(bytes: s.chatAutoDownloadVideoMb * 1024 * 1024)
         repository.setReactions(s.chatReactions)
+        Task { await refreshNotificationPermission(wanted: s.chatNotifications) }
     }
 
     /// Signs every ZenTao account into its chat, counts unread messages and raises notifications; follows accounts that
@@ -98,6 +116,11 @@ final class ChatWiring {
             for await payload in notifier.taps { openFromTap(payload) }
         }
         dockBadgeBridge.setChatUnread { [unread] in unread.total }
+        // Coming back from System Settings (or any other app) checks the permission again.
+        activeObserver = NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in await self?.refreshNotificationPermission() }
+        }
+        await refreshNotificationPermission()
     }
 
     private func follow(_ accounts: [Account]) async {

@@ -30,6 +30,9 @@ public protocol OpenCodeKeyRepository: Sendable {
     func authFor(providerId: String) async -> Outcome<OpenCodeProviderAuth>
     /// Stores `key` as `providerId`'s API key, replacing that provider's entry and leaving every other login untouched.
     func saveApiKey(providerId: String, key: String) async -> Outcome<Void>
+    /// Deletes `providerId`'s saved API key, leaving every other login (and an OAuth login of this provider) untouched.
+    /// Succeeds when there is nothing to remove.
+    func removeApiKey(providerId: String) async -> Outcome<Void>
 }
 
 /// Ported from: lib/core/domain/adapters/opencode_cli.dart

@@ -56,6 +56,17 @@ final class PresentationContextTests: XCTestCase {
         XCTAssertNotEqual(ctx.sliceKey(kind: .issue), ctx.sliceKey(kind: .pullRequest))
     }
 
+    func testSliceErrorClearsWhenNothingIsSelectedAnymore() async {
+        let (ctx, _, _, service) = PresFixtures.context()
+        service.failWith = .network("offline")
+        ctx.selectRepo(repo("acme/web"))
+        await ctx.syncSlice(kind: .issue)
+        XCTAssertEqual(ctx.sliceError, "offline")
+        ctx.selectAll(accountId: "gh-a")
+        await ctx.syncSlice(kind: .issue)
+        XCTAssertNil(ctx.sliceError, "the banner must not outlive the repository it was about")
+    }
+
     func testPinningWritesTheSettings() async throws {
         let (ctx, _, settings, _) = PresFixtures.context()
         ctx.togglePinnedProject("gh-a:acme/web")

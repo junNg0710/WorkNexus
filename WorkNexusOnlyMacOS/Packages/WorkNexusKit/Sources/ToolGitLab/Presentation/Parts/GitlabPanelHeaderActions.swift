@@ -1,4 +1,3 @@
-import AppKit
 import CoreTools
 import CoreUI
 import SwiftUI
@@ -7,7 +6,7 @@ import SwiftUI
 /// Panel-level (non-state-changing) actions of a two-pane detail header: refresh, copy link, open in browser, edit on
 /// the web page, and close the panel.
 struct GitlabPanelHeaderActions<MenuContent: View>: View {
-    @Environment(\.toasts) private var toasts
+    @Environment(\.appTheme) private var theme
     let url: String?; let onSync: () -> Void; let onClosePanel: () -> Void
     /// An item-specific "more" menu (the MR's state actions), placed just before the close-panel button.
     let menu: MenuContent
@@ -17,18 +16,15 @@ struct GitlabPanelHeaderActions<MenuContent: View>: View {
     }
 
     var body: some View {
-        HStack(spacing: 4) {
-            AppIconButton("arrow.clockwise", help: appString("refresh", "Refresh"), action: onSync)
+        HStack(spacing: theme.spacing.s8) {
+            AppIconButton("arrow.clockwise", help: appString("refresh", "Refresh"), outlined: true, action: onSync)
             if let url, !url.isEmpty {
-                AppIconButton("link", help: appString("copyLink", "Copy link")) {
-                    NSPasteboard.general.clearContents(); NSPasteboard.general.setString(url, forType: .string)
-                    toasts?.show(appString("linkCopied", "Copied!"))
-                }
-                AppIconButton("arrow.up.right.square", help: appString("openInBrowser", "Open in browser")) { openLinkExternally(url, inApp: false) }
-                AppIconButton("pencil", help: appString("edit", "Edit")) { openLinkExternally("\(url)/edit", inApp: false) }
+                CopyLinkButton(url: url)
+                AppIconButton("arrow.up.right.square", help: appString("openInBrowser", "Open in browser"), outlined: true) { openLinkExternally(url, inApp: false) }
+                AppIconButton("pencil", help: appString("edit", "Edit"), outlined: true) { openLinkExternally("\(url)/edit", inApp: false) }
             }
             menu
-            AppIconButton("xmark", help: appString("close", "Close"), action: onClosePanel)
+            AppIconButton("xmark", help: appString("close", "Close"), outlined: true, action: onClosePanel)
         }
     }
 }

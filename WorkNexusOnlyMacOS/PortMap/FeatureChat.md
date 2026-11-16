@@ -238,4 +238,4 @@ Files without a one-to-one Dart source (Swift-only glue): `ChatFeature.swift`, `
 - **New shared widget**: `CoreUI/Widgets/Fields/HsvColorFields.swift` (`HsvColor`, `HsvSaturationValueArea`, `HsvHueBar`, `AppSwatchButton`).
 - **Person chips**: `ChatPersonChip` opens the one-to-one chat (through `ChatServices.showChat`, which the app wires to the Chat place); `ChatPersonChatButton` / `ChatPersonAvatar` are injected as `\.zentaoDocPersonAction` / `\.zentaoDocPersonFace` in `HostWiring`.
 - **Translation gate**: `ChatServices.ensureTranslatorReady` (the app's `OpenCodeLinkGate`) runs before a message is translated.
-- **Not ported**: the image viewer's strip lists photos only (the Dart strip also lists videos); the OpenCode key field has no "remove" (the Dart field has none, and `OpenCodeKeyRepository` cannot delete).
+- **Not ported**: the image viewer's strip lists photos only (the Dart strip also lists videos); the OpenCode key field gains a "Remove key" button (absent in the Dart field) backed by `OpenCodeKeyRepository.removeApiKey`.

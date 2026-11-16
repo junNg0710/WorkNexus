@@ -58,6 +58,17 @@ final class PresentationContextTests: XCTestCase {
         XCTAssertNotEqual(ctx.sliceKey(kind: .issue), ctx.sliceKey(kind: .mergeRequest))
     }
 
+    func testSliceErrorClearsWhenNothingIsSelectedAnymore() async {
+        let (ctx, _, _, service) = GLPresFixtures.context()
+        service.failWith = .network("offline")
+        ctx.selectProject(project("12"))
+        await ctx.syncSlice(kind: .issue)
+        XCTAssertEqual(ctx.sliceError, "offline")
+        ctx.selectAll(accountId: "gl-a")
+        await ctx.syncSlice(kind: .issue)
+        XCTAssertNil(ctx.sliceError, "the banner must not outlive the project it was about")
+    }
+
     func testGroupsStartExpandedAndToggle() {
         let (ctx, _, _, _) = GLPresFixtures.context()
         XCTAssertTrue(ctx.collapsedGroups.isEmpty)

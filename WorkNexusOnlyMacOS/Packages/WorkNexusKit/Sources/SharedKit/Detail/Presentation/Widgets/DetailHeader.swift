@@ -53,15 +53,15 @@ struct DetailHeaderTopBar: View {
             Text(ticketRef(ticket.providerType, ticket.externalKey, ticket.externalType)).font(theme.typography.mono).foregroundStyle(c.tx3)
             Spacer(minLength: theme.spacing.s8)
             if let route = controller.extensions.route(for: ticket) {
-                AppIconButton("pencil", help: appString("edit", "Edit")) { controller.nav.openEditor(route) }
+                AppIconButton("pencil", help: appString("edit", "Edit"), outlined: true) { controller.nav.openEditor(route) }
             }
             if !url.isEmpty {
-                AppIconButton("arrow.up.right.square", help: appString("openInBrowser", "Open in browser")) {
+                AppIconButton("arrow.up.right.square", help: appString("openInBrowser", "Open in browser"), outlined: true) {
                     if let open = controller.extensions.openLink { open(url) } else { openLinkExternally(url, inApp: false) }
                 }
             }
             DetailHeaderMoreButton(ticket: ticket, model: model)
-            AppIconButton("xmark", help: appString("close", "Close"), action: onClose)
+            AppIconButton("xmark", help: appString("close", "Close"), outlined: true, action: onClose)
         }
     }
 }
@@ -86,6 +86,7 @@ struct DetailHeaderMoreButton: View {
         } label: {
             Image(systemName: "ellipsis").font(.system(size: theme.sizes.icon16)).foregroundStyle(theme.colors.tx2)
                 .frame(width: theme.sizes.control32, height: theme.sizes.control32)
+                .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
         }
         .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize().help(appString("more", "More"))
     }

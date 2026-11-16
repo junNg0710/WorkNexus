@@ -16,7 +16,7 @@ Entry point: `GithubModule(services:nav:registry:prService:)` (`: ToolModule`). 
 | PR / Issues sections | sections/github_{pulls,issues}_section.dart | Sections/GithubItemsSection.swift |
 | List rows → shared table | widgets/github_pr_row.dart, `_IssueRow` | Sections/GithubItemTable.swift |
 | Board | widgets/github_board_view.dart | Sections/GithubBoardView.swift |
-| Actions placeholder | core/widgets/coming_soon_view.dart | Sections/GithubComingSoon.swift |
+| Actions placeholder | core/widgets/coming_soon_view.dart | CoreUI `ComingSoonView` |
 | PR detail wiring (+ confirmations) | detail/github_pr_detail.dart | Detail/GithubPrDetail.swift, Providers/GithubPrDetailModel.swift |
 | PR overview / header / merge panel / sidebar | detail/github_pr_{overview,header,merge_panel,sidebar}.dart | Detail/GithubPr{Overview,Header,MergePanel,Sidebar}.swift |
 | Issue / PR metadata card | detail/github_detail_sections.dart | Detail/GithubDetailSections.swift |

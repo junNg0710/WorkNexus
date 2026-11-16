@@ -51,3 +51,47 @@ final class DetailLogicTests: XCTestCase {
         XCTAssertEqual(RepoCommit(sha: "0123456789abcdef", shortSha: "0123456", title: "t").shortSha, "0123456")
     }
 }
+
+
+// MARK: debounce (scope_filter_field.dart), back mouse button (detail_overlay.dart)
+
+@MainActor
+final class FilterDebounceTests: XCTestCase {
+    func testTypingIsAppliedAfterThePauseAndTheLastQueryWins() async throws {
+        let debounce = FilterDebounce()
+        var applied: [String] = []
+        debounce.submit("a", delay: .milliseconds(40)) { applied.append($0) }
+        debounce.submit("ab", delay: .milliseconds(40)) { applied.append($0) }
+        XCTAssertTrue(applied.isEmpty, "nothing is applied before the pause")
+        try await Task.sleep(for: .milliseconds(150))
+        XCTAssertEqual(applied, ["ab"])
+    }
+
+    func testClearingIsImmediateAndCancelsAPendingQuery() async throws {
+        let debounce = FilterDebounce()
+        var applied: [String] = []
+        debounce.submit("abc", delay: .milliseconds(40)) { applied.append($0) }
+        debounce.submit("", delay: .milliseconds(40)) { applied.append($0) }
+        XCTAssertEqual(applied, [""])
+        try await Task.sleep(for: .milliseconds(120))
+        XCTAssertEqual(applied, [""], "the cancelled query must not arrive late")
+    }
+
+    func testCancelDropsAPendingQuery() async throws {
+        let debounce = FilterDebounce()
+        var applied: [String] = []
+        debounce.submit("x", delay: .milliseconds(30)) { applied.append($0) }
+        debounce.cancel()
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertTrue(applied.isEmpty)
+        XCTAssertEqual(FilterDebounce.defaultDelay, .milliseconds(150))
+    }
+}
+
+final class BackMouseButtonTests: XCTestCase {
+    func testOnlyButtonThreeIsBack() {
+        XCTAssertTrue(BackMouseButton.isBack(3))
+        XCTAssertFalse(BackMouseButton.isBack(4), "forward")
+        XCTAssertFalse(BackMouseButton.isBack(2), "middle")
+    }
+}

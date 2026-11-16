@@ -18,7 +18,7 @@ Entry point: `GitlabModule(services:nav:registry:mrService:)` (`: ToolModule`). 
 | MR / Issues sections | sections/gitlab_{mrs,issues}_section.dart | Sections/GitlabItemsSection.swift |
 | MR table / issue rows → shared table | widgets/gitlab_mr_table*.dart, `_IssueRow` | Sections/GitlabItemTable.swift |
 | Board + card (card = shared `TicketCard`) | widgets/gitlab_board_view.dart, gitlab_ticket_card.dart | Sections/GitlabBoardView.swift |
-| Pipelines placeholder | core/widgets/coming_soon_view.dart | Sections/GitlabComingSoon.swift |
+| Pipelines placeholder | core/widgets/coming_soon_view.dart | CoreUI `ComingSoonView` |
 | MR detail wiring (+ confirmations for merge / rebase / close) | detail/gitlab_mr_detail.dart, gitlab_mr_commands.dart | Detail/GitlabMrDetail.swift, Providers/GitlabMrDetailModel.swift |
 | Overview / header / breadcrumb / "⋮" menu | detail/gitlab_mr_{overview,header,breadcrumb,more_button}.dart | Detail/GitlabMr{Overview,Header,Breadcrumb,MoreButton}.swift |
 | Merge / approval / outcome panels, widget card, async button | detail/gitlab_mr_{merge,approval,outcome}_panel.dart, mr_widget_card.dart, mr_async_button.dart | Detail/GitlabMr{MergePanel,ApprovalPanel,OutcomePanel,WidgetCard}.swift |

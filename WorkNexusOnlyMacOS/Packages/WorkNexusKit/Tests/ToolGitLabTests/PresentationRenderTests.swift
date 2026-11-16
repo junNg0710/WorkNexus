@@ -72,7 +72,7 @@ final class PresentationRenderTests: XCTestCase {
         try await render("issue-list", GitlabItemsSection(ctx: ctx, account: GLPresFixtures.account, kind: .issue), size: CGSize(width: 1000, height: 360), wait: .milliseconds(900))
         ctx.nav.setViewMode("board", section: GitlabSections.issues, accountId: "gl-a")
         try await render("issue-board", GitlabItemsSection(ctx: ctx, account: GLPresFixtures.account, kind: .issue), size: CGSize(width: 1000, height: 460), wait: .milliseconds(900))
-        try await render("pipelines-placeholder", GitlabComingSoon(systemImage: "play", title: "Pipelines"), size: CGSize(width: 500, height: 300), wait: .milliseconds(50))
+        try await render("pipelines-placeholder", ComingSoonView(systemImage: "play", title: "Pipelines"), size: CGSize(width: 500, height: 300), wait: .milliseconds(50))
     }
 
     func testNavPane() async throws {

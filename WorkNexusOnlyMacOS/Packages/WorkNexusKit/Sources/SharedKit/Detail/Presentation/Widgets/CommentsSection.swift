@@ -62,11 +62,15 @@ public struct DetailActivityTimeline: View {
     @Environment(\.appTheme) private var theme
     let comments: [Comment]; let activity: [ActivityEvent]
     let onComment: (String) async -> Bool; let onCloseItem: () -> Void; let canClose: Bool; var onReopenItem: (() -> Void)?
+    /// The settings' date format (`iso` / `dmy` / …), as for `TimelineHeadline` in Dart.
+    var dateFormat = "iso"
     @State private var text = ""
     @State private var posting = false
 
     public init(comments: [Comment], activity: [ActivityEvent], onComment: @escaping (String) async -> Bool,
-                onCloseItem: @escaping () -> Void, canClose: Bool, onReopenItem: (() -> Void)? = nil) {
+                onCloseItem: @escaping () -> Void, canClose: Bool, onReopenItem: (() -> Void)? = nil,
+                dateFormat: String = "iso") {
+        self.dateFormat = dateFormat
         self.comments = comments; self.activity = activity; self.onComment = onComment
         self.onCloseItem = onCloseItem; self.canClose = canClose; self.onReopenItem = onReopenItem
     }
@@ -84,8 +88,8 @@ public struct DetailActivityTimeline: View {
             }
             ForEach(Array(entries.enumerated()), id: \.offset) { i, e in
                 switch e.1 {
-                case .comment(let cm): CommentTile(cm, isFirst: i == 0, isLast: i == entries.count - 1)
-                case .event(let ev): ActivityRow(ev, isFirst: i == 0, isLast: i == entries.count - 1)
+                case .comment(let cm): CommentTile(cm, isFirst: i == 0, isLast: i == entries.count - 1, dateFormat: dateFormat)
+                case .event(let ev): ActivityRow(ev, isFirst: i == 0, isLast: i == entries.count - 1, dateFormat: dateFormat)
                 }
             }
             TextField(appString("writeCommentHint", "Write a comment…"), text: $text, axis: .vertical).lineLimit(4...8)

@@ -27,7 +27,12 @@ struct TranslationOpenCodeKeyField: View {
             }
             if let status = status() { AppInlineNote(status) }
             if let error { AppInlineNote(error, isError: true) }
-            AppButton(appString("translationApiSave", "Save"), kind: .primary) { Task { await save(providerId) } }.disabled(!canSave)
+            HStack(spacing: theme.spacing.s8) {
+                AppButton(appString("translationApiSave", "Save"), kind: .primary) { Task { await save(providerId) } }.disabled(!canSave)
+                if case .saved(_)? = TranslationSettingsLogic.keyStatus(auth) {
+                    AppButton(appString("translationApiRemove", "Remove key"), kind: .danger) { Task { await remove(providerId) } }.disabled(saving)
+                }
+            }
         }
         .task(id: providerId) { await refresh(providerId) }
     }
@@ -44,6 +49,17 @@ struct TranslationOpenCodeKeyField: View {
 
     private func refresh(_ providerId: String) async {
         if case .success(let a) = await root.translation.openCodeKeys.authFor(providerId: providerId) { auth = a } else { auth = nil }
+    }
+
+    private func remove(_ providerId: String) async {
+        saving = true; error = nil
+        switch await root.translation.openCodeKeys.removeApiKey(providerId: providerId) {
+        case .success:
+            toasts?.show(appFormat("translationOpenCodeKeyRemoved", "Removed the %1$@ key from OpenCode", providerId))
+            key = ""; await refresh(providerId)
+        case .failure: error = appString("translationOpenCodeKeyRemoveFailed", "Couldn't remove the key.")
+        }
+        saving = false
     }
 
     private func save(_ providerId: String) async {

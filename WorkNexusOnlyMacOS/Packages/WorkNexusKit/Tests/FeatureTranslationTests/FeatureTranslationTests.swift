@@ -292,6 +292,27 @@ final class OpenCodeKeyRepositoryTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: authFile.path + ".worknexus.tmp"))
     }
 
+    func testRemovingDropsOnlyThatProvidersApiKey() async throws {
+        try writeAuth(["opencode": ["type": "api", "key": "k"], "groq": ["type": "api", "key": "g"], "anthropic": ["type": "oauth", "access": "a"]])
+        let removed = await repo.removeApiKey(providerId: "opencode").value
+        let oauth = await repo.removeApiKey(providerId: "anthropic").value   // an OAuth login stays
+        let missing = await repo.removeApiKey(providerId: "missing").value   // nothing to remove: success
+        XCTAssertNotNil(removed); XCTAssertNotNil(oauth); XCTAssertNotNil(missing)
+        let stored = try JSONSerialization.jsonObject(with: Data(contentsOf: authFile)) as? [String: [String: String]]
+        XCTAssertNil(stored?["opencode"])
+        XCTAssertEqual(stored?["groq"], ["type": "api", "key": "g"])
+        XCTAssertEqual(stored?["anthropic"], ["type": "oauth", "access": "a"])
+        let after = await repo.authFor(providerId: "opencode").value
+        XCTAssertEqual(after, OpenCodeProviderAuth.none)
+    }
+
+    func testRemovingFromAMalformedFileLeavesItAlone() async throws {
+        try "{not json".write(to: authFile, atomically: true, encoding: .utf8)
+        let r = await repo.removeApiKey(providerId: "x")
+        guard case .failure(.parse) = r else { return XCTFail("expected parse failure") }
+        XCTAssertEqual(try String(contentsOf: authFile, encoding: .utf8), "{not json")
+    }
+
     func testFirstSaveCreatesTheFile() async {
         let nested = OpenCodeAuthFileKeyRepository(file: OpenCodeAuthFile(path: dir.appendingPathComponent("a/b/auth.json").path))
         _ = await nested.saveApiKey(providerId: "opencode", key: "k")

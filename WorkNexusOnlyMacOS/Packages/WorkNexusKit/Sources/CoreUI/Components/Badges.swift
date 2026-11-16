@@ -25,6 +25,21 @@ public struct AppCountBadge: View {
     }
 }
 
+/// Ported from: core/widgets/unread_badge.dart. An accent pill with an unread count (capped at 99+); nothing at 0.
+public struct UnreadBadge: View {
+    @Environment(\.appTheme) private var theme
+    let count: Int
+    public init(count: Int) { self.count = count }
+    public static func label(for count: Int) -> String { count > 99 ? "99+" : "\(count)" }
+    public var body: some View {
+        if count > 0 {
+            Text(Self.label(for: count)).font(theme.typography.badge).foregroundStyle(theme.colors.accentTx)
+                .padding(.horizontal, theme.spacing.s6).frame(minWidth: 16, minHeight: 16)
+                .background(theme.colors.accent, in: Capsule())
+        }
+    }
+}
+
 public struct UserAvatar: View {
     @Environment(\.appTheme) private var theme
     let name: String; var url: URL?; var size: CGFloat

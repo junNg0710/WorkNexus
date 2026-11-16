@@ -22,7 +22,8 @@ struct GitlabItemDescription: View {
             MarkdownText(ticket.body, fontSize: 15, height: 1.6,
                          images: BodyImageHooks(loader: { url in await s.fetchTicketImage(t, url: url) },
                                                 fallbackUrl: { providerImageWebUrl(providerType: .gitlab, baseUrl: base, projectPath: path, rawUrl: $0) },
-                                                onOpenImage: { url in _ = await MainActor.run { openExternally(url) } }))
+                                                onOpenImage: { url in _ = await MainActor.run { openExternally(url) } }),
+                         underlineLinksOnHover: true)
                 .textSelection(.enabled)
         }
     }

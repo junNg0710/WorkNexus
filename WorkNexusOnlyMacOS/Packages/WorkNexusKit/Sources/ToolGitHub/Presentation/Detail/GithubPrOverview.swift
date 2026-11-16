@@ -27,7 +27,7 @@ struct GithubPrOverview: View {
                 AnyView(GithubItemDescription(ticket: ticket, service: service).padding(.bottom, 4)),
                 AnyView(GithubPrMergePanel(ticket: ticket, entity: entity, busy: busy, commands: commands)),
                 AnyView(DetailActivityTimeline(comments: comments, activity: activity, onComment: onComment, onCloseItem: commands.close,
-                                               canClose: GithubItemState.of(ticket).isActive)),
+                                               canClose: GithubItemState.of(ticket).isActive, dateFormat: ctx.dateFormat)),
             ],
             header: { GithubPrHeader(nav: ctx.nav, ticket: ticket, entity: entity, dateFormat: ctx.dateFormat, onClose: onClose, onSync: onSync) },
             sidebar: { GithubPrSidebar(ctx: ctx, ticket: ticket, entity: entity) },

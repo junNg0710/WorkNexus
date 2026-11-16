@@ -56,18 +56,24 @@ public struct AppIconButton: View {
     @State private var hovering = false
     let systemImage: String
     var help: String?
+    var outlined: Bool
     var action: () -> Void
-    public init(_ systemImage: String, help: String? = nil, action: @escaping () -> Void) {
-        self.systemImage = systemImage; self.help = help; self.action = action
+    /// `outlined` draws a hairline rounded border (Dart `AppIconButton(outlined: true)`) so a row of them reads as
+    /// buttons on a plain header; the border strengthens on hover.
+    public init(_ systemImage: String, help: String? = nil, outlined: Bool = false, action: @escaping () -> Void) {
+        self.systemImage = systemImage; self.help = help; self.outlined = outlined; self.action = action
     }
     public var body: some View {
         Button(action: action) {
             Image(systemName: systemImage).font(.system(size: theme.sizes.icon16))
                 .foregroundStyle(hovering ? theme.colors.tx : theme.colors.tx2)
                 .frame(width: theme.sizes.control32, height: theme.sizes.control32)
-                .background(hovering ? theme.colors.tx.opacity(0.08) : .clear, in: Circle())
-                .contentShape(Circle())
+                .background(hovering ? theme.colors.tx.opacity(0.08) : .clear, in: shape)
+                .overlay { if outlined { shape.stroke(hovering ? theme.colors.line2 : theme.colors.line, lineWidth: theme.borders.hairline) } }
+                .contentShape(shape)
         }
         .buttonStyle(.plain).onHover { hovering = $0 }.help(help ?? "")
     }
+
+    private var shape: AnyShape { outlined ? AnyShape(RoundedRectangle(cornerRadius: theme.radii.md)) : AnyShape(Circle()) }
 }

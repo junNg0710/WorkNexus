@@ -36,6 +36,23 @@ public struct OpenCodeAuthFileKeyRepository: OpenCodeKeyRepository {
         }
     }
 
+    public func removeApiKey(providerId: String) async -> Outcome<Void> {
+        let id = providerId.trimmingCharacters(in: .whitespaces)
+        guard !id.isEmpty else { return .failure(.storage("Provider is required")) }
+        do {
+            var entries = try file.read()
+            // Only an API key goes: an OAuth login (`opencode auth login`) is not ours to delete.
+            guard (entries[id] as? [String: Any])?["type"] as? String == "api" else { return .success(()) }
+            entries[id] = nil
+            try file.write(entries)
+            return .success(())
+        } catch let e as NSError where Self.isMalformedJSON(e) {
+            return .failure(Self.malformed)
+        } catch {
+            return .failure(.storage("Could not write OpenCode credentials: \(error.localizedDescription)"))
+        }
+    }
+
     private static func isMalformedJSON(_ e: NSError) -> Bool { e.domain == NSCocoaErrorDomain && e.code == 3840 }
 
     /// Refuse to guess at a file we can't parse — overwriting it would wipe working logins.

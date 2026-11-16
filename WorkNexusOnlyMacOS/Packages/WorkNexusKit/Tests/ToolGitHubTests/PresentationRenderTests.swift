@@ -69,7 +69,7 @@ final class PresentationRenderTests: XCTestCase {
         try await render("issue-list", GithubItemsSection(ctx: ctx, account: PresFixtures.account, kind: .issue), size: CGSize(width: 1000, height: 360), wait: .milliseconds(900))
         ctx.nav.setViewMode("board", section: GithubSections.issues, accountId: "gh-a")
         try await render("issue-board", GithubItemsSection(ctx: ctx, account: PresFixtures.account, kind: .issue), size: CGSize(width: 1000, height: 460), wait: .milliseconds(900))
-        try await render("actions-placeholder", GithubComingSoon(systemImage: "play", title: "Actions"), size: CGSize(width: 500, height: 300), wait: .milliseconds(50))
+        try await render("actions-placeholder", ComingSoonView(systemImage: "play", title: "Actions"), size: CGSize(width: 500, height: 300), wait: .milliseconds(50))
     }
 
     func testNavPane() async throws {

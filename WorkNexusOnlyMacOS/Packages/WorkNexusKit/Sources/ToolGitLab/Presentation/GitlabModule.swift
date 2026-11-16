@@ -61,7 +61,7 @@ public final class GitlabModule: ToolModule {
         switch location.section {
         case GitlabSections.mrs: AnyView(GitlabItemsSection(ctx: ctx, account: account, kind: .mergeRequest))
         case GitlabSections.issues: AnyView(GitlabItemsSection(ctx: ctx, account: account, kind: .issue))
-        case GitlabSections.pipelines: AnyView(GitlabComingSoon(systemImage: "play", title: appString("pipelines", "Pipelines")))
+        case GitlabSections.pipelines: AnyView(ComingSoonView(systemImage: "play", title: appString("pipelines", "Pipelines")))
         default: AnyView(EmptyView())
         }
     }

@@ -24872,6 +24872,40 @@
         }
       }
     },
+    "connectionsAccountCount.one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 account"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 tài khoản"
+          }
+        }
+      }
+    },
+    "connectionsAccountCount.other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d accounts"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d tài khoản"
+          }
+        }
+      }
+    },
     "connectionsAllFieldsRequired": {
       "extractionState": "manual",
       "localizations": {
@@ -24936,6 +24970,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kết nối thất bại"
+          }
+        }
+      }
+    },
+    "connectionsDeleteWorkspaceMessage.one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This removes 1 account and the local synced data in this workspace."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thao tác này sẽ xoá 1 tài khoản và dữ liệu đã đồng bộ cục bộ trong workspace này."
+          }
+        }
+      }
+    },
+    "connectionsDeleteWorkspaceMessage.other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This removes %d accounts and the local synced data in this workspace."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thao tác này sẽ xoá %d tài khoản và dữ liệu đã đồng bộ cục bộ trong workspace này."
+          }
+        }
+      }
+    },
+    "connectionsSynced.one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synced 1 ticket from %@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã đồng bộ 1 ticket từ %@"
+          }
+        }
+      }
+    },
+    "connectionsSynced.other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synced %d tickets from %@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã đồng bộ %d ticket từ %@"
           }
         }
       }
@@ -26432,6 +26534,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chưa được dịch."
+          }
+        }
+      }
+    },
+    "translationOpenCodeKeyRemoveFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't remove the key."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không xoá được key."
+          }
+        }
+      }
+    },
+    "translationOpenCodeKeyRemoved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed the %1$@ key from OpenCode"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã xoá key %1$@ khỏi OpenCode"
           }
         }
       }

@@ -5,7 +5,7 @@ import SwiftUI
 
 /// Ported from: lib/shared/detail/presentation/detail_overlay.dart
 /// The detail slide-over: a scrim over the app (from `railInset` rightwards) and the `DetailPanel` sliding in from the
-/// right for the ticket open at the current place (`nav.openTicketId`). Esc or a click on the scrim closes it; ⌘[ goes
+/// right for the ticket open at the current place (`nav.openTicketId`). Esc or a click on the scrim closes it; ⌘[ (or the mouse's back button) goes
 /// back to the previously opened ticket. Width follows the layout setting (two-pane 64% / tabbed 52% of the window,
 /// never narrower than 460pt).
 public struct DetailOverlayHost: View {
@@ -111,6 +111,7 @@ struct DetailSlideOver: View {
             .opacity(isHere ? 1 : 0).allowsHitTesting(isHere && visible).disabled(!isHere)
             .focusable().focused($focusedPlace, equals: place).focusEffectDisabled()
             .onKeyPress(.escape) { controller.nav.closeTicket(); return .handled }
+            .onBackMouseButton(enabled: isHere && visible) { controller.nav.goBackTicket() }
             .background {
                 if isHere { Button("") { controller.nav.goBackTicket() }.keyboardShortcut("[", modifiers: .command).opacity(0) }
             }

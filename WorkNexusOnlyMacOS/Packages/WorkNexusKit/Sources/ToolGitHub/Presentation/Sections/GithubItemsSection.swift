@@ -32,6 +32,10 @@ struct GithubItemsSection: View {
             BoardToolbar(controller: model.board, scopes: chips(review: review), modes: GithubSections.modes(kind), viewMode: mode,
                          onViewMode: { ctx.rememberViewMode($0, section: section, accountId: account.id) },
                          refresh: { BoardRefreshButton(loading: ctx.sliceLoading) { ctx.refreshSlice() } })
+            if let message = ctx.sliceError, ctx.selection?.accountId == account.id {
+                SectionNoticeBanner(tone: .error, message: appFormat("syncFailedBanner", "Couldn't sync %1$@: %2$@", account.handle, message),
+                                    actionTitle: appString("retry", "Retry")) { ctx.refreshSlice() }
+            }
             GithubItemsBody(model: model, mode: mode, sort: $sort)
         }
         .background(theme.colors.bg)

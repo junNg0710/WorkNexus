@@ -51,7 +51,9 @@ struct BodyBlockView: View {
     var body: some View {
         switch block {
         case .text(let s, let level):
-            Text(s).font(theme.typography.font(size: fontSize * Self.headingScale[min(level, 6)], weight: level > 0 ? .semibold : .regular))
+            let size = fontSize * Self.headingScale[min(level, 6)]
+            BodyInlineText(text: s, plainFont: theme.typography.font(size: size, weight: .semibold))
+                .font(theme.typography.font(size: size, weight: level > 0 ? .semibold : .regular))
                 .foregroundStyle(ink).lineSpacing(max(lineHeight - 1.2, 0) * fontSize)
                 .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
         case .image(let url, _, let width):
@@ -117,12 +119,13 @@ private struct TableCell: View {
 /// Wraps rendered body content with link handling (taps go to `onLinkTap`, default the browser) and tint.
 struct BodyLinkScope<Content: View>: View {
     @Environment(\.appTheme) private var theme
-    let linkColor: Color?; let onLinkTap: ((String) -> Void)?; let content: Content
-    init(linkColor: Color?, onLinkTap: ((String) -> Void)?, @ViewBuilder content: () -> Content) {
-        self.linkColor = linkColor; self.onLinkTap = onLinkTap; self.content = content()
+    let linkColor: Color?; let onLinkTap: ((String) -> Void)?; let linkStyle: BodyLinkStyle; let content: Content
+    init(linkColor: Color?, onLinkTap: ((String) -> Void)?, linkStyle: BodyLinkStyle = BodyLinkStyle(), @ViewBuilder content: () -> Content) {
+        self.linkColor = linkColor; self.onLinkTap = onLinkTap; self.linkStyle = linkStyle; self.content = content()
     }
     var body: some View {
         content.tint(linkColor ?? theme.colors.accent)
+            .environment(\.bodyLinkStyle, linkStyle)
             .environment(\.openURL, OpenURLAction { url in
                 let target = url.absoluteString
                 if let onLinkTap { onLinkTap(target) } else { openLinkExternally(target) }

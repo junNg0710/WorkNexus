@@ -123,6 +123,14 @@
     "en": "Connect an account to get started",
     "vi": "Kết nối một tài khoản để bắt đầu"
   },
+  "connectionsAccountCount.one": {
+    "en": "1 account",
+    "vi": "1 tài khoản"
+  },
+  "connectionsAccountCount.other": {
+    "en": "%d accounts",
+    "vi": "%d tài khoản"
+  },
   "connectionsAllFieldsRequired": {
     "en": "All fields are required",
     "vi": "Vui lòng điền đầy đủ các trường"
@@ -138,6 +146,22 @@
   "connectionsConnectionFailed": {
     "en": "Connection failed",
     "vi": "Kết nối thất bại"
+  },
+  "connectionsDeleteWorkspaceMessage.one": {
+    "en": "This removes 1 account and the local synced data in this workspace.",
+    "vi": "Thao tác này sẽ xoá 1 tài khoản và dữ liệu đã đồng bộ cục bộ trong workspace này."
+  },
+  "connectionsDeleteWorkspaceMessage.other": {
+    "en": "This removes %d accounts and the local synced data in this workspace.",
+    "vi": "Thao tác này sẽ xoá %d tài khoản và dữ liệu đã đồng bộ cục bộ trong workspace này."
+  },
+  "connectionsSynced.one": {
+    "en": "Synced 1 ticket from %@",
+    "vi": "Đã đồng bộ 1 ticket từ %@"
+  },
+  "connectionsSynced.other": {
+    "en": "Synced %d tickets from %@",
+    "vi": "Đã đồng bộ %d ticket từ %@"
   },
   "createAndJoinWorkspace": {
     "en": "Create & join",
@@ -490,6 +514,14 @@
   "translationNone": {
     "en": "Not translated yet.",
     "vi": "Chưa được dịch."
+  },
+  "translationOpenCodeKeyRemoveFailed": {
+    "en": "Couldn't remove the key.",
+    "vi": "Không xoá được key."
+  },
+  "translationOpenCodeKeyRemoved": {
+    "en": "Removed the %1$@ key from OpenCode",
+    "vi": "Đã xoá key %1$@ khỏi OpenCode"
   },
   "translationProvider": {
     "en": "Provider",

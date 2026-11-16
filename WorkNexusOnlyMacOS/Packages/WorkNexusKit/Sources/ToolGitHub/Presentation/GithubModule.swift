@@ -60,7 +60,7 @@ public final class GithubModule: ToolModule {
         switch location.section {
         case GithubSections.pulls: AnyView(GithubItemsSection(ctx: ctx, account: account, kind: .pullRequest))
         case GithubSections.issues: AnyView(GithubItemsSection(ctx: ctx, account: account, kind: .issue))
-        case GithubSections.actions: AnyView(GithubComingSoon(systemImage: "play", title: appString("actions", "Actions")))
+        case GithubSections.actions: AnyView(ComingSoonView(systemImage: "play", title: appString("actions", "Actions")))
         default: AnyView(EmptyView())
         }
     }

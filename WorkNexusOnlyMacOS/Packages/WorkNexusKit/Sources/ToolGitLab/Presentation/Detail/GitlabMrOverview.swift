@@ -30,7 +30,7 @@ struct GitlabMrOverview: View {
         sections.append(phase.isActive ? AnyView(GitlabMrMergePanel(ticket: ticket, entity: entity, commands: commands))
                                        : AnyView(GitlabMrOutcomePanel(ticket: ticket, entity: entity, commands: commands, dateFormat: ctx.dateFormat)))
         sections.append(AnyView(DetailActivityTimeline(comments: comments, activity: activity, onComment: onComment, onCloseItem: commands.close,
-                                                       canClose: phase.isActive, onReopenItem: phase == .closed ? commands.reopen : nil).padding(.top, 8)))
+                                                       canClose: phase.isActive, onReopenItem: phase == .closed ? commands.reopen : nil, dateFormat: ctx.dateFormat).padding(.top, 8)))
         return TwoPaneTabbedDetail(
             isSyncing: isSyncing, overviewSections: sections, overviewCount: comments.count, changesCount: entity.changedFiles,
             header: { GitlabMrHeader(nav: ctx.nav, ticket: ticket, entity: entity, dateFormat: ctx.dateFormat, commands: commands, onClose: onClose, onSync: onSync) },

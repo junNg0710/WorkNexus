@@ -59,6 +59,6 @@ private struct GithubReposBody: View {
             pinnedRows: groups.pinned.map { row($0, pinned: true, selectedId: loc.scopeId) },
             recentRows: groups.recent.map { row($0, pinned: false, selectedId: loc.scopeId) },
             allRows: groups.rest.map { row($0, pinned: false, selectedId: loc.scopeId) },
-            groupTitle: appString("allRepositories", "All repositories"), cap: 100, initiallyExpanded: true)
+            groupTitle: appString("allRepositories", "All repositories"))
     }
 }

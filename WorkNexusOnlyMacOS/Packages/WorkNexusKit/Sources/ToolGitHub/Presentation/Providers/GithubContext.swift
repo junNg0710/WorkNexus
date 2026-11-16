@@ -113,7 +113,7 @@ final class GithubContext {
 
     /// Fetches the selected repo + kind's items into the local DB (the list and board read them from there).
     func syncSlice(kind: GitHubItemKind) async {
-        guard let selection else { return }
+        guard let selection else { sliceError = nil; return }
         sliceRun += 1
         let run = sliceRun
         sliceLoading = true; sliceError = nil

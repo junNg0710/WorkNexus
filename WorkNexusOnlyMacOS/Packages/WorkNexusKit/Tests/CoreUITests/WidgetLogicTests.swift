@@ -117,3 +117,55 @@ final class WidgetLogicTests: XCTestCase {
         for v in views { XCTAssertNotNil(NSHostingView(rootView: v.environment(\.appTheme, theme))) }
     }
 }
+
+
+// MARK: Link styling (markdown_text.dart `isPlainLink` / `underlineLinksOnHover`), unread badge, copy-link feedback
+
+final class BodyLinkStyleTests: XCTestCase {
+    private func linked(_ text: String, _ url: String) -> AttributedString {
+        var a = AttributedString(text); a.link = URL(string: url); return a
+    }
+
+    func testDefaultStyleChangesNothing() {
+        let style = BodyLinkStyle()
+        XCTAssertFalse(style.isCustom)
+        let text = linked("docs", "https://example.com")
+        XCTAssertEqual(style.apply(to: text, hovered: false), text)
+    }
+
+    func testUnderlineOnHoverRestsWithoutAndUnderlinesWhenHovered() {
+        let style = BodyLinkStyle(underlineOnHover: true)
+        let text = linked("docs", "https://example.com")
+        XCTAssertNil(style.apply(to: text, hovered: false).runs.first?.underlineStyle)
+        XCTAssertEqual(style.apply(to: text, hovered: true).runs.first?.underlineStyle, .single)
+    }
+
+    func testPlainLinksOnlyAreExemptFromTheUnderline() {
+        let style = BodyLinkStyle(isPlain: { $0.hasPrefix("mention:") })
+        var text = linked("@ann", "mention:42")
+        text.append(AttributedString(" and "))
+        text.append(linked("docs", "https://example.com"))
+        let resting = style.apply(to: text, hovered: false)
+        let links = resting.runs.filter { $0.link != nil }
+        XCTAssertEqual(links.count, 2)
+        XCTAssertNil(links[0].underlineStyle, "a mention rests without an underline")
+        XCTAssertEqual(links[1].underlineStyle, .single, "an ordinary link keeps its underline")
+        XCTAssertEqual(style.apply(to: text, hovered: true).runs.first?.underlineStyle, .single)
+    }
+
+    func testTextWithoutLinksIsUntouched() {
+        let style = BodyLinkStyle(underlineOnHover: true)
+        let text = AttributedString("plain")
+        XCTAssertEqual(style.apply(to: text, hovered: false), text)
+    }
+}
+
+final class UnreadBadgeTests: XCTestCase {
+    func testCountIsCappedAt99Plus() {
+        XCTAssertEqual(UnreadBadge.label(for: 3), "3")
+        XCTAssertEqual(UnreadBadge.label(for: 99), "99")
+        XCTAssertEqual(UnreadBadge.label(for: 100), "99+")
+    }
+
+    func testCopyLinkFeedbackLastsAboutASecondAndAHalf() { XCTAssertEqual(CopyLinkFeedback.duration, 1.5, accuracy: 0.001) }
+}
