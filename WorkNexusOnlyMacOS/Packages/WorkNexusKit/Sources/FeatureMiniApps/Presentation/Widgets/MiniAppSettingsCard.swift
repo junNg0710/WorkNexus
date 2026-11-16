@@ -53,6 +53,10 @@ public struct MiniAppSettingsCard: View {
                                      hint: appString("miniAppSettingsAppsHint", "Edit a mini app, or clear one site's data."), content: {
                 MiniAppSettingsAppList(feature: feature, apps: apps)
             })
+            AppExpandableCardSection(title: appString("nativeAppSettingsTitle", "Mac apps"),
+                                     hint: appString("nativeAppSettingsHint", "Apps on this Mac that open, or come forward, from the rail."), content: {
+                NativeAppSettingsList(model: feature.nativeApps)
+            })
         }
     }
 

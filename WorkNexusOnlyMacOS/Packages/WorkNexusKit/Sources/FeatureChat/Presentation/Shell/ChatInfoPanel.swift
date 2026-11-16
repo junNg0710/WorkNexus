@@ -8,7 +8,6 @@ import SwiftUI
 struct ChatInfoPanel: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatShellLayout) private var layout
-    @Environment(\.chatPanelVisibility) private var visibility
     let model: ChatShellModel
     let session: ChatThreadSession
 
@@ -19,8 +18,7 @@ struct ChatInfoPanel: View {
         let peer = withPeer ? chat.peerUserId.flatMap { users[$0] } : nil
         let title = ChatShellLabels.title(chat, users)
         ChatSidePanelFrame(title: shellString("chatInfo", "Chat info"),
-                           onClose: layout.infoRoom ? nil : { session.state.closePanel() },
-                           onCollapse: layout.infoRoom ? { visibility.infoHidden = true } : nil) {
+                           onClose: layout.infoRoom ? nil : { session.state.closePanel() }) {
             ScrollView {
                 VStack(spacing: 0) {
                     ChatAvatarView(chat: chat, title: title, users: users, diameter: theme.sizes.control36 * 2)

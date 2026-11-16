@@ -18,3 +18,11 @@ extension MiniAppPermissionGrant {
 extension MiniAppPermissionRow {
     init(grant g: MiniAppPermissionGrant) { self.init(miniAppId: g.miniAppId, kind: g.kind.rawValue, allowed: g.decision == .allow) }
 }
+
+extension NativeApp {
+    init(row r: NativeAppRow) { self.init(id: r.id, name: r.name, bundleId: r.bundleId, path: r.path, position: r.position) }
+}
+
+extension NativeAppRow {
+    init(app a: NativeApp) { self.init(id: a.id, name: a.name, bundleId: a.bundleId, path: a.path, position: a.position) }
+}

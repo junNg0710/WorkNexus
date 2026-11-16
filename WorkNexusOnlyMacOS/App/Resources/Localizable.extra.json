@@ -375,6 +375,98 @@
     "en": "Mini apps",
     "vi": "Mini app"
   },
+  "nativeAppAddHelp": {
+    "en": "Add a website or a Mac app",
+    "vi": "Thêm trang web hoặc ứng dụng Mac"
+  },
+  "nativeAppAddMenuMac": {
+    "en": "Add Mac app…",
+    "vi": "Thêm ứng dụng Mac…"
+  },
+  "nativeAppAddMenuWebsite": {
+    "en": "Add website…",
+    "vi": "Thêm trang web…"
+  },
+  "nativeAppAddTitle": {
+    "en": "Add Mac app",
+    "vi": "Thêm ứng dụng Mac"
+  },
+  "nativeAppAdded": {
+    "en": "Added",
+    "vi": "Đã thêm"
+  },
+  "nativeAppChooseOther": {
+    "en": "Choose other…",
+    "vi": "Chọn ứng dụng khác…"
+  },
+  "nativeAppDone": {
+    "en": "Done",
+    "vi": "Xong"
+  },
+  "nativeAppLaunchFailed": {
+    "en": "Couldn't open %1$@",
+    "vi": "Không mở được %1$@"
+  },
+  "nativeAppLocate": {
+    "en": "Locate…",
+    "vi": "Định vị lại…"
+  },
+  "nativeAppLocateMessage": {
+    "en": "Choose %1$@",
+    "vi": "Chọn %1$@"
+  },
+  "nativeAppMissing": {
+    "en": "%1$@ was not found. It may have been moved or uninstalled.",
+    "vi": "Không tìm thấy %1$@. Có thể ứng dụng đã bị di chuyển hoặc gỡ cài đặt."
+  },
+  "nativeAppMoveDown": {
+    "en": "Move down",
+    "vi": "Chuyển xuống"
+  },
+  "nativeAppMoveUp": {
+    "en": "Move up",
+    "vi": "Chuyển lên"
+  },
+  "nativeAppNoMatches": {
+    "en": "No apps match.",
+    "vi": "Không có ứng dụng phù hợp."
+  },
+  "nativeAppNotAnApp": {
+    "en": "That is not a Mac app.",
+    "vi": "Đó không phải ứng dụng Mac."
+  },
+  "nativeAppOpen": {
+    "en": "Open",
+    "vi": "Mở"
+  },
+  "nativeAppRemoveMessage": {
+    "en": "It only leaves the rail. The app itself is not affected.",
+    "vi": "Chỉ gỡ khỏi thanh bên. Bản thân ứng dụng không bị ảnh hưởng."
+  },
+  "nativeAppReveal": {
+    "en": "Reveal in Finder",
+    "vi": "Hiện trong Finder"
+  },
+  "nativeAppScanning": {
+    "en": "Looking for apps…",
+    "vi": "Đang tìm ứng dụng…"
+  },
+  "nativeAppSearchHint": {
+    "en": "Search installed apps…",
+    "vi": "Tìm ứng dụng đã cài…"
+  },
+  "nativeAppSettingsEmpty": {
+    "en": "No Mac apps yet. Add one with + on the rail.",
+    "vi": "Chưa có ứng dụng Mac nào. Thêm bằng nút + trên thanh bên."
+  },
+  "nativeAppSettingsHint": {
+    "en": "Apps on this Mac that open, or come forward, from the rail.",
+    "vi": "Các ứng dụng trên máy Mac này sẽ mở, hoặc được đưa lên trước, từ thanh bên."
+  },
+  "nativeAppSettingsTitle": {
+    "en": "Mac apps",
+    "vi": "Ứng dụng Mac"
+  },
   "newBugOrTask": {
     "en": "New bug or task…",
     "vi": "Lỗi hoặc công việc mới…"

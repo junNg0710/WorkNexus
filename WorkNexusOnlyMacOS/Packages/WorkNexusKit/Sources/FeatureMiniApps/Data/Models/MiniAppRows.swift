@@ -17,3 +17,12 @@ struct MiniAppPermissionRow: Codable, FetchableRecord, PersistableRecord {
     var kind: String
     var allowed: Bool
 }
+
+struct NativeAppRow: Codable, FetchableRecord, PersistableRecord {
+    static let databaseTableName = "nativeApps"
+    var id: String
+    var name: String
+    var bundleId: String
+    var path: String
+    var position: Int
+}

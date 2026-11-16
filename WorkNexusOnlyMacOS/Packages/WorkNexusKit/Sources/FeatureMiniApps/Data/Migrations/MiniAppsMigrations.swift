@@ -5,6 +5,7 @@ import GRDB
 /// The feature's own tables, registered by the composition root through `AppDatabase.open(registrars:)`.
 public enum MiniAppsMigrations {
     public static let migrationId = "miniapps_v1"
+    public static let nativeAppsMigrationId = "miniapps_v2"
 
     public static let registrar: MigrationRegistrar = { migrator in
         migrator.registerMigration(migrationId) { db in
@@ -23,6 +24,16 @@ public enum MiniAppsMigrations {
                 t.column("kind", .text).notNull()
                 t.column("allowed", .boolean).notNull()
                 t.primaryKey(["miniAppId", "kind"])
+            }
+        }
+        // New feature, no Dart counterpart: Mac apps the user put on the rail, in rail order.
+        migrator.registerMigration(nativeAppsMigrationId) { db in
+            try db.create(table: "nativeApps") { t in
+                t.primaryKey("id", .text)
+                t.column("name", .text).notNull()
+                t.column("bundleId", .text).notNull().unique()
+                t.column("path", .text).notNull()
+                t.column("position", .integer).notNull().defaults(to: 0)
             }
         }
     }

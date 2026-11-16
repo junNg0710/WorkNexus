@@ -2,7 +2,7 @@
 
 Public entry: `MiniAppsFeature` (`make`, `migrationRegistrar`, `.miniApps(feature)`, `MiniAppHostView(miniApp:)`, `MiniAppsHostStack`, `model: MiniAppsModel` = rail data source, `makeCookieImportModel()`).
 Views: `MiniAppDialog(feature:existing:onSaved:onClose:)` (add + edit), `CookieImportDialog(cookies:site:source:onClose:)`, `MiniAppSettingsCard(feature:liveLimit:notifyInBackground:dateFormat:onLiveLimit:onNotifyInBackground:)` (all present with `.appDialog`); shared models `feature.cookies` (`CookieImportModel`), internal `trustedModel` / `browsingDataModel`. The rail section lives in `App/Sources/MiniAppViews.swift` (edit, confirm-before-remove, drag to reorder through `MiniAppsModel.move(id:onto:)`); the card is hosted by `App/Sources/Settings/SettingsPages.swift`.
-Tabs (new, no Flutter counterpart): see "Tabs" below.
+Tabs and Mac apps (new, no Flutter counterpart): see "Tabs" and "Mac apps" below.
 Not ported: Linux web view, Windows-only certificate guard and frame-rate / focus workarounds (WKWebView reports certificate errors itself), the toolbar's developer-tools button (⇧⌘I / F12 and right-click → Inspect Element instead).
 
 ## Tabs
@@ -11,6 +11,25 @@ Flutter has no tab strip: a page's `window.open` / `target=_blank` goes through 
 - Every tab has its own `WKWebView` in the shared `WKWebsiteDataStore` (`MiniAppWebParts.make`), so cookies / sign-in are shared; capabilities (notifications, saved login, permissions, certificates) are per web view through its own bridge. A page-opened tab (`MiniAppWebParts.adopt`) is built from the opener's configuration, so it shares the opener's scripts and bridge and `window.opener` / `window.close()` work.
 - A window opened by the page: claimed by the router → nothing; sign-in or sized window → pop-up; link on the app's own site (`IsMiniAppSite`: same host or registrable domain, http(s), not blank) → new tab in front; at the tab limit → pop-up. Middle / ⌘-click on such a link → background tab (⇧ brings it forward).
 - Keys (`MiniAppShortcuts` + `MiniAppKeyMonitor`, a local event monitor so ⌘W / ⌘T beat the menu bar): ⌘R / F5, ⇧⌘R / ⌃F5, ⌘L / F6, ⌘[ ⌘] / ⌥← ⌥→, ⌥Home, ⇧⌘I / F12 (private `_inspector`, no-op if absent), ⌘T, ⌘W (the last tab is not closed: the key goes on to the window), ⇧⌘[ ⇧⌘] / ⌃Tab ⌃⇧Tab, mouse back / forward buttons. ⌥← / ⌥→ never take a text field's word-jump (the address field, or a page element that is editable).
+
+## Mac apps
+New feature, not a Dart port. macOS cannot embed another app's windows, so the rail also holds buttons that open (or bring forward) an installed Mac app — Slack, Notion, Figma, Xcode… — next to the mini apps, between the last mini app and "Add".
+- `NativeApp` (id, name, bundleId, path, position); table `nativeApps` from the new migration `miniapps_v2` (`miniapps_v1` is untouched; both come through `MiniAppsFeature.migrationRegistrar`). `bundleId` is unique.
+- Use cases: `AddNativeApp` (reads name — `CFBundleDisplayName`, else `CFBundleName`, else the file name — and `CFBundleIdentifier` from `Contents/Info.plist` through `AppBundleReader`; refuses anything that is not an `.app` bundle of package type `APPL`; the same bundle identifier is never added twice, and when it is added again at another path the existing entry is pointed at the new path, which is how "Locate…" works), `RemoveNativeApp`, `MoveNativeApp` (reorder, same shape as `MoveMiniApp`).
+- `NativeAppsModel` (`feature.nativeApps`): list, add / remove / move (also by one step and by drag), `launch` through the injected `AppLauncher` (`WorkspaceAppLauncher`: `NSWorkspace.openApplication` with `activates = true`; an app that already runs is un-hidden and activated), running state from `AppLauncher.events()` (`NSWorkspace` didLaunch / didTerminate), missing state (`exists(path:)`, rechecked when the window comes forward), icons from `NSWorkspace.icon(forFile:)` kept per path, and the installed-apps list for the dialog. No Dock / AppleScript automation, no Accessibility permission.
+- Rail: `NativeAppRailButtons` in `App/Sources/NativeAppRailViews.swift` (64x54 `RailLabeledButton`, 22pt icon `NativeAppRailIcon`, running dot, dimmed + tooltip when missing; context menu Open / Reveal in Finder (Locate… when missing) / Move up / Move down / Remove after asking; drag payload `native:<id>` so it never mixes with a mini app's). "Add" is a native `NSMenu` (`RailPopupMenu`): Add website… (`MiniAppDialog`) and Add Mac app… (`NativeAppPickerDialog`: /Applications, ~/Applications, /System/Applications one folder level down, searchable, added ones marked, "Choose other…" with `NSOpenPanel` for `.applicationBundle`).
+- Settings: a "Mac apps" section in `MiniAppSettingsCard` (`NativeAppSettingsList`: list, remove after asking, Add Mac app…).
+- Not cheap, so left out: ⌘-number / rail focus for Mac apps; locating a missing app as a different app (it is added as a new button instead).
+
+| Area | Dart | Swift |
+|---|---|---|
+| Mac apps: entity, repository + `AppBundleReader` / `InstalledAppsSource` protocols | (none) | Domain/Entities/NativeApp.swift, Domain/Repositories/NativeAppRepositories.swift |
+| Mac apps: Add / Remove / Move | (none) | Domain/UseCases/{AddNativeApp,RemoveNativeApp,MoveNativeApp}.swift |
+| Mac apps: migration `miniapps_v2`, row + mapper, repository | (none) | Data/Migrations/MiniAppsMigrations.swift, Data/Models/{MiniAppRows,MiniAppMappers}.swift, Data/Repositories/GRDBNativeAppRepository.swift |
+| Mac apps: Info.plist reader, installed-apps scan | (none) | Data/DataSources/{PlistAppBundleReader,InstalledAppsScanner}.swift |
+| Mac apps: model, launcher, open panel | (none) | Presentation/Providers/NativeAppsModel.swift, Presentation/Util/{AppLauncher,NativeAppPanel}.swift |
+| Mac apps: rail icon, add dialog, settings list | (none) | Widgets/{NativeAppRailIcon,NativeAppPickerDialog,NativeAppPickerRow,NativeAppSettingsList}.swift; rail buttons + Add menu in App/Sources/NativeAppRailViews.swift, MiniAppViews.swift |
+| Mac apps: tests | (none) | Tests/FeatureMiniAppsTests/{NativeAppsTests,NativeAppsFixtures,NativeAppsRenderTests}.swift; renders in /tmp/wn-native-render |
 
 | Area | Dart | Swift |
 |---|---|---|

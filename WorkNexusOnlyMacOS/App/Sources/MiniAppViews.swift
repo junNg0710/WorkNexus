@@ -8,12 +8,14 @@ import CoreTools
 
 /// Ported from: lib/features/mini_apps/presentation/widgets/mini_app_rail_section.dart — one rail button per mini app
 /// (its icon, or the name's initial) and "Add". Dragged onto another button it takes that place; the context menu edits it,
-/// closes a running page (to free memory) or removes it, after asking.
+/// closes a running page (to free memory) or removes it, after asking. The Mac app buttons (`NativeAppRailButtons`) follow the
+/// mini apps, and "Add" is a menu: a website (the mini-app dialog) or a Mac app.
 struct MiniAppRailSection: View {
     @Environment(\.appTheme) private var theme
     let feature: MiniAppsFeature
     let nav: AppNavController
     @State private var adding = false
+    @State private var addingMacApp = false
     @State private var editing: MiniApp?
     @State private var removing: MiniAppRailItem?
 
@@ -28,7 +30,7 @@ struct MiniAppRailSection: View {
                 }
                 .draggable(item.id)
                 .dropDestination(for: String.self) { dropped, _ in
-                    guard let id = dropped.first, id != item.id else { return false }
+                    guard let id = dropped.first, id != item.id, !id.hasPrefix(NativeAppRailButtons.dragPrefix) else { return false }
                     Task { await model.move(id: id, onto: item.id) }
                     return true
                 }
@@ -44,10 +46,13 @@ struct MiniAppRailSection: View {
                     Button(appString("miniAppRemove", "Remove from rail"), role: .destructive) { removing = item }
                 }
             }
-            RailLabeledButton(appString("miniAppAddShort", "Add"), systemImage: "plus.app", help: appString("miniAppAdd", "Add mini app")) {
-                adding = true
+            NativeAppRailButtons(model: feature.nativeApps)
+            RailLabeledButton(appString("miniAppAddShort", "Add"), systemImage: "plus.app", help: appString("nativeAppAddHelp", "Add a website or a Mac app")) {
+                RailPopupMenu.show([(appString("nativeAppAddMenuWebsite", "Add website…"), "globe", { adding = true }),
+                                    (appString("nativeAppAddMenuMac", "Add Mac app…"), "app.badge", { addingMacApp = true })])
             }
         }
+        .appDialog(isPresented: $addingMacApp) { NativeAppPickerDialog(model: feature.nativeApps) { addingMacApp = false } }
         .appDialog(isPresented: $adding) {
             // A new app opens at once, as picking it on the rail would.
             MiniAppDialog(feature: feature, onSaved: { nav.openMiniApp($0.id) }) { adding = false }

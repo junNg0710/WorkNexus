@@ -1,0 +1,117 @@
+import AppKit
+import CoreDomain
+import CoreUI
+import FeatureMiniApps
+import SharedKit
+import SwiftUI
+
+/// New feature, no Dart counterpart. One rail button per Mac app (its own icon, a dot while it runs, dimmed when it went missing):
+/// a click opens it or brings it forward. Dragged onto another Mac app it takes that place; the context menu opens, reveals,
+/// locates (a missing one), moves and removes it, after asking.
+struct NativeAppRailButtons: View {
+    @Environment(\.appTheme) private var theme
+    @Environment(\.toasts) private var toasts
+    let model: NativeAppsModel
+    @State private var removing: NativeAppRailItem?
+
+    /// A drag's payload starts with this, so a Mac app is never taken for a mini app (whose payload is its bare id).
+    static let dragPrefix = "native:"
+
+    var body: some View {
+        VStack(spacing: theme.spacing.s2) {
+            ForEach(model.railItems) { item in
+                RailLabeledButton(label: item.name, help: help(item)) {
+                    open(item)
+                } leading: {
+                    NativeAppRailIcon(icon: model.icon(forPath: item.path), running: item.running, missing: item.missing)
+                }
+                .draggable(Self.dragPrefix + item.id)
+                .dropDestination(for: String.self) { dropped, _ in
+                    guard let payload = dropped.first, payload.hasPrefix(Self.dragPrefix) else { return false }
+                    let id = String(payload.dropFirst(Self.dragPrefix.count))
+                    guard id != item.id else { return false }
+                    Task { await model.move(id: id, onto: item.id) }
+                    return true
+                }
+                .contextMenu { menu(item) }
+            }
+        }
+        .task { model.start() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in model.refreshMissing() }
+        .appConfirmDialog(isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
+                          title: appFormat("miniAppRemoveTitle", "Remove %1$@?", removing?.name ?? ""),
+                          message: appString("nativeAppRemoveMessage", "It only leaves the rail. The app itself is not affected."),
+                          confirmLabel: appString("miniAppRemove", "Remove from rail"), destructive: true) {
+            guard let item = removing else { return }
+            Task { await model.remove(item.id) }
+        }
+    }
+
+    private func help(_ item: NativeAppRailItem) -> String {
+        item.missing ? appFormat("nativeAppMissing", "%1$@ was not found. It may have been moved or uninstalled.", item.name) : item.name
+    }
+
+    private func app(_ item: NativeAppRailItem) -> NativeApp? { model.apps.first { $0.id == item.id } }
+
+    private func open(_ item: NativeAppRailItem) {
+        guard let app = app(item) else { return }
+        Task {
+            if case .failure = await model.launch(app) {
+                toasts?.show(item.missing ? help(item) : appFormat("nativeAppLaunchFailed", "Couldn't open %1$@", item.name), kind: .error)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func menu(_ item: NativeAppRailItem) -> some View {
+        Button(appString("nativeAppOpen", "Open")) { open(item) }.disabled(item.missing)
+        if item.missing {
+            Button(appString("nativeAppLocate", "Locate…")) { locate(item) }
+        } else {
+            Button(appString("nativeAppReveal", "Reveal in Finder")) { app(item).map(model.reveal) }
+        }
+        Divider()
+        Button(appString("nativeAppMoveUp", "Move up")) { Task { await model.move(id: item.id, by: -1) } }
+            .disabled(!model.canMove(id: item.id, by: -1))
+        Button(appString("nativeAppMoveDown", "Move down")) { Task { await model.move(id: item.id, by: 1) } }
+            .disabled(!model.canMove(id: item.id, by: 1))
+        Divider()
+        Button(appString("miniAppRemove", "Remove from rail"), role: .destructive) { removing = item }
+    }
+
+    /// Picks the app again; an app with the same identifier takes the new place, any other is added as a new button.
+    private func locate(_ item: NativeAppRailItem) {
+        guard let path = NativeAppPanel.chooseApp(message: appFormat("nativeAppLocateMessage", "Choose %1$@", item.name)) else { return }
+        Task {
+            if case .failure = await model.add(path: path) {
+                toasts?.show(appString("nativeAppNotAnApp", "That is not a Mac app."), kind: .error)
+            }
+        }
+    }
+}
+
+/// The "Add" button's menu (Add website… / Add Mac app…) as a real macOS menu popped up under the pointer: the rail is too narrow
+/// to hold a menu panel of its own.
+@MainActor
+enum RailPopupMenu {
+    static func show(_ entries: [(title: String, systemImage: String, action: () -> Void)]) {
+        let menu = NSMenu()
+        for entry in entries {
+            let item = ClosureMenuItem(title: entry.title, action: entry.action)
+            item.image = NSImage(systemSymbolName: entry.systemImage, accessibilityDescription: nil)
+            menu.addItem(item)
+        }
+        menu.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
+    }
+
+    private final class ClosureMenuItem: NSMenuItem {
+        private let run: () -> Void
+        init(title: String, action: @escaping () -> Void) {
+            run = action
+            super.init(title: title, action: #selector(fire), keyEquivalent: "")
+            target = self
+        }
+        required init(coder: NSCoder) { fatalError("init(coder:) is not used") }
+        @objc private func fire() { run() }
+    }
+}

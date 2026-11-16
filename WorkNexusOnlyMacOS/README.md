@@ -19,12 +19,13 @@ Quy ước kiến trúc và cách port: [PORTING.md](PORTING.md).
 
 | Area | State |
 |---|---|
-| Rail (workspace, chat + unread, accounts + chat badge, Connect, mini apps + Add, bell, update, settings) | wired, seen in screenshots |
+| Rail (workspace, chat + unread, accounts + chat badge, Connect, mini apps + Mac apps + Add, bell, update, settings) | wired, seen in screenshots |
 | Workspace pages: overview / integrations / members / workspace settings | wired (overview, connect dialog seen) |
 | ZenTao / GitLab / GitHub tool modules, detail slide-over (`.detailOverlay`), ticket editor route | wired (ZenTao + GitLab sections, detail, editor error state seen); needs real servers for data |
 | Chat (repository, services, unread counter, notification bridge -> `DesktopNotifier` / Dock badge, avatars via `\.personAvatar` / `\.personChip`) | wired; offline state seen, never connected to a server |
 | Translation (service, chat adapter, ticket Translation tab, card dot, settings) | wired; no real backend run |
 | Mini apps (rail, host stack, Add dialog) | wired; add dialog / pages not exercised |
+| Mac app shortcuts (new, no Dart counterpart: rail buttons that open / focus an installed Mac app, running dot, Add menu + picker dialog, settings list) | wired; unit + render tested, never launched an app from the real rail |
 | Notifications (bell, panel, poller, Dock badge), app update (banner, rail button, settings) | wired; need ZenTao / GitHub to produce data |
 | Settings: general, appearance, chat, translation, local data; quick settings popover | wired; appearance + quick settings seen |
 | Platform: tray + close-to-tray, window placement, app icon / name, resume counter | wired (off in demo mode) |
