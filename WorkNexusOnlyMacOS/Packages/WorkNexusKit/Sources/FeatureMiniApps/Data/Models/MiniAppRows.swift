@@ -1,3 +1,4 @@
+import Foundation
 import GRDB
 
 /// DB rows of the feature's tables; never leave `Data/` (rule 3.3).
@@ -9,6 +10,19 @@ struct MiniAppRow: Codable, FetchableRecord, PersistableRecord {
     var iconPath: String?
     var lastUrl: String?
     var position: Int
+}
+
+struct MiniAppTabsRow: Codable, FetchableRecord, PersistableRecord {
+    static let databaseTableName = "miniAppTabs"
+    var miniAppId: String
+    var tabsJson: String
+    var selected: Int
+
+    var urls: [String] { (tabsJson.data(using: .utf8).flatMap { try? JSONDecoder().decode([String].self, from: $0) }) ?? [] }
+    init(miniAppId: String, urls: [String], selected: Int) {
+        self.miniAppId = miniAppId; self.selected = selected
+        tabsJson = (try? JSONEncoder().encode(urls)).flatMap { String(data: $0, encoding: .utf8) } ?? "[]"
+    }
 }
 
 struct MiniAppPermissionRow: Codable, FetchableRecord, PersistableRecord {

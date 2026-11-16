@@ -919,6 +919,10 @@
     "en": "Layout",
     "vi": "Bố cục"
   },
+  "showPet": {
+    "en": "Show the TBChat character",
+    "vi": "Hiện nhân vật TBChat"
+  },
   "somethingWentWrong": {
     "en": "Something went wrong",
     "vi": "Đã xảy ra lỗi"

@@ -33,7 +33,7 @@ public struct ToolPaneScaffold<Content: View>: View {
                     if let subtitle { Text(subtitle).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx) }
                 }
                 Spacer(minLength: 0)
-                if let collapse { AppIconButton("sidebar.left", help: appString("paneCollapse", "Collapse sidebar"), action: collapse) }
+                if let collapse { AppIconButton(AppPanelIcon.collapse(.leading), help: appString("paneCollapse", "Collapse sidebar"), action: collapse) }
             }
             .padding(theme.spacing.s12)
             Divider().overlay(theme.colors.line)

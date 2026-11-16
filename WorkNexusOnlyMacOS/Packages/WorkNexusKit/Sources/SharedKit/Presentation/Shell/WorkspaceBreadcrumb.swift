@@ -55,7 +55,7 @@ struct WorkspaceBreadcrumb: View {
 private struct TrailLogo: View {
     @Environment(\.appTheme) private var theme
     let provider: ProviderType
-    var body: some View { BrandLogoBadge(provider, size: 16).padding(.leading, theme.spacing.s6) }
+    var body: some View { BrandLogoBadge(provider, size: 28).padding(.horizontal, theme.spacing.s6) }
 }
 
 /// `/ Tool / Section / Scope` of an account place.

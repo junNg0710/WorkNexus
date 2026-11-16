@@ -10,6 +10,8 @@ public protocol MiniAppRepository: Sendable {
     func save(_ app: MiniApp) async -> Outcome<Void>
     /// Remembers `url` as the page app `id` was last on. Touches nothing else, so it cannot undo an edit made meanwhile.
     func saveLastUrl(id: String, url: String) async -> Outcome<Void>
+    /// Remembers the pages of the tabs app `id` has open and which one is in front (`MiniApp.openTabs`). Touches nothing else.
+    func saveTabs(id: String, urls: [String], selected: Int) async -> Outcome<Void>
     /// Puts the apps in the order of `ids` on the rail, first to last. Touches nothing but their positions.
     func saveOrder(_ ids: [String]) async -> Outcome<Void>
     /// Removes the app, its remembered permissions and its icon file.
@@ -18,6 +20,11 @@ public protocol MiniAppRepository: Sendable {
     func fetchSiteIcon(id: String, pageUrl: String) async -> Outcome<String?>
     /// Copies the image at `sourcePath` in as app `id`'s icon; the kept file's path.
     func importIcon(id: String, sourcePath: String) async -> Outcome<String>
+}
+
+public extension MiniAppRepository {
+    /// Where tabs are not kept, they are not remembered.
+    func saveTabs(id: String, urls: [String], selected: Int) async -> Outcome<Void> { .success(()) }
 }
 
 /// Ported from: lib/features/mini_apps/domain/repositories/mini_app_permission_repository.dart

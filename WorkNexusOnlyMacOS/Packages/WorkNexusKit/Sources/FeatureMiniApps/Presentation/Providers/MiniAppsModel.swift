@@ -126,7 +126,16 @@ public final class MiniAppsModel: LinkHandler {
     func tabsModel(for app: MiniApp) -> MiniAppTabsModel {
         if let existing = tabSets[app.id] { return existing }
         let claimed = takeNavigation(for: app.id)
-        let tabs = MiniAppTabsModel(appId: app.id, initialUrl: claimed ?? app.lastUrl ?? app.url, apps: services.apps)
+        let app = current(app)
+        let kept = app.openTabs.filter { URL(string: $0).map { $0.scheme == "http" || $0.scheme == "https" } ?? false }
+        let tabs: MiniAppTabsModel
+        if kept.count > 1 {
+            tabs = MiniAppTabsModel(appId: app.id, restoring: kept, selected: app.selectedTab, apps: services.apps)
+            // A link that started the app opens in a tab of its own beside the ones it had.
+            if let claimed { tabs.newTab(url: claimed) }
+        } else {
+            tabs = MiniAppTabsModel(appId: app.id, initialUrl: claimed ?? kept.first ?? app.lastUrl ?? app.url, apps: services.apps)
+        }
         tabs.prompter = MiniAppPermissionPrompter(model: self)
         tabSets[app.id] = tabs
         return tabs

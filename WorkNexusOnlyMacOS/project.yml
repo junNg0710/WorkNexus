@@ -25,6 +25,7 @@ targets:
       - { path: App/Resources/Brands, type: folder, buildPhase: resources }
       - { path: App/Resources/Stickers, type: folder, buildPhase: resources }
       - { path: App/Resources/Tray, type: folder, buildPhase: resources }
+      - { path: App/Resources/Pet, type: folder, buildPhase: resources }
     info:
       path: App/Info.plist
       properties:

@@ -1,6 +1,9 @@
 /// Ported from: lib/features/mini_apps/data/mappers/mini_app_mapper.dart, mini_app_permission_mapper.dart
 extension MiniApp {
-    init(row r: MiniAppRow) { self.init(id: r.id, name: r.name, url: r.url, iconPath: r.iconPath, lastUrl: r.lastUrl, position: r.position) }
+    init(row r: MiniAppRow, tabs: MiniAppTabsRow? = nil) {
+        self.init(id: r.id, name: r.name, url: r.url, iconPath: r.iconPath, lastUrl: r.lastUrl, position: r.position,
+                  openTabs: tabs?.urls ?? [], selectedTab: tabs?.selected ?? 0)
+    }
 }
 
 extension MiniAppRow {

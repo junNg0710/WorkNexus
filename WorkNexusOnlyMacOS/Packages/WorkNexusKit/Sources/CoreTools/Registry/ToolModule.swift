@@ -74,7 +74,7 @@ public extension ToolModule {
     var roleLabel: String { "" }
     func metrics(account: Account) -> AsyncStream<ToolMetrics?> { AsyncStream { $0.yield(nil); $0.finish() } }
     func scopeTickets(location: ToolLocation, tickets: [Ticket]) -> [Ticket] { tickets }
-    func paneCollapsible(location: ToolLocation) -> Bool { false }
+    func paneCollapsible(location: ToolLocation) -> Bool { true }
     func webURL(account: Account, location: ToolLocation) -> URL? { nil }
     func scopeTitle(account: Account, location: ToolLocation) -> AsyncStream<String?>? { nil }
     func buildDetail(ticket: Ticket, onClose: @escaping () -> Void) -> AnyView? { nil }

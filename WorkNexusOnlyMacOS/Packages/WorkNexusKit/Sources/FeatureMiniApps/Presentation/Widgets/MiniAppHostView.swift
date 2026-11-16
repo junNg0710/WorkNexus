@@ -45,7 +45,7 @@ private struct MiniAppPageBody: View {
             MiniAppPasswordSaveBar(passwords: browser.passwords)
             ZStack {
                 // Every tab keeps its page; only the selected one shows (as the running apps do on the rail).
-                ForEach(tabs.tabs) { tab in
+                ForEach(tabs.tabs.filter(\.activated)) { tab in
                     let shown = tab.id == tabs.selectedId
                     MiniAppTabPage(app: app, model: model, tabs: tabs, tab: tab)
                         .opacity(shown ? 1 : 0).allowsHitTesting(shown).accessibilityHidden(!shown)

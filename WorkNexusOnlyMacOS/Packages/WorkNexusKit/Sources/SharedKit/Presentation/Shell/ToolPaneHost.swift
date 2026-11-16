@@ -46,11 +46,17 @@ struct ToolPaneHost: View {
 
     private var place: Place {
         switch model.nav.state.rail {
-        case .workspace: Place(key: "workspace", view: AnyView(WorkspacePane(model: model)))
-        case .settings: Place(key: "settings", view: AnyView(SettingsPane(model: model)))
-        case .chat: Place(key: "chat", view: AnyView(ChatAccountsPane(model: model)))
+        case .workspace: foldable("workspace", icon: "square.grid.2x2", label: appString("workspace", "Workspace"), WorkspacePane(model: model))
+        case .settings: foldable("settings", icon: "gearshape", label: appString("settings", "Settings"), SettingsPane(model: model))
+        case .chat: foldable("chat", icon: "bubble.left.and.bubble.right", label: appString("chat", "Chat"), ChatAccountsPane(model: model))
         case .account(let id): accountPlace(id)
         }
+    }
+
+    /// A pane every place can fold into the strip beside the rail, with a collapse button in its header.
+    private func foldable<V: View>(_ key: String, icon: String, label: String, _ pane: V) -> Place {
+        Place(key: key, view: AnyView(pane.paneCollapse { model.nav.setPane(key, collapsed: true) }),
+              collapse: CollapseInfo(key: key, icon: icon, label: label))
     }
 
     private func accountPlace(_ id: String) -> Place {
@@ -83,7 +89,7 @@ private struct CollapsedPaneStrip: View {
             VStack(spacing: theme.spacing.s4) {
                 Image(systemName: icon).font(.system(size: theme.sizes.icon20)).foregroundStyle(theme.colors.tx2)
                 Text(label).font(theme.typography.caption).foregroundStyle(theme.colors.tx2).lineLimit(2).multilineTextAlignment(.center)
-                Image(systemName: "sidebar.left").font(.system(size: theme.sizes.icon14)).foregroundStyle(theme.colors.tx3)
+                Image(systemName: AppPanelIcon.expand(.leading)).font(.system(size: theme.sizes.icon14)).foregroundStyle(theme.colors.tx3)
                     .padding(.top, theme.spacing.s4)
             }
             .frame(maxWidth: .infinity).padding(.vertical, theme.spacing.s8)

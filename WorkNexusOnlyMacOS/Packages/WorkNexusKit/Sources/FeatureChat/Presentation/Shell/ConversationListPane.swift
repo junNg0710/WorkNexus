@@ -22,7 +22,7 @@ struct ConversationListPane: View {
                 }
                 .disabled(model.selfUserId == nil)
                 AppIconButton("square.and.pencil", help: shellString("chatNewChat", "New chat")) { model.showNewChat = true }
-                AppIconButton("sidebar.left", help: shellString("chatHideList", "Hide chat list")) { visibility.listHidden = true }
+                AppIconButton(AppPanelIcon.collapse(.leading), help: shellString("chatHideList", "Hide chat list")) { visibility.listHidden = true }
             }
             .padding(.horizontal, compact ? theme.spacing.s12 : theme.spacing.s20).padding(.vertical, theme.spacing.s12)
             Divider().overlay(theme.colors.line)

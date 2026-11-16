@@ -159,7 +159,7 @@ final class GRDBNativeAppRepositoryTests: XCTestCase {
         let tables = try db.writer.read { try String.fetchAll($0, sql: "SELECT name FROM sqlite_master WHERE type = 'table'") }
         XCTAssertTrue(tables.contains("nativeApps")); XCTAssertTrue(tables.contains("miniApps")); XCTAssertTrue(tables.contains("miniAppPermissions"))
         let applied = try db.writer.read { try String.fetchAll($0, sql: "SELECT identifier FROM grdb_migrations") }
-        XCTAssertEqual(applied.filter { $0.hasPrefix("miniapps_") }, ["miniapps_v1", "miniapps_v2"], "v1 is untouched, v2 follows it")
+        XCTAssertEqual(applied.filter { $0.hasPrefix("miniapps_") }, ["miniapps_v1", "miniapps_v2", "miniapps_v3"], "v1 is untouched, v2 and v3 follow it")
         XCTAssertEqual(MiniAppsMigrations.migrationId, "miniapps_v1")
     }
 

@@ -8,6 +8,7 @@ actor FakeMiniAppRepo: MiniAppRepository {
     private(set) var saved: [MiniApp] = []
     private(set) var order: [String] = []
     private(set) var icons = 0
+    private(set) var tabSaves: [(id: String, urls: [String], selected: Int)] = []
     var failSave = false
     nonisolated func watchAll() -> AsyncStream<[MiniApp]> { AsyncStream { $0.finish() } }
     func save(_ app: MiniApp) async -> Outcome<Void> {
@@ -15,6 +16,7 @@ actor FakeMiniAppRepo: MiniAppRepository {
         saved.append(app); return .success(())
     }
     func saveLastUrl(id: String, url: String) async -> Outcome<Void> { .success(()) }
+    func saveTabs(id: String, urls: [String], selected: Int) async -> Outcome<Void> { tabSaves.append((id, urls, selected)); return .success(()) }
     func saveOrder(_ ids: [String]) async -> Outcome<Void> { order = ids; return .success(()) }
     func delete(id: String) async -> Outcome<Void> { .success(()) }
     func fetchSiteIcon(id: String, pageUrl: String) async -> Outcome<String?> { icons += 1; return .success(nil) }

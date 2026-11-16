@@ -19,7 +19,7 @@ struct ChatSidePanelFrame<Content: View>: View {
         VStack(spacing: 0) {
             HStack(spacing: theme.spacing.s4) {
                 if let onCollapse {
-                    AppIconButton("sidebar.right", help: shellString("chatHideInfo", "Hide chat info"), action: onCollapse)
+                    AppIconButton(AppPanelIcon.collapse(.trailing), help: shellString("chatHideInfo", "Hide chat info"), action: onCollapse)
                 }
                 if let onBack { AppIconButton("arrow.left", help: shellString("chatBackToInfo", "Back to chat info"), action: onBack) }
                 Text(title).font(theme.typography.title).foregroundStyle(theme.colors.tx).lineLimit(1)

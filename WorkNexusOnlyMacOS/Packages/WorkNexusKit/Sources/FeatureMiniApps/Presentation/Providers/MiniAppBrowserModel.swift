@@ -40,6 +40,13 @@ final class MiniAppBrowserModel: Identifiable {
     private(set) var popups: [MiniAppPopupWindow] = []
 
     let appId: String
+    /// Whether the tab has a page: a tab restored in the background has only its address until it is first shown, so
+    /// reopening an app with many tabs does not load them all at once.
+    private(set) var activated = true
+    func activate() { activated = true }
+    func makeDormant() { activated = false }
+    /// Told when the page moves, so the app's tab list can be kept.
+    @ObservationIgnored var onMoved: (() -> Void)?
     var loading: Bool { progress < 1 }
     /// The saved passwords of the page: the toolbar's list, the "Save password?" bar.
     let passwords = MiniAppPasswordsModel()
@@ -87,6 +94,7 @@ final class MiniAppBrowserModel: Identifiable {
     func onVisited(_ url: URL, canGoBack back: Bool, canGoForward forward: Bool) {
         address = url.absoluteString
         canGoBack = back; canGoForward = forward
+        onMoved?()
         if persistsLastUrl && Self.isWeb(url) { rememberLater(url.absoluteString) }
     }
 
@@ -120,6 +128,9 @@ final class MiniAppBrowserModel: Identifiable {
         parts?.teardown()
         parts = nil
     }
+
+    /// The page's address when it is a web page (`http` / `https`): what a tab list keeps.
+    var webAddress: String? { URL(string: address).flatMap { Self.isWeb($0) ? address : nil } }
 
     private static func isWeb(_ url: URL) -> Bool { url.scheme == "http" || url.scheme == "https" }
 

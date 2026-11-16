@@ -13,9 +13,14 @@ struct ZentaoTeamGroupDialog: View {
     @State private var users: ZentaoLoad<[ProviderUser]> = .loading
     @State private var filter = ""
     @State private var busy = false
+    private let preloaded: [ProviderUser]?
 
-    init(deps: ZentaoDependencies, state: ZentaoUIState, account: Account, bugs: Bool, editing: ZenTaoTeamGroup?, onClose: @escaping () -> Void) {
+    /// `people` skips reading the user list (tests, previews).
+    init(deps: ZentaoDependencies, state: ZentaoUIState, account: Account, bugs: Bool, editing: ZenTaoTeamGroup?,
+         people: [ProviderUser]? = nil, onClose: @escaping () -> Void) {
         self.deps = deps; self.state = state; self.account = account; self.bugs = bugs; self.editing = editing; self.onClose = onClose
+        self.preloaded = people
+        _users = State(initialValue: people.map { .loaded($0) } ?? .loading)
         _name = State(initialValue: editing?.name ?? "")
         _picked = State(initialValue: Dictionary((editing?.members ?? []).map { ($0.login, $0) }, uniquingKeysWith: { a, _ in a }))
     }
@@ -46,22 +51,34 @@ struct ZentaoTeamGroupDialog: View {
 
     var body: some View {
         let ok = (try? result.get()) != nil
-        ZentaoActionFrame(title: editing == nil ? appString("leaderNewGroup", "New team group…") : appString("leaderEditGroup", "Edit this group…"),
-                          icon: "person.3", submitLabel: appString("save", "Save"), busy: busy, canSubmit: ok, onSubmit: submit, onClose: onClose) {
-            ZentaoFieldLabel(appString("leaderGroupName", "Group name"))
-            ZentaoTextInput(text: $name)
-            ZentaoFieldGap()
-            ZentaoFieldLabel(appFormat("leaderGroupPeople", "People (%1$@ picked)", "\(picked.count)"))
-            AppSearchField(text: $filter, hint: appString("searchUsers", "Search users…"))
-            Color.clear.frame(height: theme.spacing.s8)
-            switch users {
-            case .loading: AppInlineSpinner()
-            case .failed: AppInlineNote(appString("taskDetailUsersLoadFailed", "Couldn't load users"), isError: true)
-            case .loaded(let all): list(visible(all))
+        AppDialogFrame(title: editing == nil ? appString("leaderNewGroup", "New team group…") : appString("leaderEditGroup", "Edit this group…"),
+                       leadingIcon: "person.3", maxWidth: theme.sizes.dialogMd, onClose: onClose) {
+            // No outer scroll view: the dialog is as tall as its content, and only the list of people scrolls.
+            VStack(alignment: .leading, spacing: 0) {
+                ZentaoFieldLabel(appString("leaderGroupName", "Group name"))
+                ZentaoTextInput(text: $name)
+                ZentaoFieldGap()
+                ZentaoFieldLabel(appFormat("leaderGroupPeople", "People (%1$@ picked)", "\(picked.count)"))
+                AppSearchField(text: $filter, hint: appString("searchUsers", "Search users…"))
+                Color.clear.frame(height: theme.spacing.s8)
+                switch users {
+                case .loading: AppInlineSpinner()
+                case .failed: AppInlineNote(appString("taskDetailUsersLoadFailed", "Couldn't load users"), isError: true)
+                case .loaded(let all): list(visible(all))
+                }
             }
+            .padding(EdgeInsets(top: theme.spacing.s4, leading: theme.spacing.s24, bottom: theme.spacing.s24, trailing: theme.spacing.s24))
+        } actions: {
+            Spacer(minLength: 0)
+            if busy { ProgressView().controlSize(.small) }
+            AppButton(appString("cancel", "Cancel"), kind: .ghost, action: onClose).disabled(busy)
+            AppButton(appString("save", "Save"), kind: .primary, action: submit).disabled(busy || !ok)
         }
-        .task { await loadUsers() }
+        .task { if preloaded == nil { await loadUsers() } }
     }
+
+    /// Up to `maxListHeight` tall - exactly as tall as its rows when there are few - then it scrolls.
+    private static let maxListHeight: CGFloat = 340
 
     private func list(_ people: [ProviderUser]) -> some View {
         ScrollView {
@@ -82,7 +99,8 @@ struct ZentaoTeamGroupDialog: View {
                 }
             }
         }
-        .frame(height: 260)
+        .frame(maxHeight: Self.maxListHeight)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private func loadUsers() async {

@@ -6,6 +6,7 @@ import GRDB
 public enum MiniAppsMigrations {
     public static let migrationId = "miniapps_v1"
     public static let nativeAppsMigrationId = "miniapps_v2"
+    public static let openTabsMigrationId = "miniapps_v3"
 
     public static let registrar: MigrationRegistrar = { migrator in
         migrator.registerMigration(migrationId) { db in
@@ -34,6 +35,14 @@ public enum MiniAppsMigrations {
                 t.column("bundleId", .text).notNull().unique()
                 t.column("path", .text).notNull()
                 t.column("position", .integer).notNull().defaults(to: 0)
+            }
+        }
+        // New feature, no Dart counterpart: the tabs a mini app had open, as a JSON list of addresses, and the one in front.
+        migrator.registerMigration(openTabsMigrationId) { db in
+            try db.create(table: "miniAppTabs") { t in
+                t.primaryKey("miniAppId", .text)
+                t.column("tabsJson", .text).notNull()
+                t.column("selected", .integer).notNull().defaults(to: 0)
             }
         }
     }

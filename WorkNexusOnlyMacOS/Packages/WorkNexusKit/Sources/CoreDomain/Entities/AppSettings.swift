@@ -44,6 +44,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var tableColumnWidths: [String: Double] = [:]
     public var docsReaderBrightness: String?
     public var viewModes: [String: String] = [:]
+    /// The TBChat character that stands in the window (macOS only).
+    public var showPet = true
 
     public init() {}
 
@@ -72,7 +74,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         s.pinnedProjects = v(.pinnedProjects, s.pinnedProjects); s.pinnedExecutions = v(.pinnedExecutions, s.pinnedExecutions)
         s.sidebarWidth = v(.sidebarWidth, s.sidebarWidth); s.tableColumnWidths = v(.tableColumnWidths, s.tableColumnWidths)
         s.docsReaderBrightness = try? c.decodeIfPresent(String.self, forKey: .docsReaderBrightness)
-        s.viewModes = v(.viewModes, s.viewModes)
+        s.viewModes = v(.viewModes, s.viewModes); s.showPet = v(.showPet, s.showPet)
         self = s
     }
 }

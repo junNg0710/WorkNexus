@@ -9,21 +9,35 @@ struct MiniAppTabStrip: View {
     let tabs: MiniAppTabsModel
 
     var body: some View {
-        HStack(spacing: theme.spacing.s4) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: theme.spacing.s4) {
-                    ForEach(tabs.tabs) { tab in
-                        MiniAppTabItem(app: app, tab: tab, selected: tab.id == tabs.selectedId, closable: tabs.canCloseTab,
-                                       onSelect: { tabs.select(tab.id) }, onClose: { tabs.close(tab.id) })
-                    }
-                }
+        // "+" sits right after the last tab while they fit; once they do not, the tabs scroll and "+" stays at the end.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: theme.spacing.s4) {
+                items
+                newTabButton
+                Spacer(minLength: 0)
             }
-            MiniAppStripButton(symbol: "plus", help: appString("miniAppNewTab", "New tab")) { tabs.newTab(url: app.url) }
-                .disabled(!tabs.canOpenTab).opacity(tabs.canOpenTab ? 1 : 0.4)
+            HStack(spacing: theme.spacing.s4) {
+                ScrollView(.horizontal, showsIndicators: false) { HStack(spacing: theme.spacing.s4) { items } }
+                newTabButton
+            }
         }
         .padding(.horizontal, theme.spacing.s10).padding(.vertical, theme.spacing.s4)
         .background(theme.colors.panel)
         .overlay(alignment: .bottom) { Rectangle().fill(theme.colors.line).frame(height: theme.borders.hairline) }
+    }
+}
+
+private extension MiniAppTabStrip {
+    @ViewBuilder var items: some View {
+        ForEach(tabs.tabs) { tab in
+            MiniAppTabItem(app: app, tab: tab, selected: tab.id == tabs.selectedId, closable: tabs.canCloseTab,
+                           onSelect: { tabs.select(tab.id) }, onClose: { tabs.close(tab.id) })
+        }
+    }
+
+    var newTabButton: some View {
+        MiniAppStripButton(symbol: "plus", help: appString("miniAppNewTab", "New tab")) { tabs.newTab(url: app.url) }
+            .disabled(!tabs.canOpenTab).opacity(tabs.canOpenTab ? 1 : 0.4)
     }
 }
 

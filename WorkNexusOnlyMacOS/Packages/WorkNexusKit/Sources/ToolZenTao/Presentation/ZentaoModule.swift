@@ -104,7 +104,7 @@ public final class ZentaoModule: ToolModule {
     }
 
     /// Docs' libraries tree folds away, so a document can take the width.
-    public func paneCollapsible(location: ToolLocation) -> Bool { location.section == ZentaoSection.docs }
+    public func paneCollapsible(location: ToolLocation) -> Bool { true }
 
     public func webURL(account: Account, location: ToolLocation) -> URL? {
         guard let base = account.baseUrl, !base.isEmpty else { return nil }

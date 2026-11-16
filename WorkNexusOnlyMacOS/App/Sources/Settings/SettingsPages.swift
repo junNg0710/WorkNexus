@@ -50,6 +50,9 @@ struct GeneralSettingsPage: View {
                 SettingsToggleRow(label: appString("companyTint", "Company tint"), isOn: s.companyTint) { on in
                     shell.updateSettings { $0.companyTint = on }
                 }
+                SettingsToggleRow(label: appString("showPet", "Show the TBChat character"), isOn: s.showPet) { on in
+                    shell.updateSettings { $0.showPet = on }
+                }
                 LanguagePicker(shell: shell)
             }
             MiniAppSettingsCard(feature: root.miniApps, liveLimit: s.miniAppLiveLimit, notifyInBackground: s.miniAppNotifyInBackground,

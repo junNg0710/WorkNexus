@@ -28255,6 +28255,23 @@
         }
       }
     },
+    "showPet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show the TBChat character"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện nhân vật TBChat"
+          }
+        }
+      }
+    },
     "somethingWentWrong": {
       "extractionState": "manual",
       "localizations": {

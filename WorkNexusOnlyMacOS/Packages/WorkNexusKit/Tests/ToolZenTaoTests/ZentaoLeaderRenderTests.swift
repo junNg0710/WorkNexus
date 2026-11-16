@@ -118,4 +118,22 @@ final class ZentaoLeaderRenderTests: XCTestCase {
         XCTAssertEqual(env.state.taskTeam?.failed, ["luci"])
         try await render("team-board", section(env), size: CGSize(width: 1500, height: 640))
     }
+
+    func testGroupDialogIsAsTallAsItsContentAndTheListScrolls() async throws {
+        let env = await env()
+        let account = env.store.accounts["zt1"]!
+        let many = (1...40).map { ProviderUser(account: "user\($0)", displayName: "Person \($0)_VN_Flutter") }
+        try await render("group-dialog-many", AppDialogFrameHost { ZentaoTeamGroupDialog(deps: env.deps, state: env.state, account: account, bugs: false,
+                                                                                         editing: nil, people: many, onClose: {}) },
+                         size: CGSize(width: 700, height: 800))
+        try await render("group-dialog-few", AppDialogFrameHost { ZentaoTeamGroupDialog(deps: env.deps, state: env.state, account: account, bugs: false,
+                                                                                        editing: nil, people: Array(many.prefix(3)), onClose: {}) },
+                         size: CGSize(width: 700, height: 800))
+    }
+}
+
+/// The dialog on a plain backdrop, top-aligned so its own height shows.
+private struct AppDialogFrameHost<Content: View>: View {
+    let content: () -> Content
+    var body: some View { content().padding(20).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) }
 }

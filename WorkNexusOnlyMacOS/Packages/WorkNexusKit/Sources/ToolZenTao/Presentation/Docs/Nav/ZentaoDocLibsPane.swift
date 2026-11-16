@@ -50,7 +50,7 @@ public struct ZentaoDocLibsPane: View {
             HStack(spacing: 0) {
                 ScopeFilterField(text: Binding(get: { docs.filter(for: account.id) }, set: { docs.setFilter($0, accountId: account.id) }),
                                  prompt: appString("docsFilterLibraries", "Filter libraries"))
-                ZentaoDocToolButton(systemImage: "sidebar.left", help: appString("paneCollapse", "Collapse sidebar"), small: true) {
+                ZentaoDocToolButton(systemImage: AppPanelIcon.collapse(.leading), help: appString("paneCollapse", "Collapse sidebar"), small: true) {
                     docs.setPane(collapsed: true, accountId: account.id, section: location.section)
                 }
                 .padding(.trailing, theme.spacing.s6)

@@ -117,7 +117,7 @@ final class PresentationBoardsRenderTests: XCTestCase {
         XCTAssertEqual(m.sections.first?.viewModes.map(\.id), ["board", "list"])
         XCTAssertEqual(m.sections.last?.viewModes.count, 0)
         XCTAssertTrue(m.paneCollapsible(location: ToolLocation(section: ZentaoSection.docs)))
-        XCTAssertFalse(m.paneCollapsible(location: ToolLocation(section: ZentaoSection.bugs)))
+        XCTAssertTrue(m.paneCollapsible(location: ToolLocation(section: ZentaoSection.bugs)))   // every pane folds
         let account = env.store.accounts["zt1"]!
         XCTAssertEqual(m.webURL(account: account, location: ToolLocation(section: ZentaoSection.docs))?.absoluteString, "https://zentao.example.com/doc-index.html")
         XCTAssertEqual(m.webURL(account: account, location: ToolLocation(section: ZentaoSection.bugs, scopeId: "4"))?.absoluteString, "https://zentao.example.com/product-browse-4.html")

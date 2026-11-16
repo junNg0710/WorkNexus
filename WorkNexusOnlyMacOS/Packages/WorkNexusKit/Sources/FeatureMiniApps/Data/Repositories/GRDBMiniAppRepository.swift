@@ -16,7 +16,10 @@ public final class GRDBMiniAppRepository: MiniAppRepository, @unchecked Sendable
     }
 
     public func watchAll() -> AsyncStream<[MiniApp]> {
-        db.observe { try MiniAppRow.order(Column("position")).fetchAll($0).map(MiniApp.init(row:)) }
+        db.observe { db in
+            let tabs = Dictionary(try MiniAppTabsRow.fetchAll(db).map { ($0.miniAppId, $0) }, uniquingKeysWith: { a, _ in a })
+            return try MiniAppRow.order(Column("position")).fetchAll(db).map { MiniApp(row: $0, tabs: tabs[$0.id]) }
+        }
     }
 
     public func save(_ app: MiniApp) async -> Outcome<Void> {
@@ -25,6 +28,10 @@ public final class GRDBMiniAppRepository: MiniAppRepository, @unchecked Sendable
 
     public func saveLastUrl(id: String, url: String) async -> Outcome<Void> {
         await write { try $0.execute(sql: "UPDATE miniApps SET lastUrl = ? WHERE id = ?", arguments: [url, id]) }
+    }
+
+    public func saveTabs(id: String, urls: [String], selected: Int) async -> Outcome<Void> {
+        await write { try MiniAppTabsRow(miniAppId: id, urls: urls, selected: selected).save($0) }
     }
 
     /// Gives each app in `ids` its index as position, in one write.
@@ -38,6 +45,7 @@ public final class GRDBMiniAppRepository: MiniAppRepository, @unchecked Sendable
         icons.delete(id: id)
         return await write { db in
             try db.execute(sql: "DELETE FROM miniAppPermissions WHERE miniAppId = ?", arguments: [id])
+            try db.execute(sql: "DELETE FROM miniAppTabs WHERE miniAppId = ?", arguments: [id])
             try db.execute(sql: "DELETE FROM miniApps WHERE id = ?", arguments: [id])
         }
     }
