@@ -109,6 +109,7 @@ struct RootEnvironment: ViewModifier {
         content
             .environment(\.appTheme, theme)
             .openCodeLinkGate(.shared)
+            .zentaoTodoPrompt(r.todoPrompt)
             .environment(\.services, r.services)
             .environment(\.chatServices, r.chat.services)
             .environment(\.chatSettings, ChatSettings(r.shell.settings))

@@ -1,4 +1,5 @@
 import CoreDomain
+import CoreTools
 import CoreUI
 import Foundation
 import Observation
@@ -21,9 +22,12 @@ public final class TaskEditorController {
     private let now: () -> Date
     @ObservationIgnored private var sync: RichTextDraftSync?
 
+    /// What a new ticket starts filled in with (one made from a chat message); nil for an ordinary one.
+    private let prefill: TicketEditorPrefill?
+
     public init(launch: TicketEditorLaunch, gateway: TicketEditorGateway, autosaveDelay: Duration = DraftAutosave.defaultDelay,
-                now: @escaping () -> Date = Date.init) {
-        self.launch = launch; self.gateway = gateway; self.now = now
+                prefill: TicketEditorPrefill? = nil, now: @escaping () -> Date = Date.init) {
+        self.launch = launch; self.gateway = gateway; self.now = now; self.prefill = prefill
         autosave = gateway.drafts.map { DraftAutosave($0, delay: autosaveDelay) }
     }
 
@@ -51,7 +55,9 @@ public final class TaskEditorController {
         case .failure(let f): fail(f)
         case .success(let form):
             let uid = FormValueFormat.newFormUid()
-            begin(TaskEditorState(form: form, draft: form.draft, uid: uid, draftId: launch.isNew ? (launch.draftId ?? uid) : nil))
+            var draft = form.draft
+            if launch.isNew, let prefill { draft.name = prefill.title; draft.desc = prefill.bodyHtml + draft.desc }
+            begin(TaskEditorState(form: form, draft: draft, uid: uid, draftId: launch.isNew ? (launch.draftId ?? uid) : nil))
         }
     }
 

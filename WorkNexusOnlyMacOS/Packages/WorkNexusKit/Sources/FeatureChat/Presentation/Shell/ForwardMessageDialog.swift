@@ -2,12 +2,19 @@ import CoreDomain
 import CoreUI
 import SwiftUI
 
-/// Picks one or more chats of the message's account and forwards the message to them. Lists only chats the user may post in.
+/// The messages the "forward to…" picker is open on; `onDone` runs once they were forwarded.
+struct ChatForwardRequest {
+    var messages: [ChatMessage]
+    var onDone: () -> Void = {}
+}
+
+/// Picks one or more chats of the message's account and forwards the message (or the picked messages, oldest first)
+/// to them. Lists only chats the user may post in.
 /// Ported from: lib/features/chat/presentation/widgets/forward_message_dialog.dart
 struct ForwardMessageDialog: View {
     @Environment(\.appTheme) private var theme
     let model: ChatShellModel
-    let message: ChatMessage
+    let request: ChatForwardRequest
     @State private var search = ""
     @State private var selected: [String] = []
     @State private var busy = false
@@ -17,7 +24,7 @@ struct ForwardMessageDialog: View {
         AppDialogFrame(title: shellString("chatForwardTitle", "Forward to…"), leadingIcon: "arrowshape.turn.up.right",
                        maxWidth: theme.sizes.dialogSm, onClose: close) {
             VStack(alignment: .leading, spacing: theme.spacing.s12) {
-                Text(ChatShellLabels.preview(message)).font(theme.typography.meta).foregroundStyle(theme.colors.tx2).lineLimit(2)
+                Text(preview).font(theme.typography.meta).foregroundStyle(theme.colors.tx2).lineLimit(2)
                 AppSearchField(text: $search, hint: shellString("chatSearch", "Search"), autofocus: true)
                 if shown.isEmpty {
                     AppStateView(.empty(shellString("chatNoMatches", "No matches")))
@@ -44,13 +51,22 @@ struct ForwardMessageDialog: View {
         selected.count > 1 ? shellString("chatForwardTo", "Forward to {count} chats", ["count": "\(selected.count)"]) : shellString("chatForward", "Forward")
     }
 
-    private func close() { model.forwardMessage = nil }
+    /// The message, or how many when several are forwarded together.
+    private var preview: String {
+        guard request.messages.count == 1, let only = request.messages.first else {
+            return shellString("chatForwardMany", "{count} messages", ["count": "\(request.messages.count)"])
+        }
+        return ChatShellLabels.preview(only)
+    }
+
+    private func close() { model.forwardRequest = nil }
     private func toggle(_ gid: String) { if let at = selected.firstIndex(of: gid) { selected.remove(at: at) } else { selected.append(gid) } }
 
     private func forward() async {
         busy = true
         let count = selected.count
-        if await model.forward(message, to: selected) {
+        if await model.forward(request.messages, to: selected) {
+            request.onDone()
             model.toasts.show(count == 1 ? shellString("chatForwarded", "Forwarded", ["count": "1"])
                               : shellString("chatForwarded", "Forwarded to {count} chats", ["count": "\(count)"]))
             close()

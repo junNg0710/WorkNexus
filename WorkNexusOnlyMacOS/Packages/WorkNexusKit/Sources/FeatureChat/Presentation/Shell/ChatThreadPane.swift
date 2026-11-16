@@ -22,6 +22,8 @@ struct ChatThreadPane: View {
                     .overlay(alignment: .topLeading) { ChatFloatingVideo(model: state.video) }
                 ChatComposerView(state: state, hint: shellString("chatMessageTo", "Type @ to mention, message {name}",
                                                                  ["name": ChatShellLabels.title(state.chat, state.users)]))
+                    // "Multiple select" covers the composer with its bar; what was being written stays underneath.
+                    .overlay { if state.isSelecting { ChatSelectionBar(model: model, state: state) } }
             }
             .frame(maxWidth: .infinity)
             .background { ChatWallpaperView() }
@@ -42,7 +44,14 @@ struct ChatThreadPane: View {
 extension ChatThreadPane {
     /// What the message list asks of the rest of the chat UI: open a profile; save an image as a sticker.
     @MainActor private func threadActions(_ state: ChatThreadState) -> ChatThreadActions {
-        var actions = ChatThreadActions(openProfile: { model.profileUserId = $0 }, forward: { model.forwardMessage = $0 })
+        var actions = ChatThreadActions(openProfile: { model.profileUserId = $0 },
+                                        forward: { model.forwardRequest = ChatForwardRequest(messages: [$0]) })
+        if let open = model.events.onCreateTicket {
+            let accountId = model.accountId
+            actions.createTicket = { kind, messages in
+                open(ChatTicketRequest(kind: kind, accountId: accountId, seed: ChatMessageExport.seed(messages, state: state)))
+            }
+        }
         if let chat = services?.chat, let stickers = services?.stickers {
             let save = SaveImageAsSticker(chat, stickers)
             actions.saveAsSticker = { message in Task { _ = await save(accountId: message.accountId, content: message.content) } }

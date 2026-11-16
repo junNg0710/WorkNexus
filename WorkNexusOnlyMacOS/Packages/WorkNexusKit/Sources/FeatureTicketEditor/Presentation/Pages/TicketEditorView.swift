@@ -55,6 +55,9 @@ public struct TicketEditorView: View {
 
     private struct FormKey: Hashable { let launch: TicketEditorLaunch; let epoch: Int }
 
+    /// What the new ticket starts filled in with (made from a chat message), from the nav state that opened the editor.
+    private var prefill: TicketEditorPrefill? { (explicitNav ?? environmentNav)?.state.editorPrefill }
+
     private var actions: EditorActions {
         let nav = explicitNav ?? environmentNav
         return EditorActions(
@@ -69,9 +72,9 @@ public struct TicketEditorView: View {
         ZStack {
             theme.colors.bg
             if launch.isBug {
-                BugEditorView(launch: launch, gateway: gateway, actions: actions).id(FormKey(launch: launch, epoch: epoch))
+                BugEditorView(launch: launch, gateway: gateway, actions: actions, prefill: prefill).id(FormKey(launch: launch, epoch: epoch))
             } else {
-                TaskEditorView(launch: launch, gateway: gateway, actions: actions).id(FormKey(launch: launch, epoch: epoch))
+                TaskEditorView(launch: launch, gateway: gateway, actions: actions, prefill: prefill).id(FormKey(launch: launch, epoch: epoch))
             }
         }
     }

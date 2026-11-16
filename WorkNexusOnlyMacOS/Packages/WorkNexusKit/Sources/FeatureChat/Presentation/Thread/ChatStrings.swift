@@ -29,6 +29,12 @@ enum L {
     static var scrollToLatest: String { appString("chatScrollToLatest", "Jump to the latest message") }
     static var today: String { appString("chatToday", "Today") }
     static var yesterday: String { appString("chatYesterday", "Yesterday") }
+    static var createBug: String { appString("chatCreateBug", "Create bug") }
+    static var createTask: String { appString("chatCreateTask", "Create task") }
+    static var createTodo: String { appString("chatCreateTodo", "Create todo") }
+    static var selectMultiple: String { appString("chatSelectMultiple", "Select multiple") }
+    static func selected(_ n: Int) -> String { fill("chatSelectedCount", "{count} selected", ["count": "\(n)"]) }
+    static func ticketSource(_ chat: String) -> String { fill("chatTicketSource", "From chat: {chat}", ["chat": chat]) }
     static var reply: String { appString("chatReply", "Reply") }
     static var openThread: String { appString("chatOpenThread", "Open thread") }
     static var forward: String { appString("chatForward", "Forward") }

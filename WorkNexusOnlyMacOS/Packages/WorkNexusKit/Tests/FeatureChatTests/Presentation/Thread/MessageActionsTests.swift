@@ -33,7 +33,7 @@ final class MessageActionsTests: XCTestCase {
 
     func testStoredTextOffersReplyAndCopy() {
         let m = Make.message(content: .text("hi"), serverId: 5)
-        XCTAssertEqual(ids(context(), m), ["reply", "copy"])
+        XCTAssertEqual(ids(context(), m), ["reply", "copy", "select"])
     }
 
     func testPendingMessageCannotBeRepliedTo() {
@@ -42,8 +42,42 @@ final class MessageActionsTests: XCTestCase {
 
     func testThreadActionOnlyInAThread() {
         let m = Make.message(serverId: 5, replyTo: 2)
-        XCTAssertEqual(ids(context(), m, inThread: true), ["reply", "thread", "copy"])
-        XCTAssertEqual(ids(context(), m, inThread: false), ["reply", "copy"])
+        XCTAssertEqual(ids(context(), m, inThread: true), ["reply", "thread", "copy", "select"])
+        XCTAssertEqual(ids(context(), m, inThread: false), ["reply", "copy", "select"])
+    }
+
+    func testCreateTicketNeedsTheHostHookAndTextAndComesBeforeSelectAndRetract() {
+        var asked: [(ChatTicketKind, [String])] = []
+        let state = ChatThreadState(accountId: "a", chat: Make.chat("g"))
+        let model = MessageTimelineModel(state: state, services: ChatServices(chat: StubChatRepository()))
+        let ctx = ThreadContext(model: model, actions: ChatThreadActions(createTicket: { kind, ms in asked.append((kind, ms.map(\.gid))) }))
+        let m = Make.message(at: Date(), content: .text("Login fails"), mine: true, serverId: 5)
+        let actions = ctx.actions(for: m, settings: ChatSettings(), inThread: false)
+        XCTAssertEqual(actions.map(\.id), ["reply", "copy", "createBug", "createTask", "createTodo", "select", "retract"])
+        XCTAssertEqual(actions.filter(\.sectionStart).map(\.id), ["createBug", "select"])
+        actions.first { $0.id == "createTask" }?.run()
+        XCTAssertEqual(asked.map(\.0), [.task]); XCTAssertEqual(asked.first?.1, ["m1"])
+        // A picture has no text to make a ticket of; a host without the hook offers none.
+        XCTAssertFalse(ctx.actions(for: Make.message(content: .emoji("👍"), serverId: 6), settings: ChatSettings(), inThread: false).contains { $0.id == "createBug" })
+        XCTAssertFalse(ids(context(), m).contains("createBug"))
+    }
+
+    func testSelectStartsMultipleSelectWithThatMessageAndPicksOnlyStoredMessages() {
+        let ctx = context(), state = ctx.state
+        let a = Make.message("a", at: Make.t0.addingTimeInterval(60), serverId: 2), b = Make.message("b", at: Make.t0, serverId: 1)
+        XCTAssertFalse(ids(ctx, Make.message("p", state: .pending)).contains("select"), "not on the server yet")
+        XCTAssertFalse(state.isSelecting)
+        ctx.actions(for: a, settings: ChatSettings(), inThread: false).first { $0.id == "select" }?.run()
+        XCTAssertEqual(state.selection?.map(\.gid), ["a"])
+        state.toggleSelected(b); state.toggleSelected(Make.message("gone", serverId: 3, deleted: true)); state.toggleSelected(Make.message("n", serverId: 4, notice: true))
+        XCTAssertEqual(state.selectedInOrder.map(\.gid), ["b", "a"], "oldest first, whatever the order they were picked in")
+        XCTAssertTrue(state.isSelected(b))
+        state.toggleSelected(a)
+        XCTAssertEqual(state.selection?.map(\.gid), ["b"])
+        state.endSelection()
+        XCTAssertNil(state.selection)
+        state.toggleSelected(b)
+        XCTAssertNil(state.selection, "nothing is picked while multiple select is off")
     }
 
     func testForwardNeedsTheHookAndASentMessage() {

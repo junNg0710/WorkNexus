@@ -38,7 +38,7 @@ public final class ChatShellModel {
     var showTrust = false
     var profileUserId: Int?
     /// The message the forward picker is open for.
-    var forwardMessage: ChatMessage?
+    var forwardRequest: ChatForwardRequest?
     /// The user picked "Change group avatar" for this chat.
     var groupAvatarChat: ChatConversation?
     /// The certificate already put to the user on this visit; asked once per fingerprint.
@@ -206,12 +206,14 @@ public final class ChatShellModel {
         Task { if case .failure(let f) = await repository.setChatMuted(accountId: accountId, chatGid: chat.gid, muted: muted) { report(f) } }
     }
 
-    /// Forwards `message` to each chat; reports the first failure. True when every chat got it.
-    func forward(_ message: ChatMessage, to chatGids: [String]) async -> Bool {
-        switch await ForwardChatMessage(repository)(message, toChatGids: chatGids) {
-        case .success: return true
-        case .failure(let f): report(f); return false
+    /// Forwards each message (in the order given) to each chat; reports the first failure. True when every chat got all.
+    func forward(_ messages: [ChatMessage], to chatGids: [String]) async -> Bool {
+        var first: Failure?
+        for message in messages {
+            if case .failure(let f) = await ForwardChatMessage(repository)(message, toChatGids: chatGids) { first = first ?? f }
         }
+        if let first { report(first); return false }
+        return true
     }
 
     func setPresence(_ p: ChatPresence) {

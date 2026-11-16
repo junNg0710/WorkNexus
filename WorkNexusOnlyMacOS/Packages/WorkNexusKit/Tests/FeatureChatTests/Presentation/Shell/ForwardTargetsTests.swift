@@ -51,11 +51,27 @@ final class ForwardTargetsTests: XCTestCase {
         let repo = Repo()
         let model = ChatShellModel(accountId: "a", selfAccount: "me", repository: repo)
         let m = Make.message("m", mine: true, serverId: 4)
-        let ok = await model.forward(m, to: ["x"])
+        let ok = await model.forward([m], to: ["x"])
         XCTAssertTrue(ok)
         repo.result = .failure(.network("down"))
-        let failed = await model.forward(m, to: ["x"])
+        let failed = await model.forward([m], to: ["x"])
         XCTAssertFalse(failed)
         XCTAssertEqual(model.toasts.toasts.count, 1)
+    }
+
+    @MainActor func testShellModelForwardsSeveralMessagesInTheOrderGivenToEveryChat() async {
+        final class Repo: StubChatRepository, @unchecked Sendable {
+            var calls: [String] = []
+            override func forwardMessage(accountId: String, messageGid: String, toChatGid: String) async -> Outcome<Void> {
+                calls.append("\(messageGid)>\(toChatGid)")
+                return messageGid == "m2" && toChatGid == "x" ? .failure(.network("down")) : .success(())
+            }
+        }
+        let repo = Repo()
+        let model = ChatShellModel(accountId: "a", selfAccount: "me", repository: repo)
+        let ok = await model.forward([Make.message("m1", serverId: 1), Make.message("m2", serverId: 2), Make.message("m3", serverId: 3)], to: ["x", "y"])
+        XCTAssertEqual(repo.calls, ["m1>x", "m1>y", "m2>x", "m2>y", "m3>x", "m3>y"], "one failure does not stop the rest")
+        XCTAssertFalse(ok)
+        XCTAssertEqual(model.toasts.toasts.count, 1, "reported once")
     }
 }

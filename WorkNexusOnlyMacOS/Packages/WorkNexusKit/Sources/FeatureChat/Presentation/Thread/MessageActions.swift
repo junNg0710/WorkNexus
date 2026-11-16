@@ -10,12 +10,15 @@ struct MessageAction: Identifiable {
     var icon: String
     var title: String
     var destructive = false
+    /// Starts a group of its own in the menus (a divider before it).
+    var sectionStart = false
     var run: () -> Void
 }
 
 extension ThreadContext {
     /// The actions a message offers: reply, open its thread, forward, copy text, translate, save an image as a sticker,
-    /// pin/unpin (where allowed) and — for your own recent messages — retract.
+    /// pin/unpin (where allowed), make a ZenTao bug / task / todo of it, pick several messages and — for your own
+    /// recent messages — retract.
     func actions(for message: ChatMessage, settings: ChatSettings, inThread: Bool) -> [MessageAction] {
         let serverId = message.serverId
         let chat = services.chat, report = model.report, state = state
@@ -30,11 +33,7 @@ extension ThreadContext {
             out.append(MessageAction(id: "forward", icon: "arrowshape.turn.up.right", title: L.forward) { forward(message) })
         }
         let text = message.deleted ? nil : message.content.asText?.text
-        let copy: String? = switch message.content {
-        case _ where message.deleted: nil
-        case .code(let code, _, _): code
-        default: text.map(ChatTextLabels.copyText)
-        }
+        let copy = ChatMessageExport.text(of: message)
         if let copy {
             out.append(MessageAction(id: "copy", icon: "doc.on.doc", title: L.copy) { Self.copy(copy); model.notify(L.copied) })
         }
@@ -46,6 +45,16 @@ extension ThreadContext {
             let pinned = state.chat.pinnedMessageIds.contains(serverId)
             out.append(MessageAction(id: "pin", icon: pinned ? "pin.slash" : "pin", title: pinned ? L.unpin : L.pin) {
                 Task { @MainActor in if case .failure(let f) = await PinChatMessage(chat)(message, pinned: !pinned) { report(f.message) } }
+            })
+        }
+        if copy != nil, let create = actions.createTicket {
+            out.append(MessageAction(id: "createBug", icon: "ladybug", title: L.createBug, sectionStart: true) { create(.bug, [message]) })
+            out.append(MessageAction(id: "createTask", icon: "checklist", title: L.createTask) { create(.task, [message]) })
+            out.append(MessageAction(id: "createTodo", icon: "calendar.badge.plus", title: L.createTodo) { create(.todo, [message]) })
+        }
+        if ChatThreadState.canSelect(message) {
+            out.append(MessageAction(id: "select", icon: "checkmark.circle", title: L.selectMultiple, sectionStart: true) {
+                state.beginSelection(with: message)
             })
         }
         if RetractMessage(chat).canRetract(message) {

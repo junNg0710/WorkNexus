@@ -1,4 +1,5 @@
 import CoreDomain
+import CoreTools
 import CoreUI
 import SwiftUI
 
@@ -13,8 +14,8 @@ struct TaskEditorView: View {
     let gateway: TicketEditorGateway
     let actions: EditorActions
 
-    init(launch: TicketEditorLaunch, gateway: TicketEditorGateway, actions: EditorActions) {
-        _controller = State(initialValue: TaskEditorController(launch: launch, gateway: gateway))
+    init(launch: TicketEditorLaunch, gateway: TicketEditorGateway, actions: EditorActions, prefill: TicketEditorPrefill? = nil) {
+        _controller = State(initialValue: TaskEditorController(launch: launch, gateway: gateway, prefill: prefill))
         self.gateway = gateway; self.actions = actions
     }
 

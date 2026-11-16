@@ -33,8 +33,9 @@ struct MessageHoverActions<Content: View>: View {
                 if !rest.isEmpty { MoreActionsMenu(actions: rest) }
             }
             .padding(.horizontal, theme.spacing.s8)
-            .opacity(hovering || picking ? 1 : 0)
-            .allowsHitTesting(hovering || picking)
+            // While "Multiple select" is on a click picks the row: no buttons then.
+            .opacity((hovering || picking) && !ctx.state.isSelecting ? 1 : 0)
+            .allowsHitTesting((hovering || picking) && !ctx.state.isSelecting)
             HStack(alignment: .bottom, spacing: 0) {
                 if alignEnd { buttons }
                 content.contextMenu { MessageContextMenu(actions: actions, canReact: canReact, picking: $picking) }
@@ -75,7 +76,10 @@ private struct MoreActionsMenu: View {
 
     var body: some View {
         Menu {
-            ForEach(actions) { MessageMenuItem(action: $0) }
+            ForEach(Array(actions.enumerated()), id: \.element.id) { i, a in
+                if a.sectionStart, i > 0 { Divider() }
+                MessageMenuItem(action: a)
+            }
         } label: {
             Image(systemName: "ellipsis").font(.system(size: theme.sizes.icon14)).foregroundStyle(theme.colors.tx2)
                 .frame(width: 28, height: 28).background(theme.colors.panel, in: Circle())
@@ -95,7 +99,7 @@ private struct MessageContextMenu: View {
         let firstDestructive = actions.firstIndex { $0.destructive }
         if canReact { Button { picking = true } label: { Label(L.react, systemImage: "face.smiling") } }
         ForEach(Array(actions.enumerated()), id: \.element.id) { i, a in
-            if i == 1 || i == firstDestructive { Divider() }
+            if i == 1 || i == firstDestructive || (a.sectionStart && i > 1) { Divider() }
             MessageMenuItem(action: a)
         }
     }

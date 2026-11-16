@@ -12,10 +12,12 @@ public struct ChatThreadActions {
     public var forward: ((ChatMessage) -> Void)?
     /// Saves an image message as a sticker.
     public var saveAsSticker: ((ChatMessage) -> Void)?
+    /// Starts a ZenTao bug, task or todo from the messages (nil: the host cannot make them).
+    public var createTicket: ((ChatTicketKind, [ChatMessage]) -> Void)?
 
     public init(openProfile: @escaping (Int) -> Void = { _ in }, forward: ((ChatMessage) -> Void)? = nil,
-                saveAsSticker: ((ChatMessage) -> Void)? = nil) {
-        self.openProfile = openProfile; self.forward = forward; self.saveAsSticker = saveAsSticker
+                saveAsSticker: ((ChatMessage) -> Void)? = nil, createTicket: ((ChatTicketKind, [ChatMessage]) -> Void)? = nil) {
+        self.openProfile = openProfile; self.forward = forward; self.saveAsSticker = saveAsSticker; self.createTicket = createTicket
     }
 }
 

@@ -42,6 +42,8 @@ final class CompositionRoot {
     let ticketLinks: TicketLinkHandler
     let notifications: NotificationsModel?
     let chat: ChatWiring
+    /// The "New todo" dialog any place of the app may ask for (a chat message → "Create todo").
+    let todoPrompt: ZentaoTodoPrompt
     let platform: PlatformServices
     let autoUpdate: AutoUpdatePreference
 
@@ -131,8 +133,11 @@ final class CompositionRoot {
         update = AppUpdateFeature.makeModel(config: Self.updateConfig, preference: autoUpdate, quit: { DispatchQueue.main.async { NSApp.terminate(nil) } })
         overview = OverviewHolder(services: services, nav: shell.nav, registry: registry, workspaceId: shell.workspace?.id)
         platform = PlatformServices(isDemo: DemoMode.isEnabled)
+        let todoPrompt = ZentaoTodoPrompt(todos: wiring.todos)
+        todoPrompt.onCreated = { shell.toasts.show(appString("zentaoTodoCreated", "Todo created")) }
+        self.todoPrompt = todoPrompt
         chat = ChatWiring(db: db, services: services, shell: shell, notifier: notifier, translation: translation, live: live,
-                          isDemo: DemoMode.isEnabled)
+                          todoPrompt: todoPrompt, isDemo: DemoMode.isEnabled)
         let bridge = chat.dockBadgeBridge
         let notificationsModel = NotificationsFeature.makeModel(
             services: services,

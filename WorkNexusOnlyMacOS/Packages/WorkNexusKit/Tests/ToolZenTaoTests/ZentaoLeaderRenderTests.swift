@@ -130,6 +130,20 @@ final class ZentaoLeaderRenderTests: XCTestCase {
                                                                                         editing: nil, people: Array(many.prefix(3)), onClose: {}) },
                          size: CGSize(width: 700, height: 800))
     }
+
+    /// "New todo" as a chat message opens it: the name and the note filled in.
+    func testNewTodoDialogFilledFromAChatMessage() async throws {
+        let seed = ZentaoTodoPrompt.Seed(accountId: "zt", name: "Login fails on Safari after the last deploy",
+                                         desc: "Login fails on Safari after the last deploy\n\nFrom chat: Release Team · An, 2026-11-17 10:32")
+        for dark in [false, true] {
+            try await render("todo-dialog\(dark ? "-dark" : "")", ZentaoTodoDialog(seed: seed, todos: SilentTodos(), onClose: {}),
+                             size: CGSize(width: 620, height: 520), dark: dark)
+        }
+    }
+}
+
+private struct SilentTodos: ZenTaoTodos {
+    func createTodo(accountId: String, todo: ZenTaoTodoDraft) async -> Outcome<Int?> { .success(nil) }
 }
 
 /// The dialog on a plain backdrop, top-aligned so its own height shows.

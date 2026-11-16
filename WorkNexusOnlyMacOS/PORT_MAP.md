@@ -1,4 +1,4 @@
-# Port map (Dart → Swift). Cột 2 là file Dart, cột 3 là file Swift; `upstream-diff.sh` grep file này.
+# Port map (Dart → Swift). Column 2 is the Dart file, column 3 the Swift file; `upstream-diff.sh` greps this file.
 
 | Area | Dart | Swift |
 |---|---|---|

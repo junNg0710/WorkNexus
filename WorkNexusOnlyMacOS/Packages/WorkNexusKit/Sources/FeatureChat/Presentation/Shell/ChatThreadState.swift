@@ -50,4 +50,26 @@ public final class ChatThreadState {
     }
 
     public func requestJump(to serverId: Int) { jump = ChatJumpRequest(serverId: serverId) }
+
+    // MARK: multiple select
+
+    /// "Multiple select": nil while off; while on, the messages picked so far (in the order they were picked).
+    public var selection: [ChatMessage]?
+    public var isSelecting: Bool { selection != nil }
+    public func isSelected(_ message: ChatMessage) -> Bool { selection?.contains { $0.gid == message.gid } ?? false }
+    public func beginSelection(with message: ChatMessage) { selection = Self.canSelect(message) ? [message] : [] }
+    public func endSelection() { selection = nil }
+    public func toggleSelected(_ message: ChatMessage) {
+        guard var picked = selection, Self.canSelect(message) else { return }
+        if let at = picked.firstIndex(where: { $0.gid == message.gid }) { picked.remove(at: at) } else { picked.append(message) }
+        selection = picked
+    }
+    /// The picked messages, oldest first.
+    public var selectedInOrder: [ChatMessage] {
+        (selection ?? []).sorted { ($0.sentAt, $0.serverId ?? .max) < ($1.sentAt, $1.serverId ?? .max) }
+    }
+    /// A message that can be picked: one the server holds, not a notice, not retracted.
+    public static func canSelect(_ message: ChatMessage) -> Bool {
+        !message.deleted && !message.isNotice && message.serverId != nil && message.sendState == .sent
+    }
 }

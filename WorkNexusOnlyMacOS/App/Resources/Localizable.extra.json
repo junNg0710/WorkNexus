@@ -51,6 +51,26 @@
     "en": "Cache size limit",
     "vi": "Giới hạn bộ nhớ đệm"
   },
+  "chatCreateBug": {
+    "en": "Create bug",
+    "vi": "Tạo Bug"
+  },
+  "chatCreateFrom": {
+    "en": "Create…",
+    "vi": "Tạo…"
+  },
+  "chatCreateTask": {
+    "en": "Create task",
+    "vi": "Tạo Task"
+  },
+  "chatCreateTodo": {
+    "en": "Create todo",
+    "vi": "Tạo việc cần làm"
+  },
+  "chatForwardMany": {
+    "en": "{count} messages",
+    "vi": "{count} tin nhắn"
+  },
   "chatHideInfo": {
     "en": "Hide chat info",
     "vi": "Ẩn thông tin chat"
@@ -83,6 +103,14 @@
     "en": "Photo",
     "vi": "Ảnh"
   },
+  "chatSelectMultiple": {
+    "en": "Select multiple",
+    "vi": "Chọn nhiều"
+  },
+  "chatSelectedCount": {
+    "en": "{count} selected",
+    "vi": "Đã chọn {count}"
+  },
   "chatSendMarkdown": {
     "en": "Send messages as Markdown",
     "vi": "Gửi tin nhắn dạng Markdown"
@@ -102,6 +130,10 @@
   "chatStyle": {
     "en": "Style",
     "vi": "Kiểu"
+  },
+  "chatTicketSource": {
+    "en": "From chat: {chat}",
+    "vi": "Từ chat: {chat}"
   },
   "chatUnavailable": {
     "en": "Chat isn't available right now.",
@@ -1306,5 +1338,21 @@
   "zentaoSelectProject": {
     "en": "Select Project",
     "vi": "Chọn dự án"
+  },
+  "zentaoTodoCreated": {
+    "en": "Todo created",
+    "vi": "Đã tạo việc cần làm"
+  },
+  "zentaoTodoDate": {
+    "en": "Date",
+    "vi": "Ngày"
+  },
+  "zentaoTodoName": {
+    "en": "Todo",
+    "vi": "Việc cần làm"
+  },
+  "zentaoTodoNew": {
+    "en": "New todo",
+    "vi": "Việc cần làm mới"
   }
 }

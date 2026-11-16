@@ -60,6 +60,21 @@ extension ZenTaoClient {
         return updated
     }
 
+    /// Makes a todo of the signed-in user (`POST /todos`); the new todo's id when the reply names it. ZenTao answers a
+    /// refusal as an HTTP error with `error`, or as `result: fail` with `message` (a string, or the fields at fault).
+    func createTodo(fields: JSON) async throws -> Int? {
+        let body = try JSONSerialization.data(withJSONObject: fields)
+        let res = try await perform(ZenTaoRequest(method: "POST", url: try url("\(v1)/todos"), body: .json(body)))
+        let reply = (try? responseMap(res.data)) ?? [:]
+        let refused = str(reply["status"]) == "fail" || str(reply["result"]) == "fail" || reply["error"] != nil
+        if res.status >= 400 || refused {
+            let said = reply["error"] ?? reply["message"]
+            let message = str(said) ?? said.flatMap { $0 is NSNull ? nil : jsonEncode($0) } ?? "HTTP \(res.status)"
+            throw ZenTaoError.http(status: res.status, message: message, hasResponse: true)
+        }
+        return zentaoInt(reply["id"]).flatMap { $0 > 0 ? $0 : nil }
+    }
+
     /// Product list used by the ZenTao Sources tab. `merged` asks for ZenTao's program > line > product tree.
     func products(page: Int, limit: Int, merged: Bool = false) async throws -> ZenTaoProductsResponse {
         var q: [(String, String)] = [("page", "\(page)"), ("limit", "\(limit)")]

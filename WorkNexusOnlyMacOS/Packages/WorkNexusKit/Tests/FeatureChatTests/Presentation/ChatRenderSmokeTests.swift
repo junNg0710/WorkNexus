@@ -63,7 +63,35 @@ final class ChatRenderSmokeTests: XCTestCase {
     func testForwardDialog() async throws {
         let repo = Repo(), m = model(repo)
         let message = Make.message("m1", chat: "g", sender: 2, content: .text("Release notes are **ready**, please review before Friday"), mine: false, serverId: 5)
-        try await render(ForwardMessageDialog(model: m, message: message), "forward-dialog", width: 460, height: 720)
+        try await render(ForwardMessageDialog(model: m, request: ChatForwardRequest(messages: [message])), "forward-dialog", width: 460, height: 720)
+        try await render(ForwardMessageDialog(model: m, request: ChatForwardRequest(messages: [message, message, message])), "forward-dialog-many", width: 460, height: 720)
+    }
+
+    /// "Multiple select": ticks before the rows (two picked), and the bar that stands in the composer's place.
+    func testMultipleSelectRowsAndBar() async throws {
+        let m = model(Repo())
+        m.events.onCreateTicket = { _ in }
+        let state = ChatThreadState(accountId: "a", chat: RenderData.chats[1])
+        state.users = Dictionary(uniqueKeysWithValues: RenderData.users.map { ($0.userId, $0) }); state.selfUserId = 1
+        let ctx = ThreadContext(model: MessageTimelineModel(state: state, services: ChatServices(chat: Repo())), actions: ChatThreadActions())
+        let messages = [
+            Make.message("m1", chat: "g", sender: 2, content: .text("Login fails on Safari after the last deploy"), serverId: 5),
+            Make.message("m2", chat: "g", sender: 3, at: Make.t0.addingTimeInterval(60), content: .text("Same here, the token is empty"), serverId: 6),
+            Make.message("m3", chat: "g", sender: 1, at: Make.t0.addingTimeInterval(120), content: .text("I'll file a bug"), mine: true, serverId: 7),
+        ]
+        state.beginSelection(with: messages[0]); state.toggleSelected(messages[1])
+        for dark in [false, true] {
+            let view = VStack(spacing: 0) {
+                ForEach(messages) { message in
+                    MessageSelectionRow(state: state, message: message) { MessageBubbleView(ctx: ctx, message: message).padding(.horizontal, 16) }
+                        .padding(.vertical, 4)
+                }
+                Spacer(minLength: 0)
+                ChatSelectionBar(model: m, state: state).frame(height: 64)
+            }
+            .chatServices(ChatServices(chat: Repo()))
+            try await render(view, "multi-select\(dark ? "-dark" : "")", width: 720, height: 300, dark: dark)
+        }
     }
 
     func testWallpaperAndStylePickers() async throws {

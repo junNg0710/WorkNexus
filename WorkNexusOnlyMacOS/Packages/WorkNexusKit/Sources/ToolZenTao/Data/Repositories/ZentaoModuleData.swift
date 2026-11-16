@@ -23,6 +23,7 @@ import Foundation
 ///   close, task actions with `ZenTaoTaskActionInput`; needs a `ZenTaoOptimisticRunner` from the sync layer).
 /// - `ZenTaoTicketEditor` <- `ZenTaoTicketEditorService(clients:tickets:)` (bug / task forms, options, save, image upload).
 /// - `ZenTaoTeamMembers` <- `ClassicZenTaoTeamMembers(clients:)`.
+/// - `ZenTaoTodos` <- `ZenTaoTodoService(clients:)` (a personal todo, e.g. made from a chat message).
 /// - `ZenTaoTicketService` / `ZenTaoViewPages` / `ZenTaoTaskBugs` <- `ZenTaoTicketServiceImpl(accounts:adapters:tickets:cache:)`.
 /// - `ZenTaoProfileRepository` <- `GRDBZenTaoProfileRepository`; `ZenTaoDocRepository` <- `GRDBZenTaoDocRepository`;
 ///   `ZenTaoNotificationRepository` <- `GRDBZenTaoNotificationRepository`; `ZenTaoDashboardRepository` <-
@@ -50,6 +51,7 @@ public struct ZentaoModuleData: Sendable {
         public let editor: ZenTaoTicketEditor
         public let teamMembers: ZenTaoTeamMembers
         public let teamGroups: ZenTaoTeamGroupRepository
+        public let todos: ZenTaoTodos
     }
 
     /// Wires the Data layer over `db` and the core services. `runner` is the sync layer's optimistic-action runner
@@ -76,7 +78,8 @@ public struct ZentaoModuleData: Sendable {
             tickets: service,
             editor: ZenTaoTicketEditorService(clients: pool, tickets: service),
             teamMembers: ClassicZenTaoTeamMembers(clients: pool),
-            teamGroups: GRDBZenTaoTeamGroupRepository(db: db))
+            teamGroups: GRDBZenTaoTeamGroupRepository(db: db),
+            todos: ZenTaoTodoService(clients: pool))
     }
 
     /// The document export use case with the real HTML-to-Markdown converter.

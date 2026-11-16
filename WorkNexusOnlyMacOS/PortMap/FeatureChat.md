@@ -239,3 +239,11 @@ Files without a one-to-one Dart source (Swift-only glue): `ChatFeature.swift`, `
 - **Person chips**: `ChatPersonChip` opens the one-to-one chat (through `ChatServices.showChat`, which the app wires to the Chat place); `ChatPersonChatButton` / `ChatPersonAvatar` are injected as `\.zentaoDocPersonAction` / `\.zentaoDocPersonFace` in `HostWiring`.
 - **Translation gate**: `ChatServices.ensureTranslatorReady` (the app's `OpenCodeLinkGate`) runs before a message is translated.
 - **Not ported**: the image viewer's strip lists photos only (the Dart strip also lists videos); the OpenCode key field gains a "Remove key" button (absent in the Dart field) backed by `OpenCodeKeyRepository.removeApiKey`.
+
+### macOS-only: tickets from messages and multiple select (not in the Flutter app)
+
+Mirrors the message menu of ZenTao's own desktop client.
+
+- **Create bug / Create task / Create todo** (`Thread/MessageActions.swift`, domain `DraftTicketFromMessages`, `Thread/ChatMessageExport.swift`): offered on a message with text or code when the host sets `ChatShellEvents.onCreateTicket`. The message's first line becomes the title; the body quotes the message and says which chat and who it came from. The app (`ChatWiring`) opens the full bug / task editor filled in (`AppNavController.openEditor(_:prefill:)` → `TicketEditorPrefill`, laid over ZenTao's form above its steps template), or the "New todo" dialog (`ToolZenTao/Presentation/Widgets/ZentaoTodoDialog.swift`).
+- **Select multiple** (`ChatThreadState.selection`, `Thread/MessageSelectionRow.swift`, `Shell/ChatSelectionBar.swift`): a click picks or drops a row; the bar in the composer's place copies the picked messages as one transcript, forwards them (oldest first, `ChatForwardRequest`), or starts a bug / task / todo quoting all of them. Esc or ✕ leaves.
+- **Todo** (`ZenTaoTodos` ← `ZenTaoTodoService`, `CreateZenTaoTodo`): `POST /api.php/v1/todos` as a plain all-day todo of the signed-in user. **Unverified against a real server.**

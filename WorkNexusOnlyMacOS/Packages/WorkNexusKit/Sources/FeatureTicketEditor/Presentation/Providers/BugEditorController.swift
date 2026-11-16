@@ -1,4 +1,5 @@
 import CoreDomain
+import CoreTools
 import CoreUI
 import Foundation
 import Observation
@@ -20,9 +21,12 @@ public final class BugEditorController {
     private let now: () -> Date
     @ObservationIgnored private var sync: RichTextDraftSync?
 
+    /// What a new ticket starts filled in with (one made from a chat message); nil for an ordinary one.
+    private let prefill: TicketEditorPrefill?
+
     public init(launch: TicketEditorLaunch, gateway: TicketEditorGateway, autosaveDelay: Duration = DraftAutosave.defaultDelay,
-                now: @escaping () -> Date = Date.init) {
-        self.launch = launch; self.gateway = gateway; self.now = now
+                prefill: TicketEditorPrefill? = nil, now: @escaping () -> Date = Date.init) {
+        self.launch = launch; self.gateway = gateway; self.now = now; self.prefill = prefill
         autosave = gateway.drafts.map { DraftAutosave($0, delay: autosaveDelay) }
     }
 
@@ -50,7 +54,11 @@ public final class BugEditorController {
         case .failure(let f): fail(f)
         case .success(let form):
             let uid = FormValueFormat.newFormUid()
-            begin(BugEditorState(form: form, draft: form.draft, uid: uid, draftId: launch.isNew ? (launch.draftId ?? uid) : nil))
+            var draft = form.draft
+            // A new bug made from a chat message: ZenTao's form (product, defaults) with the message as title, and quoted
+            // above the form's own steps template (steps / result / expected), which stays to be filled in.
+            if launch.isNew, let prefill { draft.title = prefill.title; draft.steps = prefill.bodyHtml + draft.steps }
+            begin(BugEditorState(form: form, draft: draft, uid: uid, draftId: launch.isNew ? (launch.draftId ?? uid) : nil))
         }
     }
 

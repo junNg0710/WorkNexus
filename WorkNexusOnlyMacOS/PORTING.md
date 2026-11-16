@@ -1,20 +1,20 @@
-# Quy ước port Flutter → Swift
+# Flutter → Swift porting rules
 
-Clean Architecture feature-first, giống `AGENTS.md` của repo cha. Mỗi file Swift bắt đầu bằng `/// Ported from: <đường dẫn dart>` (ghi vào `PORT_MAP.md`).
+Clean Architecture, feature-first, as in the parent repository's `AGENTS.md`. Every Swift file starts with `/// Ported from: <dart path>` (recorded in `PORT_MAP.md`).
 
-## Cấu trúc (Packages/WorkNexusKit/Sources)
-`CoreDomain` (thuần Foundation) · `CorePersistence` (GRDB, Keychain) · `CoreUI` (theme, component) · `CoreTools` (ToolModule, nav, `AppServices`) · `SharedKit` (shell, board, detail, sync) · `ToolZenTao|GitLab|GitHub` · `Feature*`.
-Trong mỗi tool/feature: `Domain/ Data/ Presentation/` (tên thư mục đúng như vậy — `ArchitectureTests` dựa vào nó).
-- `Domain/`: không import SwiftUI/AppKit/GRDB/CorePersistence; trả `Outcome<T>`, không throw qua ranh giới layer.
-- `Presentation/`: không import GRDB/CorePersistence; chỉ gọi protocol (`AppServices`), ≤ 300 dòng/file. Tách view bằng struct riêng, không dùng `func xxxView() -> some View`.
-- Mọi file khác ≤ 400 dòng. Một repository một file. DTO không rò ra ngoài `Data/`.
-- Màu/spacing/radius/font chỉ lấy từ `@Environment(\.appTheme)`; chuỗi UI qua l10n key trong `Localizable.xcstrings` (sinh từ `lib/l10n/*.arb`).
-- Mở rộng DB: module tự đăng ký migration qua `MigrationRegistrar` (đặt tên `"<module>_v1"`), composition root truyền vào `AppDatabase.open(registrars:)`. Không sửa `CoreMigrations`.
-- Tool/feature không import nhau (target graph chặn); giao tiếp qua `CoreDomain`/`CoreTools`/`AppServices`.
+## Layout (Packages/WorkNexusKit/Sources)
+`CoreDomain` (Foundation only) · `CorePersistence` (GRDB, Keychain) · `CoreUI` (theme, components) · `CoreTools` (ToolModule, nav, `AppServices`) · `SharedKit` (shell, board, detail, sync) · `ToolZenTao|GitLab|GitHub` · `Feature*`.
+Inside each tool/feature: `Domain/ Data/ Presentation/` (the folder names must be exactly these — `ArchitectureTests` relies on them).
+- `Domain/`: no SwiftUI/AppKit/GRDB/CorePersistence imports; returns `Outcome<T>`, never throws across a layer boundary.
+- `Presentation/`: no GRDB/CorePersistence imports; calls protocols only (`AppServices`), ≤ 300 lines per file. Split views into their own structs, not `func xxxView() -> some View`.
+- Every other file ≤ 400 lines. One repository per file. DTOs do not leak out of `Data/`.
+- Colours/spacing/radii/fonts come only from `@Environment(\.appTheme)`; UI strings go through l10n keys in `Localizable.xcstrings` (generated from `lib/l10n/*.arb`).
+- Extending the database: a module registers its own migration through `MigrationRegistrar` (named `"<module>_v1"`), and the composition root passes it to `AppDatabase.open(registrars:)`. Do not edit `CoreMigrations`.
+- Tools/features do not import each other (the target graph forbids it); they talk through `CoreDomain`/`CoreTools`/`AppServices`.
 
-## Quy trình
-- Build/test từng target: `cd Packages/WorkNexusKit && swift build --scratch-path <riêng> --target X && swift test --scratch-path <riêng> --filter XTests`.
-- Test: port test Dart tương ứng (`test/...`) làm test vector — đặc biệt codec/parser/mapper. Mock ở ranh giới protocol.
-- Không sửa `App/`, `Package.swift`, `project.yml`, hay target của người khác. Mỗi module công khai đúng một điểm vào để composition root nối (ví dụ `ZentaoModule`), không tự đăng ký.
-- Swift language mode 5, `@MainActor` cho view-model `@Observable`.
-- Mỗi module ghi bảng port vào `PortMap/<Module>.md` (cùng định dạng PORT_MAP.md) — không sửa PORT_MAP.md.
+## Workflow
+- Build/test one target at a time: `cd Packages/WorkNexusKit && swift build --scratch-path <own> --target X && swift test --scratch-path <own> --filter XTests`.
+- Tests: port the matching Dart test (`test/...`) as test vectors — codecs/parsers/mappers above all. Mock at the protocol boundary.
+- Do not edit `App/`, `Package.swift`, `project.yml`, or someone else's target. Each module exposes exactly one entry point for the composition root to wire (e.g. `ZentaoModule`); nothing registers itself.
+- Swift language mode 5, `@MainActor` for `@Observable` view models.
+- Each module records its port table in `PortMap/<Module>.md` (same format as PORT_MAP.md) — do not edit PORT_MAP.md.

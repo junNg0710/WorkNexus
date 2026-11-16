@@ -1,4 +1,5 @@
 import CoreDomain
+import CoreTools
 import XCTest
 @testable import FeatureTicketEditor
 
@@ -32,6 +33,28 @@ final class ControllerTests: XCTestCase {
         XCTAssertNil(c.state?.draftSavedAt)
         XCTAssertNotNil(c.steps)
         await c.close()
+    }
+
+    func testANewBugOrTaskMadeFromAChatMessageStartsWithItsTitleAndBody() async {
+        let prefill = TicketEditorPrefill(title: "Login fails", bodyHtml: "<p>tap login</p>")
+        let gateway = TicketEditorGateway(editor: FakeEditor(), drafts: FakeDrafts(), members: FakeMembers())
+        let bug = BugEditorController(launch: .newBug(accountId: "a"), gateway: gateway, prefill: prefill)
+        await bug.load()
+        XCTAssertEqual(bug.state?.draft.title, "Login fails")
+        XCTAssertEqual(bug.state?.draft.steps, "<p>tap login</p>")
+        XCTAssertEqual(bug.steps?.html, "<p>tap login</p>", "the editor shows it")
+        XCTAssertEqual(bug.state?.draft.product, "7", "the rest is still ZenTao's form")
+        await bug.close()
+        let task = TaskEditorController(launch: .newTask(accountId: "a", executionId: "5"), gateway: gateway, prefill: prefill)
+        await task.load()
+        XCTAssertEqual(task.state?.draft.name, "Login fails")
+        XCTAssertEqual(task.state?.draft.desc, "<p>tap login</p>")
+        await task.close()
+        // An existing bug is never overwritten.
+        let edit = BugEditorController(launch: .editBug(accountId: "a", bugId: "42"), gateway: gateway, prefill: prefill)
+        await edit.load()
+        XCTAssertNotEqual(edit.state?.draft.title, "Login fails")
+        await edit.close()
     }
 
     func testEditBugHasNoDraft() async {

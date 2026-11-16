@@ -8,6 +8,7 @@ import FeatureTranslation
 import Foundation
 import Observation
 import SharedKit
+import ToolZenTao
 
 /// Chat at the composition root: one repository for every ZenTao account, the services the chat view reads from the
 /// environment, the unread counters behind the rail badges, and the bridge that turns incoming messages into OS
@@ -30,7 +31,7 @@ final class ChatWiring {
     private var activeObserver: NSObjectProtocol?
 
     init(db: AppDatabase, services appServices: AppServices, shell: ShellModel, notifier: DesktopNotifier,
-         translation: TranslationFeature, live: LiveSettings, isDemo: Bool) {
+         translation: TranslationFeature, live: LiveSettings, todoPrompt: ZentaoTodoPrompt, isDemo: Bool) {
         self.appServices = appServices; self.shell = shell; self.notifier = notifier; self.live = live; self.isDemo = isDemo
         let repo = ChatFeature.makeRepository(db: db, credentials: appServices.credentials)
         repository = repo
@@ -55,6 +56,22 @@ final class ChatWiring {
         events.onViewProfile = { _ in nav.setWorkspaceSection("integrations") }
         events.onOpenStorage = { nav.select(.settings); nav.setSettingsSection("cache") }
         events.onEnableNotifications = { [weak self] in Task { await self?.turnOnNotifications() } }
+        // "Create bug / task / todo" on a message: the chat's account is a ZenTao account, so the ticket is made there.
+        // A bug or a task opens the full editor with the message filled in (product / execution are picked there); a
+        // todo is small enough for a dialog.
+        events.onCreateTicket = { request in
+            let seed = request.seed
+            switch request.kind {
+            case .bug:
+                nav.openEditor(.newBug(accountId: request.accountId, productId: "0"),
+                               prefill: TicketEditorPrefill(title: seed.title, bodyHtml: seed.html))
+            case .task:
+                nav.openEditor(.newTask(accountId: request.accountId, executionId: "0"),
+                               prefill: TicketEditorPrefill(title: seed.title, bodyHtml: seed.html))
+            case .todo:
+                todoPrompt.open(accountId: request.accountId, name: seed.title, desc: seed.text)
+            }
+        }
     }
 
     /// Whether the warning strip ("notifications are blocked") shows: chat notifications are on in the app but the OS does not

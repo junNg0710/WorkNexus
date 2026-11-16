@@ -1,17 +1,17 @@
 # WorkNexusOnlyMacOS
 
-Bản Swift/SwiftUI native cho macOS của WorkNexus (port từ app Flutter ở thư mục cha). Thư mục này độc lập: upstream không bao giờ sửa nó, nên sync fork không conflict.
+The native Swift/SwiftUI macOS build of WorkNexus (ported from the Flutter app in the parent folder). This folder stands alone: upstream never touches it, so syncing the fork does not conflict.
 
 ```bash
-brew install xcodegen            # một lần
-Scripts/sync-assets.sh && python3 Scripts/gen-l10n.py   # font/logo/sticker + chuỗi l10n từ lib/
+brew install xcodegen            # once
+Scripts/sync-assets.sh && python3 Scripts/gen-l10n.py   # fonts/logos/stickers + l10n strings from lib/
 xcodegen generate && open WorkNexusOnlyMacOS.xcodeproj
 (cd Packages/WorkNexusKit && swift test)
 ```
 
-**Theo dõi upstream:** `Scripts/upstream-diff.sh` liệt kê file Dart đổi kể từ `UPSTREAM_PORTED`, kèm file Swift tương ứng (`PORT_MAP.md`). Port xong thì `Scripts/upstream-diff.sh --mark`.
+**Following upstream:** `Scripts/upstream-diff.sh` lists the Dart files changed since `UPSTREAM_PORTED`, each with its Swift counterpart (`PORT_MAP.md`). Once they are ported, run `Scripts/upstream-diff.sh --mark`.
 
-Quy ước kiến trúc và cách port: [PORTING.md](PORTING.md).
+Architecture rules and how to port: [PORTING.md](PORTING.md).
 
 ## Status (integration pass)
 

@@ -132,8 +132,11 @@ public final class AppNavController {
     // MARK: overlays
 
     /// Opens the bug / task editor over the whole area beside the rail, so the notifications panel closes.
-    public func openEditor(_ route: TicketEditorRoute) { state.editor = route; closeNotifications?() }
-    public func closeEditor() { state.editor = nil }
+    /// `prefill` is what a new ticket starts with (one made from a chat message); every other opening clears it.
+    public func openEditor(_ route: TicketEditorRoute, prefill: TicketEditorPrefill? = nil) {
+        state.editor = route; state.editorPrefill = prefill; closeNotifications?()
+    }
+    public func closeEditor() { state.editor = nil; state.editorPrefill = nil }
 
     /// Shows a mini app beside the rail (nil: back to the rail's place). Like Dart `showMiniApp` it also drops what covers
     /// it: the editor, the notifications panel and every open ticket.

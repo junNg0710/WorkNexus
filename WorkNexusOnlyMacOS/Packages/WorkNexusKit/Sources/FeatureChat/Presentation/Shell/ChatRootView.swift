@@ -77,7 +77,7 @@ struct ChatShellView: View {
         .appDialog(item: $model.groupAvatarChat) { chat in
             ChatGroupAvatarDialog(model: model, chat: chat, title: ChatShellLabels.title(chat, model.users))
         }
-        .appDialog(item: $model.forwardMessage) { ForwardMessageDialog(model: model, message: $0) }
+        .appDialog(item: $model.forwardRequest) { ForwardMessageDialog(model: model, request: $0) }
         .task { model.start() }
         .onDisappear { model.stop() }
         .onChange(of: model.events.pendingChatGid, initial: true) { _, gid in

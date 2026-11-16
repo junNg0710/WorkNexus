@@ -22,6 +22,16 @@ final class NavControllerTests: XCTestCase {
         n.closeAllTickets(); XCTAssertNil(n.openTicketId)
     }
 
+    func testEditorPrefillLivesOnlyAsLongAsTheEditorItWasOpenedWith() {
+        let n = nav(), prefill = TicketEditorPrefill(title: "Login fails", bodyHtml: "<p>steps</p>")
+        n.openEditor(.newBug(accountId: "a"), prefill: prefill)
+        XCTAssertEqual(n.state.editorPrefill, prefill)
+        n.openEditor(.newTask(accountId: "a"))
+        XCTAssertNil(n.state.editorPrefill, "an ordinary new ticket starts empty")
+        n.openEditor(.newBug(accountId: "a"), prefill: prefill); n.closeEditor()
+        XCTAssertNil(n.state.editorPrefill)
+    }
+
     func testEditorAndMiniAppCloseTheNotificationsPanel() {
         let n = nav(); var closed = 0
         n.closeNotifications = { closed += 1 }

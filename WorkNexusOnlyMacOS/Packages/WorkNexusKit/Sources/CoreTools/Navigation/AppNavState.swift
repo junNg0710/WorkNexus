@@ -35,6 +35,13 @@ public enum TicketEditorRoute: Hashable, Sendable {
     case editTask(accountId: String, ticketId: String)
 }
 
+/// What a new bug or task opens filled in with (a ticket made from a chat message): its title and its body as HTML.
+public struct TicketEditorPrefill: Hashable, Sendable {
+    public var title: String
+    public var bodyHtml: String
+    public init(title: String, bodyHtml: String) { self.title = title; self.bodyHtml = bodyHtml }
+}
+
 public struct AppNavState: Equatable, Sendable {
     public var rail: RailTarget = .workspace
     public var workspaceSection = "overview"
@@ -43,6 +50,8 @@ public struct AppNavState: Equatable, Sendable {
     /// Opened tickets per place (key = rail target id), newest last; the last one is the open detail slide-over.
     public var ticketHistories: [String: [String]] = [:]
     public var editor: TicketEditorRoute?
+    /// What the open editor's new ticket starts with; nil for an ordinary new ticket. Goes when the editor closes.
+    public var editorPrefill: TicketEditorPrefill?
     public var miniAppId: String?
     /// The user picked the workspace pages themselves (rail "Dashboard", a workspace section): the default selection
     /// (first account at launch) must not take the place away from them. Dart `userSelectedWorkspace`.

@@ -26,9 +26,11 @@ struct ThreadRowView: View {
         case .message(let m):
             HighlightedRow(model: ctx.model, serverId: m.serverId, gapAbove: row.firstOfRun ? style.groupGap : style.runGap,
                            gapBelow: row.lastOfRun ? style.groupGap : style.runGap) {
-                MessageBubbleView(ctx: ctx, message: m, firstOfRun: row.firstOfRun, lastOfRun: row.lastOfRun,
-                                  showSender: showSenders, thread: m.serverId.flatMap { ctx.model.summaries[$0] })
-                    .padding(.horizontal, side)
+                MessageSelectionRow(state: ctx.state, message: m) {
+                    MessageBubbleView(ctx: ctx, message: m, firstOfRun: row.firstOfRun, lastOfRun: row.lastOfRun,
+                                      showSender: showSenders, thread: m.serverId.flatMap { ctx.model.summaries[$0] })
+                        .padding(.horizontal, side)
+                }
             }
         }
     }
