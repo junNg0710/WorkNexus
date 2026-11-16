@@ -14,6 +14,7 @@
 # Environment:
 #   SIGN_IDENTITY   codesign identity (default "-" = ad-hoc). See Packaging/README.md for notarization.
 #   DERIVED_DATA    xcodebuild derived-data folder (default build/release under this project)
+#   SCHEME          Xcode scheme (default WorkNexus; the product is WorkNexusMac.app)
 #   SYNC_ASSETS=1   run Scripts/sync-assets.sh and gen-l10n.py before building
 set -euo pipefail
 
@@ -51,7 +52,7 @@ if [[ -z "$app" ]]; then
   # Both architectures in one binary (ONLY_ACTIVE_ARCH=NO); signed ad-hoc by the project's own settings, re-signed below.
   xcodebuild \
     -project "$root/WorkNexusOnlyMacOS.xcodeproj" \
-    -scheme "$name" \
+    -scheme "${SCHEME:-WorkNexus}" \
     -configuration Release \
     -destination 'generic/platform=macOS' \
     -derivedDataPath "$derived" \
