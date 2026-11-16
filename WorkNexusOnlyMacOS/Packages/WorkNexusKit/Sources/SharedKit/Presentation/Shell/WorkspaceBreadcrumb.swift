@@ -36,6 +36,7 @@ struct WorkspaceBreadcrumb: View {
                 segment(appString("settings", "Settings"), link: nil)
                 segment(ShellSections.label(ShellSections.settings, model.nav.state.settingsSection), link: nil)
             case .chat:
+                if let provider = model.chatAccount?.providerType { TrailLogo(provider: provider) }
                 segment(appString("chat", "Chat"), link: nil)
             case .account(let id):
                 if let account = model.account(id), let tool = model.registry.module(for: account.providerType) {
@@ -50,6 +51,13 @@ struct WorkspaceBreadcrumb: View {
     }
 }
 
+/// The tool's logo at the head of its trail, so a ZenTao place says so at a glance.
+private struct TrailLogo: View {
+    @Environment(\.appTheme) private var theme
+    let provider: ProviderType
+    var body: some View { BrandLogoBadge(provider, size: 16).padding(.leading, theme.spacing.s6) }
+}
+
 /// `/ Tool / Section / Scope` of an account place.
 private struct AccountTrail: View {
     let model: ShellModel
@@ -61,6 +69,7 @@ private struct AccountTrail: View {
         let several = model.accounts.filter { $0.providerType == account.providerType }.count > 1
         let section = tool.sections.first { $0.id == location.section }
         let hasScope = !(location.scopeId ?? "").isEmpty
+        TrailLogo(provider: account.providerType)
         BreadcrumbSegment(title: several ? account.handle : account.providerType.displayName,
                           link: { model.nav.select(.account(account.id)) })
         BreadcrumbSegment(title: section.map { appString($0.label, $0.label.capitalized) } ?? location.section.rawValue,

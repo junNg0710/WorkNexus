@@ -19,12 +19,13 @@ struct NavRail: View {
                 .keyboardShortcut("1", modifiers: .command)
             if model.chatAccount != nil {
                 RailLabeledButton(appString("chat", "Chat"), systemImage: "bubble.left.and.bubble.right",
-                                  selected: onScreen && nav.state.rail == .chat, badge: host.chatTotalUnread()) { nav.select(.chat) }
+                                  selected: onScreen && nav.state.rail == .chat, badge: host.chatTotalUnread(),
+                                  brand: model.chatAccount?.providerType) { nav.select(.chat) }
             }
             ForEach(model.railSectionTools, id: \.module.providerType) { entry in
                 ForEach(entry.module.sections.filter(\.available)) { section in
                     RailLabeledButton(appString(section.label, section.label.capitalized), systemImage: section.systemImage,
-                                      selected: sectionSelected(entry.module, section)) {
+                                      selected: sectionSelected(entry.module, section), brand: entry.module.providerType) {
                         model.openRailSection(section.id, tool: entry.module, accounts: entry.accounts)
                     }
                 }

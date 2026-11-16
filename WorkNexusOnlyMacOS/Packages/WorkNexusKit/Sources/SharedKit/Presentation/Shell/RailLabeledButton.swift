@@ -1,3 +1,4 @@
+import CoreDomain
 import CoreUI
 import SwiftUI
 
@@ -8,17 +9,25 @@ public struct RailLabeledButton<Leading: View>: View {
     @State private var hovering = false
     let label: String; let selected: Bool; let badge: Int; let help: String?; let action: () -> Void
     let leading: Leading
+    /// The tool this place belongs to: its logo sits on the icon's corner (ZenTao's Chat / Tasks / Bugs / Docs).
+    var brand: ProviderType?
 
-    public init(label: String, selected: Bool = false, badge: Int = 0, help: String? = nil, action: @escaping () -> Void,
-                @ViewBuilder leading: () -> Leading) {
+    public init(label: String, selected: Bool = false, badge: Int = 0, help: String? = nil, brand: ProviderType? = nil,
+                action: @escaping () -> Void, @ViewBuilder leading: () -> Leading) {
         self.label = label; self.selected = selected; self.badge = badge; self.help = help; self.action = action
-        self.leading = leading()
+        self.brand = brand; self.leading = leading()
     }
 
     public var body: some View {
         Button(action: action) {
             VStack(spacing: theme.spacing.s2) {
                 leading.frame(height: theme.sizes.icon24)
+                    .overlay(alignment: .bottomTrailing) {
+                        if let brand {
+                            BrandLogoBadge(brand, size: 12).padding(1).background(theme.colors.panel, in: Circle())
+                                .offset(x: theme.spacing.s8, y: theme.spacing.s4)
+                        }
+                    }
                 Text(label).font(theme.typography.caption).lineLimit(1).truncationMode(.tail)
             }
             .padding(.horizontal, theme.spacing.s2)
@@ -36,8 +45,9 @@ public struct RailLabeledButton<Leading: View>: View {
 }
 
 public extension RailLabeledButton where Leading == RailSymbol {
-    init(_ label: String, systemImage: String, selected: Bool = false, badge: Int = 0, help: String? = nil, action: @escaping () -> Void) {
-        self.init(label: label, selected: selected, badge: badge, help: help, action: action) { RailSymbol(systemImage) }
+    init(_ label: String, systemImage: String, selected: Bool = false, badge: Int = 0, help: String? = nil,
+         brand: ProviderType? = nil, action: @escaping () -> Void) {
+        self.init(label: label, selected: selected, badge: badge, help: help, brand: brand, action: action) { RailSymbol(systemImage) }
     }
 }
 
