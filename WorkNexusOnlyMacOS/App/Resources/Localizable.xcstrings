@@ -25722,6 +25722,40 @@
         }
       }
     },
+    "miniAppCookiesPickBrowser": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the browser you are signed in with. Nothing is read until you do."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chọn trình duyệt bạn đã đăng nhập. Chưa có gì được đọc cho tới khi bạn chọn."
+          }
+        }
+      }
+    },
+    "miniAppCookiesProfileLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hồ sơ"
+          }
+        }
+      }
+    },
     "miniAppLiveLimit": {
       "extractionState": "manual",
       "localizations": {

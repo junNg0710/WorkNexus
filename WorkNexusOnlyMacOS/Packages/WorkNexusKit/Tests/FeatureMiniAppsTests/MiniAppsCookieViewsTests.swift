@@ -29,7 +29,10 @@ final class CookieImportDialogModelTests: XCTestCase {
         XCTAssertTrue(m.loadingSources)
         await m.load()
         XCTAssertFalse(m.loadingSources)
-        XCTAssertEqual(m.source, chromeSource, "the first profile")
+        XCTAssertNil(m.source, "nothing is read (no keychain prompt) until a browser is chosen")
+        XCTAssertEqual(m.browsers.first, .chrome, "Chrome is offered first")
+        await m.chooseBrowser(.chrome)
+        XCTAssertEqual(m.source, chromeSource, "its main profile")
         XCTAssertEqual(CookieImportFeedback.label(chromeSource), "Chrome · Me")
         XCTAssertEqual(m.picked, ["alpha.com", "mac-mini-2.local"])
         XCTAssertEqual(loaded(m).map(\.site), ["alpha.com", "mac-mini-2.local", "zeta.com"])
@@ -48,11 +51,13 @@ final class CookieImportDialogModelTests: XCTestCase {
         XCTAssertEqual(loaded(m).map(\.site), ["mac-mini-2.local", "alpha.com", "zeta.com"])
     }
 
-    func testAProfileThatIsGoneFallsBackToTheFirst() async throws {
+    func testAProfileThatIsGoneWaitsForTheUsersChoice() async throws {
         let h = try await Harness()
         let browsers = FixtureBrowsers(); browsers.found = [chromeSource]
         let m = CookieImportDialogModel(cookies: cookies(h, browsers), site: "x.com", source: firefoxSource)
         await m.load()
+        XCTAssertNil(m.source)
+        await m.chooseBrowser(.chrome)
         XCTAssertEqual(m.source, chromeSource)
     }
 
@@ -61,6 +66,7 @@ final class CookieImportDialogModelTests: XCTestCase {
         let browsers = FixtureBrowsers(); browsers.found = []
         let m = CookieImportDialogModel(cookies: h.cookieModel(browsers: browsers))
         await m.load()
+        await m.chooseBrowser(.chrome)
         XCTAssertNil(m.source); XCTAssertFalse(m.loadingSources); XCTAssertFalse(m.canImport)
         let none = await m.importPicked()
         XCTAssertNil(none)
@@ -70,6 +76,7 @@ final class CookieImportDialogModelTests: XCTestCase {
         let h = try await Harness()
         let m = CookieImportDialogModel(cookies: cookies(h))
         await m.load()
+        await m.chooseBrowser(.chrome)
         XCTAssertEqual(m.picked, [])
         XCTAssertFalse(m.canImport, "nothing picked")
         m.toggle("zeta.com"); XCTAssertEqual(m.picked, ["zeta.com"])
@@ -100,6 +107,7 @@ final class CookieImportDialogModelTests: XCTestCase {
         browsers.cookies[browsers.found[0]] = .failure(.auth("denied"))
         let m = CookieImportDialogModel(cookies: h.cookieModel(browsers: browsers))
         await m.load()
+        await m.chooseBrowser(.safari)
         guard case .failed(let failure) = m.sites else { return XCTFail("expected a refused read") }
         XCTAssertTrue(CookieImportFeedback.needsFullDiskAccess(browsers.found[0], failure))
         XCTAssertFalse(CookieImportFeedback.needsFullDiskAccess(chromeSource, failure))
@@ -122,6 +130,7 @@ final class CookieImportDialogModelTests: XCTestCase {
         let model = h.cookieModel(browsers: browsers, web: web, imports: imports)
         let m = CookieImportDialogModel(cookies: model)
         await m.load()
+        await m.chooseBrowser(.chrome)
         XCTAssertEqual(m.picked, ["alpha.com"])
         let imported = await m.importPicked()
         let done = try XCTUnwrap(imported)
@@ -141,6 +150,7 @@ final class CookieImportDialogModelTests: XCTestCase {
         let model = h.cookieModel(browsers: browsers)
         let m = CookieImportDialogModel(cookies: model)
         await m.load()
+        await m.chooseBrowser(.chrome)
         browsers.cookies[chromeSource] = .failure(.auth("denied"))          // the keychain says no on the second read
         let imported = await m.importPicked()
         let done = try XCTUnwrap(imported)

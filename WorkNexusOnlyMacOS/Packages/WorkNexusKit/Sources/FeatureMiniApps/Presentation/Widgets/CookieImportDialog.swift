@@ -22,17 +22,22 @@ public struct CookieImportDialog: View {
         AppDialogFrame(title: appString("miniAppCookiesDialogTitle", "Import cookies"), leadingIcon: "person.badge.key", onClose: onClose) {
             VStack(alignment: .leading, spacing: theme.spacing.s12) {
                 if model.loadingSources { AppInlineSpinner() }
-                else if let source = model.source {
-                    CookieSourcePicker(sources: model.sources, value: source) { next in Task { await model.choose(next) } }
-                    switch model.sites {
-                    case .loading:
-                        if source.browser.isChromium {
-                            AppInlineNote(appFormat("miniAppCookiesKeychainHint", "macOS will ask to let WorkNexus read %1$@'s cookie key: choose Allow.",
-                                                    source.browser.displayName))
+                else if !model.sources.isEmpty {
+                    CookieBrowserPicker(model: model)
+                    if let source = model.source {
+                        switch model.sites {
+                        case .idle: EmptyView()
+                        case .loading:
+                            if source.browser.isChromium {
+                                AppInlineNote(appFormat("miniAppCookiesKeychainHint", "macOS will ask to let WorkNexus read %1$@'s cookie key: choose Allow.",
+                                                        source.browser.displayName))
+                            }
+                            AppInlineSpinner()
+                        case .failed(let failure): CookieReadError(source: source, failure: failure) { Task { await model.retry() } }
+                        case .loaded(let sites): CookieSitePicker(model: model, sites: sites)
                         }
-                        AppInlineSpinner()
-                    case .failed(let failure): CookieReadError(source: source, failure: failure) { Task { await model.retry() } }
-                    case .loaded(let sites): CookieSitePicker(model: model, sites: sites)
+                    } else {
+                        AppInlineNote(appString("miniAppCookiesPickBrowser", "Choose the browser you are signed in with. Nothing is read until you do."))
                     }
                 } else {
                     AppInlineNote(appString("miniAppCookiesNoBrowser", "No browser with cookies was found on this device."))
@@ -63,18 +68,45 @@ public struct CookieImportDialog: View {
     }
 }
 
-/// The "Browser" dropdown of the dialog.
-private struct CookieSourcePicker: View {
+/// "Browser": one button per browser found (Chrome, Edge, Brave, Arc, Firefox, Safari), then a profile dropdown when the
+/// chosen browser has several.
+private struct CookieBrowserPicker: View {
     @Environment(\.appTheme) private var theme
-    let sources: [CookieSource]
-    let value: CookieSource
-    let onChange: (CookieSource) -> Void
+    let model: CookieImportDialogModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: theme.spacing.s6) {
+        VStack(alignment: .leading, spacing: theme.spacing.s8) {
             Text(appString("miniAppCookiesBrowserLabel", "Browser")).font(theme.typography.metaStrong).foregroundStyle(theme.colors.tx2)
-            AppDropdown(value: value, values: sources, labelOf: CookieImportFeedback.label, onChanged: onChange)
+            HStack(spacing: theme.spacing.s6) {
+                ForEach(model.browsers, id: \.self) { browser in
+                    BrowserChip(browser: browser, selected: model.source?.browser == browser) { Task { await model.chooseBrowser(browser) } }
+                }
+            }
+            if let source = model.source, model.profiles(of: source.browser).count > 1 {
+                Text(appString("miniAppCookiesProfileLabel", "Profile")).font(theme.typography.metaStrong).foregroundStyle(theme.colors.tx2)
+                    .padding(.top, theme.spacing.s4)
+                AppDropdown(value: source, values: model.profiles(of: source.browser), labelOf: { $0.profileName }) { next in
+                    Task { await model.choose(next) }
+                }
+            }
         }
+    }
+}
+
+private struct BrowserChip: View {
+    @Environment(\.appTheme) private var theme
+    let browser: CookieBrowser; let selected: Bool; let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(browser.displayName).font(theme.typography.label)
+                .padding(.horizontal, theme.spacing.s12).frame(height: theme.sizes.control32)
+                .foregroundStyle(selected ? theme.colors.accentTx : theme.colors.tx)
+                .background(selected ? theme.colors.accent : theme.colors.panel2, in: Capsule())
+                .overlay(Capsule().stroke(selected ? Color.clear : theme.colors.line, lineWidth: theme.borders.hairline))
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }
 

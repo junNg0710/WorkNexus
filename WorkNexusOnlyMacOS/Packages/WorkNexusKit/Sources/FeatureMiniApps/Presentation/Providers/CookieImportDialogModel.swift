@@ -8,12 +8,12 @@ import Observation
 /// app's `site` alone is picked and listed first, from the `source` it was last imported from, if that is still there.
 @MainActor @Observable
 final class CookieImportDialogModel {
-    enum Sites { case loading, loaded([CookieSite]), failed(Failure) }
+    enum Sites { case idle, loading, loaded([CookieSite]), failed(Failure) }
 
     private(set) var sources: [CookieSource] = []
     private(set) var loadingSources = true
     private(set) var source: CookieSource?
-    private(set) var sites: Sites = .loading
+    private(set) var sites: Sites = .idle
     /// The sites picked for `source`.
     private(set) var picked: Set<String> = []
     private(set) var importing = false
@@ -27,14 +27,29 @@ final class CookieImportDialogModel {
         self.cookies = cookies; focusSite = site; preferred = source
     }
 
-    /// Finds the browser profiles and reads the first one's (or the preferred one's) sites.
+    /// Finds the browser profiles. Nothing is read (and so no keychain prompt appears) until the user picks a browser —
+    /// unless the dialog was opened for a mini app imported before, which starts from the profile it came from.
     func load() async {
         loadingSources = true
         await cookies.loadSources()
         sources = cookies.sources
         loadingSources = false
-        guard let first = preferred.flatMap({ sources.contains($0) ? $0 : nil }) ?? sources.first else { return }
+        guard let first = preferred.flatMap({ sources.contains($0) ? $0 : nil }) else { return }
         await choose(first)
+    }
+
+    /// The browsers that have a readable profile here, Chrome first.
+    var browsers: [CookieBrowser] { CookieBrowser.allCases.filter { b in sources.contains { $0.browser == b } } }
+
+    /// `browser`'s profiles.
+    func profiles(of browser: CookieBrowser) -> [CookieSource] { sources.filter { $0.browser == browser } }
+
+    /// Picks `browser` (its main profile) and reads its sites.
+    func chooseBrowser(_ browser: CookieBrowser) async {
+        guard source?.browser != browser else { return }
+        let all = profiles(of: browser)
+        guard let main = all.first(where: { $0.profileId.hasSuffix("/Default") || $0.profileName == "Default" }) ?? all.first else { return }
+        await choose(main)
     }
 
     func choose(_ next: CookieSource) async {
