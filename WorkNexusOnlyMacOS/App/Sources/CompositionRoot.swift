@@ -62,7 +62,7 @@ final class CompositionRoot {
         }
         credentials = DemoMode.isEnabled ? MemoryCredentialStore() : KeychainCredentialStore()
         let workspaces = GRDBWorkspaceRepository(db: db)
-        let tickets = GRDBTicketRepository(db: db)
+        let tickets = GRDBTicketRepository(db: db, keepsLabel: { SyntheticLabels.isSynthetic($0) })
         let comments = GRDBCommentRepository(db: db), activity = GRDBActivityRepository(db: db)
         let syncStatus = GRDBSyncStatusRepository(db: db)
         let settingsRepo = GRDBSettingsRepository(db: db)
@@ -121,7 +121,12 @@ final class CompositionRoot {
         miniApps = MiniAppsFeature.make(database: db, accounts: { await currentAccounts(workspaces) }, credentials: credentials,
                                         notifier: notifier,
                                         settings: MiniAppsSettings(liveLimit: { live.value.miniAppLiveLimit },
-                                                                   notifyInBackground: { live.value.miniAppNotifyInBackground }))
+                                                                   notifyInBackground: { live.value.miniAppNotifyInBackground }),
+                                        // The demo build keeps the saved passwords and session cookies in memory, like its credentials.
+                                        secrets: DemoMode.isEnabled ? .inMemory() : .keychain)
+        // Here rather than in `start()`: the session cookies kept from the last run must be on their way back into the web
+        // view before the first mini app page can exist (a page waits for them), and `start()` runs after the first render.
+        if !DemoMode.isEnabled { miniApps.startSessionCookies() }
         autoUpdate = MarkerFileAutoUpdatePreference(file: PlatformPaths.applicationSupport().appendingPathComponent("auto_update.txt"))
         update = AppUpdateFeature.makeModel(config: Self.updateConfig, preference: autoUpdate, quit: { DispatchQueue.main.async { NSApp.terminate(nil) } })
         overview = OverviewHolder(services: services, nav: shell.nav, registry: registry, workspaceId: shell.workspace?.id)

@@ -31,16 +31,9 @@ public struct ZentaoTasksSection: View {
             ZentaoBoardToolbar(
                 state: state, bugs: false,
                 scopes: [
-                    AppSegmentedTab(label: appString("viewAll", "All"), active: !isRelated && !state.dueThisWeek) {
-                        board.leaveOwnView(); state.dueThisWeek = false
-                    },
+                    AppSegmentedTab(label: appString("viewAll", "All"), active: !isRelated) { board.leaveOwnView() },
                     // Related to me is a filter of its own: the others are set aside (All brings them back).
-                    AppSegmentedTab(label: appString("relatedToMe", "Related to me"), active: isRelated && !state.dueThisWeek) {
-                        board.enterOwnView(.related); state.dueThisWeek = false
-                    },
-                    AppSegmentedTab(label: appString("dueThisWeek", "Due this week"), active: state.dueThisWeek) {
-                        board.leaveOwnView(); state.dueThisWeek = true
-                    },
+                    AppSegmentedTab(label: appString("relatedToMe", "Related to me"), active: isRelated) { board.enterOwnView(.related) },
                 ],
                 modes: ZentaoSectionMode.modes, viewMode: viewMode,
                 onViewMode: { deps.nav.setViewMode($0, section: ZentaoSection.tasks, accountId: account.id) },
@@ -49,6 +42,8 @@ public struct ZentaoTasksSection: View {
             ZentaoTasksBody(state: state, account: account, location: location, list: viewMode == "list")
         }
         .background(theme.colors.bg)
+        .environment(\.zentaoState, state)
+        .overlay { ZentaoBulkBar(deps: deps, state: state, bugs: false) }
         .task(id: loadSignature) {
             state.keepTaskBoardScope(account: account, location: location)
             state.loadBoardMembers(bugs: false); state.loadModuleNames(bugs: false)
@@ -62,7 +57,9 @@ private struct ZentaoTasksBody: View {
     let state: ZentaoUIState; let account: Account; let location: ToolLocation; let list: Bool
 
     var body: some View {
-        if !state.taskBoardHasExecution(account: account, location: location) {
+        if let team = state.taskTeam {
+            ZentaoTeamBody(state: state, team: team, bugs: false, list: list)
+        } else if !state.taskBoardHasExecution(account: account, location: location) {
             // Until an execution is picked (or none could be): tasks are listed per execution only.
             AppStateView(.empty(appString("zentaoPickExecution", "Pick an execution to see its tasks")))
         } else if let failure = state.taskSlice.failure, state.taskBoard.scoped.isEmpty {

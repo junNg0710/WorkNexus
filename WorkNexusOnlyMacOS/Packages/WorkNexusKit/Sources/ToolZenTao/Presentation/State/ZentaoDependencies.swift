@@ -21,6 +21,8 @@ public struct ZentaoDependencies {
     /// Bug / task forms; the board reads module names and the detail the form lists from it.
     public let editor: ZenTaoTicketEditor
     public let teamMembers: ZenTaoTeamMembers
+    /// The team groups a leader follows (kept on this Mac).
+    public let teamGroups: ZenTaoTeamGroupRepository
     /// Bug confirm / resolve / close / activate and the task actions (optimistic).
     public let workflow: ZenTaoWorkflowService
     public let docs: ZenTaoDocRepository
@@ -29,10 +31,10 @@ public struct ZentaoDependencies {
     public init(services: AppServices, nav: AppNavController, registry: @escaping @MainActor () -> ToolRegistry,
                 tickets: ZenTaoTicketService, viewPages: ZenTaoViewPages, taskBugs: ZenTaoTaskBugs,
                 editor: ZenTaoTicketEditor, teamMembers: ZenTaoTeamMembers, workflow: ZenTaoWorkflowService,
-                docs: ZenTaoDocRepository, exportDoc: ExportZenTaoDoc) {
+                docs: ZenTaoDocRepository, exportDoc: ExportZenTaoDoc, teamGroups: ZenTaoTeamGroupRepository = NoTeamGroups()) {
         self.services = services; self.nav = nav; self.registry = registry; self.tickets = tickets
         self.viewPages = viewPages; self.taskBugs = taskBugs; self.editor = editor; self.teamMembers = teamMembers
-        self.workflow = workflow; self.docs = docs; self.exportDoc = exportDoc
+        self.workflow = workflow; self.docs = docs; self.exportDoc = exportDoc; self.teamGroups = teamGroups
     }
 
     /// The usual composition: `wiring` from `ZentaoModuleData.wire(...)`, `workflow` from
@@ -41,7 +43,7 @@ public struct ZentaoDependencies {
                 nav: AppNavController, registry: @escaping @MainActor () -> ToolRegistry) {
         self.init(services: services, nav: nav, registry: registry, tickets: wiring.tickets, viewPages: wiring.tickets,
                   taskBugs: wiring.tickets, editor: wiring.editor, teamMembers: wiring.teamMembers, workflow: workflow,
-                  docs: wiring.docs, exportDoc: ZentaoModuleData.exportDoc(wiring.docs))
+                  docs: wiring.docs, exportDoc: ZentaoModuleData.exportDoc(wiring.docs), teamGroups: wiring.teamGroups)
     }
 
     /// Opens ZenTao ticket `type` (`task`, `story`, `bug`) `id` linked from `from` in the detail panel, on `from`'s

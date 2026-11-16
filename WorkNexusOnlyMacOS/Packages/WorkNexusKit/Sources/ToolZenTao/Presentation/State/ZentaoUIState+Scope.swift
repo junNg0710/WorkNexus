@@ -18,6 +18,8 @@ extension ZentaoUIState {
     /// view by view to what each status view has loaded. Tasks are listed per execution: none until one is picked.
     func scopeTasks(_ tickets: [Ticket]) -> [Ticket] {
         let place = place
+        // A team replaces the execution: the tasks read from each person, wherever they are.
+        if let team = taskTeam { return team.accountId == place.accountId ? team.tickets(in: tickets, bugs: false) : [] }
         guard let e = execution, e.accountId == place.accountId, e.executionId == place.scopeId else { return [] }
         return ScopePagedViewTickets<ZenTaoTaskColumn>()(PagedViewScopeQuery(
             tickets: ScopeProviderTickets()(tickets: tickets, accountId: e.accountId, providerType: .zentao, externalType: "task",
@@ -29,6 +31,7 @@ extension ZentaoUIState {
     /// narrowed view by view to what each bug view has loaded (and to the picked execution, when there is one).
     func scopeBugs(_ tickets: [Ticket]) -> [Ticket] {
         let place = place
+        if let team = bugTeam { return team.accountId == place.accountId ? team.tickets(in: tickets, bugs: true) : [] }
         guard let product, product.accountId == place.accountId, product.productId == place.scopeId else { return [] }
         let pickedExecution = execution?.accountId == product.accountId ? execution : nil
         let related = bugRelated

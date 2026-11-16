@@ -8,6 +8,15 @@ public protocol ZenTaoViewPages: Sendable {
                              sort: TicketSort, cancel: CancelSignal?) async -> Outcome<ViewPage>
     func syncExecutionTasksPage(accountId: String, executionId: String, browseType: String, page: Int, limit: Int,
                                 sort: TicketSort, cancel: CancelSignal?) async -> Outcome<ViewPage>
+    /// Everything assigned to `login` across every execution (tasks) or product (bugs), read page after page up to `cap`
+    /// tickets and stored locally. Not in the Flutter app (a team leader's view of a person).
+    func syncAssignedWork(accountId: String, login: String, bugs: Bool, cap: Int, cancel: CancelSignal?) async -> Outcome<ZenTaoPersonWork>
+}
+
+public extension ZenTaoViewPages {
+    func syncAssignedWork(accountId: String, login: String, bugs: Bool, cap: Int, cancel: CancelSignal?) async -> Outcome<ZenTaoPersonWork> {
+        .failure(.unexpected("Reading a person's work is not available"))
+    }
 }
 
 /// Ported from: lib/tools/zentao/domain/repositories/zentao_task_bugs.dart

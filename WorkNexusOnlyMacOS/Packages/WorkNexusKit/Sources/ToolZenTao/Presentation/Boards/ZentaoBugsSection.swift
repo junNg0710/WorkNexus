@@ -24,8 +24,11 @@ public struct ZentaoBugsSection: View {
             ZentaoBoardToolbar(
                 state: state, bugs: true,
                 scopes: [
-                    AppSegmentedTab(label: appString("viewAll", "All"), active: !isRelated) {
+                    AppSegmentedTab(label: appString("viewAll", "All"), active: !isRelated && state.bugTab != .all) {
                         board.leaveOwnView(); state.setBugTab(.unclosed)
+                    },
+                    AppSegmentedTab(label: appString("bugsWithClosed", "With closed"), active: !isRelated && state.bugTab == .all) {
+                        board.leaveOwnView(); state.setBugTab(.all)
                     },
                     AppSegmentedTab(label: appString("relatedToMe", "Related to me"), active: isRelated) {
                         board.enterOwnView(.related); state.setBugTab(.relatedToMe)
@@ -39,6 +42,8 @@ public struct ZentaoBugsSection: View {
             ZentaoBugsBody(deps: deps, state: state, list: viewMode == "list")
         }
         .background(theme.colors.bg)
+        .environment(\.zentaoState, state)
+        .overlay { ZentaoBulkBar(deps: deps, state: state, bugs: true) }
         .task(id: "\(account.id)|\(location.scopeId ?? "")|\(state.products[account.id]?.value?.count ?? -1)") {
             state.keepBugBoardProduct(account: account, location: location)
             state.loadBoardMembers(bugs: true); state.loadModuleNames(bugs: true)
@@ -56,7 +61,9 @@ private struct ZentaoBugsBody: View {
     let deps: ZentaoDependencies; let state: ZentaoUIState; let list: Bool
 
     var body: some View {
-        if let failure = state.bugSlice.failure, state.bugBoard.scoped.isEmpty {
+        if let team = state.bugTeam {
+            ZentaoTeamBody(state: state, team: team, bugs: true, list: list, deps: deps)
+        } else if let failure = state.bugSlice.failure, state.bugBoard.scoped.isEmpty {
             AppStateView(.error(failure.message)) { state.reopenBugStreams() }
         } else if state.bugSlice.isLoading && state.bugBoard.scoped.isEmpty {
             BoardSkeleton()

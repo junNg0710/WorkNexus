@@ -17,6 +17,7 @@ public func zentaoOrderBy(_ sort: TicketSort, bug: Bool) -> String {
     case .left: field = bug ? "id" : "left"
     case .resolution: field = bug ? "resolution" : "id"
     case .updated: field = "lastEditedDate"
+    case .deadline: field = "deadline"
     }
     return "\(field)_\(sort.descending ? "desc" : "asc")"
 }

@@ -29,13 +29,22 @@ public struct AppConfirmDialog: View {
 }
 
 public extension View {
-    /// Shows an `AppConfirmDialog` while `isPresented`; `onConfirm` runs only when the person confirms.
+    /// Shows an `AppConfirmDialog` while `isPresented`; `onConfirm` runs only when the person confirms, before the dialog closes.
     func appConfirmDialog(isPresented: Binding<Bool>, title: String, message: String, confirmLabel: String? = nil,
                           destructive: Bool = false, onConfirm: @escaping () -> Void) -> some View {
         appDialog(isPresented: isPresented) {
             AppConfirmDialog(title: title, message: message, confirmLabel: confirmLabel, destructive: destructive,
-                             onConfirm: { isPresented.wrappedValue = false; onConfirm() },
+                             onConfirm: { AppConfirmFlow.confirm(isPresented: isPresented, action: onConfirm) },
                              onCancel: { isPresented.wrappedValue = false })
         }
+    }
+}
+
+/// What confirming does. The action runs BEFORE the dialog is dismissed: callers read the state that drives `isPresented`
+/// (the item being removed), and dismissing clears it — dismiss-first made every "Remove" a silent no-op.
+enum AppConfirmFlow {
+    static func confirm(isPresented: Binding<Bool>, action: () -> Void) {
+        action()
+        isPresented.wrappedValue = false
     }
 }

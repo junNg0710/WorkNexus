@@ -107,20 +107,20 @@ final class PresentationNavTests: XCTestCase {
     func testBugModuleTreeCountsTheBoardsBugsAndSkipsClosedOnTheUnclosedTab() {
         let tickets = [bug("1", product: "5", module: "2"), bug("2", product: "5", module: "2"), bug("3", product: "5", module: "3"),
                        bug("4", product: "5", module: "3", status: .done, providerStatus: "closed")]
-        let unclosed = ZentaoNavLogic.moduleTree(bugs: true, query: query(tickets), bugTab: .unclosed, dueThisWeek: false,
+        let unclosed = ZentaoNavLogic.moduleTree(bugs: true, query: query(tickets), bugTab: .unclosed, leader: ZenTaoLeaderFilter(),
                                                  paths: paths, hideEmpty: false)
         XCTAssertEqual(unclosed.total, 3)
         XCTAssertEqual(unclosed.nodes.map(\.name), ["Live", "Share", "Chat"], "ZenTao's 'no module' is not listed")
         XCTAssertEqual(unclosed.nodes.map(\.depth), [0, 1, 0])
         XCTAssertEqual(unclosed.nodes.map(\.count), [0, 2, 1])
-        let all = ZentaoNavLogic.moduleTree(bugs: true, query: query(tickets), bugTab: .all, dueThisWeek: false, paths: paths, hideEmpty: false)
+        let all = ZentaoNavLogic.moduleTree(bugs: true, query: query(tickets), bugTab: .all, leader: ZenTaoLeaderFilter(), paths: paths, hideEmpty: false)
         XCTAssertEqual(all.total, 4)
         XCTAssertEqual(all.nodes.map(\.count), [0, 2, 2])
     }
 
     func testModuleTreeIgnoresThePickedModuleSoSiblingsKeepTheirCounts() {
         let tickets = [bug("1", product: "5", module: "2"), bug("2", product: "5", module: "3")]
-        let tree = ZentaoNavLogic.moduleTree(bugs: true, query: query(tickets, modules: ["2"]), bugTab: .unclosed, dueThisWeek: false,
+        let tree = ZentaoNavLogic.moduleTree(bugs: true, query: query(tickets, modules: ["2"]), bugTab: .unclosed, leader: ZenTaoLeaderFilter(),
                                              paths: paths, hideEmpty: false)
         XCTAssertEqual(tree.total, 2)
         XCTAssertEqual(tree.nodes.map(\.count), [0, 1, 1])
@@ -128,16 +128,16 @@ final class PresentationNavTests: XCTestCase {
 
     func testHideEmptyKeepsAParentOfABusyModuleAndThePickedOne() {
         let tickets = [bug("1", product: "5", module: "2")]
-        let hidden = ZentaoNavLogic.moduleTree(bugs: true, query: query(tickets), bugTab: .unclosed, dueThisWeek: false, paths: paths, hideEmpty: true)
+        let hidden = ZentaoNavLogic.moduleTree(bugs: true, query: query(tickets), bugTab: .unclosed, leader: ZenTaoLeaderFilter(), paths: paths, hideEmpty: true)
         XCTAssertEqual(hidden.nodes.map(\.name), ["Live", "Share"], "Live holds nothing itself but its sub-module is busy; Chat is empty")
-        let picked = ZentaoNavLogic.moduleTree(bugs: true, query: query(tickets, modules: ["3"]), bugTab: .unclosed, dueThisWeek: false,
+        let picked = ZentaoNavLogic.moduleTree(bugs: true, query: query(tickets, modules: ["3"]), bugTab: .unclosed, leader: ZenTaoLeaderFilter(),
                                                paths: paths, hideEmpty: true)
         XCTAssertEqual(picked.nodes.map(\.name), ["Live", "Share", "Chat"], "the picked module never vanishes from under the cursor")
     }
 
     func testTaskModuleTreeCountsTasksNotBugs() {
         let tickets = [task("1", project: "p1", module: "3"), task("2", project: "p1", module: "3"), bug("3", product: "5", module: "3")]
-        let tree = ZentaoNavLogic.moduleTree(bugs: false, query: query(tickets), bugTab: .unclosed, dueThisWeek: false, paths: paths, hideEmpty: false)
+        let tree = ZentaoNavLogic.moduleTree(bugs: false, query: query(tickets), bugTab: .unclosed, leader: ZenTaoLeaderFilter(), paths: paths, hideEmpty: false)
         XCTAssertEqual(tree.total, 2)
         XCTAssertEqual(tree.nodes.last?.count, 2)
     }

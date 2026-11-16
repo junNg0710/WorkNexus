@@ -34,7 +34,9 @@ public struct CookieImportDialog: View {
                             }
                             AppInlineSpinner()
                         case .failed(let failure): CookieReadError(source: source, failure: failure) { Task { await model.retry() } }
-                        case .loaded(let sites): CookieSitePicker(model: model, sites: sites)
+                        case .loaded(let sites):
+                            CookieSitePicker(model: model, sites: sites)
+                            if model.passwordsSupported && !sites.isEmpty { CookiePasswordsOption(model: model) }
                         }
                     } else {
                         AppInlineNote(appString("miniAppCookiesPickBrowser", "Choose the browser you are signed in with. Nothing is read until you do."))
@@ -63,7 +65,7 @@ public struct CookieImportDialog: View {
     /// Imports, says how it went and closes — unless it failed, so the user can try another profile or site.
     private func run() async {
         guard let done = await model.importPicked() else { return }
-        CookieImportFeedback.report(done.result, source: done.source, toasts: toasts)
+        CookieImportFeedback.report(done.result, passwords: done.passwords, source: done.source, toasts: toasts)
         if case .success = done.result { onClose() }
     }
 }
@@ -107,6 +109,31 @@ private struct BrowserChip: View {
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// "Also import the saved passwords for these sites": off to begin with, and only there for a browser whose passwords can be
+/// read (Chrome, Edge, Brave, Arc). The passwords of the picked sites alone go into the keychain, as the mini apps' own.
+private struct CookiePasswordsOption: View {
+    @Environment(\.appTheme) private var theme
+    let model: CookieImportDialogModel
+
+    var body: some View {
+        let on = model.includePasswords
+        HStack(alignment: .top, spacing: theme.spacing.s10) {
+            Image(systemName: on ? "checkmark.square.fill" : "square").font(.system(size: theme.sizes.icon16))
+                .foregroundStyle(on ? theme.colors.accent : theme.colors.tx3)
+            VStack(alignment: .leading, spacing: theme.spacing.s2) {
+                Text(appString("miniAppPasswordsImportOption", "Also import the saved passwords for these sites"))
+                    .font(theme.typography.body).foregroundStyle(theme.colors.tx)
+                Text(appString("miniAppPasswordsImportHint", "Only the picked sites' passwords are copied, into your Mac's keychain, to fill sign-in forms in mini apps."))
+                    .font(theme.typography.meta).foregroundStyle(theme.colors.tx3).fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, theme.spacing.s4)
+        .contentShape(Rectangle()).onTapGesture { model.includePasswords.toggle() }
+        .accessibilityElement(children: .combine).accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
     }
 }
 

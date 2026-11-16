@@ -91,6 +91,7 @@ public extension BoardController {
         let next = SwitchBoardFilter()(memory: memory, fromKey: activeKey, toKey: key, current: filter,
                                        initial: initial(for: key, current: filter))
         memory = next.memory
+        if activeKey != key { clearSelection() }
         activeKey = key
         var f = next.filter; f.workspaceId = filter.workspaceId
         filter = f

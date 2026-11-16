@@ -39,6 +39,10 @@
     "en": "Ticket lists",
     "vi": "Danh sách phiếu"
   },
+  "bugsWithClosed": {
+    "en": "With closed",
+    "vi": "Gồm đã đóng"
+  },
   "chatAppearanceCard": {
     "en": "Chat appearance",
     "vi": "Giao diện chat"
@@ -335,6 +339,254 @@
     "en": "No merge requests in this view",
     "vi": "Không có merge request nào trong chế độ xem này"
   },
+  "leaderBackToExecution": {
+    "en": "Back to the execution",
+    "vi": "Quay lại execution"
+  },
+  "leaderBackToProduct": {
+    "en": "Back to the product",
+    "vi": "Quay lại product"
+  },
+  "leaderBulkApply": {
+    "en": "Apply to %1$@",
+    "vi": "Áp dụng cho %1$@"
+  },
+  "leaderBulkAssign": {
+    "en": "Assign…",
+    "vi": "Giao cho…"
+  },
+  "leaderBulkAssignTitle": {
+    "en": "Assign %1$@ tickets",
+    "vi": "Giao %1$@ ticket"
+  },
+  "leaderBulkClose": {
+    "en": "Close…",
+    "vi": "Đóng…"
+  },
+  "leaderBulkCloseName": {
+    "en": "Close",
+    "vi": "Đóng"
+  },
+  "leaderBulkCloseTitle": {
+    "en": "Close %1$@ tickets",
+    "vi": "Đóng %1$@ ticket"
+  },
+  "leaderBulkDone": {
+    "en": "%1$@: %2$@ done, %3$@ failed",
+    "vi": "%1$@: %2$@ xong, %3$@ lỗi"
+  },
+  "leaderBulkFailedTitle": {
+    "en": "%1$@ tickets failed",
+    "vi": "%1$@ ticket lỗi"
+  },
+  "leaderBulkNotRun": {
+    "en": "· %1$@ not run",
+    "vi": "· %1$@ chưa chạy"
+  },
+  "leaderBulkNothing": {
+    "en": "Nothing to change",
+    "vi": "Không có gì để thay đổi"
+  },
+  "leaderBulkPriority": {
+    "en": "Priority…",
+    "vi": "Độ ưu tiên…"
+  },
+  "leaderBulkPriorityTitle": {
+    "en": "Set the priority of %1$@ tickets",
+    "vi": "Đặt độ ưu tiên cho %1$@ ticket"
+  },
+  "leaderBulkRetry": {
+    "en": "Retry failed",
+    "vi": "Thử lại các mục lỗi"
+  },
+  "leaderBulkRunning": {
+    "en": "%1$@ of %2$@",
+    "vi": "%1$@/%2$@"
+  },
+  "leaderBulkSkipNotAllowed": {
+    "en": "%1$@ skipped: ZenTao does not allow it in their state",
+    "vi": "Bỏ qua %1$@: ZenTao không cho phép ở trạng thái hiện tại"
+  },
+  "leaderBulkSkipUnchanged": {
+    "en": "%1$@ skipped: already so",
+    "vi": "Bỏ qua %1$@: đã đúng sẵn"
+  },
+  "leaderBulkStop": {
+    "en": "Stop",
+    "vi": "Dừng"
+  },
+  "leaderBulkWillChange": {
+    "en": "%1$@ will change on ZenTao",
+    "vi": "%1$@ mục sẽ thay đổi trên ZenTao"
+  },
+  "leaderClearSelection": {
+    "en": "Clear",
+    "vi": "Bỏ chọn"
+  },
+  "leaderDeleteGroup": {
+    "en": "Delete this group",
+    "vi": "Xóa nhóm này"
+  },
+  "leaderDeleteGroupMessage": {
+    "en": "\"%1$@\" is only removed from this Mac; nobody's work on ZenTao changes.",
+    "vi": "Chỉ xóa \"%1$@\" khỏi máy này; công việc của mọi người trên ZenTao không đổi."
+  },
+  "leaderDeselect": {
+    "en": "Remove from selection",
+    "vi": "Bỏ khỏi lựa chọn"
+  },
+  "leaderDueSoon": {
+    "en": "Due in %1$@ days",
+    "vi": "Hạn trong %1$@ ngày"
+  },
+  "leaderDueSoonCount": {
+    "en": "%1$@ due soon",
+    "vi": "%1$@ sắp đến hạn"
+  },
+  "leaderEditGroup": {
+    "en": "Edit this group…",
+    "vi": "Sửa nhóm này…"
+  },
+  "leaderEveryone": {
+    "en": "Everyone",
+    "vi": "Tất cả mọi người"
+  },
+  "leaderFilterHint": {
+    "en": "Filter by id, title or person",
+    "vi": "Lọc theo id, tiêu đề hoặc người"
+  },
+  "leaderGroupName": {
+    "en": "Group name",
+    "vi": "Tên nhóm"
+  },
+  "leaderGroupPeople": {
+    "en": "People (%1$@ picked)",
+    "vi": "Thành viên (đã chọn %1$@)"
+  },
+  "leaderHelpBulk": {
+    "en": "Act on the pick: Assign…, Priority… or Close… from the bar at the bottom. It says what will change and what is skipped first, then runs ticket by ticket; failed ones can be retried.",
+    "vi": "Thao tác trên phần đã chọn: Assign…, Priority… hoặc Close… ở thanh dưới cùng. Có báo trước cái nào sẽ đổi, cái nào bị bỏ qua, rồi chạy từng ticket; cái lỗi có thể thử lại."
+  },
+  "leaderHelpChips": {
+    "en": "Chips: one-click filters (overdue, due soon, unassigned, high priority…). The number is how many each would keep. Overdue and due-soon count by calendar day.",
+    "vi": "Chip: lọc một cú bấm (trễ hạn, sắp đến hạn, chưa giao, ưu tiên cao…). Con số là số ticket còn lại nếu bấm. Trễ hạn/sắp đến hạn tính theo ngày."
+  },
+  "leaderHelpFilter": {
+    "en": "Filter box: narrows the board as you type, by id, title or person. ⌘K searches every cached ticket of the account, and an id that isn't cached (#123) can be looked up on the server with Return.",
+    "vi": "Ô lọc: thu hẹp board khi gõ, theo id, tiêu đề hoặc người. ⌘K tìm trên mọi ticket đã cache của tài khoản; gõ id chưa có (#123) rồi nhấn Return để tìm trên máy chủ."
+  },
+  "leaderHelpHours": {
+    "en": "Cards show the hours left, and a tag for how late or how close the deadline is. Sort: deadline puts the most overdue first.",
+    "vi": "Thẻ hiện số giờ còn lại và tag trễ/sắp đến hạn. Sort: deadline xếp việc trễ nhất lên đầu."
+  },
+  "leaderHelpLoad": {
+    "en": "\"Load all\": counts and filters only cover what is loaded; this reads the rest of the open views.",
+    "vi": "\"Load all\": số đếm và bộ lọc chỉ tính phần đã tải; nút này đọc nốt phần còn lại."
+  },
+  "leaderHelpMenu": {
+    "en": "Right-click a ticket: Select, Assign… or Priority… without opening it.",
+    "vi": "Chuột phải vào ticket: Select, Assign… hoặc Priority… mà không cần mở."
+  },
+  "leaderHelpPeople": {
+    "en": "People: click a name to see only their work; ⌘-click adds more people. The number is what they still have open, the red dot means something is overdue. \"Everyone\" clears the pick.",
+    "vi": "Người: bấm tên để chỉ xem việc của họ; ⌘-click để thêm người. Con số là số việc họ còn mở, chấm đỏ là có việc trễ hạn. \"Everyone\" để bỏ chọn."
+  },
+  "leaderHelpSelect": {
+    "en": "Pick tickets: ⌘-click a card or row, ⇧-click to pick a range. With some picked, a plain click picks too. Esc or Clear drops the pick.",
+    "vi": "Chọn ticket: ⌘-click thẻ hoặc dòng, ⇧-click để chọn một dải. Khi đã chọn, click thường cũng là chọn. Esc hoặc Clear để bỏ chọn."
+  },
+  "leaderHelpTeam": {
+    "en": "Team (header): follow a saved group of people across every execution or product instead of just one. Pick an execution again to leave it.",
+    "vi": "Team (ở header): theo dõi một nhóm người đã lưu trên mọi execution hoặc product thay vì chỉ một. Chọn lại execution để thoát."
+  },
+  "leaderHelpTitle": {
+    "en": "How to use the team tools",
+    "vi": "Cách dùng công cụ cho leader"
+  },
+  "leaderHighPriority": {
+    "en": "High priority",
+    "vi": "Ưu tiên cao"
+  },
+  "leaderLoadAll": {
+    "en": "Load all",
+    "vi": "Tải hết"
+  },
+  "leaderLoadedOf": {
+    "en": "%1$@ of %2$@ loaded",
+    "vi": "Đã tải %1$@/%2$@"
+  },
+  "leaderNewGroup": {
+    "en": "New team group…",
+    "vi": "Nhóm mới…"
+  },
+  "leaderNoDeadline": {
+    "en": "No deadline",
+    "vi": "Chưa có hạn"
+  },
+  "leaderNoEstimate": {
+    "en": "No estimate",
+    "vi": "Chưa ước lượng"
+  },
+  "leaderOpenCount": {
+    "en": "%1$@ open",
+    "vi": "%1$@ đang mở"
+  },
+  "leaderOverdue": {
+    "en": "Overdue",
+    "vi": "Trễ hạn"
+  },
+  "leaderOverdueCount": {
+    "en": "%1$@ overdue",
+    "vi": "%1$@ trễ hạn"
+  },
+  "leaderSelect": {
+    "en": "Select",
+    "vi": "Chọn"
+  },
+  "leaderSelectAll": {
+    "en": "Select all shown",
+    "vi": "Chọn tất cả đang hiện"
+  },
+  "leaderSelected": {
+    "en": "%1$@ selected",
+    "vi": "Đã chọn %1$@"
+  },
+  "leaderSortDeadline": {
+    "en": "Sort: deadline",
+    "vi": "Sắp xếp: hạn chót"
+  },
+  "leaderSortHelp": {
+    "en": "Order of the cards in each column",
+    "vi": "Thứ tự thẻ trong mỗi cột"
+  },
+  "leaderSortPriority": {
+    "en": "Sort: priority",
+    "vi": "Sắp xếp: ưu tiên"
+  },
+  "leaderStale": {
+    "en": "Idle %1$@ days+",
+    "vi": "Không đổi %1$@+ ngày"
+  },
+  "leaderTeam": {
+    "en": "Team",
+    "vi": "Nhóm"
+  },
+  "leaderTeamFailed": {
+    "en": "Couldn't read %1$@ of the team",
+    "vi": "Không đọc được %1$@ người trong nhóm"
+  },
+  "leaderTeamHelp": {
+    "en": "Follow a group of people across every execution",
+    "vi": "Theo dõi một nhóm người trên mọi execution"
+  },
+  "leaderTeamReading": {
+    "en": "Reading %1$@ of %2$@ people",
+    "vi": "Đang đọc %1$@/%2$@ người"
+  },
+  "leaderTeamTruncated": {
+    "en": "Newest %1$@ per person",
+    "vi": "%1$@ mục mới nhất mỗi người"
+  },
   "localCache": {
     "en": "Local data",
     "vi": "Dữ liệu cục bộ"
@@ -350,6 +602,10 @@
   "miniAppCookiesFilesAccess": {
     "en": "Reading %1$@'s cookies needs Full Disk Access: turn it on for WorkNexus Mac, quit and reopen the app, then try again.",
     "vi": "Đọc cookie của %1$@ cần quyền Full Disk Access: bật cho WorkNexus Mac, thoát và mở lại app, rồi thử lại."
+  },
+  "miniAppCookiesImportedWithPasswords": {
+    "en": "Imported %1$@ and %2$@.",
+    "vi": "Đã nhập %1$@ và %2$@."
   },
   "miniAppCookiesPickBrowser": {
     "en": "Choose the browser you are signed in with. Nothing is read until you do.",
@@ -370,6 +626,138 @@
   "miniAppNotify": {
     "en": "Notifications from background pages",
     "vi": "Thông báo từ các trang chạy nền"
+  },
+  "miniAppPasswordDelete": {
+    "en": "Delete this password",
+    "vi": "Xóa mật khẩu này"
+  },
+  "miniAppPasswordFill": {
+    "en": "Fill",
+    "vi": "Điền"
+  },
+  "miniAppPasswordInsecureNote": {
+    "en": "This site is not encrypted",
+    "vi": "Trang này không được mã hóa"
+  },
+  "miniAppPasswordKeychainNote": {
+    "en": "Kept in your Mac's keychain",
+    "vi": "Lưu trong chuỗi khóa của máy Mac"
+  },
+  "miniAppPasswordNever": {
+    "en": "Never for this site",
+    "vi": "Không bao giờ với trang này"
+  },
+  "miniAppPasswordNoUsername": {
+    "en": "No user name",
+    "vi": "Không có tên đăng nhập"
+  },
+  "miniAppPasswordNotNow": {
+    "en": "Not now",
+    "vi": "Để sau"
+  },
+  "miniAppPasswordSaveFailed": {
+    "en": "Could not save the password.",
+    "vi": "Không lưu được mật khẩu."
+  },
+  "miniAppPasswordSaveTitle": {
+    "en": "Save password for %1$@?",
+    "vi": "Lưu mật khẩu cho %1$@?"
+  },
+  "miniAppPasswordSaved": {
+    "en": "Password saved in your keychain.",
+    "vi": "Đã lưu mật khẩu vào chuỗi khóa."
+  },
+  "miniAppPasswordUpdate": {
+    "en": "Update",
+    "vi": "Cập nhật"
+  },
+  "miniAppPasswordUpdateTitle": {
+    "en": "Update the saved password for %1$@?",
+    "vi": "Cập nhật mật khẩu đã lưu cho %1$@?"
+  },
+  "miniAppPasswordsButton": {
+    "en": "Saved passwords for this site",
+    "vi": "Mật khẩu đã lưu cho trang này"
+  },
+  "miniAppPasswordsChangeFailed": {
+    "en": "Couldn't change the saved passwords.",
+    "vi": "Không thay đổi được mật khẩu đã lưu."
+  },
+  "miniAppPasswordsCountOne": {
+    "en": "1 password",
+    "vi": "1 mật khẩu"
+  },
+  "miniAppPasswordsCountOther": {
+    "en": "%1$@ passwords",
+    "vi": "%1$@ mật khẩu"
+  },
+  "miniAppPasswordsDeleteAll": {
+    "en": "Delete all passwords",
+    "vi": "Xóa tất cả mật khẩu"
+  },
+  "miniAppPasswordsDeleteAllMessage": {
+    "en": "Mini apps will no longer fill your sign-in forms. This cannot be undone.",
+    "vi": "Mini app sẽ không còn tự điền biểu mẫu đăng nhập. Không thể hoàn tác."
+  },
+  "miniAppPasswordsDeleteAllTitle": {
+    "en": "Delete all saved passwords?",
+    "vi": "Xóa tất cả mật khẩu đã lưu?"
+  },
+  "miniAppPasswordsDeleteConfirm": {
+    "en": "Delete",
+    "vi": "Xóa"
+  },
+  "miniAppPasswordsEmpty": {
+    "en": "No password saved yet. Sign in inside a mini app and choose Save.",
+    "vi": "Chưa lưu mật khẩu nào. Hãy đăng nhập trong một mini app rồi chọn Lưu."
+  },
+  "miniAppPasswordsHint": {
+    "en": "Sign-ins you chose to save inside mini apps, kept in your Mac's keychain and filled only on the site they were saved on.",
+    "vi": "Các đăng nhập bạn chọn lưu trong mini app, cất trong chuỗi khóa của máy Mac và chỉ được điền trên đúng trang đã lưu."
+  },
+  "miniAppPasswordsImportFailed": {
+    "en": "The saved passwords could not be read.",
+    "vi": "Không đọc được mật khẩu đã lưu."
+  },
+  "miniAppPasswordsImportHint": {
+    "en": "Only the picked sites' passwords are copied, into your Mac's keychain, to fill sign-in forms in mini apps.",
+    "vi": "Chỉ mật khẩu của các trang đã chọn được sao chép vào chuỗi khóa của máy Mac, để điền biểu mẫu đăng nhập trong mini app."
+  },
+  "miniAppPasswordsImportOption": {
+    "en": "Also import the saved passwords for these sites",
+    "vi": "Nhập cả mật khẩu đã lưu của các trang này"
+  },
+  "miniAppPasswordsLoadFailed": {
+    "en": "The saved passwords could not be read from the keychain.",
+    "vi": "Không đọc được mật khẩu đã lưu từ chuỗi khóa."
+  },
+  "miniAppPasswordsNeverDetail": {
+    "en": "You are not asked to save passwords here",
+    "vi": "Bạn không được hỏi lưu mật khẩu ở trang này"
+  },
+  "miniAppPasswordsNeverRemove": {
+    "en": "Ask again on this site",
+    "vi": "Hỏi lại ở trang này"
+  },
+  "miniAppPasswordsNeverTitle": {
+    "en": "Never saved",
+    "vi": "Không bao giờ lưu"
+  },
+  "miniAppPasswordsNoForm": {
+    "en": "There is no sign-in form on this page.",
+    "vi": "Trang này không có biểu mẫu đăng nhập."
+  },
+  "miniAppPasswordsNoneForSite": {
+    "en": "None saved for this site. Sign in on the page and choose Save.",
+    "vi": "Chưa lưu gì cho trang này. Hãy đăng nhập trên trang rồi chọn Lưu."
+  },
+  "miniAppPasswordsSection": {
+    "en": "Saved passwords",
+    "vi": "Mật khẩu đã lưu"
+  },
+  "miniAppPasswordsTitle": {
+    "en": "Saved passwords",
+    "vi": "Mật khẩu đã lưu"
   },
   "miniApps": {
     "en": "Mini apps",
@@ -515,6 +903,14 @@
     "en": "Saved",
     "vi": "Đã lưu"
   },
+  "searchLookupHint": {
+    "en": "Press Return to look up #%1$@ on the server",
+    "vi": "Nhấn Return để tìm #%1$@ trên máy chủ"
+  },
+  "searchLookupNotFound": {
+    "en": "Nothing with id %1$@ was found",
+    "vi": "Không tìm thấy mục nào có id %1$@"
+  },
   "searchTickets": {
     "en": "Search",
     "vi": "Tìm kiếm"
@@ -574,6 +970,10 @@
   "syncOfflineEmpty": {
     "en": "You're offline and nothing is saved for this account yet.",
     "vi": "Bạn đang ngoại tuyến và chưa có dữ liệu nào được lưu cho tài khoản này."
+  },
+  "tableColumnHours": {
+    "en": "Left / est.",
+    "vi": "Còn lại / ước lượng"
   },
   "title": {
     "en": "Title",
@@ -690,6 +1090,22 @@
   "workspaceSettings": {
     "en": "Workspace settings",
     "vi": "Cài đặt không gian làm việc"
+  },
+  "zentaoDelayDays": {
+    "en": "Delay %1$@ days",
+    "vi": "Trễ %1$@ ngày"
+  },
+  "zentaoDelayOneDay": {
+    "en": "Delay 1 day",
+    "vi": "Trễ 1 ngày"
+  },
+  "zentaoDueToday": {
+    "en": "Due today",
+    "vi": "Đến hạn hôm nay"
+  },
+  "zentaoDueTomorrow": {
+    "en": "Due tomorrow",
+    "vi": "Đến hạn ngày mai"
   },
   "zentaoExecutionGone": {
     "en": "This execution no longer exists",

@@ -72,6 +72,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard !flag, let root, root.platform.reopenWindow() else { return true }
         return false
     }
+
+    /// Quitting waits a moment for the mini apps' session cookies to be copied into the keychain (WebKit forgets them when
+    /// the app quits): the copy is asynchronous, so the answer is "later". Never longer than `quitGrace`.
+    @MainActor func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let root, !root.isDemo else { return .terminateNow }
+        var replied = false
+        let reply = { @MainActor in
+            guard !replied else { return }
+            replied = true
+            sender.reply(toApplicationShouldTerminate: true)
+        }
+        Task { @MainActor in await root.miniApps.stopSessionCookies(); reply() }
+        Task { @MainActor in try? await Task.sleep(for: Self.quitGrace); reply() }
+        return .terminateLater
+    }
+
+    private static let quitGrace: Duration = .milliseconds(1500)
 }
 
 /// Menu-bar commands (Settings…, search, refresh, new bug/task) so the app behaves like a Mac app, not a web view. ⌘K and ⌘R

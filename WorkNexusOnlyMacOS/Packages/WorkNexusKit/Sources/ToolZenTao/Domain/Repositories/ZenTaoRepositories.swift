@@ -45,3 +45,18 @@ public protocol ZenTaoSourceListCache: Sendable {
     func saveProducts(accountId: String, items: [ProviderProduct]) async
     func saveProjects(accountId: String, items: [ProviderProject]) async
 }
+
+/// The team groups of a leader, kept on this Mac. Not in the Flutter app.
+public protocol ZenTaoTeamGroupRepository: Sendable {
+    func watchGroups(accountId: String) -> AsyncStream<[ZenTaoTeamGroup]>
+    func save(_ group: ZenTaoTeamGroup) async -> Outcome<Void>
+    func delete(id: String) async -> Outcome<Void>
+}
+
+/// Nothing saved, nothing stored: where a team group store is not wired (tests, previews).
+public struct NoTeamGroups: ZenTaoTeamGroupRepository {
+    public init() {}
+    public func watchGroups(accountId: String) -> AsyncStream<[ZenTaoTeamGroup]> { AsyncStream { $0.yield([]); $0.finish() } }
+    public func save(_ group: ZenTaoTeamGroup) async -> Outcome<Void> { .success(()) }
+    public func delete(id: String) async -> Outcome<Void> { .success(()) }
+}

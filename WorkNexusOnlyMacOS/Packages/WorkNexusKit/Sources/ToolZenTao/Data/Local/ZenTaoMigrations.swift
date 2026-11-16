@@ -63,5 +63,15 @@ public enum ZenTaoMigrations {
                 t.column("updatedAt", .datetime).notNull()
             }
         }
+        // Team groups a leader follows (macOS only): the people as JSON of `[ZenTaoTeamMember]`.
+        migrator.registerMigration("zentao_v2") { db in
+            try db.create(table: "zenTaoTeamGroups") { t in
+                t.primaryKey("id", .text)
+                t.column("accountId", .text).notNull().indexed()
+                t.column("name", .text).notNull()
+                t.column("membersJson", .text).notNull()
+                t.column("createdAt", .datetime).notNull()
+            }
+        }
     }
 }

@@ -61,9 +61,10 @@ public struct TicketTable<Footer: View>: View {
                                           controller.setTableColumnWidth(key(col), nil)
                                       })
                     ScrollView(.vertical) {
+                        let order = rows.map(\.id)
                         LazyVStack(spacing: 0) {
                             ForEach(Array(rows.enumerated()), id: \.element.id) { i, t in
-                                TicketTableRow(columns: cols, ticket: t, controller: controller, totalWidth: inner,
+                                TicketTableRow(columns: cols, ticket: t, controller: controller, totalWidth: inner, among: order,
                                                last: Footer.self == EmptyView.self && i == rows.count - 1)
                             }
                             footer.padding(theme.spacing.s8).frame(width: inner)
@@ -95,14 +96,18 @@ public extension TicketTable where Footer == EmptyView {
 private struct TicketTableRow: View {
     @Environment(\.appTheme) private var theme
     let columns: [TicketTableColumn]; let ticket: Ticket; let controller: BoardController
-    let totalWidth: CGFloat; let last: Bool
+    let totalWidth: CGFloat; let among: [String]; let last: Bool
 
     var body: some View {
-        let selected = controller.openTicketId == ticket.id
+        let picked = controller.selectedIds.contains(ticket.id)
+        let selected = controller.openTicketId == ticket.id || picked
         let pending = controller.pendingTicketIds.contains(ticket.id)
-        HoverSurface(onTap: pending ? nil : { controller.openTicket(ticket.id) }, enabled: !pending,
+        HoverSurface(onTap: pending ? nil : { controller.tapTicket(ticket.id, among: among) }, enabled: !pending,
                      fill: selected ? theme.colors.sel : .clear, cornerRadius: 0) {
             TicketTableCells(columns: columns, cells: columns.map { $0.cell(ticket) }, totalWidth: totalWidth)
+                .overlay(alignment: .leading) {
+                    if picked { Rectangle().fill(theme.colors.accent).frame(width: theme.spacing.s4) }
+                }
                 .overlay(alignment: .bottom) {
                     if !last { Rectangle().fill(theme.colors.line).frame(height: theme.borders.hairline) }
                 }

@@ -4,7 +4,7 @@ import SwiftUI
 /// Ported from: lib/features/mini_apps/presentation/widgets/mini_app_settings_card.dart
 /// Settings' "Mini apps" card, folded like the translation one: collapsed it says how many keep running and how many there
 /// are; open it holds how many keep running, whether the ones that notify keep running hidden, clearing what their pages keep,
-/// the imported cookies, the trusted certificates and each app's own data. The two preferences live in the app's settings, so
+/// the imported cookies, the saved passwords, the trusted certificates and each app's own data. The two preferences live in the app's settings, so
 /// the page that hosts the card passes them in. Needs no environment but the theme, the dialog host and the toasts.
 public struct MiniAppSettingsCard: View {
     /// The numbers of pages kept running to pick from.
@@ -46,6 +46,9 @@ public struct MiniAppSettingsCard: View {
             AppExpandableCardSection(title: appString("miniAppCookiesSection", "Imported cookies"),
                                      hint: appString("miniAppCookiesHint", "Sign mini apps in with the cookies a browser on this device already has. Only the sites you pick are imported."),
                                      content: { MiniAppCookieImportsSection(cookies: feature.cookies, dateFormat: dateFormat) })
+            AppExpandableCardSection(title: appString("miniAppPasswordsSection", "Saved passwords"),
+                                     hint: appString("miniAppPasswordsHint", "Sign-ins you chose to save inside mini apps, kept in your Mac's keychain and filled only on the site they were saved on."),
+                                     content: { MiniAppSavedPasswordsSection(model: feature.webLoginsModel) })
             AppExpandableCardSection(title: appString("miniAppTrustedCertsSection", "Trusted certificates"),
                                      hint: appString("miniAppTrustedCertsHint", "Sites whose invalid certificate you chose to trust. They load without asking again, until you forget them here."),
                                      content: { MiniAppTrustedCertificatesSection(model: feature.trustedModel) })

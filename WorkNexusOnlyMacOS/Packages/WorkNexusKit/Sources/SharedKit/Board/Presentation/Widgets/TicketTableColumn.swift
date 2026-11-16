@@ -46,7 +46,9 @@ struct TicketTableCells: View {
         let inset = Self.inset(theme)
         HStack(spacing: 0) {
             ForEach(Array(columns.enumerated()), id: \.offset) { i, col in
-                cells[i].padding(.horizontal, theme.spacing.s8)
+                // The ZStack keeps an empty cell (a task with no sprint) a column of its own; bare, it would vanish and
+                // pull every cell after it one column to the left.
+                ZStack(alignment: col.alignEnd ? .trailing : .leading) { cells[i] }.padding(.horizontal, theme.spacing.s8)
                     .frame(maxWidth: .infinity, alignment: col.alignEnd ? .trailing : .leading)
                     .overlay(alignment: .trailing) { if let edge = edges?[i] { edge } }
                     .frame(width: ws[i])

@@ -91,14 +91,14 @@ enum ZentaoNavLogic {
 
     /// The module tree of the board on screen, counted from the tickets the board would show with every filter but
     /// the module one: its columns, so a view without Closed does not count closed bugs.
-    static func moduleTree(bugs: Bool, query: BoardQuery, bugTab: ZenTaoBugBrowseType, dueThisWeek: Bool,
-                           paths: [ZentaoModulePath], hideEmpty: Bool) -> ZenTaoModuleTree {
+    static func moduleTree(bugs: Bool, query: BoardQuery, bugTab: ZenTaoBugBrowseType, leader: ZenTaoLeaderFilter,
+                           names: [String: String] = [:], paths: [ZentaoModulePath], hideEmpty: Bool) -> ZenTaoModuleTree {
         var unpickedFilter = query.filter
         unpickedFilter.modules = []
         let unpicked = query.withFilter(unpickedFilter)
         let shown: [Ticket] = bugs
-            ? BuildZenTaoBugBoard(includeClosed: bugTab == .all)(unpicked).columns.flatMap(\.tickets)
-            : BuildZenTaoTaskBoard(dueThisWeekOnly: dueThisWeek)(unpicked).columns.flatMap(\.tickets)
+            ? BuildZenTaoBugBoard(includeClosed: bugTab == .all, leader: leader, names: names)(unpicked).columns.flatMap(\.tickets)
+            : BuildZenTaoTaskBoard(leader: leader, names: names)(unpicked).columns.flatMap(\.tickets)
         let picked = query.filter.modules
         return BuildZenTaoModuleTree()(paths: paths.map { (id: $0.id, path: $0.path) }, tickets: shown, hideEmpty: hideEmpty,
                                        selected: picked.count == 1 ? picked.first : nil)

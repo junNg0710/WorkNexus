@@ -17,12 +17,13 @@ public final class CookieImportModel {
     private let imports: CookieImportRepository
     private let importCookies: ImportBrowserCookies
     private let check: CheckCookieImports
+    private let importLogins: ImportBrowserLogins?
     private let model: MiniAppsModel
 
     init(browsers: BrowserCookieRepository, webView: WebViewCookieRepository, imports: CookieImportRepository,
-         importCookies: ImportBrowserCookies, check: CheckCookieImports, model: MiniAppsModel) {
+         importCookies: ImportBrowserCookies, check: CheckCookieImports, importLogins: ImportBrowserLogins? = nil, model: MiniAppsModel) {
         self.browsers = browsers; self.webView = webView; self.imports = imports
-        self.importCookies = importCookies; self.check = check; self.model = model
+        self.importCookies = importCookies; self.check = check; self.importLogins = importLogins; self.model = model
     }
 
     public var canImport: Bool { webView.canWrite }
@@ -56,6 +57,15 @@ public final class CookieImportModel {
         return result
     }
 
+    /// Whether `browser`'s saved passwords can be imported too (Chromium browsers only).
+    public func canImportPasswords(from browser: CookieBrowser) -> Bool { importLogins?.supports(browser) ?? false }
+
+    /// Imports the passwords `source` saved for `sites` — those sites only — into the mini apps' saved passwords; answers how many.
+    public func importPasswords(_ sites: Set<String>, from source: CookieSource) async -> Outcome<Int> {
+        guard let importLogins else { return .success(0) }
+        return await importLogins(source, sites: sites)
+    }
+
     /// Imports `state`'s site again from where it came from.
     public func reimport(_ state: CookieImportState) async -> Outcome<Int> {
         await importSites([state.cookieImport.site], from: state.cookieImport.source)
@@ -63,7 +73,10 @@ public final class CookieImportModel {
 
     public func forget(site: String) async -> Outcome<Void> {
         switch await imports.forget(site: site) {
-        case .success: await refresh(); return .success(())
+        case .success:
+            // Its session cookies are no longer kept between runs (unless a mini app still opens the site).
+            await model.sessionCookies?.snapshotNow()
+            await refresh(); return .success(())
         case .failure(let f): return .failure(f)
         }
     }

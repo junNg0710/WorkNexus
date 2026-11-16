@@ -33,7 +33,9 @@ struct Harness {
         let store = InMemoryCredentialStore()
         for (k, v) in vault { _ = await store.write(k, value: v) }
         feature = MiniAppsFeature.make(database: db, accounts: { accounts }, credentials: store, notifier: notifier,
-                                       settings: MiniAppsSettings(liveLimit: { liveLimit }), supportDirectory: dir, router: router)
+                                       settings: MiniAppsSettings(liveLimit: { liveLimit }), supportDirectory: dir, router: router,
+                                       // Never the real keychain: saved passwords and session cookies stay in memory.
+                                       secrets: .inMemory())
         model = feature.model
     }
 

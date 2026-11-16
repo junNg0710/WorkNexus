@@ -66,3 +66,12 @@ struct TicketDraftRow: Codable, FetchableRecord, PersistableRecord, Sendable {
     var json: String
     var updatedAt: Date
 }
+
+struct ZenTaoTeamGroupRow: Codable, FetchableRecord, PersistableRecord, Sendable {
+    static let databaseTableName = "zenTaoTeamGroups"
+    var id: String
+    var accountId: String
+    var name: String
+    var membersJson: String
+    var createdAt: Date
+}

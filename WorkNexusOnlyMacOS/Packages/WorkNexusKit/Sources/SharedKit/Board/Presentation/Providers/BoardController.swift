@@ -48,6 +48,11 @@ public final class BoardController {
     public private(set) var board: BoardModel = .empty
     public private(set) var resultCount = 0
 
+    /// Tickets picked for a bulk action (⌘-click, ⇧-click); cards and rows draw them selected.
+    public internal(set) var selectedIds: Set<String> = []
+    /// The ticket picked last: where a ⇧-click starts its range.
+    var selectionAnchor: String?
+
     var memory: [String: FilterState] = [:]
     var setAside: [String: FilterState] = [:]
     var activeKey: String?
@@ -137,8 +142,24 @@ public final class BoardController {
                             pinnedExecutions: Set(settings.pinnedExecutions))
     }
 
-    /// Quick search over cached tickets in scope (⌘K field).
-    public func search(_ query: String) -> [Ticket] { SearchLocalTickets()(tickets: scoped, query: query) }
+    /// Tool hook: the cached tickets the ⌘K search looks through, narrowed from every ticket. Nil searches only the
+    /// tickets in scope (the board on screen); a tool whose boards each show one slice sets it to search its whole account.
+    public var searchPool: (([Ticket]) -> [Ticket])?
+    /// Tool hook: finds the ticket whose id was typed (`123`, `#123`) when no cached one has it - fetches it from the
+    /// server and returns its local ticket id (nil when there is none).
+    public var fetchTicketByKey: ((String) async -> String?)?
+
+    /// Quick search over cached tickets (⌘K field): in scope, or in the tool's `searchPool`.
+    public func search(_ query: String) -> [Ticket] {
+        SearchLocalTickets()(tickets: searchPool?(tickets) ?? scoped, query: query)
+    }
+
+    /// The id typed into the search (`123` or `#123`), when that is all it holds.
+    public static func ticketKey(typed query: String) -> String? {
+        let q = query.trimmingCharacters(in: .whitespaces)
+        let digits = q.hasPrefix("#") ? String(q.dropFirst()) : q
+        return !digits.isEmpty && digits.allSatisfy(\.isNumber) ? digits : nil
+    }
 
     // MARK: Actions
 

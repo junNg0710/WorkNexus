@@ -63,6 +63,36 @@ extension ZenTaoClient {
         return ZenTaoExecutionTasksResponse(classicView: payload)
     }
 
+    /// One page of what is assigned to user `userId`, in every execution, via the classic `user-task-...json` action.
+    /// URL: `{base}/user-task-{userID}-assignedTo-{orderBy}-0-{recPerPage}-{pageID}.json`. Not in the Flutter app; the
+    /// page needs a numeric user id (`GET /users`) and the right to see that person's work.
+    func classicUserTasks(_ userId: String, recPerPage: Int, pageID: Int, orderBy: String = "id_desc",
+                          cancel: CancelSignal? = nil) async throws -> ZenTaoExecutionTasksResponse {
+        let view = try await classicUserView("user-task-\(userId)-assignedTo-\(orderBy)-0-\(recPerPage)-\(pageID)", list: "tasks", cancel: cancel)
+        return ZenTaoExecutionTasksResponse(classicView: view)
+    }
+
+    /// The bugs assigned to user `userId` in every product: `{base}/user-bug-{userID}-assignedTo-{orderBy}-0-{recPerPage}-{pageID}.json`.
+    func classicUserBugs(_ userId: String, recPerPage: Int, pageID: Int, orderBy: String = "id_desc",
+                         cancel: CancelSignal? = nil) async throws -> ZenTaoProductBugsResponse {
+        let view = try await classicUserView("user-bug-\(userId)-assignedTo-\(orderBy)-0-\(recPerPage)-\(pageID)", list: "bugs", cancel: cancel)
+        let bugs = listOrMapValues(view["bugs"]).compactMap { asMap($0).map(ZenTaoEntity.init(json:)) }
+        let total = asMap(view["pager"]).map { zentaoInt($0["recTotal"]) ?? bugs.count } ?? bugs.count
+        return ZenTaoProductBugsResponse(total: total, bugs: bugs)
+    }
+
+    /// A classic person page's view; throws when the reply has no `list` - a refusal (no right to see the person,
+    /// an expired session) must not read as "nothing assigned".
+    private func classicUserView(_ path: String, list: String, cancel: CancelSignal?) async throws -> JSON {
+        let token = try await ensureToken()
+        let target = try url("\(baseUrl)/\(path).json", query: [("zentaosid", token)])
+        let res = try await run(cancel: cancel) { [self] in try await perform(ZenTaoRequest(url: target)) }
+        guard let view = classicView(res), view[list] != nil else {
+            throw ZenTaoError.http(status: res.status, message: "ZenTao did not show this person's work", hasResponse: true)
+        }
+        return view
+    }
+
     // MARK: Messages
 
     /// The user's web notifications (the bell menu), via the classic `message-ajaxGetDropmenu-all` page - REST

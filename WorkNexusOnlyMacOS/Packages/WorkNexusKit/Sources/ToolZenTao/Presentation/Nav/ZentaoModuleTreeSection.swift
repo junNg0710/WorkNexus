@@ -20,7 +20,7 @@ struct ZentaoModuleTreeSection: View {
             switch state.boardModuleNames(bugs: bugs) {
             case .loaded(let paths):
                 let tree = ZentaoNavLogic.moduleTree(bugs: bugs, query: board.boardQuery, bugTab: state.bugTab,
-                                                     dueThisWeek: state.dueThisWeek, paths: paths, hideEmpty: state.hideEmptyModules)
+                                                     leader: state.leader(bugs: bugs), names: state.memberNames, paths: paths, hideEmpty: state.hideEmptyModules)
                 ScopeEntryRow(name: appString("zentaoAllModules", "All modules"), systemImage: "square.stack.3d.up", count: tree.total,
                               selected: picked.isEmpty, onTap: { board.selectModule(nil) })
                 ForEach(tree.nodes, id: \.id) { node in

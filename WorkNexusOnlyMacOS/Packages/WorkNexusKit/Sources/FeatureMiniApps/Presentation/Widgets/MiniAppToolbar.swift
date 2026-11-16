@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Ported from: lib/features/mini_apps/presentation/widgets/mini_app_toolbar.dart
 /// A browser-style bar over a mini app's page: back, forward, reload / stop, home, the address field, `trailing` (the cookie
-/// import) and "open in browser". The browser's keys (see `MiniAppShortcuts`) are heard by `MiniAppKeyMonitor`.
+/// import and the saved passwords) and "open in browser". The browser's keys (see `MiniAppShortcuts`) are heard by `MiniAppKeyMonitor`.
 struct MiniAppToolbar<Trailing: View>: View {
     @Environment(\.appTheme) private var theme
     @Binding var address: String

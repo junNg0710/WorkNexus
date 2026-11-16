@@ -67,6 +67,13 @@ public struct BuildPagedTable<V: Hashable & Sendable>: Sendable {
         case .left: if case .zentaoTask(let e) = t.providerEntity { return e.left.map(Key.double) }; return nil
         case .resolution: if case .zentaoBug(let e) = t.providerEntity { return e.resolution.map(Key.string) }; return nil
         case .updated: return t.updatedAt.map(Key.date)
+        case .deadline:
+            // ZenTao sends a deadline as `yyyy-MM-dd`, which orders as text.
+            switch t.providerEntity {
+            case .zentaoTask(let e)?: return (e.deadline ?? "").isEmpty ? nil : .string(e.deadline!)
+            case .zentaoBug(let e)?: return (e.deadline ?? "").isEmpty ? nil : .string(e.deadline!)
+            default: return nil
+            }
         }
     }
 

@@ -22,7 +22,21 @@ public final class ZentaoUIState {
     public internal(set) var execution: ZentaoExecutionSelection?
     /// The bug board's browse tab; `relatedToMe` feeds every column from one merged view.
     public internal(set) var bugTab: ZenTaoBugBrowseType = .unclosed
-    public var dueThisWeek = false
+    /// The team leader's filter of each board (people, quick chips, keyword), by `BoardController.currentBoardKey`.
+    public internal(set) var leaders: [String: ZenTaoLeaderFilter] = [:]
+    /// How the cards inside a column are ordered.
+    public var columnSort = ZenTaoColumnSort.priority
+    /// The team groups saved for each account (watched from the store once an account's board opens).
+    public internal(set) var teamGroups: [String: [ZenTaoTeamGroup]] = [:]
+    /// The team a board shows instead of one execution / product, with what was read of each person.
+    public internal(set) var taskTeam: ZentaoTeamScope?
+    public internal(set) var bugTeam: ZentaoTeamScope?
+    var teamGeneration = 0
+    var observedTeamAccounts: Set<String> = []
+    /// A bulk dialog asked for from a card's menu; the bar of the board it names opens it and clears this.
+    var bulkRequest: ZentaoBulkRequest?
+    /// Boards (`"bugs"` / `"tasks"`) whose views the leader asked to load whole, so the counts cover everything.
+    public internal(set) var loadingEverything: Set<String> = []
     public var hideEmptyModules = false
     /// Table sorts (kept for the session, apart for tasks and bugs).
     public var taskSort = TicketSort.newest
@@ -57,18 +71,23 @@ public final class ZentaoUIState {
         bugBoard = BoardController(services: deps.services, nav: deps.nav, registry: registry)
         let box = WeakBox<ZentaoUIState>()
         bugStreams = PagedViewsController<ZenTaoBugStream>(
-            isFiltered: { box.value?.bugBoard.filter.narrowsTickets ?? false },
+            isFiltered: { box.value.map { $0.bugBoard.filter.narrowsTickets || $0.leader(bugs: true).isActive } ?? false },
             fetchPage: { view, page, limit, cancel in
                 await box.value?.fetchBugPage(view, page: page, limit: limit, cancel: cancel) ?? .failure(.cancelled("closed"))
             })
         taskStreams = PagedViewsController<ZenTaoTaskColumn>(
-            isFiltered: { box.value?.taskBoard.filter.narrowsTickets ?? false },
+            isFiltered: { box.value.map { $0.taskBoard.filter.narrowsTickets || $0.leader(bugs: false).isActive } ?? false },
             fetchPage: { view, page, limit, cancel in
                 await box.value?.fetchTaskPage(view, page: page, limit: limit, cancel: cancel) ?? .failure(.cancelled("closed"))
             })
         box.value = self
         taskBoard.scopeTickets = { [weak self] in self?.scopeTasks($0) ?? [] }
         bugBoard.scopeTickets = { [weak self] in self?.scopeBugs($0) ?? [] }
+        // ⌘K searches the whole account (every execution / product cached), and an id nothing cached has is fetched.
+        taskBoard.searchPool = { [weak self] in self?.accountZenTaoTickets($0) ?? [] }
+        bugBoard.searchPool = { [weak self] in self?.accountZenTaoTickets($0) ?? [] }
+        taskBoard.fetchTicketByKey = { [weak self] key in await self?.fetchByKey(key, bugsFirst: false) }
+        bugBoard.fetchTicketByKey = { [weak self] key in await self?.fetchByKey(key, bugsFirst: true) }
         taskBoard.facetScope = .task
         bugBoard.facetScope = .bug
         bugBoard.usesFacetFilters = true
@@ -102,6 +121,7 @@ public final class ZentaoUIState {
     /// Opens `product`'s bug board: its scope, its selection and its own filter. An execution picked under another
     /// product would narrow this product's bugs to nothing, so it is cleared.
     public func openProduct(_ p: ProviderProduct) {
+        closeTeam(bugs: true)
         deps.nav.setScope(p.id, accountId: p.accountId)
         selectProduct(p)
         execution = nil
@@ -111,6 +131,7 @@ public final class ZentaoUIState {
 
     /// Opens `execution`'s task board (the sidebar's and a ticket's Execution field's way in).
     public func openExecution(_ e: ProviderExecution) {
+        closeTeam(bugs: false)
         deps.nav.select(.account(e.accountId))
         deps.nav.setSection(ZentaoSection.tasks, accountId: e.accountId)
         deps.nav.setScope(e.id, accountId: e.accountId)
@@ -141,6 +162,8 @@ public final class ZentaoUIState {
         let relatedChanged = (tab == .relatedToMe) != bugRelated
         bugTab = tab
         if relatedChanged { reopenBugStreams() }
+        // The Closed column draws on the all-bugs view, which only loads once the tab that shows it is open.
+        if tab == .all, bugStreams.views[.all]?.started != true { Task { await bugStreams.loadMore(.all) } }
         rescope()
     }
 

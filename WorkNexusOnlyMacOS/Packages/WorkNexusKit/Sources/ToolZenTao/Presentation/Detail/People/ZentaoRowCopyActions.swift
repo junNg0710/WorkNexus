@@ -58,12 +58,19 @@ public extension View {
 
 private struct ZentaoRowContextMenu: ViewModifier {
     @Environment(\.toasts) private var toasts
+    @Environment(\.zentaoState) private var state
     let ticket: Ticket
     func body(content: Content) -> some View {
         let entries = ZentaoCopyText.entries(ticket)
-        content.appContextMenu(entries: entries.map { AppMenuEntry(icon: $0.icon, label: $0.label) }) { i in
-            NSPasteboard.general.clearContents(); NSPasteboard.general.setString(entries[i].text, forType: .string)
-            toasts?.show(entries[i].toast)
+        let triage = state.map { ZentaoTriageMenu(state: $0, ticket: ticket) }
+        let all = entries.map { AppMenuEntry(icon: $0.icon, label: $0.label) } + (triage?.entries ?? [])
+        content.appContextMenu(entries: all) { i in
+            if i < entries.count {
+                NSPasteboard.general.clearContents(); NSPasteboard.general.setString(entries[i].text, forType: .string)
+                toasts?.show(entries[i].toast)
+            } else {
+                triage?.run(i - entries.count)
+            }
         }
     }
 }

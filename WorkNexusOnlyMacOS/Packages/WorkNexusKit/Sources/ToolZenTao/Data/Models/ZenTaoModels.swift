@@ -151,6 +151,7 @@ struct ZenTaoEntity {
 
 /// `GET /users` -> `{ users: [...] }`.
 struct ZenTaoUser {
+    var id: String?
     var account: String?
     var realname: String?
 }
@@ -160,7 +161,7 @@ struct ZenTaoUsersResponse {
     init(json: JSON) {
         users = (json["users"] as? [Any] ?? []).compactMap { raw -> ZenTaoUser? in
             guard let m = asMap(raw) else { return nil }
-            return ZenTaoUser(account: m["account"] as? String, realname: m["realname"] as? String)
+            return ZenTaoUser(id: zentaoInt(m["id"]).map(String.init), account: m["account"] as? String, realname: m["realname"] as? String)
         }
     }
 }

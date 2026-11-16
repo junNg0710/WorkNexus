@@ -20,7 +20,8 @@ enum ZentaoTableColumns {
          TicketTableColumn(id: "resolution", label: appString("resolution", "Resolution"), width: 110, sortField: .resolution) { t in
              if case .zentaoBug(let b)? = t.providerEntity, let label = zentaoResolutionLabel(b.resolution) { return AnyView(TableTextCell(label)) }
              return AnyView(EmptyView())
-         }]
+         },
+         TicketTableColumn(id: "due", label: appString("tableColumnDue", "Due"), width: 100, sortField: .deadline) { AnyView(ZentaoDueCell(ticket: $0)) }]
     }
 
     /// ID, title, assignee, sprint (execution), status, due.
@@ -34,7 +35,8 @@ enum ZentaoTableColumns {
              let (label, color) = ZentaoColumnVisual.task(zentaoTaskColumnFor(t), palette)
              return AnyView(TableStatusCell(label, color))
          },
-         TicketTableColumn(id: "due", label: appString("tableColumnDue", "Due"), width: 100) { AnyView(ZentaoDueCell(ticket: $0)) }]
+         TicketTableColumn(id: "hours", label: appString("tableColumnHours", "Left / est."), width: 90, sortField: .left) { AnyView(ZentaoHoursCell(ticket: $0)) },
+         TicketTableColumn(id: "due", label: appString("tableColumnDue", "Due"), width: 100, sortField: .deadline) { AnyView(ZentaoDueCell(ticket: $0)) }]
     }
 
     private static func idColumn() -> TicketTableColumn {
@@ -78,13 +80,25 @@ struct ZentaoSeverityPriorityCell: View {
     }
 }
 
-/// The deadline of a task, in the error colour once it is late.
+/// Hours left over the estimate of a task ("2 / 8 h").
+struct ZentaoHoursCell: View {
+    @Environment(\.appTheme) private var theme
+    let ticket: Ticket
+    var body: some View {
+        if case .zentaoTask(let t)? = ticket.providerEntity, t.left != nil || t.estimate != nil {
+            Text("\(zentaoHoursText(t.left ?? 0)) / \(zentaoHoursText(t.estimate ?? 0)) h").font(theme.typography.mono)
+                .foregroundStyle(theme.colors.tx2).lineLimit(1)
+        }
+    }
+}
+
+/// The deadline of a ticket, in the error colour once it is late.
 struct ZentaoDueCell: View {
     @Environment(\.appTheme) private var theme
     let ticket: Ticket
     var body: some View {
         if let d = ZentaoFormatters.extractDeadline(ticket) {
-            let late = ZentaoFormatters.delayText(d) != nil && ticket.status != .done
+            let late = zentaoDeadlineState(ticket).isOverdue
             Text(ZentaoFormatters.formatDeadline(d)).font(theme.typography.mono)
                 .foregroundStyle(late ? theme.colors.red : theme.colors.tx2).lineLimit(1)
         }

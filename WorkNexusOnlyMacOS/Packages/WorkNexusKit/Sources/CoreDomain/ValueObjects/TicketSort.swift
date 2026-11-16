@@ -1,6 +1,6 @@
 /// Ported from: lib/core/domain/value_objects/ticket_sort.dart
 public enum TicketSortField: String, Codable, CaseIterable, Sendable {
-    case id, title, priority, severity, status, assignee, estimate, left, resolution, updated
+    case id, title, priority, severity, status, assignee, estimate, left, resolution, updated, deadline
     public var startsDescending: Bool { self == .id || self == .updated }
 }
 

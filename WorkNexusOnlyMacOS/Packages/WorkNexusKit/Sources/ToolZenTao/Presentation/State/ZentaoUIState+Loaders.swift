@@ -89,7 +89,8 @@ extension ZentaoUIState {
 
     /// Loads the people of the open board's product / execution (for the assignee / opener facet choices).
     public func loadBoardMembers(bugs: Bool) {
-        guard let (key, accountId, id) = moduleKey(bugs), membersFor != key else { return }
+        // A team brings its own people (`openTeam`).
+        guard team(bugs: bugs) == nil, let (key, accountId, id) = moduleKey(bugs), membersFor != key else { return }
         membersFor = key
         Task {
             let r = bugs ? await deps.teamMembers.productMembers(accountId: accountId, productId: id)

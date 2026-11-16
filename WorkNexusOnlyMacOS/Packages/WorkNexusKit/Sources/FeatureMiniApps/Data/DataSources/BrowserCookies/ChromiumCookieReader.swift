@@ -103,11 +103,18 @@ final class ChromiumCookieReader: @unchecked Sendable {
             if !Self.canList(parent) { throw CocoaError(.fileReadNoPermission, userInfo: [NSFilePathErrorKey: profilePath]) }
             throw CocoaError(.fileNoSuchFile, userInfo: [NSFilePathErrorKey: profilePath])
         }
-        let cached = keys.withLock { $0[browser] }
-        let crypto: ChromiumCookieCrypto
-        if let cached { crypto = cached } else { crypto = try await keyFor(browser); keys.withLock { $0[browser] = crypto } }
+        let crypto = try await crypto(for: browser)
         // Decrypting thousands of values is too slow for the main actor.
         return try await Task.detached { try Self.readFile(file, crypto) }.value
+    }
+
+    /// `browser`'s key, asked of the keychain once and then kept for the session (the saved passwords are under the same key,
+    /// so reading them after the cookies asks for nothing more).
+    func crypto(for browser: CookieBrowser) async throws -> ChromiumCookieCrypto {
+        if let cached = keys.withLock({ $0[browser] }) { return cached }
+        let crypto = try await keyFor(browser)
+        keys.withLock { $0[browser] = crypto }
+        return crypto
     }
 
     static func readFile(_ file: String, _ crypto: ChromiumCookieCrypto) throws -> [BrowserCookie] {

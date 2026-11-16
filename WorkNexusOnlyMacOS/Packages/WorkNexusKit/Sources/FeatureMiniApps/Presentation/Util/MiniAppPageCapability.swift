@@ -13,6 +13,10 @@ struct MiniAppPageContext {
     let prompter: MiniAppPermissionPrompter
     /// The page is in the app's selected tab, so it is what the user is looking at (a background tab's is not).
     var selectedTab = true
+    /// The web view the call came from (a tab's, or a window the page opened). Set by the bridge.
+    weak var web: WKWebView?
+    /// The origin of the frame that called (`https://host[:port]`), as WebKit reports it — not what the page says. Set by the bridge.
+    var frameOrigin: String?
 }
 
 /// Something the app lets a mini app's page do through the app itself — show a notification, sign in. Each is its own class;
@@ -25,6 +29,13 @@ protocol MiniAppPageCapability: AnyObject {
     var handledCalls: Set<String> { get }
     /// Answers one call (a Promise value for the page: String, number, dictionary or nil).
     func handle(_ name: String, args: [Any], page: MiniAppPageContext) async -> Any?
+    /// The JavaScript world the script runs in and its calls must come from. The page's own world for a capability that
+    /// stands in for a web API the page calls; a world of its own for one the page must not be able to reach.
+    var contentWorld: WKContentWorld { get }
+}
+
+extension MiniAppPageCapability {
+    var contentWorld: WKContentWorld { .page }
 }
 
 /// Ported from: lib/features/mini_apps/presentation/util/mini_app_page_token.dart
@@ -35,13 +46,19 @@ func newMiniAppPageToken() -> String {
 }
 
 /// Receives the bridge calls of every page of one web view's content controller and hands them to the capability that
-/// answers that name. Calls from a frame other than the main frame, or without the capability's token, are ignored.
+/// answers that name. Calls from a frame other than the main frame, without the capability's token, or from another
+/// JavaScript world than the capability's own are ignored.
 @MainActor
 final class MiniAppBridge: NSObject, WKScriptMessageHandlerWithReply {
     static let handlerName = "wnBridge"
     private let capabilities: [MiniAppPageCapability]
     private let tokens: [ObjectIdentifier: String]
     private let context: (WKWebView?) -> MiniAppPageContext
+
+    /// The worlds the capabilities' calls come from: the bridge is installed in each.
+    var worlds: [WKContentWorld] {
+        capabilities.reduce(into: [WKContentWorld]()) { all, c in if !all.contains(c.contentWorld) { all.append(c.contentWorld) } }
+    }
 
     init(capabilities: [(MiniAppPageCapability, token: String)], context: @escaping (WKWebView?) -> MiniAppPageContext) {
         self.capabilities = capabilities.map(\.0)
@@ -54,9 +71,12 @@ final class MiniAppBridge: NSObject, WKScriptMessageHandlerWithReply {
         MainActor.assumeIsolated {
             guard message.frameInfo.isMainFrame, let body = message.body as? [String: Any], let name = body["name"] as? String,
                   let token = body["token"] as? String, let capability = capabilities.first(where: { $0.handledCalls.contains(name) }),
-                  tokens[ObjectIdentifier(capability)] == token else { replyHandler(nil, nil); return }
+                  tokens[ObjectIdentifier(capability)] == token, message.world == capability.contentWorld else { replyHandler(nil, nil); return }
             let args = body["args"] as? [Any] ?? []
-            let page = context(message.webView)
+            var page = context(message.webView)
+            page.web = message.webView
+            let origin = message.frameInfo.securityOrigin
+            page.frameOrigin = webOrigin(scheme: origin.protocol, host: origin.host, port: origin.port)
             Task { @MainActor in replyHandler(await capability.handle(name, args: args, page: page), nil) }
         }
     }

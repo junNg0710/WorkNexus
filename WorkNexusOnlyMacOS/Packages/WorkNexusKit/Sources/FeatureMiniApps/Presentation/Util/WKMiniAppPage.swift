@@ -31,9 +31,11 @@ enum MiniAppWebFactory {
         for capability in capabilities {
             guard let script = capability.script else { continue }
             controller.addUserScript(WKUserScript(source: script.source, injectionTime: script.atDocumentStart ? .atDocumentStart : .atDocumentEnd,
-                                                  forMainFrameOnly: true))
+                                                  forMainFrameOnly: true, in: capability.contentWorld))
         }
-        controller.addScriptMessageHandler(bridge, contentWorld: .page, name: MiniAppBridge.handlerName)
+        // One handler per world: a capability in a world of its own is out of the page's reach, and the bridge refuses a
+        // call that comes from another world than the capability's.
+        for world in bridge.worlds { controller.addScriptMessageHandler(bridge, contentWorld: world, name: MiniAppBridge.handlerName) }
         return config
     }
 
@@ -48,7 +50,7 @@ enum MiniAppWebFactory {
 }
 
 /// A tab's web view with everything that has to live as long as it does: its delegate, its page driver, the bridge and
-/// the capabilities (notifications, saved login). Held by the tab's `MiniAppBrowserModel`.
+/// the capabilities (notifications, ZenTao login, saved passwords). Held by the tab's `MiniAppBrowserModel`.
 @MainActor
 struct MiniAppWebParts {
     let web: WKWebView
@@ -63,7 +65,9 @@ struct MiniAppWebParts {
         let prompter = tabs?.prompter ?? MiniAppPermissionPrompter(model: model)
         let notifications = MiniAppNotificationCapability(notifier: model.services.notifier, isWindowFocused: { NSApp.isActive && NSApp.keyWindow != nil })
         let login = MiniAppLoginCapability()
-        let capabilities: [(MiniAppPageCapability, token: String)] = [(notifications, notifications.token), (login, login.token)]
+        let passwords = MiniAppPasswordCapability(tab: browser)
+        let capabilities: [(MiniAppPageCapability, token: String)] = [(notifications, notifications.token), (login, login.token),
+                                                                      (passwords, passwords.token)]
         let bridge = MiniAppBridge(capabilities: capabilities) { [unowned model] web in
             MiniAppPageContext(app: { model.current(app) }, pageURL: web?.url, model: model, prompter: prompter,
                                selectedTab: model.isSelectedTab(appId: app.id, web: web))
@@ -71,7 +75,13 @@ struct MiniAppWebParts {
         let config = MiniAppWebFactory.makeConfiguration(bridge: bridge, capabilities: capabilities.map(\.0))
         let parts = wire(MiniAppWebFactory.makeWebView(configuration: config), app: app, model: model, browser: browser, tabs: tabs,
                          prompter: prompter, bridge: bridge)
-        if loadInitialPage, let url = URL(string: browser.initialUrl) { parts.web.load(URLRequest(url: url)) }
+        if loadInitialPage, let url = URL(string: browser.initialUrl) {
+            // At launch the session cookies kept from the last run go back into the web view first, so the page opens signed in.
+            if let keeper = model.sessionCookies, !keeper.isReady {
+                let web = parts.web
+                Task { @MainActor in await keeper.ready(); web.load(URLRequest(url: url)) }
+            } else { parts.web.load(URLRequest(url: url)) }
+        }
         return parts
     }
 
@@ -91,6 +101,7 @@ struct MiniAppWebParts {
         delegate.observe(web)
         let page = WKMiniAppPage(web)
         browser.attach(page)
+        browser.passwords.bind(model.services.webLogins, filler: WKLoginFiller(web: web))
         let parts = MiniAppWebParts(web: web, delegate: delegate, page: page, prompter: prompter)
         browser.parts = parts
         return parts

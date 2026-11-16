@@ -41,6 +41,8 @@ final class MiniAppBrowserModel: Identifiable {
 
     let appId: String
     var loading: Bool { progress < 1 }
+    /// The saved passwords of the page: the toolbar's list, the "Save password?" bar.
+    let passwords = MiniAppPasswordsModel()
 
     /// The web view and what has to live as long as it (delegate, page driver); built by the view, or handed in by the page's
     /// request for a window of its own.

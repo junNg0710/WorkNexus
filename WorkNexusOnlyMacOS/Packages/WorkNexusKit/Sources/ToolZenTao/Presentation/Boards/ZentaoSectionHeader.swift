@@ -25,7 +25,12 @@ struct ZentaoSectionHeader: View {
 
     var body: some View {
         HStack(spacing: theme.spacing.s12) {
-            if bugs { ZentaoProductSwitcher(state: state, account: account) } else { ZentaoExecutionSwitcher(state: state, account: account) }
+            Group {
+                if bugs { ZentaoProductSwitcher(state: state, account: account) } else { ZentaoExecutionSwitcher(state: state, account: account) }
+            }
+            // While a team is shown the board is not of this one: it stays to be picked, but reads as set aside.
+            .opacity(state.team(bugs: bugs) == nil ? 1 : 0.5)
+            ZentaoTeamMenu(deps: deps, state: state, account: account, bugs: bugs)
             Text(caption).font(theme.typography.body).foregroundStyle(theme.colors.tx3).lineLimit(1)
             Spacer(minLength: 0)
             AppButton(bugs ? appString("newBug", "New bug") : appString("newTask", "New task"), systemImage: "plus", kind: .primary, action: create)

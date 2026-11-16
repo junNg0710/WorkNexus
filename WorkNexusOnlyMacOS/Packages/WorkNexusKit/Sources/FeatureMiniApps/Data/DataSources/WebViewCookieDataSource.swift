@@ -20,6 +20,31 @@ struct WebViewCookieDataSource {
         return Set(keys.filter { key in live.contains { Self.matches($0, key) } })
     }
 
+    /// Every cookie the web view holds.
+    @MainActor func all() async -> [BrowserCookie] { await store.allCookies().map(Self.browserCookie) }
+
+    /// One event per change of the web view's cookies, until the consumer lets go of the stream.
+    @MainActor func changes() -> AsyncStream<Void> {
+        let store = store
+        return AsyncStream(bufferingPolicy: .bufferingNewest(1)) { continuation in
+            let observer = CookieChangeObserver { continuation.yield(()) }
+            store.add(observer)
+            continuation.onTermination = { _ in Task { @MainActor in store.remove(observer) } }
+        }
+    }
+
+    /// The cookie as the app's own type; a leading dot on the domain means subdomains too, as browsers write it.
+    nonisolated static func browserCookie(_ c: HTTPCookie) -> BrowserCookie {
+        let same: CookieSameSite
+        switch c.sameSitePolicy {
+        case HTTPCookieStringPolicy.sameSiteLax?: same = .lax
+        case HTTPCookieStringPolicy.sameSiteStrict?: same = .strict
+        default: same = .unspecified
+        }
+        return BrowserCookie(name: c.name, value: c.value, domain: c.domain, path: c.path, expires: c.isSessionOnly ? nil : c.expiresDate,
+                             secure: c.isSecure, httpOnly: c.isHTTPOnly, sameSite: same)
+    }
+
     nonisolated static func matches(_ cookie: HTTPCookie, _ key: CookieKey) -> Bool {
         guard cookie.name == key.name else { return false }
         let includesSubdomains = cookie.domain.hasPrefix(".")
@@ -42,6 +67,13 @@ struct WebViewCookieDataSource {
         }
         return HTTPCookie(properties: props)
     }
+}
+
+/// Hears the web view's cookie store change (`WKHTTPCookieStoreObserver`).
+private final class CookieChangeObserver: NSObject, WKHTTPCookieStoreObserver {
+    private let onChange: @Sendable () -> Void
+    init(onChange: @escaping @Sendable () -> Void) { self.onChange = onChange }
+    func cookiesDidChange(in cookieStore: WKHTTPCookieStore) { onChange() }
 }
 
 /// Ported from: lib/features/mini_apps/data/datasources/web_profile_datasource.dart

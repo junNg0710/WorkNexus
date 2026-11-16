@@ -30,6 +30,16 @@ final class FakeViewPages: ZenTaoTicketService, ZenTaoViewPages, ZenTaoTaskBugs,
     func syncExecutionTasksPage(accountId: String, executionId: String, browseType: String, page: Int, limit: Int, sort: TicketSort, cancel: CancelSignal?) async -> Outcome<ViewPage> {
         self.page(Call(kind: "tasks", scope: executionId, browseType: browseType, page: page, limit: limit, sort: sort), script[browseType] ?? [])
     }
+    /// What `syncAssignedWork` answers per login, and the logins it refuses; every call is recorded as `login|bugs`.
+    var personWork: [String: ZenTaoPersonWork] = [:]
+    var personFailures: [String: Failure] = [:]
+    private var _personCalls: [String] = []
+    var personCalls: [String] { lock.withLock { _personCalls } }
+    func syncAssignedWork(accountId: String, login: String, bugs: Bool, cap: Int, cancel: CancelSignal?) async -> Outcome<ZenTaoPersonWork> {
+        lock.withLock { _personCalls.append("\(login)|\(bugs)") }
+        if let f = personFailures[login] { return .failure(f) }
+        return .success(personWork[login] ?? ZenTaoPersonWork(ids: [], total: 0, truncated: false))
+    }
     func fetchZenTaoTicket(host: String, type: String, id: String) async -> Outcome<String> { .success("") }
     func listProducts(accountId: String) async -> Outcome<[ProviderProduct]> { .success(products) }
     func cachedProducts(accountId: String) async -> [ProviderProduct]? { nil }
@@ -52,7 +62,8 @@ struct BoardsEnv {
     let deps: ZentaoDependencies
     let state: ZentaoUIState
 
-    init(section: SectionID = ZentaoSection.bugs, tickets: [Ticket] = [], members: [ProviderUser] = []) {
+    init(section: SectionID = ZentaoSection.bugs, tickets: [Ticket] = [], members: [ProviderUser] = [],
+         teamGroups: ZenTaoTeamGroupRepository = NoTeamGroups()) {
         let store = self.store, pages = self.pages
         store.accounts["zt1"] = Account(id: "zt1", workspaceId: "w1", providerType: .zentao, handle: "thanh", baseUrl: "https://zentao.example.com")
         for t in tickets { store.tickets[t.id] = t }
@@ -67,7 +78,7 @@ struct BoardsEnv {
         let docs = DetailFakeDocs()
         deps = ZentaoDependencies(services: services, nav: nav, registry: { ToolRegistry() }, tickets: pages, viewPages: pages, taskBugs: pages,
                                   editor: DetailFakeEditor(), teamMembers: DetailFakeTeam(members: members), workflow: workflow, docs: docs,
-                                  exportDoc: ExportZenTaoDoc(docs))
+                                  exportDoc: ExportZenTaoDoc(docs), teamGroups: teamGroups)
         state = ZentaoUIState(deps: deps)
         state.start()
     }

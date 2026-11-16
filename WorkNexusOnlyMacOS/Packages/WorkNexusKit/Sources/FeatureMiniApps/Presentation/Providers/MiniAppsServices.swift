@@ -23,6 +23,8 @@ struct MiniAppsServices: Sendable {
     var resolvePermission: ResolveMiniAppPermission
     var isPinnedCertificate: IsPinnedCertificate
     var findSavedWebLogin: FindSavedWebLogin
+    /// The passwords saved for the sites the mini apps open (the keychain's).
+    var webLogins: WebLoginServices
     var notifier: DesktopNotifying
     var settings: MiniAppsSettings
 }

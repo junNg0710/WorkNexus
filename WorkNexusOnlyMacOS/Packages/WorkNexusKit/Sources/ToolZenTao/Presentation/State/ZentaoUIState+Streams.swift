@@ -62,9 +62,14 @@ extension ZentaoUIState {
 
     /// What has been loaded of the view `column` draws on.
     public func bugStream(_ column: ZenTaoBugColumn) -> PagedViewState {
-        bugStreams.views[ZenTaoBugStream.of(column, related: bugRelated)] ?? PagedViewState()
+        // A team's tickets are read whole per person: no column has a next page.
+        if bugTeam != nil { return PagedViewState(hasMore: false) }
+        return bugStreams.views[ZenTaoBugStream.of(column, related: bugRelated)] ?? PagedViewState()
     }
-    public func taskStream(_ column: ZenTaoTaskColumn) -> PagedViewState { taskStreams.views[column] ?? PagedViewState() }
+    public func taskStream(_ column: ZenTaoTaskColumn) -> PagedViewState {
+        if taskTeam != nil { return PagedViewState(hasMore: false) }
+        return taskStreams.views[column] ?? PagedViewState()
+    }
 
     /// Loading until each opening view has its first page; an error when none of them could be loaded.
     public var bugSlice: ZentaoLoad<Set<String>> {

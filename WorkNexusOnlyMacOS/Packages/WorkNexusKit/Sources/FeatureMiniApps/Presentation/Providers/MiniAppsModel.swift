@@ -36,6 +36,8 @@ public final class MiniAppsModel: LinkHandler {
 
     let services: MiniAppsServices
     private let router: LinkRouter
+    /// Keeps the sites' session cookies between runs; set by the feature.
+    @ObservationIgnored var sessionCookies: SessionCookieKeeper?
     @ObservationIgnored private var started = false
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
     @ObservationIgnored private var seq = 0
@@ -114,6 +116,8 @@ public final class MiniAppsModel: LinkHandler {
     public func remove(_ id: String) async {
         close(id)
         _ = await services.apps.delete(id: id)
+        // Its site is no longer one whose session cookies are kept.
+        await sessionCookies?.snapshotNow()
     }
 
     // MARK: Pages
@@ -135,6 +139,12 @@ public final class MiniAppsModel: LinkHandler {
     func isSelectedTab(appId: String, web: AnyObject?) -> Bool {
         guard let web, let tabs = tabSets[appId] else { return true }
         return tabs.selected.parts?.web === web
+    }
+
+    /// The tab of app `appId` whose page is in `web`; nil for a window the page opened (or an app that is not running).
+    func tab(appId: String, web: AnyObject?) -> MiniAppBrowserModel? {
+        guard let web else { return nil }
+        return tabSets[appId]?.tabs.first { $0.parts?.web === web }
     }
 
     /// The app as the database has it now — edited since it was handed over, say — or `app` itself when it is not there.

@@ -24515,6 +24515,23 @@
         }
       }
     },
+    "bugsWithClosed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With closed"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gồm đã đóng"
+          }
+        }
+      }
+    },
     "chatAppearanceCard": {
       "extractionState": "manual",
       "localizations": {
@@ -25773,6 +25790,1060 @@
         }
       }
     },
+    "leaderBackToExecution": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to the execution"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quay lại execution"
+          }
+        }
+      }
+    },
+    "leaderBackToProduct": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to the product"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quay lại product"
+          }
+        }
+      }
+    },
+    "leaderBulkApply": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply to %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Áp dụng cho %1$@"
+          }
+        }
+      }
+    },
+    "leaderBulkAssign": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assign…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giao cho…"
+          }
+        }
+      }
+    },
+    "leaderBulkAssignTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assign %1$@ tickets"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giao %1$@ ticket"
+          }
+        }
+      }
+    },
+    "leaderBulkClose": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đóng…"
+          }
+        }
+      }
+    },
+    "leaderBulkCloseName": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đóng"
+          }
+        }
+      }
+    },
+    "leaderBulkCloseTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close %1$@ tickets"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đóng %1$@ ticket"
+          }
+        }
+      }
+    },
+    "leaderBulkDone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@ done, %3$@ failed"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@ xong, %3$@ lỗi"
+          }
+        }
+      }
+    },
+    "leaderBulkFailedTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tickets failed"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ticket lỗi"
+          }
+        }
+      }
+    },
+    "leaderBulkNotRun": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %1$@ not run"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %1$@ chưa chạy"
+          }
+        }
+      }
+    },
+    "leaderBulkNothing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to change"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có gì để thay đổi"
+          }
+        }
+      }
+    },
+    "leaderBulkPriority": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priority…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Độ ưu tiên…"
+          }
+        }
+      }
+    },
+    "leaderBulkPriorityTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set the priority of %1$@ tickets"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đặt độ ưu tiên cho %1$@ ticket"
+          }
+        }
+      }
+    },
+    "leaderBulkRetry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry failed"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thử lại các mục lỗi"
+          }
+        }
+      }
+    },
+    "leaderBulkRunning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@/%2$@"
+          }
+        }
+      }
+    },
+    "leaderBulkSkipNotAllowed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ skipped: ZenTao does not allow it in their state"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bỏ qua %1$@: ZenTao không cho phép ở trạng thái hiện tại"
+          }
+        }
+      }
+    },
+    "leaderBulkSkipUnchanged": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ skipped: already so"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bỏ qua %1$@: đã đúng sẵn"
+          }
+        }
+      }
+    },
+    "leaderBulkStop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dừng"
+          }
+        }
+      }
+    },
+    "leaderBulkWillChange": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ will change on ZenTao"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mục sẽ thay đổi trên ZenTao"
+          }
+        }
+      }
+    },
+    "leaderClearSelection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bỏ chọn"
+          }
+        }
+      }
+    },
+    "leaderDeleteGroup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this group"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xóa nhóm này"
+          }
+        }
+      }
+    },
+    "leaderDeleteGroupMessage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%1$@\" is only removed from this Mac; nobody's work on ZenTao changes."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chỉ xóa \"%1$@\" khỏi máy này; công việc của mọi người trên ZenTao không đổi."
+          }
+        }
+      }
+    },
+    "leaderDeselect": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from selection"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bỏ khỏi lựa chọn"
+          }
+        }
+      }
+    },
+    "leaderDueSoon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due in %1$@ days"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hạn trong %1$@ ngày"
+          }
+        }
+      }
+    },
+    "leaderDueSoonCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ due soon"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ sắp đến hạn"
+          }
+        }
+      }
+    },
+    "leaderEditGroup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit this group…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sửa nhóm này…"
+          }
+        }
+      }
+    },
+    "leaderEveryone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tất cả mọi người"
+          }
+        }
+      }
+    },
+    "leaderFilterHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by id, title or person"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lọc theo id, tiêu đề hoặc người"
+          }
+        }
+      }
+    },
+    "leaderGroupName": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group name"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tên nhóm"
+          }
+        }
+      }
+    },
+    "leaderGroupPeople": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People (%1$@ picked)"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thành viên (đã chọn %1$@)"
+          }
+        }
+      }
+    },
+    "leaderHelpBulk": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Act on the pick: Assign…, Priority… or Close… from the bar at the bottom. It says what will change and what is skipped first, then runs ticket by ticket; failed ones can be retried."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thao tác trên phần đã chọn: Assign…, Priority… hoặc Close… ở thanh dưới cùng. Có báo trước cái nào sẽ đổi, cái nào bị bỏ qua, rồi chạy từng ticket; cái lỗi có thể thử lại."
+          }
+        }
+      }
+    },
+    "leaderHelpChips": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chips: one-click filters (overdue, due soon, unassigned, high priority…). The number is how many each would keep. Overdue and due-soon count by calendar day."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chip: lọc một cú bấm (trễ hạn, sắp đến hạn, chưa giao, ưu tiên cao…). Con số là số ticket còn lại nếu bấm. Trễ hạn/sắp đến hạn tính theo ngày."
+          }
+        }
+      }
+    },
+    "leaderHelpFilter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter box: narrows the board as you type, by id, title or person. ⌘K searches every cached ticket of the account, and an id that isn't cached (#123) can be looked up on the server with Return."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ô lọc: thu hẹp board khi gõ, theo id, tiêu đề hoặc người. ⌘K tìm trên mọi ticket đã cache của tài khoản; gõ id chưa có (#123) rồi nhấn Return để tìm trên máy chủ."
+          }
+        }
+      }
+    },
+    "leaderHelpHours": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cards show the hours left, and a tag for how late or how close the deadline is. Sort: deadline puts the most overdue first."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thẻ hiện số giờ còn lại và tag trễ/sắp đến hạn. Sort: deadline xếp việc trễ nhất lên đầu."
+          }
+        }
+      }
+    },
+    "leaderHelpLoad": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"Load all\": counts and filters only cover what is loaded; this reads the rest of the open views."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"Load all\": số đếm và bộ lọc chỉ tính phần đã tải; nút này đọc nốt phần còn lại."
+          }
+        }
+      }
+    },
+    "leaderHelpMenu": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right-click a ticket: Select, Assign… or Priority… without opening it."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chuột phải vào ticket: Select, Assign… hoặc Priority… mà không cần mở."
+          }
+        }
+      }
+    },
+    "leaderHelpPeople": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People: click a name to see only their work; ⌘-click adds more people. The number is what they still have open, the red dot means something is overdue. \"Everyone\" clears the pick."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Người: bấm tên để chỉ xem việc của họ; ⌘-click để thêm người. Con số là số việc họ còn mở, chấm đỏ là có việc trễ hạn. \"Everyone\" để bỏ chọn."
+          }
+        }
+      }
+    },
+    "leaderHelpSelect": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick tickets: ⌘-click a card or row, ⇧-click to pick a range. With some picked, a plain click picks too. Esc or Clear drops the pick."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chọn ticket: ⌘-click thẻ hoặc dòng, ⇧-click để chọn một dải. Khi đã chọn, click thường cũng là chọn. Esc hoặc Clear để bỏ chọn."
+          }
+        }
+      }
+    },
+    "leaderHelpTeam": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Team (header): follow a saved group of people across every execution or product instead of just one. Pick an execution again to leave it."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Team (ở header): theo dõi một nhóm người đã lưu trên mọi execution hoặc product thay vì chỉ một. Chọn lại execution để thoát."
+          }
+        }
+      }
+    },
+    "leaderHelpTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How to use the team tools"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cách dùng công cụ cho leader"
+          }
+        }
+      }
+    },
+    "leaderHighPriority": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "High priority"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ưu tiên cao"
+          }
+        }
+      }
+    },
+    "leaderLoadAll": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load all"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tải hết"
+          }
+        }
+      }
+    },
+    "leaderLoadedOf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ loaded"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã tải %1$@/%2$@"
+          }
+        }
+      }
+    },
+    "leaderNewGroup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New team group…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhóm mới…"
+          }
+        }
+      }
+    },
+    "leaderNoDeadline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No deadline"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa có hạn"
+          }
+        }
+      }
+    },
+    "leaderNoEstimate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No estimate"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa ước lượng"
+          }
+        }
+      }
+    },
+    "leaderOpenCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ open"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ đang mở"
+          }
+        }
+      }
+    },
+    "leaderOverdue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overdue"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trễ hạn"
+          }
+        }
+      }
+    },
+    "leaderOverdueCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ overdue"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ trễ hạn"
+          }
+        }
+      }
+    },
+    "leaderSelect": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chọn"
+          }
+        }
+      }
+    },
+    "leaderSelectAll": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select all shown"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chọn tất cả đang hiện"
+          }
+        }
+      }
+    },
+    "leaderSelected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ selected"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã chọn %1$@"
+          }
+        }
+      }
+    },
+    "leaderSortDeadline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort: deadline"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sắp xếp: hạn chót"
+          }
+        }
+      }
+    },
+    "leaderSortHelp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Order of the cards in each column"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thứ tự thẻ trong mỗi cột"
+          }
+        }
+      }
+    },
+    "leaderSortPriority": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort: priority"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sắp xếp: ưu tiên"
+          }
+        }
+      }
+    },
+    "leaderStale": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idle %1$@ days+"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không đổi %1$@+ ngày"
+          }
+        }
+      }
+    },
+    "leaderTeam": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Team"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhóm"
+          }
+        }
+      }
+    },
+    "leaderTeamFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't read %1$@ of the team"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không đọc được %1$@ người trong nhóm"
+          }
+        }
+      }
+    },
+    "leaderTeamHelp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follow a group of people across every execution"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theo dõi một nhóm người trên mọi execution"
+          }
+        }
+      }
+    },
+    "leaderTeamReading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading %1$@ of %2$@ people"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang đọc %1$@/%2$@ người"
+          }
+        }
+      }
+    },
+    "leaderTeamTruncated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Newest %1$@ per person"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mục mới nhất mỗi người"
+          }
+        }
+      }
+    },
     "localCache": {
       "extractionState": "manual",
       "localizations": {
@@ -25837,6 +26908,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Đọc cookie của %1$@ cần quyền Full Disk Access: bật cho WorkNexus Mac, thoát và mở lại app, rồi thử lại."
+          }
+        }
+      }
+    },
+    "miniAppCookiesImportedWithPasswords": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imported %1$@ and %2$@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã nhập %1$@ và %2$@."
           }
         }
       }
@@ -25922,6 +27010,567 @@
           "stringUnit": {
             "state": "translated",
             "value": "Thông báo từ các trang chạy nền"
+          }
+        }
+      }
+    },
+    "miniAppPasswordDelete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this password"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xóa mật khẩu này"
+          }
+        }
+      }
+    },
+    "miniAppPasswordFill": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fill"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Điền"
+          }
+        }
+      }
+    },
+    "miniAppPasswordInsecureNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This site is not encrypted"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trang này không được mã hóa"
+          }
+        }
+      }
+    },
+    "miniAppPasswordKeychainNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kept in your Mac's keychain"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lưu trong chuỗi khóa của máy Mac"
+          }
+        }
+      }
+    },
+    "miniAppPasswordNever": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never for this site"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không bao giờ với trang này"
+          }
+        }
+      }
+    },
+    "miniAppPasswordNoUsername": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No user name"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có tên đăng nhập"
+          }
+        }
+      }
+    },
+    "miniAppPasswordNotNow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not now"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Để sau"
+          }
+        }
+      }
+    },
+    "miniAppPasswordSaveFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save the password."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không lưu được mật khẩu."
+          }
+        }
+      }
+    },
+    "miniAppPasswordSaveTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save password for %1$@?"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lưu mật khẩu cho %1$@?"
+          }
+        }
+      }
+    },
+    "miniAppPasswordSaved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password saved in your keychain."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã lưu mật khẩu vào chuỗi khóa."
+          }
+        }
+      }
+    },
+    "miniAppPasswordUpdate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cập nhật"
+          }
+        }
+      }
+    },
+    "miniAppPasswordUpdateTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update the saved password for %1$@?"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cập nhật mật khẩu đã lưu cho %1$@?"
+          }
+        }
+      }
+    },
+    "miniAppPasswordsButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved passwords for this site"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mật khẩu đã lưu cho trang này"
+          }
+        }
+      }
+    },
+    "miniAppPasswordsChangeFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't change the saved passwords."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thay đổi được mật khẩu đã lưu."
+          }
+        }
+      }
+    },
+    "miniAppPasswordsCountOne": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 password"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 mật khẩu"
+          }
+        }
+      }
+    },
+    "miniAppPasswordsCountOther": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ passwords"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mật khẩu"
+          }
+        }
+      }
+    },
+    "miniAppPasswordsDeleteAll": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete all passwords"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xóa tất cả mật khẩu"
+          }
+        }
+      }
+    },
+    "miniAppPasswordsDeleteAllMessage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mini apps will no longer fill your sign-in forms. This cannot be undone."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mini app sẽ không còn tự điền biểu mẫu đăng nhập. Không thể hoàn tác."
+          }
+        }
+      }
+    },
+    "miniAppPasswordsDeleteAllTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete all saved passwords?"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xóa tất cả mật khẩu đã lưu?"
+          }
+        }
+      }
+    },
+    "miniAppPasswordsDeleteConfirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xóa"
+          }
+        }
+      }
+    },
+    "miniAppPasswordsEmpty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No password saved yet. Sign in inside a mini app and choose Save."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa lưu mật khẩu nào. Hãy đăng nhập trong một mini app rồi chọn Lưu."
+          }
+        }
+      }
+    },
+    "miniAppPasswordsHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-ins you chose to save inside mini apps, kept in your Mac's keychain and filled only on the site they were saved on."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Các đăng nhập bạn chọn lưu trong mini app, cất trong chuỗi khóa của máy Mac và chỉ được điền trên đúng trang đã lưu."
+          }
+        }
+      }
+    },
+    "miniAppPasswordsImportFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved passwords could not be read."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không đọc được mật khẩu đã lưu."
+          }
+        }
+      }
+    },
+    "miniAppPasswordsImportHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the picked sites' passwords are copied, into your Mac's keychain, to fill sign-in forms in mini apps."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chỉ mật khẩu của các trang đã chọn được sao chép vào chuỗi khóa của máy Mac, để điền biểu mẫu đăng nhập trong mini app."
+          }
+        }
+      }
+    },
+    "miniAppPasswordsImportOption": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also import the saved passwords for these sites"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhập cả mật khẩu đã lưu của các trang này"
+          }
+        }
+      }
+    },
+    "miniAppPasswordsLoadFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved passwords could not be read from the keychain."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không đọc được mật khẩu đã lưu từ chuỗi khóa."
+          }
+        }
+      }
+    },
+    "miniAppPasswordsNeverDetail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are not asked to save passwords here"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bạn không được hỏi lưu mật khẩu ở trang này"
+          }
+        }
+      }
+    },
+    "miniAppPasswordsNeverRemove": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask again on this site"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hỏi lại ở trang này"
+          }
+        }
+      }
+    },
+    "miniAppPasswordsNeverTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never saved"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không bao giờ lưu"
+          }
+        }
+      }
+    },
+    "miniAppPasswordsNoForm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no sign-in form on this page."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trang này không có biểu mẫu đăng nhập."
+          }
+        }
+      }
+    },
+    "miniAppPasswordsNoneForSite": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None saved for this site. Sign in on the page and choose Save."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa lưu gì cho trang này. Hãy đăng nhập trên trang rồi chọn Lưu."
+          }
+        }
+      }
+    },
+    "miniAppPasswordsSection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved passwords"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mật khẩu đã lưu"
+          }
+        }
+      }
+    },
+    "miniAppPasswordsTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved passwords"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mật khẩu đã lưu"
           }
         }
       }
@@ -26538,6 +28187,40 @@
         }
       }
     },
+    "searchLookupHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press Return to look up #%1$@ on the server"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhấn Return để tìm #%1$@ trên máy chủ"
+          }
+        }
+      }
+    },
+    "searchLookupNotFound": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing with id %1$@ was found"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không tìm thấy mục nào có id %1$@"
+          }
+        }
+      }
+    },
     "searchTickets": {
       "extractionState": "manual",
       "localizations": {
@@ -26789,6 +28472,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bạn đang ngoại tuyến và chưa có dữ liệu nào được lưu cho tài khoản này."
+          }
+        }
+      }
+    },
+    "tableColumnHours": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left / est."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Còn lại / ước lượng"
           }
         }
       }
@@ -27282,6 +28982,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cài đặt không gian làm việc"
+          }
+        }
+      }
+    },
+    "zentaoDelayDays": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delay %1$@ days"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trễ %1$@ ngày"
+          }
+        }
+      }
+    },
+    "zentaoDelayOneDay": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delay 1 day"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trễ 1 ngày"
+          }
+        }
+      }
+    },
+    "zentaoDueToday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due today"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đến hạn hôm nay"
+          }
+        }
+      }
+    },
+    "zentaoDueTomorrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due tomorrow"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đến hạn ngày mai"
           }
         }
       }

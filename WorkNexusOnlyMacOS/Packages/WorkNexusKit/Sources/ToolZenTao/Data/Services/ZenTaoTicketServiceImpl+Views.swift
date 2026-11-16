@@ -20,6 +20,37 @@ extension ZenTaoTicketServiceImpl {
                                                                 limit: limit, sort: sort, cancel: cancel))
     }
 
+    public func syncAssignedWork(accountId: String, login: String, bugs: Bool, cap: Int, cancel: CancelSignal?) async -> Outcome<ZenTaoPersonWork> {
+        guard await accounts.account(id: accountId) != nil else { return .failure(.auth("ZenTao account not found")) }
+        guard let adapter = await adapters.adapter(accountId: accountId) as? ZenTaoProviderAdapter else {
+            return .failure(.auth("No signed-in ZenTao account"))
+        }
+        let userId: String
+        switch await adapter.userId(of: login) {
+        case .failure(let f): return .failure(f)
+        case .success(let id): userId = id
+        }
+        let limit = 100
+        var ids: [String] = []
+        var seen = Set<String>()
+        var total = 0
+        var page = 1
+        while true {
+            if cancel?.isCancelled == true { return .failure(.cancelled("Reading \(login)'s work was stopped")) }
+            switch await store(await adapter.listAssignedWorkPage(userId: userId, bugs: bugs, page: page, limit: limit, cancel: cancel)) {
+            case .failure(let f): return .failure(f)
+            case .success(let v):
+                total = v.total
+                var added = 0
+                for t in v.tickets where seen.insert(t.id).inserted { ids.append(t.id); added += 1 }
+                // A page past the end answers the first again, so the total ends the read, and so does a page with nothing new.
+                if !v.hasMore || added == 0 { return .success(ZenTaoPersonWork(ids: ids, total: total, truncated: false)) }
+                if ids.count >= cap { return .success(ZenTaoPersonWork(ids: Array(ids.prefix(cap)), total: total, truncated: true)) }
+            }
+            page += 1
+        }
+    }
+
     private func store(_ res: Outcome<ViewPage>) async -> Outcome<ViewPage> {
         if case .success(let page) = res { _ = await tickets.upsertTickets(page.tickets) }
         return res

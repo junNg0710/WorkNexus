@@ -15,6 +15,9 @@ public struct ContextualSearchField: View {
     @State private var showing = false
     @State private var debounce: Task<Void, Never>?
     @State private var overlayHeight: CGFloat = 0
+    /// The id typed, when no cached ticket has it and the tool can fetch one: Return asks the server.
+    @State private var lookupKey: String?
+    @State private var lookupFailed = false
     @FocusState private var focused: Bool
     @Environment(\.sectionIsActive) private var sectionActive
 
@@ -28,6 +31,17 @@ public struct ContextualSearchField: View {
             let q = query.trimmingCharacters(in: .whitespaces)
             if q.isEmpty { results = []; highlight = 0; showing = false; return }
             results = controller.search(q); highlight = 0; showing = true
+            lookupFailed = false
+            lookupKey = results.isEmpty && controller.fetchTicketByKey != nil ? BoardController.ticketKey(typed: q) : nil
+        }
+    }
+
+    /// Return on an id nothing cached has: fetches it from the server and opens it.
+    private func lookup(_ key: String) {
+        guard let fetch = controller.fetchTicketByKey else { return }
+        Task {
+            if let id = await fetch(key) { controller.openTicket(id); text = ""; showing = false; results = []; lookupKey = nil; focused = false }
+            else { lookupFailed = true }
         }
     }
 
@@ -40,7 +54,9 @@ public struct ContextualSearchField: View {
             TextField(scope.map { appFormat("searchContextTool", "Search in %1$@…", $0) } ?? appString("search", "Search"), text: $text)
                 .textFieldStyle(.plain).font(theme.typography.meta).focused($focused)
                 .onChange(of: text) { _, v in changed(v) }
-                .onSubmit { if results.indices.contains(highlight) { open(results[highlight]) } }
+                .onSubmit {
+                    if results.indices.contains(highlight) { open(results[highlight]) } else if let lookupKey { lookup(lookupKey) }
+                }
                 .onKeyPress(.downArrow) { if !results.isEmpty { highlight = (highlight + 1) % results.count }; return .handled }
                 .onKeyPress(.upArrow) { if !results.isEmpty { highlight = (highlight - 1 + results.count) % results.count }; return .handled }
                 .onKeyPress(.escape) { if text.isEmpty { focused = false } else { text = "" }; showing = false; return .handled }
@@ -62,7 +78,9 @@ public struct ContextualSearchField: View {
         }
         .overlay(alignment: .topLeading) {
             if showing {
-                SearchResultsOverlay(results: results, highlight: highlight, registry: controller.registry, onSelect: open)
+                SearchResultsOverlay(results: results, highlight: highlight, registry: controller.registry, onSelect: open,
+                                     emptyHint: lookupKey.map { lookupFailed ? appFormat("searchLookupNotFound", "Nothing with id %1$@ was found", $0)
+                                                                              : appFormat("searchLookupHint", "Press Return to look up #%1$@ on the server", $0) })
                     .frame(width: 480).onGeometryChange(for: CGFloat.self) { $0.size.height } action: { overlayHeight = $0 }
                     .offset(y: theme.sizes.control32 + theme.spacing.s4).zIndex(10)
             }
@@ -79,16 +97,18 @@ public struct ContextualSearchField: View {
 public struct SearchResultsOverlay: View {
     @Environment(\.appTheme) private var theme
     let results: [Ticket]; let highlight: Int; let registry: ToolRegistry; let onSelect: (Ticket) -> Void
+    /// Shown instead of "No results found" when there is a way to go on (look the id up on the server).
+    let emptyHint: String?
 
-    public init(results: [Ticket], highlight: Int, registry: ToolRegistry, onSelect: @escaping (Ticket) -> Void) {
-        self.results = results; self.highlight = highlight; self.registry = registry; self.onSelect = onSelect
+    public init(results: [Ticket], highlight: Int, registry: ToolRegistry, onSelect: @escaping (Ticket) -> Void, emptyHint: String? = nil) {
+        self.results = results; self.highlight = highlight; self.registry = registry; self.onSelect = onSelect; self.emptyHint = emptyHint
     }
 
     public var body: some View {
         let c = theme.colors
         AppPopupCard {
             if results.isEmpty {
-                Text(appString("searchNoResults", "No results found")).font(theme.typography.meta).foregroundStyle(c.tx3)
+                Text(emptyHint ?? appString("searchNoResults", "No results found")).font(theme.typography.meta).foregroundStyle(c.tx3)
                     .frame(maxWidth: .infinity).padding(theme.spacing.s14)
             } else {
                 VStack(spacing: 0) {
@@ -97,6 +117,8 @@ public struct SearchResultsOverlay: View {
                         HoverSurface(onTap: { onSelect(t) }, selected: i == highlight, cornerRadius: theme.radii.sm) {
                             HStack(spacing: theme.spacing.s6) {
                                 BrandLogoBadge(t.providerType, size: 15)
+                                // A ZenTao task and bug can share a number: say which is which.
+                                if t.providerType == .zentao, let kind = t.externalType { Text(kind).font(theme.typography.caption).foregroundStyle(c.tx3).lineLimit(1) }
                                 Text(t.externalKey).font(theme.typography.mono.weight(.semibold)).foregroundStyle(c.tx2).lineLimit(1)
                                     .frame(width: 80, alignment: .leading)
                                 Text(t.title).font(theme.typography.meta).foregroundStyle(c.tx).lineLimit(1)

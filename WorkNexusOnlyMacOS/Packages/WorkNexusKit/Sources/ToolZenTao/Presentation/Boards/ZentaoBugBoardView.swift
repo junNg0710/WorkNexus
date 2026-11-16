@@ -86,8 +86,9 @@ struct ZentaoBugColumn: View {
                 } badge: {
                     PagedColumnCount(column.count, more: more)
                 } content: {
+                    let order = column.tickets.map(\.id)
                     ForEach(column.tickets) { t in
-                        ZentaoBoardCard(controller: state.bugBoard, ticket: t)
+                        ZentaoBoardCard(controller: state.bugBoard, ticket: t, among: order)
                             .opacity(dragging == t.id ? 0.35 : 1)
                             // The data closure runs as the drag lifts the card (`.draggable` evaluates its closures while
                             // rendering): that is the moment to dim the one left behind.

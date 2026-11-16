@@ -115,6 +115,41 @@ final class BoardControllerTests: XCTestCase {
         XCTAssertEqual(store.tickets["a"]?.status, .done)
     }
 
+    func testSelectionIsBuiltUpAndClearedWhenTheBoardChanges() {
+        let (c, _) = make(tickets: [makeTicket("a"), makeTicket("b"), makeTicket("c")])
+        c.toggleSelected("a"); c.toggleSelected("b")
+        XCTAssertEqual(c.selectedIds, ["a", "b"])
+        c.toggleSelected("a")
+        XCTAssertEqual(c.selectedIds, ["b"])
+        c.select(["a", "c"])
+        XCTAssertEqual(c.selectedIds, ["a", "c"])
+        // With something picked a plain click picks too, instead of opening the ticket.
+        c.tapTicket("b")
+        XCTAssertEqual(c.selectedIds, ["a", "b", "c"])
+        XCTAssertNil(c.openTicketId)
+        c.openBoard("zentao.tasks|acc|1")
+        XCTAssertTrue(c.selectedIds.isEmpty)
+        // With nothing picked a plain click opens it.
+        c.tapTicket("a")
+        XCTAssertTrue(c.selectedIds.isEmpty)
+        XCTAssertEqual(c.openTicketId, "a")
+    }
+
+    func testSearchPoolWidensWhatQuickSearchLooksThrough() async {
+        let (c, _) = make(tickets: [makeTicket("alpha", title: "alpha"), makeTicket("beta", title: "beta")])
+        c.start()
+        await waitFor { c.tickets.count == 2 }
+        c.scopeTickets = { $0.filter { $0.id == "alpha" } }
+        XCTAssertEqual(c.search("beta").count, 0)
+        c.searchPool = { $0 }
+        XCTAssertEqual(c.search("beta").map(\.id), ["beta"])
+        XCTAssertEqual(BoardController.ticketKey(typed: " #123 "), "123")
+        XCTAssertEqual(BoardController.ticketKey(typed: "45"), "45")
+        XCTAssertNil(BoardController.ticketKey(typed: "login"))
+        XCTAssertNil(BoardController.ticketKey(typed: "#"))
+        c.stop()
+    }
+
     func testBoardKeyFollowsTheNavLocation() {
         let (c, _) = make(tickets: [])
         XCTAssertEqual(c.currentBoardKey, "default")

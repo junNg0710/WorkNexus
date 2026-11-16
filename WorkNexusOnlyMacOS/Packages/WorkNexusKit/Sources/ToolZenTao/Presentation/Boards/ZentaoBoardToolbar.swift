@@ -26,12 +26,16 @@ struct ZentaoBoardToolbar: View {
                               onPick: scopes.first?.active == false ? scopes.first?.onTap : nil)
             }
         } refresh: {
-            BoardRefreshButton(loading: bugs ? state.bugSlice.isLoading : state.taskSlice.isLoading) {
-                if bugs { state.reopenBugStreams() } else { state.reopenTaskStreams() }
+            BoardRefreshButton(loading: state.team(bugs: bugs)?.isLoading ?? (bugs ? state.bugSlice.isLoading : state.taskSlice.isLoading)) {
+                if state.team(bugs: bugs) != nil { state.loadTeam(bugs: bugs, only: nil) }
+                else if bugs { state.reopenBugStreams() } else { state.reopenTaskStreams() }
             }
         } below: {
-            // On every view: one without Filters (Related to me) can still carry a module picked in the side panel.
-            ActiveFilterBar(controller: controller, catalog: catalog, statusOption: option)
+            VStack(alignment: .leading, spacing: 0) {
+                ZentaoLeaderBar(state: state, bugs: bugs)
+                // On every view: one without Filters (Related to me) can still carry a module picked in the side panel.
+                ActiveFilterBar(controller: controller, catalog: catalog, statusOption: option)
+            }
         }
     }
 }

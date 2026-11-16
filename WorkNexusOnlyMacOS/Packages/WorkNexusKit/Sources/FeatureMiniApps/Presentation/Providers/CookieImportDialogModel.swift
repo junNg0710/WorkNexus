@@ -17,6 +17,8 @@ final class CookieImportDialogModel {
     /// The sites picked for `source`.
     private(set) var picked: Set<String> = []
     private(set) var importing = false
+    /// "Also import the saved passwords for these sites": off until the user asks for it.
+    var includePasswords = false
 
     let focusSite: String?
     private let preferred: CookieSource?
@@ -54,6 +56,8 @@ final class CookieImportDialogModel {
 
     func choose(_ next: CookieSource) async {
         source = next; sites = .loading; picked = []
+        // Passwords are asked for anew with every profile: never carried over from the last one.
+        includePasswords = false
         generation += 1
         let mine = generation
         let result = await cookies.sites(of: next)
@@ -86,11 +90,18 @@ final class CookieImportDialogModel {
 
     var canImport: Bool { source != nil && !picked.isEmpty && !importing }
 
-    /// Imports the picked sites from the chosen profile; nil when there is nothing to import.
-    func importPicked() async -> (source: CookieSource, result: Outcome<Int>)? {
+    /// Whether the chosen browser's saved passwords can be imported too (not Firefox's, not Safari's).
+    var passwordsSupported: Bool { source.map { cookies.canImportPasswords(from: $0.browser) } ?? false }
+
+    /// Imports the picked sites from the chosen profile; nil when there is nothing to import. `passwords` is how the saved
+    /// passwords of those same sites went, when the user asked for them (and the cookies went in).
+    func importPicked() async -> (source: CookieSource, result: Outcome<Int>, passwords: Outcome<Int>?)? {
         guard let source, !picked.isEmpty, !importing else { return nil }
         importing = true
         defer { importing = false }
-        return (source, await cookies.importSites(picked, from: source))
+        let sites = picked
+        let result = await cookies.importSites(sites, from: source)
+        guard case .success = result, includePasswords, passwordsSupported else { return (source, result, nil) }
+        return (source, result, await cookies.importPasswords(sites, from: source))
     }
 }

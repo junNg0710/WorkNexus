@@ -36,6 +36,24 @@ enum CookieImportFeedback {
         appFormat("miniAppCookiesImported", count == 1 ? "Imported 1 cookie." : "Imported %1$@ cookies.", "\(count)")
     }
 
+    /// "Imported 3 cookies and 2 passwords."
+    static func importedMessage(cookies: Int, passwords: Int) -> String {
+        let cookieCount = appFormat("miniAppCookiesSiteCount", cookies == 1 ? "1 cookie" : "%1$@ cookies", "\(cookies)")
+        let passwordCount = passwords == 1 ? appString("miniAppPasswordsCountOne", "1 password")
+                                           : appFormat("miniAppPasswordsCountOther", "%1$@ passwords", "\(passwords)")
+        return appFormat("miniAppCookiesImportedWithPasswords", "Imported %1$@ and %2$@.", cookieCount, passwordCount)
+    }
+
+    /// The toast for an import that was asked for the passwords too: both counts, or the cookies' and why the passwords stayed.
+    @MainActor static func report(_ result: Outcome<Int>, passwords: Outcome<Int>?, source: CookieSource, toasts: AppToastController?) {
+        guard case .success(let count) = result, let passwords else { report(result, source: source, toasts: toasts); return }
+        switch passwords {
+        case .success(let saved): toasts?.show(importedMessage(cookies: count, passwords: saved))
+        case .failure:
+            toasts?.show(importedMessage(count) + " " + appString("miniAppPasswordsImportFailed", "The saved passwords could not be read."), kind: .error)
+        }
+    }
+
     /// The toast for an import's end: how many cookies went in, or why none did.
     @MainActor static func report(_ result: Outcome<Int>, source: CookieSource, toasts: AppToastController?) {
         switch result {

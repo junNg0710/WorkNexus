@@ -1,25 +1,69 @@
 import CoreDomain
+import Foundation
 import GRDB
 import XCTest
 @testable import CorePersistence
 
 final class CorePersistenceTests: XCTestCase {
-    func testTicketRoundTripAndHashSkip() async throws {
+    func testTicketRoundTrip() async throws {
         let db = try AppDatabase.inMemory()
         let repo = GRDBTicketRepository(db: db)
         let bug = ZenTaoBugEntity(product: "1", severity: 2, attachments: [TicketAttachment(id: "a", title: "x.png", url: "u")])
-        var t = Ticket(id: "t1", accountId: "a1", projectId: "p", providerType: .zentao, externalKey: "BUG-1", title: "T",
+        let t = Ticket(id: "t1", accountId: "a1", projectId: "p", providerType: .zentao, externalKey: "BUG-1", title: "T",
                        body: "B", priority: .high, status: .todo, providerStatus: "active", sourceHash: "h1",
                        labels: ["x"], providerEntity: .zentaoBug(bug))
         let first = await repo.upsertTickets([t])
         XCTAssertNotNil(first.value)
-        t.title = "changed"
-        _ = await repo.upsertTickets([t])                    // same hash → skipped
         let fetched = await repo.ticket(id: "t1")
         let got = try XCTUnwrap(fetched.value ?? nil)
         XCTAssertEqual(got.title, "T")
         XCTAssertEqual(got.providerEntity, .zentaoBug(bug))
         XCTAssertEqual(got.priority, .high)
+    }
+
+    /// A list page brings a ticket's new status / assignee / priority while its title and body (its hash) stay the same.
+    func testUpsertWritesChangesTheHashDoesNotSee() async throws {
+        let repo = GRDBTicketRepository(db: try AppDatabase.inMemory())
+        var t = Ticket(id: "t1", accountId: "a1", projectId: "p", providerType: .zentao, externalKey: "7", title: "T",
+                       body: "B", priority: .low, status: .todo, providerStatus: "wait", sourceHash: "h1", assignee: "an")
+        _ = await repo.upsertTickets([t])
+        t.status = .inprogress; t.providerStatus = "doing"; t.assignee = "binh"; t.priority = .urgent
+        t.updatedAt = Date(timeIntervalSince1970: 1_700_000_000)
+        _ = await repo.upsertTickets([t])
+        let stored = await repo.ticket(id: "t1")
+        let got = try XCTUnwrap(stored.value ?? nil)
+        XCTAssertEqual(got.providerStatus, "doing")
+        XCTAssertEqual(got.status, .inprogress)
+        XCTAssertEqual(got.assignee, "binh")
+        XCTAssertEqual(got.priority, .urgent)
+        XCTAssertEqual(got.updatedAt, t.updatedAt)
+    }
+
+    /// Each list stamps only its own board-membership label: the ones already stored stay.
+    func testUpsertKeepsTheLabelsItIsToldToKeep() async throws {
+        let repo = GRDBTicketRepository(db: try AppDatabase.inMemory(), keepsLabel: { $0.hasPrefix("board:") })
+        var t = Ticket(id: "t1", accountId: "a1", projectId: "p", providerType: .zentao, externalKey: "7", title: "T",
+                       body: "B", priority: .low, status: .todo, providerStatus: "wait", sourceHash: "h1",
+                       labels: ["ui", "board:1"])
+        _ = await repo.upsertTickets([t])
+        t.labels = ["api", "board:2"]
+        _ = await repo.upsertTickets([t])
+        let stored = await repo.ticket(id: "t1")
+        XCTAssertEqual(try XCTUnwrap(stored.value ?? nil).labels, ["api", "board:2", "board:1"])
+    }
+
+    /// Writing what is already stored wakes no watcher.
+    func testUpsertOfTheSameRowWritesNothing() async throws {
+        let db = try AppDatabase.inMemory()
+        let repo = GRDBTicketRepository(db: db, keepsLabel: { $0.hasPrefix("board:") })
+        let t = Ticket(id: "t1", accountId: "a1", projectId: "p", providerType: .zentao, externalKey: "7", title: "T",
+                       body: "B", priority: .low, status: .todo, providerStatus: "wait", sourceHash: "h1",
+                       labels: ["board:1"], updatedAt: Date(timeIntervalSince1970: 1_700_000_000.4567))
+        _ = await repo.upsertTickets([t])
+        let before = try await db.writer.read { $0.totalChangesCount }
+        _ = await repo.upsertTickets([t])
+        let after = try await db.writer.read { $0.totalChangesCount }
+        XCTAssertEqual(before, after)
     }
 
     func testSettingsDefaultsAndRoundTrip() async throws {

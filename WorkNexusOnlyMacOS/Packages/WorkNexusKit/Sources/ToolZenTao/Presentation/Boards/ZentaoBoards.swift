@@ -8,17 +8,18 @@ import SharedKit
 enum ZentaoBoards {
     /// The bug board's columns after the filters (the Closed column only on the All tab).
     static func bugBoard(_ s: ZentaoUIState) -> ZenTaoBugBoardModel {
-        BuildZenTaoBugBoard(includeClosed: s.bugTab == .all)(s.bugBoard.boardQuery)
+        BuildZenTaoBugBoard(includeClosed: s.bugTab == .all, leader: s.leader(bugs: true), names: s.memberNames,
+                            sort: s.columnSort)(s.bugBoard.boardQuery)
     }
 
     static func taskBoard(_ s: ZentaoUIState) -> ZenTaoTaskBoardModel {
-        BuildZenTaoTaskBoard(dueThisWeekOnly: s.dueThisWeek)(s.taskBoard.boardQuery)
+        BuildZenTaoTaskBoard(leader: s.leader(bugs: false), names: s.memberNames, sort: s.columnSort)(s.taskBoard.boardQuery)
     }
 
     /// The task board as one table: status by status, each status view's tasks showing once the statuses before it are
     /// fully loaded.
     static func taskTable(_ s: ZentaoUIState) -> PagedTable<ZenTaoTaskColumn> {
-        let hasExec = s.execution != nil
+        let hasExec = s.execution != nil && s.taskTeam == nil
         return BuildPagedTable<ZenTaoTaskColumn>()(PagedTableQuery(
             segments: taskBoard(s).columns.map {
                 PagedTableSegment(view: $0.column, tickets: $0.tickets, complete: !hasExec || !(s.taskStreams.views[$0.column]?.hasMore ?? false))
@@ -35,7 +36,7 @@ enum ZentaoBoards {
             byView[view, default: []].append(contentsOf: col.tickets)
         }
         return BuildPagedTable<ZenTaoBugStream>()(PagedTableQuery(
-            segments: order.map { PagedTableSegment(view: $0, tickets: byView[$0] ?? [], complete: !(s.bugStreams.views[$0]?.hasMore ?? false)) },
+            segments: order.map { PagedTableSegment(view: $0, tickets: byView[$0] ?? [], complete: s.bugTeam != nil || !(s.bugStreams.views[$0]?.hasMore ?? false)) },
             sort: s.bugSort))
     }
 
@@ -45,6 +46,8 @@ enum ZentaoBoards {
         var base = FilterState()
         base.workspaceId = query.filter.workspaceId; base.savedView = query.filter.savedView
         let build = BuildZenTaoBugBoard(includeClosed: s.bugTab == .all)
-        return (build(query).total, build(query.withFilter(base)).total)
+        var shown = build
+        shown.leader = s.leader(bugs: true); shown.names = s.memberNames
+        return (shown(query).total, build(query.withFilter(base)).total)
     }
 }

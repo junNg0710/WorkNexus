@@ -32,7 +32,8 @@ struct ZentaoTaskColumn: View {
         } badge: {
             PagedColumnCount(column.count, more: more)
         } content: {
-            ForEach(column.tickets) { ZentaoBoardCard(controller: state.taskBoard, ticket: $0) }
+            let order = column.tickets.map(\.id)
+            ForEach(column.tickets) { ZentaoBoardCard(controller: state.taskBoard, ticket: $0, among: order) }
             if more { ZentaoTaskColumnFooter(state: state, column: column.column, visible: column.tickets.count) }
         }
     }

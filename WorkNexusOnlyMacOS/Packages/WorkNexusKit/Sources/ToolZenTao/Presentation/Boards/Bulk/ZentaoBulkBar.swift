@@ -1,0 +1,83 @@
+/// Not in the Flutter app.
+import CoreDomain
+import CoreUI
+import SharedKit
+import SwiftUI
+
+enum ZentaoBulkDialog: Identifiable, Hashable {
+    case assign, priority, close, failures
+    var id: Int { switch self { case .assign: 0; case .priority: 1; case .close: 2; case .failures: 3 } }
+}
+
+/// The bar over the board's foot while tickets are picked: how many, and what to do to all of them. Esc clears the pick.
+struct ZentaoBulkBar: View {
+    @Environment(\.appTheme) private var theme
+    @Environment(\.toasts) private var toasts
+    let deps: ZentaoDependencies; let state: ZentaoUIState; let bugs: Bool
+    @State private var model = ZentaoBulkModel()
+    @State private var dialog: ZentaoBulkDialog?
+
+    private var board: BoardController { bugs ? state.bugBoard : state.taskBoard }
+
+    var body: some View {
+        let targets = state.bulkTargets(bugs: bugs)
+        Group {
+            if !board.selectedIds.isEmpty || model.progress != nil {
+                HStack(spacing: theme.spacing.s8) {
+                    // One line each, whatever the board's width.
+                    if let p = model.progress { ZentaoBulkRunning(progress: p, onStop: model.stop) }
+                    else { actions(targets) }
+                }
+                .fixedSize()
+                .padding(.horizontal, theme.spacing.s14).padding(.vertical, theme.spacing.s8)
+                .appGlass(in: Capsule())
+                .shadow(color: .black.opacity(0.12), radius: 10, y: 3)
+                .padding(.bottom, theme.spacing.s20)
+                .background {
+                    // Present only while something is picked, so it never takes Esc from a field.
+                    Button("") { board.clearSelection() }.keyboardShortcut(.escape, modifiers: []).opacity(0).frame(width: 0, height: 0)
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .allowsHitTesting(!board.selectedIds.isEmpty || model.progress != nil)
+        .animation(.easeOut(duration: 0.15), value: board.selectedIds.isEmpty)
+        .appDialog(item: $dialog) { which in
+            switch which {
+            case .assign: ZentaoBulkAssignDialog(deps: deps, state: state, bugs: bugs, model: model, onClose: { dialog = nil })
+            case .priority: ZentaoBulkPriorityDialog(state: state, bugs: bugs, model: model, onClose: { dialog = nil })
+            case .close: ZentaoBulkCloseDialog(state: state, bugs: bugs, model: model, onClose: { dialog = nil })
+            case .failures: ZentaoBulkFailuresDialog(state: state, bugs: bugs, model: model, onClose: { dialog = nil })
+            }
+        }
+        .onChange(of: model.failures == nil) { _, none in if !none { dialog = .failures } }
+        .onChange(of: state.bulkRequest) { _, request in
+            guard let request, request.bugs == bugs else { return }
+            dialog = request.dialog
+            state.bulkRequest = nil
+        }
+    }
+
+    @ViewBuilder private func actions(_ targets: [Ticket]) -> some View {
+        Text(appFormat("leaderSelected", "%1$@ selected", "\(targets.count)")).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx)
+        Divider().frame(height: theme.sizes.icon14)
+        AppButton(appString("leaderBulkAssign", "Assign…"), systemImage: "person.badge.plus", kind: .ghost) { dialog = .assign }.disabled(targets.isEmpty)
+        AppButton(appString("leaderBulkPriority", "Priority…"), systemImage: "flag", kind: .ghost) { dialog = .priority }.disabled(targets.isEmpty)
+        AppButton(appString("leaderBulkClose", "Close…"), systemImage: "checkmark.circle", kind: .ghost) { dialog = .close }.disabled(targets.isEmpty)
+        Divider().frame(height: theme.sizes.icon14)
+        AppButton(appString("leaderSelectAll", "Select all shown"), kind: .ghost) { state.selectAllShown(bugs: bugs) }
+        AppButton(appString("leaderClearSelection", "Clear"), kind: .ghost) { board.clearSelection() }
+    }
+}
+
+private struct ZentaoBulkRunning: View {
+    @Environment(\.appTheme) private var theme
+    let progress: ZentaoBulkModel.Progress; let onStop: () -> Void
+    var body: some View {
+        ProgressView().controlSize(.small)
+        Text(appFormat("leaderBulkRunning", "%1$@ of %2$@", "\(progress.done)", "\(progress.total)")).font(theme.typography.bodyStrong)
+            .foregroundStyle(theme.colors.tx)
+        AppButton(appString("leaderBulkStop", "Stop"), kind: .ghost, action: onStop)
+    }
+}

@@ -38,8 +38,11 @@ private struct MiniAppPageBody: View {
             MiniAppToolbar(address: $address, focus: $addressFocused, browser: browser, onSubmit: go,
                            onHome: { browser.load(model.current(app).url) }, onOpenExternal: openExternal) {
                 MiniAppCookieButton(app: app, browser: browser, cookies: cookies)
+                MiniAppPasswordButton(browser: browser)
             }
             MiniAppTabStrip(app: app, tabs: tabs)
+            // The selected tab's "Save password?" question, between the bars and its page.
+            MiniAppPasswordSaveBar(passwords: browser.passwords)
             ZStack {
                 // Every tab keeps its page; only the selected one shows (as the running apps do on the rail).
                 ForEach(tabs.tabs) { tab in
