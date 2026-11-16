@@ -10,8 +10,9 @@ enum CookieImportFeedback {
     /// Why `source`'s cookies could not be read or imported.
     static func failureMessage(_ source: CookieSource, _ failure: Failure) -> String {
         switch failure {
-        case .auth where source.browser == .safari:
-            appString("miniAppCookiesSafariAccess", "Reading Safari's cookies needs Full Disk Access: turn it on for WorkNexus, then try again.")
+        case .auth where source.browser == .safari || failure.message == CookieReadRefusal.system:
+            appFormat("miniAppCookiesFilesAccess", "Reading %1$@'s cookies needs Full Disk Access: turn it on for WorkNexus Mac, quit and reopen the app, then try again.",
+                      source.browser.displayName)
         case .auth:
             appFormat("miniAppCookiesKeychainDenied", "macOS did not give out %1$@'s cookie key. Try again and choose Allow.", source.browser.displayName)
         case .notFound: appString("miniAppCookiesNone", "The browser has no cookies for this site any more. Sign in there first.")
@@ -21,7 +22,7 @@ enum CookieImportFeedback {
 
     /// Whether the way past `failure` is the Privacy settings.
     static func needsFullDiskAccess(_ source: CookieSource, _ failure: Failure) -> Bool {
-        if case .auth = failure { return source.browser == .safari }
+        if case .auth = failure { return source.browser == .safari || failure.message == CookieReadRefusal.system }
         return false
     }
 

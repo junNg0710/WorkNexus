@@ -56,17 +56,28 @@ final class ChromiumCookieReader: @unchecked Sendable {
     }
 
     /// `browser`'s profiles that have cookies, named as it names them.
+    /// A browser whose data folder macOS will not let this app open (Privacy: Full Disk Access) still gets its main profile,
+    /// so the user can pick it and be told what to switch on, instead of the browser silently missing from the list.
     func profiles(_ browser: CookieBrowser) -> [ChromiumProfile] {
         guard let dir = dataDir(browser), FileManager.default.fileExists(atPath: dir) else { return [] }
+        guard let entries = try? FileManager.default.contentsOfDirectory(atPath: dir) else {
+            return [ChromiumProfile(path: "\(dir)/Default", name: "Default")]
+        }
         let names = Self.profileNames(dir)
-        let entries = (try? FileManager.default.contentsOfDirectory(atPath: dir)) ?? []
-        return entries.compactMap { entry -> ChromiumProfile? in
+        let found = entries.compactMap { entry -> ChromiumProfile? in
             let path = "\(dir)/\(entry)"
             var isDir: ObjCBool = false
-            guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue, Self.cookieFile(path) != nil else { return nil }
+            guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else { return nil }
+            guard Self.cookieFile(path) != nil || (Self.isProfileFolder(entry) && !Self.canList(path)) else { return nil }
             return ChromiumProfile(path: path, name: names[entry] ?? entry)
         }.sorted { $0.name < $1.name }
+        return found
     }
+
+    /// `Default` or `Profile 3`.
+    static func isProfileFolder(_ name: String) -> Bool { name == "Default" || name.hasPrefix("Profile ") }
+
+    static func canList(_ path: String) -> Bool { (try? FileManager.default.contentsOfDirectory(atPath: path)) != nil }
 
     /// The names `Local State` gives each profile folder.
     static func profileNames(_ dataDir: String) -> [String: String] {
@@ -83,7 +94,15 @@ final class ChromiumCookieReader: @unchecked Sendable {
 
     /// Every cookie in the profile at `profilePath`. Throws `KeychainDeniedError` when the keychain refuses the password.
     func read(_ browser: CookieBrowser, profilePath: String) async throws -> [BrowserCookie] {
-        guard let file = Self.cookieFile(profilePath) else { throw CocoaError(.fileNoSuchFile, userInfo: [NSFilePathErrorKey: profilePath]) }
+        guard let file = Self.cookieFile(profilePath) else {
+            // A folder macOS keeps this app out of is "no permission", not "no such file": the user can fix that.
+            let parent = (profilePath as NSString).deletingLastPathComponent
+            if FileManager.default.fileExists(atPath: profilePath), !Self.canList(profilePath) || !Self.canList(parent) {
+                throw CocoaError(.fileReadNoPermission, userInfo: [NSFilePathErrorKey: profilePath])
+            }
+            if !Self.canList(parent) { throw CocoaError(.fileReadNoPermission, userInfo: [NSFilePathErrorKey: profilePath]) }
+            throw CocoaError(.fileNoSuchFile, userInfo: [NSFilePathErrorKey: profilePath])
+        }
         let cached = keys.withLock { $0[browser] }
         let crypto: ChromiumCookieCrypto
         if let cached { crypto = cached } else { crypto = try await keyFor(browser); keys.withLock { $0[browser] = crypto } }

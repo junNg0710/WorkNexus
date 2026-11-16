@@ -35,9 +35,9 @@ public final class LocalBrowserCookieRepository: BrowserCookieRepository, @unche
             default: return .success(try await chromium.read(source.browser, profilePath: source.profileId))
             }
         } catch is KeychainDeniedError {
-            return .failure(.auth("The keychain refused the password"))
+            return .failure(.auth(CookieReadRefusal.keychain))
         } catch let e as NSError where Self.isRefused(e) {
-            return .failure(.auth("The system refused access"))
+            return .failure(.auth(CookieReadRefusal.system))
         } catch {
             return .failure(.storage("Could not read the cookies"))
         }

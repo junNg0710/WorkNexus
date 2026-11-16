@@ -323,6 +323,10 @@
     "en": "Close tab",
     "vi": "Đóng tab"
   },
+  "miniAppCookiesFilesAccess": {
+    "en": "Reading %1$@'s cookies needs Full Disk Access: turn it on for WorkNexus Mac, quit and reopen the app, then try again.",
+    "vi": "Đọc cookie của %1$@ cần quyền Full Disk Access: bật cho WorkNexus Mac, thoát và mở lại app, rồi thử lại."
+  },
   "miniAppCookiesPickBrowser": {
     "en": "Choose the browser you are signed in with. Nothing is read until you do.",
     "vi": "Chọn trình duyệt bạn đã đăng nhập. Chưa có gì được đọc cho tới khi bạn chọn."

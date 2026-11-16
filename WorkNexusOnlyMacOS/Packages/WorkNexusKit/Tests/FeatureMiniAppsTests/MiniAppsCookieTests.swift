@@ -228,6 +228,27 @@ final class BrowserCookieReaderTests: XCTestCase {
         XCTAssertEqual(cookies.first?.sameSite, CookieSameSite.none)
     }
 
+    /// macOS (Privacy: Full Disk Access) can keep the app out of a browser's folder. The browser must still be offered, and
+    /// reading it must come back as "the system refused", which the dialog answers with the Privacy settings button.
+    func testABrowserFolderTheSystemWillNotOpenIsStillListedAndReadsAsRefused() async throws {
+        let chrome = tmp.appendingPathComponent("Library/Application Support/Google/Chrome")
+        try FileManager.default.createDirectory(at: chrome.appendingPathComponent("Default"), withIntermediateDirectories: true)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: chrome.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: chrome.path) }
+        let reader = ChromiumCookieReader(home: tmp.path, run: { _, _ in CommandResult(status: 0, stdout: "pw") })
+        let repo = LocalBrowserCookieRepository(chromium: reader, firefox: FirefoxCookieReader(root: tmp.path), safari: SafariCookieReader(home: tmp.path))
+        let listed = await repo.sources()
+        let sources = try XCTUnwrap(listed.value)
+        let chromeSource = try XCTUnwrap(sources.first { $0.browser == .chrome }, "Chrome is listed")
+        let result = await repo.read(chromeSource)
+        guard case .failure(let failure) = result else { return XCTFail("expected a refusal") }
+        XCTAssertEqual(failure.message, CookieReadRefusal.system)
+        XCTAssertTrue(CookieImportFeedback.needsFullDiskAccess(chromeSource, failure))
+        XCTAssertTrue(CookieImportFeedback.failureMessage(chromeSource, failure).contains("Full Disk Access"))
+        // The keychain's "no" stays a keychain problem.
+        XCTAssertFalse(CookieImportFeedback.needsFullDiskAccess(chromeSource, .auth(CookieReadRefusal.keychain)))
+    }
+
     func testARefusedKeychainIsAKeychainDeniedError() async throws {
         let (profile, _, _) = try makeChromeProfile()
         let reader = ChromiumCookieReader(home: tmp.path, run: { _, _ in CommandResult(status: 51, stdout: "") })

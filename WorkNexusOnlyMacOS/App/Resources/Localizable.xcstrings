@@ -25722,6 +25722,23 @@
         }
       }
     },
+    "miniAppCookiesFilesAccess": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading %1$@'s cookies needs Full Disk Access: turn it on for WorkNexus Mac, quit and reopen the app, then try again."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đọc cookie của %1$@ cần quyền Full Disk Access: bật cho WorkNexus Mac, thoát và mở lại app, rồi thử lại."
+          }
+        }
+      }
+    },
     "miniAppCookiesPickBrowser": {
       "extractionState": "manual",
       "localizations": {
