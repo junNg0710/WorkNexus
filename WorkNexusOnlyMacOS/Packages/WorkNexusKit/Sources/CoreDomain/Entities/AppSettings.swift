@@ -40,6 +40,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var accentColorValue: Int?
     public var pinnedProjects: [String] = []
     public var pinnedExecutions: [String] = []
+    /// Not in the Flutter app. Per ZenTao execution ("accountId:executionId"): whether its tasks show in a team view. An
+    /// execution without an entry follows the default (`IsShownInTeamView`).
+    public var teamExecutionVisibility: [String: Bool] = [:]
     public var sidebarWidth: Double = 290
     public var tableColumnWidths: [String: Double] = [:]
     public var docsReaderBrightness: String?
@@ -72,6 +75,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         s.miniAppNotifyInBackground = v(.miniAppNotifyInBackground, s.miniAppNotifyInBackground)
         s.accentColorValue = try? c.decodeIfPresent(Int.self, forKey: .accentColorValue)
         s.pinnedProjects = v(.pinnedProjects, s.pinnedProjects); s.pinnedExecutions = v(.pinnedExecutions, s.pinnedExecutions)
+        s.teamExecutionVisibility = v(.teamExecutionVisibility, s.teamExecutionVisibility)
         s.sidebarWidth = v(.sidebarWidth, s.sidebarWidth); s.tableColumnWidths = v(.tableColumnWidths, s.tableColumnWidths)
         s.docsReaderBrightness = try? c.decodeIfPresent(String.self, forKey: .docsReaderBrightness)
         s.viewModes = v(.viewModes, s.viewModes); s.showPet = v(.showPet, s.showPet)

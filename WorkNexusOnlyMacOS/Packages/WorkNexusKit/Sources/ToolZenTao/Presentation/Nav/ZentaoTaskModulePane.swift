@@ -33,6 +33,7 @@ struct ZentaoTaskModulePane: View {
                         ScopeEntryRow(name: e.name, systemImage: "bolt", selected: e.id == open?.id, isPinned: isPinned,
                                       onPinToggle: { state.togglePinnedExecution(accountId: account.id, executionId: e.id) },
                                       onTap: { state.openExecution(e) })
+                            .modifier(TeamViewToggle(state: state, accountId: account.id, execution: e))
                     }
                     ForEach(stale, id: \.self) { id in
                         ScopeEntryRow(name: "#\(id)", systemImage: "bolt.slash", selected: false, isPinned: true,
@@ -61,4 +62,23 @@ struct ZentaoTaskModulePane: View {
 
     /// What the loading of the pinned rows' executions depends on: the pins and the projects known so far.
     private struct PinResolution: Equatable { let pins: [String]; let projectIds: [String] }
+}
+
+/// The right-click choice of whether an execution's tasks show in team views; a hidden one says so on hover.
+private struct TeamViewToggle: ViewModifier {
+    let state: ZentaoUIState; let accountId: String; let execution: ProviderExecution
+
+    func body(content: Content) -> some View {
+        let shown = state.isShownInTeamView(accountId: accountId, executionId: execution.id, name: execution.name)
+        content
+            .help(shown ? "" : appString("zentaoHiddenFromTeamView", "Not in the team view: its tasks show only here"))
+            .contextMenu {
+                Button {
+                    state.toggleTeamView(accountId: accountId, executionId: execution.id, name: execution.name)
+                } label: {
+                    Label(shown ? appString("zentaoHideFromTeamView", "Hide from team view") : appString("zentaoShowInTeamView", "Show in team view"),
+                          systemImage: shown ? "eye.slash" : "eye")
+                }
+            }
+    }
 }

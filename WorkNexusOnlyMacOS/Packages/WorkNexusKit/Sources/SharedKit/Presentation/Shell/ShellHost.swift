@@ -39,6 +39,9 @@ public struct ShellHost {
     /// execution); nil, or an empty list, hides the button. Closures run in a view body, so reading the nav state in one makes
     /// the menu follow it.
     public var newTicketTargets: (() -> [NewTicketTarget])?
+    /// What the title bar's search looks through on `rail` when that place has a search of its own (the Chat page);
+    /// nil: the workspace's tickets.
+    public var placeSearch: (RailTarget) -> PlaceSearch? = { _ in nil }
     public init() {}
 }
 

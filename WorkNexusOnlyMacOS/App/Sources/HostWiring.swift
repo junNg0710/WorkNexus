@@ -48,6 +48,21 @@ struct HostWiring {
         host.updateButton = { AnyView(UpdateRailButton(model: r.update)) }
         host.banner = { AnyView(UpdateBannerView(model: r.update)) }
         host.quickSettings = { AnyView(QuickSettingsView(root: r)) }
+        // On the Chat page the title bar searches the chats and their stored messages; a hit opens the chat (at the message).
+        let chat = r.chat
+        host.placeSearch = { rail in
+            guard rail == .chat, let account = shell.chatAccount else { return nil }
+            return PlaceSearch(placeholder: appString("chatGlobalSearchHint", "Search chats and messages…")) { query in
+                await ChatGlobalSearch(repository: chat.repository, accountId: account.id).search(query).map { hit in
+                    PlaceSearchHit(id: hit.id,
+                                   section: hit.kind == .chat ? appString("chatGlobalSearchChats", "Chats") : appString("chatGlobalSearchMessages", "Messages"),
+                                   icon: hit.kind == .chat ? "bubble.left.and.bubble.right" : "text.bubble", title: hit.title, subtitle: hit.subtitle,
+                                   detail: hit.date.map { formatWhen($0) } ?? "") {
+                        if let id = hit.serverId { chat.events.open(chatGid: hit.chatGid, jumpTo: id) } else { chat.events.open(chatGid: hit.chatGid) }
+                    }
+                }
+            }
+        }
         host.miniAppName = { id in r.miniApps.model.apps.first { $0.id == id }?.name }
         host.newTicketTargets = { Self.newTicketTargets(shell) }
         shell.host = host

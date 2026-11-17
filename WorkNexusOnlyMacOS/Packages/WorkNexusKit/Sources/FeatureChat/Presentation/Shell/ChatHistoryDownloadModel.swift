@@ -64,5 +64,8 @@ final class ChatHistoryDownloadModel {
     /// Another period asks for another download: start over.
     func reset() { task?.cancel(); task = nil; phase = .idle }
 
-    func teardown() { task?.cancel(); task = nil }
+    /// The search bar closed: stops the download and forgets where it stood (as the Flutter provider is disposed), so the
+    /// next search checks the stored history again and resumes the download. Left "running", every later search took
+    /// the download as under way and never started it again.
+    func teardown() { task?.cancel(); task = nil; phase = .idle }
 }

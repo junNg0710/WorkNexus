@@ -1,3 +1,4 @@
+import AppKit
 import CoreDomain
 import CoreTools
 import CoreUI
@@ -51,6 +52,9 @@ public final class ShellModel {
     public var railAccountMemory: [ProviderType: String] = [:]
     /// Whether the chat opens by itself at launch (a ZenTao account is its login). Off in demo runs.
     @ObservationIgnored public var opensChatAtLaunch = true
+    /// When the app last came to the front: a rail click that did that only shows its place (`railTap`).
+    @ObservationIgnored public var activatedAt = Date.distantPast
+    @ObservationIgnored private var activationObserver: NSObjectProtocol?
     @ObservationIgnored let workspaceStore: ActiveWorkspaceStoring
     @ObservationIgnored var statusTasks: [String: Task<Void, Never>] = [:]
     @ObservationIgnored var knownAccountIds: Set<String>?
@@ -72,6 +76,10 @@ public final class ShellModel {
 
     public func start() {
         guard tasks.isEmpty else { return }
+        activationObserver = NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil,
+                                                                    queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.activatedAt = Date() }
+        }
         tasks = [
             Task { [weak self] in
                 guard let s = self?.services.workspaces.watchWorkspaces() else { return }
@@ -109,6 +117,11 @@ public final class ShellModel {
     }
     /// A mini app is on screen (it replaces the nav pane and the viewport, like the Dart shell).
     public var miniAppOnScreen: Bool { nav.state.miniAppId != nil }
+    /// The title bar's search has something to search here: tickets, or the place's own items (chat). A mini app (a web
+    /// page with its own search), Settings and the ticket editor have none, so the field is not shown there.
+    public var showsGlobalSearch: Bool {
+        !miniAppOnScreen && nav.state.editor == nil && nav.state.rail != .settings
+    }
 }
 
 /// Lets `AppNavController` (built before `self` exists) resolve a tool's default section for an account.

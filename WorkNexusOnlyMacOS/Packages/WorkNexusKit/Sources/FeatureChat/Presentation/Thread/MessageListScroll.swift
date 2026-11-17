@@ -33,9 +33,12 @@ struct MessageListScroll: View {
     @Environment(\.appTheme) private var theme
     let ctx: ThreadContext
     let showSenders: Bool
-    @State private var metrics = ThreadScrollMetrics()
-    /// The rows (at least partly) on screen.
-    @State private var visibleIds: Set<String> = []
+    /// Where the list is scrolled. Like `visible`, read only by the load checks, never drawn: as state it redrew the list
+    /// whenever the content height changed, which it does as rows scroll in and get measured.
+    @State private var scrolled = ScrollMemo()
+    /// The rows (at least partly) on screen. Kept outside SwiftUI's state: it changes as every row scrolls in or out, and as
+    /// state it re-ran this view - and every row of the list - on each change, which made scrolling stutter.
+    @State private var visible = VisibleRows()
     /// The row at the top of the viewport when older rows were asked for: put back at the top once they are in.
     @State private var restoreId: String?
     /// The list has been placed at the bottom (or at a jumped-to message): from then on its position is the reader's, so
@@ -57,7 +60,7 @@ struct MessageListScroll: View {
                         requestOlder()
                     }
                     ForEach(model.rows) { row in
-                        ThreadRowView(ctx: ctx, row: row, showSenders: showSenders).id(row.id)
+                        ThreadRowView(ctx: ctx, row: row, showSenders: showSenders).equatable().id(row.id)
                     }
                     Color.clear.frame(height: 1).id(Self.bottomId)
                 }
@@ -68,18 +71,17 @@ struct MessageListScroll: View {
                 .frame(maxWidth: .infinity)
             }
             .defaultScrollAnchor(.bottom)
-            .onScrollTargetVisibilityChange(idType: String.self, threshold: 0.1) { visibleIds = Set($0) }
+            .onScrollTargetVisibilityChange(idType: String.self, threshold: 0.1) { ids in
+                visible.ids = Set(ids)
+                // While older rows are on their way, the row at the top is the one to come back to - until they arrive.
+                if model.loadingOlder, handledPrepends == model.prependCount { restoreId = topVisibleId }
+            }
             .onScrollGeometryChange(for: ThreadScrollMetrics.self) { g in
                 ThreadScrollMetrics(offset: g.contentOffset.y + g.contentInsets.top, content: g.contentSize.height, container: g.containerSize.height)
             } action: { _, new in
-                metrics = new
-                model.away = new.away
+                scrolled.metrics = new
+                if model.away != new.away { model.away = new.away }
                 loadIfNeeded()
-            }
-            // While older rows are on their way, the row at the top is the one to come back to — until they arrive and
-            // shift everything.
-            .onChange(of: visibleIds) { _, _ in
-                if model.loadingOlder, handledPrepends == model.prependCount { restoreId = topVisibleId }
             }
             .onChange(of: model.loadingOlder) { _, _ in loadIfNeeded() }
             .onChange(of: model.loadingNewer) { _, _ in loadIfNeeded() }
@@ -113,7 +115,7 @@ struct MessageListScroll: View {
     }
 
     /// The first row on screen.
-    private var topVisibleId: String? { ctx.model.rows.first { visibleIds.contains($0.id) }?.id }
+    private var topVisibleId: String? { ctx.model.rows.first { visible.ids.contains($0.id) }?.id }
 
     private func requestOlder() {
         guard !ctx.model.loadingOlder else { return }
@@ -125,8 +127,8 @@ struct MessageListScroll: View {
     private func loadIfNeeded() {
         let model = ctx.model
         guard positioned, Date() >= quietUntil, handledPrepends == model.prependCount else { return }
-        if metrics.nearTop, model.canAutoLoadOlder { requestOlder() }
-        if metrics.nearBottom, model.canAutoLoadNewer { model.beginLoadNewer() }
+        if scrolled.metrics.nearTop, model.canAutoLoadOlder { requestOlder() }
+        if scrolled.metrics.nearBottom, model.canAutoLoadNewer { model.beginLoadNewer() }
     }
 
     private func scroll(_ request: ChatScrollRequest, _ proxy: ScrollViewProxy) {
@@ -151,3 +153,9 @@ struct MessageListScroll: View {
         }
     }
 }
+
+/// The ids of the rows on screen, in a plain reference so changing them does not redraw the list.
+final class VisibleRows { var ids: Set<String> = [] }
+
+/// The latest scroll metrics, in a plain reference so updating them does not redraw the list.
+final class ScrollMemo { var metrics = ThreadScrollMetrics() }

@@ -141,30 +141,23 @@ enum ChatTextLabels {
         let today = calendar.startOfDay(for: now), d = calendar.startOfDay(for: day)
         if d == today { return L.today }
         if let y = calendar.date(byAdding: .day, value: -1, to: today), d == y { return L.yesterday }
-        let f = DateFormatter()
-        f.locale = .current
-        f.setLocalizedDateFormatFromTemplate(calendar.component(.year, from: d) == calendar.component(.year, from: today) ? "MMMMd" : "yMMMMd")
-        return f.string(from: d)
+        return CachedDateFormatter.string(d, template: calendar.component(.year, from: d) == calendar.component(.year, from: today) ? "MMMMd" : "yMMMMd")
     }
 
     /// `HH:mm`.
     static func clock(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "HH:mm"
-        return f.string(from: date)
+        CachedDateFormatter.string(date, format: "HH:mm")
     }
 
     /// Compact time for the chat list: 10:05 today, "Yesterday", a weekday within the week, else a short date.
     static func listTime(_ t: Date, now: Date = Date(), calendar: Calendar = .current) -> String {
         let today = calendar.startOfDay(for: now), day = calendar.startOfDay(for: t)
         let age = calendar.dateComponents([.day], from: day, to: today).day ?? 0
-        let f = DateFormatter()
         if age == 0 { return clock(t) }
         if age == 1 { return L.yesterday }
-        if age < 7 { f.setLocalizedDateFormatFromTemplate("E"); return f.string(from: t) }
-        f.dateFormat = calendar.component(.year, from: t) == calendar.component(.year, from: today) ? "dd/MM" : "dd/MM/yy"
-        return f.string(from: t)
+        if age < 7 { return CachedDateFormatter.string(t, template: "E") }
+        return CachedDateFormatter.string(t, format: calendar.component(.year, from: t) == calendar.component(.year, from: today) ? "dd/MM" : "dd/MM/yy",
+                                          locale: .current)
     }
 
     /// Human-readable byte size.
@@ -185,8 +178,6 @@ enum ChatTextLabels {
         if secs < 3600 { return L.minutesAgo(secs / 60) }
         if secs < 86400 { return L.hoursAgo(secs / 3600) }
         if secs < 30 * 86400 { return L.daysAgo(secs / 86400) }
-        let f = DateFormatter()
-        f.setLocalizedDateFormatFromTemplate("yMMMd")
-        return f.string(from: t)
+        return CachedDateFormatter.string(t, template: "yMMMd")
     }
 }

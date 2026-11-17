@@ -45,14 +45,43 @@ enum ChatDrop {
     }
 }
 
+/// Where a drop lands in a chat (as in the Flutter app): on the messages the files go out at once; on the input they wait
+/// there to be sent.
+enum ChatDropMode { case send, stage }
+
+/// How many drop areas of an open chat files hover over: while they hover over either, both show their hints, the one
+/// under the pointer highlighted, so the user sees what each does before letting go.
+@MainActor @Observable
+final class ChatDropZones { var hovering = 0 }
+
+private struct ChatDropZonesKey: EnvironmentKey { static let defaultValue: ChatDropZones? = nil }
+extension EnvironmentValues {
+    var chatDropZones: ChatDropZones? {
+        get { self[ChatDropZonesKey.self] }
+        set { self[ChatDropZonesKey.self] = newValue }
+    }
+}
+
 extension View {
-    /// Takes files and pictures dropped anywhere on the chat (messages or input) into the input, ready to send.
-    func chatFileDrop(state: ChatThreadState) -> some View { modifier(ChatFileDropModifier(state: state)) }
+    /// Groups the drop areas under it (`chatFileDrop`), so they show their hints together.
+    func chatDropZones() -> some View { modifier(ChatDropZonesHost()) }
+    /// Takes files and pictures dropped here: `.send` sends them at once, `.stage` puts them in the input.
+    func chatFileDrop(state: ChatThreadState, mode: ChatDropMode) -> some View { modifier(ChatFileDropModifier(state: state, mode: mode)) }
+}
+
+private struct ChatDropZonesHost: ViewModifier {
+    @State private var zones = ChatDropZones()
+    func body(content: Content) -> some View { content.environment(\.chatDropZones, zones) }
 }
 
 private struct ChatFileDropModifier: ViewModifier {
     @Environment(\.appTheme) private var theme
+    @Environment(\.chatServices) private var services
+    @Environment(\.chatSettings) private var settings
+    @Environment(\.toasts) private var toasts
+    @Environment(\.chatDropZones) private var zones
     let state: ChatThreadState
+    let mode: ChatDropMode
     @State private var targeted = false
 
     /// A read-only chat, or one in "Multiple select", takes nothing.
@@ -60,21 +89,43 @@ private struct ChatFileDropModifier: ViewModifier {
         CanSendToChat()(state.chat, selfUserId: state.selfUserId, selfAccount: state.selfAccount) && !state.isSelecting
     }
 
+    private var hint: String {
+        mode == .send ? appString("dropFilesToSend", "Drop files to send") : appString("dropFilesToStage", "Drop files to add them to the message")
+    }
+
     func body(content: Content) -> some View {
+        let shown = accepts && (targeted || (zones?.hovering ?? 0) > 0)
         content
             .overlay {
-                if targeted && accepts {
-                    FileDropOverlay(hint: appString("dropFilesToStage", "Drop files to add them to the message"), active: true)
-                        .padding(theme.spacing.s8).allowsHitTesting(false)
+                if shown {
+                    FileDropOverlay(hint: hint, active: targeted)
+                        .padding(mode == .send ? theme.spacing.s8 : theme.spacing.s4).allowsHitTesting(false)
                 }
             }
-            .onDrop(of: ChatDrop.types, isTargeted: $targeted) { providers in
+            .animation(.easeOut(duration: theme.motion.fast), value: shown)
+            .onDrop(of: ChatDrop.types, isTargeted: Binding(get: { targeted }, set: hover)) { providers in
+                hover(false)
                 guard accepts, !providers.isEmpty else { return false }
                 Task { @MainActor in
                     let files = await ChatDrop.read(providers)
-                    if !files.isEmpty { state.stagedFiles.append(contentsOf: files) }
+                    guard !files.isEmpty else { return }
+                    switch mode {
+                    case .stage: state.stagedFiles.append(contentsOf: files)
+                    case .send:
+                        guard let services else { return }
+                        if case .failure(let f) = await ChatMessageSender(state: state, services: services, settings: settings).files(files) {
+                            toasts?.show(f.message, kind: .error)
+                        }
+                    }
                 }
                 return true
             }
+            .onDisappear { hover(false) }
+    }
+
+    private func hover(_ on: Bool) {
+        guard on != targeted else { return }
+        targeted = on
+        if on { zones?.hovering += 1 } else { zones?.hovering = max((zones?.hovering ?? 1) - 1, 0) }
     }
 }

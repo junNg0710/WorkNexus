@@ -24651,6 +24651,57 @@
         }
       }
     },
+    "chatGlobalSearchChats": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chats"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuộc trò chuyện"
+          }
+        }
+      }
+    },
+    "chatGlobalSearchHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search chats and messages…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tìm cuộc trò chuyện và tin nhắn…"
+          }
+        }
+      }
+    },
+    "chatGlobalSearchMessages": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tin nhắn"
+          }
+        }
+      }
+    },
     "chatHideInfo": {
       "extractionState": "manual",
       "localizations": {
@@ -26946,6 +26997,23 @@
         }
       }
     },
+    "leaderPinPerson": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin to the front"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghim lên đầu"
+          }
+        }
+      }
+    },
     "leaderSelect": {
       "extractionState": "manual",
       "localizations": {
@@ -27146,6 +27214,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ mục mới nhất mỗi người"
+          }
+        }
+      }
+    },
+    "leaderUnpinPerson": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpin"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bỏ ghim"
           }
         }
       }
@@ -28731,6 +28816,23 @@
         }
       }
     },
+    "searching": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang tìm…"
+          }
+        }
+      }
+    },
     "settingsLayout": {
       "extractionState": "manual",
       "localizations": {
@@ -29441,6 +29543,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tạo task mới trong execution đang mở"
+          }
+        }
+      }
+    },
+    "tipPersonArrange": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag onto another person to move them; right-click to pin"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kéo thả lên người khác để đổi vị trí; chuột phải để ghim"
           }
         }
       }
@@ -30393,6 +30512,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Việc cần làm mới"
+          }
+        }
+      }
+    },
+    "zentaoHideFromTeamView": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide from team view"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ẩn khỏi chế độ Team"
+          }
+        }
+      }
+    },
+    "zentaoShowInTeamView": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in team view"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện trong chế độ Team"
+          }
+        }
+      }
+    },
+    "zentaoHiddenFromTeamView": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not in the team view: its tasks show only here"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không hiện trong chế độ Team: task của nó chỉ xem ở đây"
           }
         }
       }

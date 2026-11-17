@@ -1,0 +1,51 @@
+/// Not in the Flutter app.
+import AppKit
+
+/// A native menu opened under the pointer from a button. AppKit runs the menu itself until a pick (or Esc), so it stays
+/// open whatever the view around the button does meanwhile - unlike a SwiftUI `Menu` in a row whose buttons show only
+/// while hovered, which closed (or never opened) as the pointer moved onto the menu.
+public enum AppNativeMenu {
+    public struct Item {
+        public var title: String
+        public var icon: String?
+        public var destructive: Bool
+        public var dividerBefore: Bool
+        public var action: () -> Void
+        public init(_ title: String, icon: String? = nil, destructive: Bool = false, dividerBefore: Bool = false, action: @escaping () -> Void) {
+            self.title = title; self.icon = icon; self.destructive = destructive; self.dividerBefore = dividerBefore; self.action = action
+        }
+    }
+
+    /// The menu for `items` (built separately so it can be checked without showing it).
+    public static func menu(_ items: [Item]) -> NSMenu {
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        for (i, item) in items.enumerated() {
+            if item.dividerBefore, i > 0 { menu.addItem(.separator()) }
+            let entry = ClosureItem(title: item.title, run: item.action)
+            if let icon = item.icon { entry.image = NSImage(systemSymbolName: icon, accessibilityDescription: nil) }
+            if item.destructive {
+                entry.attributedTitle = NSAttributedString(string: item.title, attributes: [.foregroundColor: NSColor.systemRed])
+            }
+            menu.addItem(entry)
+        }
+        return menu
+    }
+
+    /// Shows the menu at the pointer and returns once it is closed.
+    @MainActor public static func popUp(_ items: [Item]) {
+        guard !items.isEmpty else { return }
+        menu(items).popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
+    }
+
+    final class ClosureItem: NSMenuItem {
+        let run: () -> Void
+        init(title: String, run: @escaping () -> Void) {
+            self.run = run
+            super.init(title: title, action: #selector(fire), keyEquivalent: "")
+            target = self
+        }
+        required init(coder: NSCoder) { fatalError("init(coder:) is not used") }
+        @objc func fire() { run() }
+    }
+}

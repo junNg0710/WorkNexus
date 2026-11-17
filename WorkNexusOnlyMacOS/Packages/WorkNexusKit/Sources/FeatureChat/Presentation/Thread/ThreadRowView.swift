@@ -3,12 +3,26 @@ import CoreUI
 import SwiftUI
 
 /// One row of the message list: a day divider, a time marker, the typing bubble, a server notice or a message.
-struct ThreadRowView: View {
+///
+/// Equatable on what it is given (the row, the model it belongs to, whether senders show): the list redraws for its own
+/// reasons (scroll metrics, a page arriving) and without this every loaded row - hundreds - re-ran its body each time.
+/// What a row reads from the model itself (reactions, summaries, the highlight) still redraws it through Observation.
+struct ThreadRowView: View, Equatable {
     @Environment(\.chatStyle) private var style
     @Environment(\.appTheme) private var theme
     let ctx: ThreadContext
     let row: ChatListRow
     let showSenders: Bool
+    private let modelKey: ObjectIdentifier
+
+    init(ctx: ThreadContext, row: ChatListRow, showSenders: Bool) {
+        self.ctx = ctx; self.row = row; self.showSenders = showSenders
+        modelKey = ObjectIdentifier(ctx.model)
+    }
+
+    nonisolated static func == (a: ThreadRowView, b: ThreadRowView) -> Bool {
+        a.modelKey == b.modelKey && a.showSenders == b.showSenders && a.row == b.row
+    }
 
     var body: some View {
         let side = theme.spacing.s24

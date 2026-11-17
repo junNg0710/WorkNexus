@@ -25,4 +25,22 @@ extension ZentaoUIState {
             _ = await settings.save(s)
         }
     }
+
+    /// Whether execution `id` (named `name`) shows its tasks in team views.
+    func isShownInTeamView(accountId: String, executionId: String, name: String) -> Bool {
+        IsShownInTeamView()(accountId: accountId, executionId: executionId, executionName: name,
+                            choices: taskBoard.settings.teamExecutionVisibility)
+    }
+
+    /// Shows / hides execution `id`'s tasks in team views.
+    func toggleTeamView(accountId: String, executionId: String, name: String) {
+        let show = !isShownInTeamView(accountId: accountId, executionId: executionId, name: name)
+        let key = IsShownInTeamView.key(accountId: accountId, executionId: executionId)
+        let settings = deps.services.settings
+        Task {
+            var s = await settings.load()
+            s.teamExecutionVisibility[key] = show
+            _ = await settings.save(s)
+        }
+    }
 }

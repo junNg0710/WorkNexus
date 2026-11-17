@@ -71,6 +71,18 @@
     "en": "{count} messages",
     "vi": "{count} tin nhắn"
   },
+  "chatGlobalSearchChats": {
+    "en": "Chats",
+    "vi": "Cuộc trò chuyện"
+  },
+  "chatGlobalSearchHint": {
+    "en": "Search chats and messages…",
+    "vi": "Tìm cuộc trò chuyện và tin nhắn…"
+  },
+  "chatGlobalSearchMessages": {
+    "en": "Messages",
+    "vi": "Tin nhắn"
+  },
   "chatHideInfo": {
     "en": "Hide chat info",
     "vi": "Ẩn thông tin chat"
@@ -611,6 +623,10 @@
     "en": "%1$@ overdue",
     "vi": "%1$@ trễ hạn"
   },
+  "leaderPinPerson": {
+    "en": "Pin to the front",
+    "vi": "Ghim lên đầu"
+  },
   "leaderSelect": {
     "en": "Select",
     "vi": "Chọn"
@@ -658,6 +674,10 @@
   "leaderTeamTruncated": {
     "en": "Newest %1$@ per person",
     "vi": "%1$@ mục mới nhất mỗi người"
+  },
+  "leaderUnpinPerson": {
+    "en": "Unpin",
+    "vi": "Bỏ ghim"
   },
   "localCache": {
     "en": "Local data",
@@ -1031,6 +1051,10 @@
     "en": "Search",
     "vi": "Tìm kiếm"
   },
+  "searching": {
+    "en": "Searching…",
+    "vi": "Đang tìm…"
+  },
   "settingsLayout": {
     "en": "Layout",
     "vi": "Bố cục"
@@ -1198,6 +1222,10 @@
   "tipNewTask": {
     "en": "Create a new task in the open execution",
     "vi": "Tạo task mới trong execution đang mở"
+  },
+  "tipPersonArrange": {
+    "en": "Drag onto another person to move them; right-click to pin",
+    "vi": "Kéo thả lên người khác để đổi vị trí; chuột phải để ghim"
   },
   "tipPet": {
     "en": "TBChat: click to wave, drag to move it. Turn it off in Settings",
@@ -1422,5 +1450,17 @@
   "zentaoTodoNew": {
     "en": "New todo",
     "vi": "Việc cần làm mới"
+  },
+  "zentaoHideFromTeamView": {
+    "en": "Hide from team view",
+    "vi": "Ẩn khỏi chế độ Team"
+  },
+  "zentaoShowInTeamView": {
+    "en": "Show in team view",
+    "vi": "Hiện trong chế độ Team"
+  },
+  "zentaoHiddenFromTeamView": {
+    "en": "Not in the team view: its tasks show only here",
+    "vi": "Không hiện trong chế độ Team: task của nó chỉ xem ở đây"
   }
 }

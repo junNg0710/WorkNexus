@@ -55,7 +55,11 @@ struct BodyBlockView: View {
             BodyInlineText(text: s, plainFont: theme.typography.font(size: size, weight: .semibold))
                 .font(theme.typography.font(size: size, weight: level > 0 ? .semibold : .regular))
                 .foregroundStyle(ink).lineSpacing(max(lineHeight - 1.2, 0) * fontSize)
-                .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
+                .textSelection(.enabled)
+                // As tall as all its lines: measured shorter (selectable text with extra line spacing, in a list row) a long
+                // comment overflowed its card and was drawn over the rows above and below it.
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
         case .image(let url, _, let width):
             if let loader = images.loader {
                 InlineImage(url: url, loader: loader, fallbackUrl: images.fallbackUrl, onOpenImage: images.onOpenImage, width: width.map { CGFloat($0) })
@@ -78,6 +82,7 @@ struct BodyBlockView: View {
                             .frame(minWidth: theme.spacing.s16, alignment: .trailing)
                         nested(item)
                     }
+                    .fixedSize(horizontal: false, vertical: true)
                 }
             }
         case .table(let header, let rows):

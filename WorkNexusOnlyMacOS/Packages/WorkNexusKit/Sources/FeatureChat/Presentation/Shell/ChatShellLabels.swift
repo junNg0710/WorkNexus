@@ -129,7 +129,7 @@ enum ChatShellLabels {
         if m.deleted { return shellString("chatRetracted", "Message retracted") }
         if reactions, let emoji = m.reactionEmoji { return shellString("chatReacted", "Reacted {emoji}", ["emoji": emoji]) }
         switch m.content {
-        case .text(let text, let markdown): return oneLine(markdown ? stripMarkdown(text) : text)
+        case .text(let text, let markdown): return cachedLine(text, markdown: markdown)
         case .emoji(let e): return e
         case .notification(let n): return oneLine(n.title ?? stripMarkdown(n.text))
         case .image: return shellString("chatImage", "Image")
@@ -140,6 +140,17 @@ enum ChatShellLabels {
             return "\(shellString("chatCode", "Code")): \(name ?? first.trimmingCharacters(in: .whitespaces))"
         case .unsupported(let type): return shellString("chatUnsupportedMessage", "Unsupported message ({type})", ["type": type])
         }
+    }
+
+    /// Every chat row in the list asks for its preview on each redraw; the regex passes are kept per text.
+    nonisolated(unsafe) private static let lineCache: NSCache<NSString, NSString> = { let c = NSCache<NSString, NSString>(); c.countLimit = 1000; return c }()
+
+    private static func cachedLine(_ text: String, markdown: Bool) -> String {
+        let key = "\(markdown ? 1 : 0)\(text)" as NSString
+        if let hit = lineCache.object(forKey: key) { return hit as String }
+        let line = oneLine(markdown ? stripMarkdown(text) : text)
+        lineCache.setObject(line as NSString, forKey: key)
+        return line
     }
 
     private static func oneLine(_ s: String) -> String {
@@ -161,9 +172,7 @@ enum ChatShellLabels {
         guard let t else { return "" }
         let age = calendar.dateComponents([.day], from: calendar.startOfDay(for: t), to: calendar.startOfDay(for: now)).day ?? 0
         func format(_ pattern: String) -> String {
-            let f = DateFormatter()
-            f.calendar = calendar; f.timeZone = calendar.timeZone; f.locale = locale; f.dateFormat = pattern
-            return f.string(from: t)
+            CachedDateFormatter.string(t, format: pattern, locale: locale, timeZone: calendar.timeZone, calendar: calendar)
         }
         if age == 0 { return format("HH:mm") }
         if age == 1 { return shellString("chatYesterday", "Yesterday") }

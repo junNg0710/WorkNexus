@@ -84,6 +84,12 @@ struct ChatShellView: View {
             guard let gid else { return }
             model.select(gid); model.events.pendingChatGid = nil
         }
+        .onChange(of: model.events.pendingJump, initial: true) { _, target in
+            guard let target else { return }
+            model.select(target.chatGid)
+            model.thread?.state.requestJump(to: target.serverId)
+            model.events.pendingJump = nil
+        }
         .onChange(of: openChat?.wrappedValue, initial: true) { _, gid in
             guard let gid else { return }
             model.select(gid); openChat?.wrappedValue = nil

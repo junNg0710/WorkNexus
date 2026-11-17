@@ -4,33 +4,26 @@ import CoreUI
 import ImageIO
 import SwiftUI
 
-/// Stands in for the composer's text input while files dropped, pasted or picked wait: their thumbnails, each removable, and the
-/// send button. Enter sends, Esc removes them all; no text can be typed meanwhile.
+/// The files dropped, pasted or picked that wait above the input: their thumbnails, each removable. The input below stays
+/// open, so a message can be typed to go with them; Enter sends both, Esc removes the files.
 struct StagedFilesStrip: View {
     @Environment(\.appTheme) private var theme
-    @FocusState private var focused: Bool
     let files: [StagedFile]
-    let onSend: () -> Void
     let onClear: () -> Void
     let onRemove: (UUID) -> Void
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: theme.spacing.s10) {
-            VStack(alignment: .leading, spacing: theme.spacing.s6) {
-                FlowThumbs(files: files, onRemove: onRemove)
+        VStack(alignment: .leading, spacing: theme.spacing.s6) {
+            FlowThumbs(files: files, onRemove: onRemove)
+            HStack(spacing: theme.spacing.s8) {
                 Text(appString("chatStagedFilesHint", "Enter sends · Esc removes all"))
                     .font(theme.typography.caption).foregroundStyle(theme.colors.tx3)
+                Spacer(minLength: 0)
+                Button(action: onClear) { Text(appString("chatRemoveAttachment", "Remove")).font(theme.typography.caption) }
+                    .buttonStyle(.plain).foregroundStyle(theme.colors.tx2).pointerStyle(.link)
             }
-            Spacer(minLength: 0)
-            ComposerSendButton(action: onSend)
         }
-        .padding(EdgeInsets(top: theme.spacing.s10, leading: theme.spacing.s24, bottom: theme.spacing.s10, trailing: theme.spacing.s12))
-        .focusable()
-        .focusEffectDisabled()
-        .focused($focused)
-        .onAppear { focused = true }
-        .onKeyPress(.return) { onSend(); return .handled }
-        .onKeyPress(.escape) { onClear(); return .handled }
+        .padding(EdgeInsets(top: theme.spacing.s10, leading: theme.spacing.s16, bottom: 0, trailing: theme.spacing.s16))
     }
 }
 

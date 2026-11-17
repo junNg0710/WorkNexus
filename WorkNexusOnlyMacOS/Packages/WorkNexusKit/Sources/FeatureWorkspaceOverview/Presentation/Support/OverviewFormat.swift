@@ -18,10 +18,7 @@ func shortWhen(_ t: Date?, now: Date = Date(), locale: Locale = .current) -> Str
 
 /// "Oct 12" in the user's locale.
 func monthDay(_ date: Date, locale: Locale = .current) -> String {
-    let f = DateFormatter()
-    f.locale = locale
-    f.setLocalizedDateFormatFromTemplate("MMMd")
-    return f.string(from: date)
+    CachedDateFormatter.string(date, template: "MMMd", locale: locale)
 }
 
 /// A ZenTao date field (`2026-10-12`), or nil for its empty forms (`""`, `0000-00-00`).

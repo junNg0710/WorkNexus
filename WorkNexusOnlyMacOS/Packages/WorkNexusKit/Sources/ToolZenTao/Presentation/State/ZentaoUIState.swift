@@ -35,6 +35,8 @@ public final class ZentaoUIState {
     public internal(set) var taskTeam: ZentaoTeamScope?
     public internal(set) var bugTeam: ZentaoTeamScope?
     var teamGeneration = 0
+    /// Bumped when the pinned people change, so the people strip reads them again.
+    var pinnedPeopleRevision = 0
     var observedTeamAccounts: Set<String> = []
     /// A bulk dialog asked for from a card's menu; the bar of the board it names opens it and clears this.
     var bulkRequest: ZentaoBulkRequest?

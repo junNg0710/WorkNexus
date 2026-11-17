@@ -122,4 +122,19 @@ final class ChatHistoryDownloadModelTests: XCTestCase {
         model.reset()
         XCTAssertEqual(model.phase, .idle)
     }
+
+    /// Closing the search bar during a download used to leave it "running": the next search took it as under way and never
+    /// downloaded the older messages it needed.
+    func testClosingTheSearchMidDownloadLetsTheNextSearchStartItAgain() async {
+        let repo = ShellFakeRepository()
+        repo.extent = .success(ChatTimelineExtent(count: 3, oldestServerId: 50, oldestSentAt: Date(), reachesStart: false))
+        let model = ChatHistoryDownloadModel(accountId: "a", chatGid: "g", repository: repo, period: { .all })
+        await model.ensure(searching: true)
+        if case .running = model.phase {} else { return XCTFail("expected running, got \(model.phase)") }
+        model.teardown()
+        XCTAssertEqual(model.phase, .idle)
+        await model.ensure(searching: true)
+        if case .running = model.phase {} else { XCTFail("the next search starts the download again, got \(model.phase)") }
+        model.teardown()
+    }
 }

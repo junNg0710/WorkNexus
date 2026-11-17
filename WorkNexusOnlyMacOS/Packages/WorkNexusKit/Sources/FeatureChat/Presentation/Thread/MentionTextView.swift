@@ -13,7 +13,7 @@ struct MentionTextView: View {
     static let mentionScheme = "worknexus-mention"
 
     var body: some View {
-        Text(Self.attributed(text, ink: ink, font: theme.typography.font(size: ink.fontSize)))
+        Text(Self.cachedAttributed(text, ink: ink, font: theme.typography.font(size: ink.fontSize)))
             .foregroundStyle(ink.text.color)
             .lineSpacing(ink.fontSize * 0.2)
             .tint(ink.link.color)
@@ -25,6 +25,18 @@ struct MentionTextView: View {
                 return .handled
             })
     }
+
+    /// `attributed`, worked out once per text and look: rows redraw often while the list scrolls.
+    static func cachedAttributed(_ text: String, ink: ChatBubbleInk, font: Font) -> AttributedString {
+        let key = "\(ink.fontSize)|\(ink.link.color)|\(text)" as NSString
+        if let kept = attributedCache.object(forKey: key) { return kept.value }
+        let value = attributed(text, ink: ink, font: font)
+        attributedCache.setObject(AttributedBox(value), forKey: key)
+        return value
+    }
+
+    private final class AttributedBox { let value: AttributedString; init(_ v: AttributedString) { value = v } }
+    nonisolated(unsafe) private static let attributedCache: NSCache<NSString, AttributedBox> = { let c = NSCache<NSString, AttributedBox>(); c.countLimit = 2000; return c }()
 
     /// The text as styled runs (mentions bold in the link colour, addresses underlined links).
     static func attributed(_ text: String, ink: ChatBubbleInk, font: Font) -> AttributedString {

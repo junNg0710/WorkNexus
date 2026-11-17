@@ -19,7 +19,15 @@ extension ZentaoUIState {
     func scopeTasks(_ tickets: [Ticket]) -> [Ticket] {
         let place = place
         // A team replaces the execution: the tasks read from each person, wherever they are.
-        if let team = taskTeam { return team.accountId == place.accountId ? team.tickets(in: tickets, bugs: false) : [] }
+        if let team = taskTeam {
+            guard team.accountId == place.accountId else { return [] }
+            // Routine executions (daily reports) stay out of it; they are seen by opening the execution.
+            let choices = taskBoard.settings.teamExecutionVisibility, shown = IsShownInTeamView()
+            return team.tickets(in: tickets, bugs: false).filter { t in
+                guard case .zentaoTask(let e)? = t.providerEntity else { return true }
+                return shown(accountId: t.accountId, executionId: e.execution, executionName: e.executionName, choices: choices)
+            }
+        }
         guard let e = execution, e.accountId == place.accountId, e.executionId == place.scopeId else { return [] }
         return ScopePagedViewTickets<ZenTaoTaskColumn>()(PagedViewScopeQuery(
             tickets: ScopeProviderTickets()(tickets: tickets, accountId: e.accountId, providerType: .zentao, externalType: "task",

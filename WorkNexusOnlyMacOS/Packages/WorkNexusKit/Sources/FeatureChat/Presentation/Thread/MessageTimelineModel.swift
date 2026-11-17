@@ -165,7 +165,9 @@ final class MessageTimelineModel {
               let at = list.firstIndex(where: { $0.gid == newest }) else { return }
         let arrived = list[(at + 1)...]
         let selfId = state.selfUserId
-        if arrived.contains(where: { $0.isMine || $0.senderId == selfId }) { scroll(to: .bottom) }
+        // Own message: from far up, an animated trip down; at the bottom already, the list's bottom anchor keeps it in view,
+        // and an extra animated scroll only made the newest bubble jump at the bottom edge.
+        if arrived.contains(where: { $0.isMine || $0.senderId == selfId }), away { scroll(to: .bottom) }
         else if away { unseen += arrived.count }
     }
 

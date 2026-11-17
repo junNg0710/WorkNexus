@@ -93,6 +93,7 @@ final class ChatComposerController {
         case .escape:
             if mentions.handle(.escape, model: model) { return true }
             if state.replyDraft != nil { state.replyDraft = nil; return true }
+            if !state.stagedFiles.isEmpty { clearStaged(); return true }
             return false
         case .enter:
             if mentions.handle(.enter, model: model) { return true }
@@ -109,14 +110,19 @@ final class ChatComposerController {
         }
     }
 
-    /// Sends the input; a lone emoji goes large.
+    /// Sends the input: the files waiting above it first, then the text typed with them (a lone emoji goes large). Each
+    /// goes as its own message, as xxd has no caption; a reply being written answers with the first.
     func send() {
-        guard !model.isBlank, let sender else { return }
-        let message = model.messageText
-        let plain = model.hasMentions ? nil : model.plainText
+        let files = state.stagedFiles
+        guard !(model.isBlank && files.isEmpty), let sender else { return }
+        let text: (message: String, plain: String?)? = model.isBlank ? nil : (model.messageText, model.hasMentions ? nil : model.plainText)
+        state.stagedFiles = []
         model.clear(); mentions.reset()
         typing.changed("")
-        Task { report(await sender.composed(message: message, plain: plain)) }
+        Task {
+            if !files.isEmpty { report(await sender.files(files)) }
+            if let text { report(await sender.composed(message: text.message, plain: text.plain)) }
+        }
     }
 
     func sendLike() { sendLargeEmoji("👍") }
@@ -141,15 +147,6 @@ final class ChatComposerController {
 
     func stage(urls: [URL]) {
         stage(urls.compactMap(ChatStaging.staged(from:)))
-    }
-
-    /// Sends the staged files, then goes back to typing.
-    func sendStaged() {
-        let files = state.stagedFiles
-        state.stagedFiles = []
-        model.requestFocus()
-        guard !files.isEmpty, let sender else { return }
-        Task { report(await sender.files(files)) }
     }
 
     func clearStaged() { state.stagedFiles = []; model.requestFocus() }

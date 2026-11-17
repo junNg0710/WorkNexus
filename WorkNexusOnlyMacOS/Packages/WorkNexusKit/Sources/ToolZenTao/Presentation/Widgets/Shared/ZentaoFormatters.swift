@@ -43,8 +43,6 @@ public enum ZentaoFormatters {
 
 enum AppDateFormatBridge {
     static func iso(_ d: Date) -> String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"
-        return f.string(from: d)
+        CachedDateFormatter.string(d, format: "yyyy-MM-dd")
     }
 }

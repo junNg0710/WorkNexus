@@ -26,11 +26,18 @@ struct ConversationRow: View {
             }
     }
 
+    /// Only the peer of a direct chat is drawn (avatar, presence, badge). Handing every row the whole user table made each
+    /// redraw of the list compare that table once per row.
+    private func peerOnly(_ chat: ChatConversation) -> [Int: ChatUser] {
+        guard chat.type == .one2one, let id = chat.peerUserId, let user = model.users[id] else { return [:] }
+        return [id: user]
+    }
+
     private var data: ConversationRowData {
         let chat = item.chat
         let typing = model.typing(in: chat.gid)
         return ConversationRowData(
-            chat: chat, title: item.title, users: model.users, lastSender: lastSender(chat),
+            chat: chat, title: item.title, users: peerOnly(chat), lastSender: lastSender(chat),
             typing: typing.isEmpty ? nil
                 : chat.type == .one2one ? shellString("chatTyping", "typing…") : ChatShellLabels.typingLabel(model.users, typing))
     }

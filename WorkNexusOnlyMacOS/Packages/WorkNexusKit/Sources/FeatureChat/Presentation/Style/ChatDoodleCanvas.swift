@@ -3,7 +3,9 @@ import SwiftUI
 
 /// The doodle pattern background: a soft four-corner gradient under a tiled doodle pattern. Drawn once into a cached
 /// layer, so scrolling the messages over it does not repaint it.
-public struct ChatDoodleCanvas: View {
+/// Equatable: its whole look is `palette` and `scale`, so a redraw of the chat around it (typing, a message arriving)
+/// skips repainting the pattern.
+public struct ChatDoodleCanvas: View, Equatable {
     let palette: ChatDoodlePalette
     let scale: CGFloat
     public init(palette: ChatDoodlePalette, scale: CGFloat = 1) { self.palette = palette; self.scale = scale }

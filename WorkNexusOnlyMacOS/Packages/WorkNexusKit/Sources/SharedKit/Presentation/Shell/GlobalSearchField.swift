@@ -12,15 +12,25 @@ struct GlobalSearchField: View {
     @State private var results: [Ticket] = []
     @State private var highlight = 0
     @State private var showing = false
+    @State private var hits: [PlaceSearchHit] = []
+    @State private var searching = false
+    @State private var placeTask: Task<Void, Never>?
     @FocusState private var focused: Bool
+
+    /// The place on screen's own search (the Chat page), if it has one.
+    private var place: PlaceSearch? { model.host.placeSearch(model.nav.state.rail) }
+    private var count: Int { place == nil ? results.count : hits.count }
 
     var body: some View {
         let c = theme.colors
         HStack(spacing: theme.spacing.s6) {
             Image(systemName: "magnifyingglass").foregroundStyle(c.tx3)
-            TextField(appString("search", "Search tasks, IDs, projects…"), text: $text)
+            TextField(place?.placeholder ?? appString("search", "Search tasks, IDs, projects…"), text: $text)
                 .textFieldStyle(.plain).font(theme.typography.body).focused($focused)
-                .onSubmit { if results.indices.contains(highlight) { open(results[highlight]) } }
+                .onSubmit {
+                    if place != nil { if hits.indices.contains(highlight) { pick(hits[highlight]) } }
+                    else if results.indices.contains(highlight) { open(results[highlight]) }
+                }
                 .onKeyPress(.downArrow) { move(1) }
                 .onKeyPress(.upArrow) { move(-1) }
                 .onKeyPress(.escape) { clear(); focused = false; return .handled }
@@ -33,12 +43,20 @@ struct GlobalSearchField: View {
         .padding(.horizontal, theme.spacing.s12)
         .onChange(of: text) { _, q in search(q) }
         .onChange(of: model.searchFocusTick) { _, _ in focused = true; search(text) }
+        // Another place searches other things: start over.
+        .onChange(of: model.nav.state.rail) { _, _ in clear() }
         .task { model.detail.start() }
         .overlay(alignment: .topTrailing) {
             if showing {
-                SearchResultsOverlay(results: results, highlight: highlight, registry: model.registry, onSelect: open)
-                    .frame(width: theme.sizes.dialogMd + theme.spacing.s24)
-                    .offset(y: theme.sizes.control36 + theme.spacing.s4)
+                Group {
+                    if place != nil {
+                        PlaceSearchResults(hits: hits, highlight: highlight, searching: searching, onSelect: pick)
+                    } else {
+                        SearchResultsOverlay(results: results, highlight: highlight, registry: model.registry, onSelect: open)
+                    }
+                }
+                .frame(width: theme.sizes.dialogMd + theme.spacing.s24)
+                .offset(y: theme.sizes.control36 + theme.spacing.s4)
             }
         }
         .zIndex(showing ? 10 : 0)
@@ -46,19 +64,37 @@ struct GlobalSearchField: View {
 
     private func search(_ query: String) {
         let q = query.trimmingCharacters(in: .whitespaces)
-        guard !q.isEmpty else { results = []; showing = false; return }
+        placeTask?.cancel()
+        guard !q.isEmpty else { results = []; hits = []; showing = false; return }
+        if let place {
+            showing = true; searching = true
+            // A moment after the last key, so typing does not search on every letter.
+            placeTask = Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(150))
+                guard !Task.isCancelled else { return }
+                let found = await place.search(q)
+                guard !Task.isCancelled else { return }
+                hits = found; highlight = 0; searching = false
+            }
+            return
+        }
         let mine = Set(model.workspaceAccounts.map(\.id))
         results = SearchLocalTickets()(tickets: model.detail.tickets.values.filter { mine.contains($0.accountId) }, query: q)
         highlight = 0; showing = true
     }
 
     private func move(_ d: Int) -> KeyPress.Result {
-        guard !results.isEmpty else { return .ignored }
-        highlight = (highlight + d + results.count) % results.count
+        guard count > 0 else { return .ignored }
+        highlight = (highlight + d + count) % count
         return .handled
     }
 
-    private func clear() { text = ""; results = []; showing = false }
+    private func clear() { placeTask?.cancel(); text = ""; results = []; hits = []; showing = false; searching = false }
+
+    private func pick(_ hit: PlaceSearchHit) {
+        hit.open()
+        clear(); focused = false
+    }
 
     /// Goes to the ticket's account (so the panel sits over its own place) and opens it.
     private func open(_ t: Ticket) {

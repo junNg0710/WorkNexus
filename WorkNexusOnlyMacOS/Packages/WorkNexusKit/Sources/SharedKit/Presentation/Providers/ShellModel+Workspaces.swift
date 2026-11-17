@@ -50,9 +50,14 @@ extension ShellModel {
     }
 
     /// A click on a rail button: it goes to its place, or - when that place is the one on screen - folds / unfolds its pane.
-    public func railTap(isCurrent: Bool, go: () -> Void) {
-        if isCurrent && !miniAppOnScreen { toggleCurrentPane() } else { go() }
+    /// A click that also brought the app back from another app only shows the place: coming back to Chat must not fold its list.
+    public func railTap(isCurrent: Bool, now: Date = Date(), go: () -> Void) {
+        let bringsAppBack = now.timeIntervalSince(activatedAt) < Self.activationGrace
+        if isCurrent && !miniAppOnScreen && !bringsAppBack { toggleCurrentPane() } else { go() }
     }
+
+    /// How soon after the app came to the front a click still counts as the one that brought it back.
+    public static let activationGrace: TimeInterval = 0.6
 
     public func openRailSection(_ section: SectionID, tool: any ToolModule, accounts ofTool: [Account]) {
         let id = railAccountMemory[tool.providerType].flatMap { r in ofTool.contains { $0.id == r } ? r : nil } ?? ofTool[0].id

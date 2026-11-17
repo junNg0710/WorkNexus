@@ -8,6 +8,8 @@ import Observation
 public final class ChatShellEvents {
     /// A chat the view should open as soon as it can; the view clears it once it has.
     public var pendingChatGid: String?
+    /// A message to show once its chat is open (a search hit); the view clears it once it has.
+    public var pendingJump: ChatJumpTarget?
     /// Message notifications are on in the app but blocked by the OS: shows the warning strip.
     public var notificationsBlocked = false
     /// "Turn on" in the warning strip.
@@ -37,6 +39,14 @@ public final class ChatShellEvents {
 
     /// Opens `chatGid` in the view (what `ChatFeature.open(accountId:chatGid:)` calls).
     public func open(chatGid: String) { pendingChatGid = chatGid }
+
+    /// Opens `chatGid` and jumps to its message `serverId` (loading it from the server when it is not stored around).
+    public func open(chatGid: String, jumpTo serverId: Int) { pendingJump = ChatJumpTarget(chatGid: chatGid, serverId: serverId) }
+}
+
+public struct ChatJumpTarget: Equatable, Sendable {
+    public var chatGid: String
+    public var serverId: Int
 }
 
 

@@ -1,3 +1,4 @@
+import CoreDomain
 import Foundation
 
 /// Ported from: lib/core/util/relative_time.dart (`formatDate`) — the app-wide date format.
@@ -7,10 +8,8 @@ public enum AppDateFormat {
     public static func format(_ date: Date, style: String = "iso", withTime: Bool = false,
                               locale: Locale = .current, calendar: Calendar = .current) -> String {
         func fmt(_ pattern: String?, long: Bool = false) -> String {
-            let f = DateFormatter()
-            f.calendar = calendar; f.timeZone = calendar.timeZone; f.locale = long ? locale : Locale(identifier: "en_US_POSIX")
-            if long { f.setLocalizedDateFormatFromTemplate("yMMMd") } else { f.dateFormat = pattern }
-            return f.string(from: date)
+            long ? CachedDateFormatter.string(date, template: "yMMMd", locale: locale, timeZone: calendar.timeZone, calendar: calendar)
+                 : CachedDateFormatter.string(date, format: pattern ?? "yyyy-MM-dd", timeZone: calendar.timeZone, calendar: calendar)
         }
         let day: String
         switch style {

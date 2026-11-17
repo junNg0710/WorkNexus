@@ -19,15 +19,17 @@ struct ChatThreadPane: View {
                 ChatThreadHeader(model: model, session: session)
                 if session.search.isOpen { ChatThreadSearchBar(model: model, session: session) }
                 VStack(spacing: 0) {
+                    // Dropped on the messages, files go out at once; dropped on the input, they wait there (as in Flutter).
                     MessageListView(state: state)
                         .overlay(alignment: .topLeading) { ChatFloatingVideo(model: state.video) }
+                        .chatFileDrop(state: state, mode: .send)
                     ChatComposerView(state: state, hint: shellString("chatMessageTo", "Type @ to mention, message {name}",
                                                                      ["name": ChatShellLabels.title(state.chat, state.users)]))
+                        .chatFileDrop(state: state, mode: .stage)
                         // "Multiple select" covers the composer with its bar; what was being written stays underneath.
                         .overlay { if state.isSelecting { ChatSelectionBar(model: model, state: state) } }
                 }
-                // Files and pictures dropped on the messages or the input wait in the input to be sent.
-                .chatFileDrop(state: state)
+                .chatDropZones()
             }
             .frame(maxWidth: .infinity)
             .background { ChatWallpaperView() }

@@ -21,10 +21,21 @@ public struct MarkdownText: View {
     }
 
     /// The blocks `data` renders to (normalized, bare URLs linkified).
+    /// Parsed once per text: a chat list redraws its rows often (scrolling, hovering), and parsing each time made it stutter.
     public static func blocks(for data: String) -> [BodyBlock] {
+        if let kept = blockCache.object(forKey: data as NSString) { return kept.blocks }
+        let blocks = parse(data)
+        blockCache.setObject(BlocksBox(blocks), forKey: data as NSString)
+        return blocks
+    }
+
+    private static func parse(_ data: String) -> [BodyBlock] {
         let text = linkifyBareUrls(normalizeMarkdown(data.trimmingCharacters(in: .whitespacesAndNewlines)))
         return text.isEmpty ? [] : MarkdownBlocks.parse(text)
     }
+
+    private final class BlocksBox { let blocks: [BodyBlock]; init(_ b: [BodyBlock]) { blocks = b } }
+    nonisolated(unsafe) private static let blockCache: NSCache<NSString, BlocksBox> = { let c = NSCache<NSString, BlocksBox>(); c.countLimit = 2000; return c }()
 
     public var body: some View {
         let blocks = Self.blocks(for: data)

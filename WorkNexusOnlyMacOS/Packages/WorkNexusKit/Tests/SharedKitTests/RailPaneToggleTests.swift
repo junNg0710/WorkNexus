@@ -14,6 +14,17 @@ final class RailPaneToggleTests: XCTestCase {
         return ShellModel(services: services, registry: ToolRegistry())
     }
 
+    /// The title bar's search shows only where it has something to search.
+    func testTheGlobalSearchShowsOnlyWhereThereIsSomethingToSearch() {
+        let s = shell()
+        s.nav.select(.workspace); XCTAssertTrue(s.showsGlobalSearch)
+        s.nav.select(.chat); XCTAssertTrue(s.showsGlobalSearch)
+        s.nav.openMiniApp("gitlab"); XCTAssertFalse(s.showsGlobalSearch, "a mini app is a web page with its own search")
+        s.nav.openMiniApp(nil); XCTAssertTrue(s.showsGlobalSearch)
+        s.nav.openEditor(.newBug(accountId: "zt1")); XCTAssertFalse(s.showsGlobalSearch)
+        s.nav.select(.settings); XCTAssertFalse(s.showsGlobalSearch)
+    }
+
     func testTheSecondClickFoldsThePaneAndTheThirdBringsItBack() {
         let s = shell()
         var went = 0
@@ -64,5 +75,21 @@ final class RailPaneToggleTests: XCTestCase {
         XCTAssertEqual(RailTips.place("Tasks", current: false, folded: false), "Tasks")
         XCTAssertTrue(RailTips.place("Tasks", current: true, folded: false).contains("hide"))
         XCTAssertTrue(RailTips.place("Tasks", current: true, folded: true).contains("show"))
+    }
+
+    /// Clicking Chat in the rail from another app brings WorkNexus back and shows Chat; it does not fold the chat list.
+    func testTheClickThatBringsTheAppBackDoesNotFoldThePane() {
+        let s = shell()
+        s.nav.select(.chat)
+        let folded = s.currentPaneFolded
+        s.activatedAt = Date()
+        var went = 0
+        s.railTap(isCurrent: true) { went += 1 }
+        XCTAssertEqual(went, 1, "it only shows the place")
+        XCTAssertEqual(s.currentPaneFolded, folded)
+        // A second click a moment later folds it as usual.
+        s.railTap(isCurrent: true, now: Date().addingTimeInterval(ShellModel.activationGrace + 0.1)) { went += 1 }
+        XCTAssertEqual(went, 1)
+        XCTAssertNotEqual(s.currentPaneFolded, folded)
     }
 }

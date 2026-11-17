@@ -27,14 +27,18 @@ public struct ZentaoDependencies {
     public let workflow: ZenTaoWorkflowService
     public let docs: ZenTaoDocRepository
     public let exportDoc: ExportZenTaoDoc
+    /// The people a leader keeps at the front of the people strip.
+    public let pinnedPeople: ZenTaoPinnedPeopleStore
 
     public init(services: AppServices, nav: AppNavController, registry: @escaping @MainActor () -> ToolRegistry,
                 tickets: ZenTaoTicketService, viewPages: ZenTaoViewPages, taskBugs: ZenTaoTaskBugs,
                 editor: ZenTaoTicketEditor, teamMembers: ZenTaoTeamMembers, workflow: ZenTaoWorkflowService,
-                docs: ZenTaoDocRepository, exportDoc: ExportZenTaoDoc, teamGroups: ZenTaoTeamGroupRepository = NoTeamGroups()) {
+                docs: ZenTaoDocRepository, exportDoc: ExportZenTaoDoc, teamGroups: ZenTaoTeamGroupRepository = NoTeamGroups(),
+                pinnedPeople: ZenTaoPinnedPeopleStore = InMemoryPinnedPeople()) {
         self.services = services; self.nav = nav; self.registry = registry; self.tickets = tickets
         self.viewPages = viewPages; self.taskBugs = taskBugs; self.editor = editor; self.teamMembers = teamMembers
         self.workflow = workflow; self.docs = docs; self.exportDoc = exportDoc; self.teamGroups = teamGroups
+        self.pinnedPeople = pinnedPeople
     }
 
     /// The usual composition: `wiring` from `ZentaoModuleData.wire(...)`, `workflow` from
@@ -43,7 +47,8 @@ public struct ZentaoDependencies {
                 nav: AppNavController, registry: @escaping @MainActor () -> ToolRegistry) {
         self.init(services: services, nav: nav, registry: registry, tickets: wiring.tickets, viewPages: wiring.tickets,
                   taskBugs: wiring.tickets, editor: wiring.editor, teamMembers: wiring.teamMembers, workflow: workflow,
-                  docs: wiring.docs, exportDoc: ZentaoModuleData.exportDoc(wiring.docs), teamGroups: wiring.teamGroups)
+                  docs: wiring.docs, exportDoc: ZentaoModuleData.exportDoc(wiring.docs), teamGroups: wiring.teamGroups,
+                  pinnedPeople: wiring.pinnedPeople)
     }
 
     /// Opens ZenTao ticket `type` (`task`, `story`, `bug`) `id` linked from `from` in the detail panel, on `from`'s

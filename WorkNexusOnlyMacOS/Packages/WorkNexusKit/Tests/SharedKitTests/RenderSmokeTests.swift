@@ -110,6 +110,29 @@ final class RenderSmokeTests: XCTestCase {
         try rep.representation(using: .png, properties: [:])!.write(to: outDir.appendingPathComponent("\(name).png"))
     }
 
+    /// A long comment with a numbered list and nested bullets (as ZenTao writes them) stays inside its own row.
+    func testALongListCommentDoesNotSpillOverItsNeighbours() async throws {
+        let html = """
+        <ol><li>(Phạm vi) Spec chỉ ghi iOS, có làm cho android không. Code đang làm cả Android với cùng hành vi. Trên Android, nút phóng to trên cửa sổ PiP và icon app đều mở V2-02 (không tách được như BR-14/15 của iOS)?<ul><li>Tách BR-14 / BR-15 trên Android: không làm được, vì nút phóng to và icon app khởi phục Activity theo cùng một cách.</li><li>Các hành vi còn lại: Android làm giống iOS được.</li></ul></li><li>(BR-08) Khi bàn phím mở, có bottom sheet/dialog, hoặc mở màn full-screen (xem ảnh) thì mini player ẩn hay vẫn hiện, pause hay vẫn play ?</li><li>(BR-25) Icon PiP có cần hiện khi video đang tải và ở Clear Mode không?</li></ol>
+        """
+        let view = ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                DetailRegionCard { VStack(alignment: .leading) { DetailSectionTitle("Description"); Text("Above the comments") } }
+                DetailRegionCard {
+                    VStack(alignment: .leading, spacing: 0) {
+                        DetailSectionTitle("Comments & Activity")
+                        TimelineItem(isFirst: true, isLast: false) { Circle().fill(.gray) } content: { Text("Thanh-VN-Flutter assigned to Thanh") }
+                        TimelineItem(isFirst: false, isLast: false) { Circle().fill(.gray) } content: {
+                            VStack(alignment: .leading) { Text("Thanh-VN-Flutter commented"); RichBodyText(html, html: true, fontSize: 13) }
+                        }
+                        TimelineItem(isFirst: false, isLast: true) { Circle().fill(.gray) } content: { Text("Thanh-VN-Flutter edited") }
+                    }
+                }
+            }.padding(20)
+        }
+        try await renderAfterFadeIn("long-list-comment", view, size: CGSize(width: 620, height: 900))
+    }
+
     func testDetailPanel() async throws {
         let store = FakeStore()
         let t = makeTicket("d1", account: "ztB", provider: .zentao, key: "101", status: .inprogress, priority: .high, title: "Login crashes on submit",

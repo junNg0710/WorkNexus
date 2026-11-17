@@ -37,7 +37,8 @@ struct ChatThreadSearchBar: View {
             .overlay(alignment: .bottom) { Rectangle().fill(theme.colors.line).frame(height: theme.borders.hairline) }
             ChatHistoryDownloadPrompt(session: session)
         }
-        .onAppear { focused = true }
+        // Once the field is in the window (focusing it in the same pass as it appears does nothing): type at once.
+        .task { await Task.yield(); try? await Task.sleep(for: .milliseconds(30)); focused = true }
     }
 
     private func stepFromKey(_ delta: Int) { Task { await session.search.step(delta) } }

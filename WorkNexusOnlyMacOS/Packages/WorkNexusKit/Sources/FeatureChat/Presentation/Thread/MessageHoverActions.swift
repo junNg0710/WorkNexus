@@ -18,31 +18,58 @@ struct MessageHoverActions<Content: View>: View {
     @ViewBuilder let content: Content
     @State private var hovering = false
     @State private var picking = false
+    /// The "…" menu is open: the buttons stay while it is.
+    @State private var menuOpen = false
 
     var body: some View {
-        let actions = ctx.actions(for: message, settings: settings, inThread: inThread)
-        let canReact = ctx.canReact(to: message)
-        if actions.isEmpty && !canReact {
-            content
-        } else {
-            let buttonCount = inThread ? 2 : 1
-            let own = Array(actions.prefix(buttonCount)), rest = Array(actions.dropFirst(buttonCount))
-            let buttons = HStack(spacing: theme.spacing.s6) {
-                ForEach(own) { a in RoundActionButton(icon: a.icon, help: a.title, action: a.run) }
-                if canReact { ReactButton(ctx: ctx, message: message, mine: mineReactions, picking: $picking) }
-                if !rest.isEmpty { MoreActionsMenu(actions: rest) }
-            }
-            .padding(.horizontal, theme.spacing.s8)
-            // While "Multiple select" is on a click picks the row: no buttons then.
-            .opacity((hovering || picking) && !ctx.state.isSelecting ? 1 : 0)
-            .allowsHitTesting((hovering || picking) && !ctx.state.isSelecting)
-            HStack(alignment: .bottom, spacing: 0) {
-                if alignEnd { buttons }
-                content.contextMenu { MessageContextMenu(actions: actions, canReact: canReact, picking: $picking) }
-                if !alignEnd { buttons }
-            }
-            .onHover { hovering = $0 }
+        // While "Multiple select" is on a click picks the row: no buttons then.
+        let live = (hovering || picking || menuOpen) && !ctx.state.isSelecting
+        let buttons = HoverButtons(ctx: ctx, message: message, inThread: inThread, alignEnd: alignEnd, live: live,
+                                   picking: $picking, menuOpen: $menuOpen)
+        HStack(alignment: .bottom, spacing: 0) {
+            if alignEnd { buttons }
+            // The menu's rows are worked out when it opens, not for every row of the list on every redraw.
+            content.contextMenu { MessageContextMenu(ctx: ctx, message: message, inThread: inThread, picking: $picking) }
+            if !alignEnd { buttons }
         }
+        .onHover { hovering = $0 }
+    }
+}
+
+/// The round buttons beside a bubble. Their actions are worked out only while they show (hovered, or a menu or picker of
+/// theirs open); otherwise the row keeps their room empty, so nothing shifts when they appear. Building every row's
+/// actions on every redraw made scrolling a long chat heavy.
+private struct HoverButtons: View {
+    @Environment(\.appTheme) private var theme
+    @Environment(\.chatSettings) private var settings
+    let ctx: ThreadContext
+    let message: ChatMessage
+    let inThread: Bool
+    let alignEnd: Bool
+    let live: Bool
+    @Binding var picking: Bool
+    @Binding var menuOpen: Bool
+
+    var body: some View {
+        let ownCount = inThread ? 2 : 1
+        let canReact = ctx.canReact(to: message)
+        // Room for the most buttons it can have: its own, React, and "…".
+        let slots = CGFloat(ownCount + (canReact ? 1 : 0) + 1)
+        let width = slots * 28 + (slots - 1) * theme.spacing.s6 + theme.spacing.s8 * 2
+        ZStack(alignment: alignEnd ? .trailing : .leading) {
+            Color.clear
+            if live {
+                let actions = ctx.actions(for: message, settings: settings, inThread: inThread)
+                let own = Array(actions.prefix(ownCount)), rest = Array(actions.dropFirst(ownCount))
+                HStack(spacing: theme.spacing.s6) {
+                    ForEach(own) { a in RoundActionButton(icon: a.icon, help: a.title, action: a.run) }
+                    if canReact { ReactButton(ctx: ctx, message: message, mine: mineReactions, picking: $picking) }
+                    if !rest.isEmpty { MoreActionsMenu(actions: rest, open: $menuOpen) }
+                }
+                .padding(.horizontal, theme.spacing.s8)
+            }
+        }
+        .frame(width: width, height: 28)
     }
 
     private var mineReactions: Set<String> {
@@ -69,33 +96,34 @@ private struct ReactButton: View {
     }
 }
 
-/// "…": the actions that have no button of their own, as a menu.
+/// "…": the actions that have no button of their own, as a native menu. A SwiftUI `Menu` here did not open: the buttons
+/// show only while the pointer is over the message, and the menu taking the pointer hid them (and itself) again.
 private struct MoreActionsMenu: View {
-    @Environment(\.appTheme) private var theme
     let actions: [MessageAction]
+    @Binding var open: Bool
 
     var body: some View {
-        Menu {
-            ForEach(Array(actions.enumerated()), id: \.element.id) { i, a in
-                if a.sectionStart, i > 0 { Divider() }
-                MessageMenuItem(action: a)
-            }
-        } label: {
-            Image(systemName: "ellipsis").font(.system(size: theme.sizes.icon14)).foregroundStyle(theme.colors.tx2)
-                .frame(width: 28, height: 28).background(theme.colors.panel, in: Circle())
-                .overlay(Circle().stroke(theme.colors.line, lineWidth: theme.borders.hairline))
+        RoundActionButton(icon: "ellipsis", help: L.moreActions) {
+            open = true
+            AppNativeMenu.popUp(actions.map { a in
+                AppNativeMenu.Item(a.title, icon: a.icon, destructive: a.destructive, dividerBefore: a.sectionStart || a.destructive, action: a.run)
+            })
+            open = false
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize().help(L.moreActions)
     }
 }
 
 /// The right-click menu: reply stands apart from the rest; destructive actions come last.
 private struct MessageContextMenu: View {
-    let actions: [MessageAction]
-    let canReact: Bool
+    @Environment(\.chatSettings) private var settings
+    let ctx: ThreadContext
+    let message: ChatMessage
+    let inThread: Bool
     @Binding var picking: Bool
 
     var body: some View {
+        let actions = ctx.actions(for: message, settings: settings, inThread: inThread)
+        let canReact = ctx.canReact(to: message)
         let firstDestructive = actions.firstIndex { $0.destructive }
         if canReact { Button { picking = true } label: { Label(L.react, systemImage: "face.smiling") } }
         ForEach(Array(actions.enumerated()), id: \.element.id) { i, a in

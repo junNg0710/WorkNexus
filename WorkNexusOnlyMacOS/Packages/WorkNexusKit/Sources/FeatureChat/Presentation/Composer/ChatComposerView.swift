@@ -3,8 +3,8 @@ import AppKit
 import CoreUI
 import SwiftUI
 
-/// Message input: Enter sends, Shift+Enter adds a line; pasted, picked or dropped files (dropped anywhere on the chat,
-/// `chatFileDrop`) wait in the input (which then takes no
+/// Message input: Enter sends, Shift+Enter adds a line; pasted, picked or dropped files (dropped on the input,
+/// `chatFileDrop`) wait above it, and the next send takes them with the text typed (the input stays open) — or
 /// text) until sent. A message picked with "reply" shows above the input and the next send answers it; in a reply thread
 /// (`threadRootId`) sends answer its root unless another message is picked.
 public struct ChatComposerView: View {
@@ -50,19 +50,20 @@ public struct ChatComposerView: View {
             if let draft = state.replyDraft {
                 ReplyDraftBanner(message: draft, state: state) { state.replyDraft = nil; controller.model.requestFocus() }
             }
-            if state.stagedFiles.isEmpty {
-                ComposerInputRow(controller: controller, state: state, hint: hint, expanded: expanded, height: $inputHeight)
-                if controller.markdown { MarkdownToolbar(model: controller.model, expanded: $expanded) }
-            } else {
-                StagedFilesStrip(files: state.stagedFiles, onSend: controller.sendStaged, onClear: controller.clearStaged,
-                                 onRemove: controller.removeStaged)
+            // Files dropped, pasted or picked wait above the input, which stays open: a message can go with them.
+            if !state.stagedFiles.isEmpty {
+                StagedFilesStrip(files: state.stagedFiles, onClear: controller.clearStaged, onRemove: controller.removeStaged)
             }
+            ComposerInputRow(controller: controller, state: state, hint: hint, expanded: expanded, height: $inputHeight)
+            if controller.markdown { MarkdownToolbar(model: controller.model, expanded: $expanded) }
         }
         .background(theme.colors.panel)
         .overlay(alignment: .top) { Rectangle().fill(theme.colors.line).frame(height: theme.borders.hairline) }
         .onChange(of: controller.model.revision) { _, _ in controller.textChanged() }
         .onChange(of: state.pendingInsertion) { _, text in takeInsertion(text) }
         .onChange(of: state.replyDraft?.gid) { _, gid in if gid != nil { controller.model.requestFocus() } }
+        // Files just added (dropped, pasted, picked): the caret goes to the input, to type what goes with them.
+        .onChange(of: state.stagedFiles.count) { old, new in if new > old { controller.model.requestFocus() } }
         .onAppear { takeInsertion(state.pendingInsertion) }
     }
 
@@ -114,7 +115,7 @@ private struct ComposerInputRow: View {
                     .alignmentGuide(.top) { $0[.bottom] }
                     .offset(y: -theme.spacing.s4)
             }
-            if model.isBlank {
+            if model.isBlank && state.stagedFiles.isEmpty {
                 Button(action: controller.sendLike) { Text("👍").font(.system(size: 26)).frame(width: theme.sizes.control36, height: theme.sizes.control36) }
                     .buttonStyle(.plain).help(appString("chatSendLike", "Send a like"))
             } else {

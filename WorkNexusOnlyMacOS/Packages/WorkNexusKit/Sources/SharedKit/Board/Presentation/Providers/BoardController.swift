@@ -23,7 +23,8 @@ public final class BoardController {
     public private(set) var accounts: [String: Account] = [:] { didSet { recompute() } }
     public private(set) var workspaces: [String: Workspace] = [:]
     public private(set) var projects: [String: Project] = [:]
-    public private(set) var settings = AppSettings()
+    /// A tool's scope can depend on the settings (which executions a team view leaves out): a change re-scopes.
+    public private(set) var settings = AppSettings() { didSet { if oldValue != settings, scopeTickets != nil { recompute() } } }
     public private(set) var savedFilters: [SavedFilter] = []
     /// Replaces the tickets the board scopes from (a paged tool board that loads its own slice).
     public var scopedTicketsOverride: [Ticket]? { didSet { recompute() } }

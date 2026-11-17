@@ -15,7 +15,10 @@ struct ZentaoPeopleStrip: View {
         let leader = state.leader(bugs: bugs)
         let narrowing = !leader.quick.isEmpty || !leader.trimmedKeyword.isEmpty
         // While chips or a keyword narrow the board, people with nothing left are noise: only the picked ones stay.
-        let rows = state.workload(bugs: bugs).filter { !narrowing || $0.open > 0 || leader.people.contains($0.login) }
+        let pinned = state.pinnedPeople
+        // The pinned people lead, in the leader's order; then everyone else, most work first.
+        let rows = OrderWorkload()(state.workload(bugs: bugs).filter { !narrowing || $0.open > 0 || leader.people.contains($0.login) },
+                                   pinned: pinned)
         let loading = (bugs ? state.bugSlice.isLoading : state.taskSlice.isLoading) || (state.team(bugs: bugs)?.isLoading ?? false)
         if loading && rows.count <= 1 && leader.people.isEmpty {
             // The row the people will fill, held while the board loads: the board below does not jump down when they come.
@@ -35,13 +38,15 @@ struct ZentaoPeopleStrip: View {
                     ForEach(rows) { row in
                         PersonChipBody(name: row.isUnassigned ? appString("unassigned", "Unassigned") : (state.memberNames[row.login] ?? row.login),
                                        count: row.open, overdue: row.overdue, accountId: state.place.accountId, login: row.login,
-                                       active: leader.people.contains(row.login), help: Self.help(row, bugs: bugs)) {
+                                       active: leader.people.contains(row.login), pinned: pinned.contains(row.login),
+                                       help: Self.help(row, bugs: bugs)) {
                             let add = NSEvent.modifierFlags.contains(.command)
                             state.updateLeader(bugs: bugs) { f in
                                 if add { f = f.toggled(person: row.login) }
                                 else { f.people = f.people == [row.login] ? [] : [row.login] }
                             }
                         }
+                        .modifier(PersonChipArranging(state: state, login: row.login, pinned: pinned.contains(row.login)))
                     }
                 }
             }
@@ -53,6 +58,7 @@ struct ZentaoPeopleStrip: View {
         if row.overdue > 0 { parts.append(appFormat("leaderOverdueCount", "%1$@ overdue", "\(row.overdue)")) }
         if row.dueSoon > 0 { parts.append(appFormat("leaderDueSoonCount", "%1$@ due soon", "\(row.dueSoon)")) }
         if !bugs, row.hoursLeft > 0 { parts.append(appFormat("taskHoursLeft", "%1$@ h left", zentaoHoursText(row.hoursLeft))) }
+        if !row.isUnassigned { parts.append(appString("tipPersonArrange", "Drag onto another person to move them; right-click to pin")) }
         return parts.joined(separator: " · ")
     }
 }
@@ -60,7 +66,7 @@ struct ZentaoPeopleStrip: View {
 private struct PersonChipBody: View {
     @Environment(\.appTheme) private var theme
     let name: String; let count: Int; let overdue: Int; let accountId: String?; let login: String
-    let active: Bool; let help: String?; let onTap: () -> Void
+    let active: Bool; var pinned = false; let help: String?; let onTap: () -> Void
 
     var body: some View {
         let c = theme.colors
@@ -70,6 +76,7 @@ private struct PersonChipBody: View {
             HStack(spacing: theme.spacing.s6) {
                 if let accountId, !login.isEmpty { ZentaoPersonAvatar(accountId: accountId, name: name, diameter: 18) }
                 else if login.isEmpty, accountId != nil { Image(systemName: "person.fill.questionmark").font(.system(size: theme.sizes.icon12)).foregroundStyle(c.tx3) }
+                if pinned { Image(systemName: "pin.fill").font(.system(size: theme.sizes.icon12 - 2)).foregroundStyle(c.accent).rotationEffect(.degrees(30)) }
                 Text(name).font(theme.typography.metaStrong).foregroundStyle(active ? c.tx : c.tx2).lineLimit(1)
                 Text("\(count)").font(theme.typography.meta).foregroundStyle(c.tx3)
                 if overdue > 0 { Circle().fill(c.red).frame(width: theme.spacing.s6, height: theme.spacing.s6) }
@@ -78,5 +85,43 @@ private struct PersonChipBody: View {
         }
         .fixedSize()
         .help(help ?? "")
+    }
+}
+
+/// A person's chip can be pinned to the front (right-click) and dragged onto another to move it there. "Unassigned" and
+/// "Everyone" stay where they are.
+private struct PersonChipArranging: ViewModifier {
+    @Environment(\.appTheme) private var theme
+    let state: ZentaoUIState; let login: String; let pinned: Bool
+    @State private var over = false
+    static let prefix = "zentao-person:"
+
+    func body(content: Content) -> some View {
+        if login.isEmpty {
+            content
+        } else {
+            content
+                .contextMenu {
+                    Button { state.togglePinned(login) } label: {
+                        Label(pinned ? appString("leaderUnpinPerson", "Unpin") : appString("leaderPinPerson", "Pin to the front"),
+                              systemImage: pinned ? "pin.slash" : "pin")
+                    }
+                }
+                .draggable(Self.prefix + login)
+                .dropDestination(for: String.self) { items, _ in
+                    guard let item = items.first, item.hasPrefix(Self.prefix) else { return false }
+                    let moved = String(item.dropFirst(Self.prefix.count))
+                    guard moved != login else { return false }
+                    withAnimation(.easeOut(duration: theme.motion.fast)) { state.movePerson(moved, before: login) }
+                    return true
+                } isTargeted: { over = $0 }
+                .overlay(alignment: .leading) {
+                    // Where the dragged person will land: just before this one.
+                    if over {
+                        Capsule().fill(theme.colors.accent).frame(width: theme.borders.thick * 2)
+                            .padding(.vertical, theme.spacing.s2).offset(x: -theme.spacing.s4)
+                    }
+                }
+        }
     }
 }

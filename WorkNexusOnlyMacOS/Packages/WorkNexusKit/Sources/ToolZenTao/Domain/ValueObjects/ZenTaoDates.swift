@@ -1,3 +1,4 @@
+import CoreDomain
 /// Ported from: dart:core DateTime.tryParse / toIso8601String
 import Foundation
 
@@ -43,10 +44,6 @@ public enum ZenTaoDayParser {
 
     /// Dart's `DateTime.toIso8601String()`: local times carry no zone, UTC ends in `Z`; milliseconds always shown.
     public static func iso8601(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.timeZone = .current
-        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS"
-        return f.string(from: date)
+        CachedDateFormatter.string(date, format: "yyyy-MM-dd'T'HH:mm:ss.SSS")
     }
 }

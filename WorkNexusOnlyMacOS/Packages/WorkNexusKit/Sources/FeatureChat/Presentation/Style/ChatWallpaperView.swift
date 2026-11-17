@@ -19,7 +19,7 @@ public struct ChatWallpaperView: View {
         } else if let chosen = ChatWallpaperColor.parse(wallpaper) {
             // An unreadable colour (a hand-edited setting) falls back to plain.
             if let palette = ChatDoodlePalette.forColor(chosen.color, dark: dark) {
-                if chosen.doodles { ChatDoodleCanvas(palette: palette) } else { palette.base.color }
+                if chosen.doodles { ChatDoodleCanvas(palette: palette).equatable() } else { palette.base.color }
             } else {
                 theme.colors.bg
             }

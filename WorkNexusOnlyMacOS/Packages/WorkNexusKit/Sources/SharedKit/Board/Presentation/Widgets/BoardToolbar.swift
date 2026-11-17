@@ -44,6 +44,9 @@ public struct BoardToolbar<Filters: View, Refresh: View, Below: View>: View {
                 ToolbarRow(controller: controller, scopes: scopes, searchScope: searchScope, modeTabs: modes.count > 1 ? modeTabs : [], layout: Self.layouts[2], filters: filters, refresh: refresh)
                 ToolbarRow(controller: controller, scopes: scopes, searchScope: searchScope, modeTabs: modes.count > 1 ? modeTabs : [], layout: Self.layouts[3], filters: filters, refresh: refresh)
             }
+            // The search results hang below the field, over `below` (the leader bar, the active filters): drawn after,
+            // `below` would take the clicks meant for them.
+            .zIndex(1)
             below
         }
         .padding(.horizontal, theme.spacing.s12).padding(.vertical, theme.spacing.s6)

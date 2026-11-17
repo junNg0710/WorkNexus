@@ -36,6 +36,29 @@ final class ChatMessageSenderTests: XCTestCase {
         XCTAssertNil(state.replyDraft)
     }
 
+    /// Files waiting above the input go with the text typed under them: the files first, then the text, each its own
+    /// message; the reply being written answers with the first. Esc drops the files and keeps the text.
+    func testTheInputSendsTheWaitingFilesAndThenTheTextTypedWithThem() async throws {
+        let repo = Recorder()
+        let state = ChatThreadState(accountId: "a", chat: Make.chat())
+        state.replyDraft = Make.message(serverId: 9)
+        let controller = ChatComposerController(state: state)
+        controller.services = ChatServices(chat: repo)
+        controller.stage([StagedFile(name: "shot.png", data: Data([1]), mimeType: "image/png")])
+        controller.model.insertText("see the screenshot")
+        XCTAssertTrue(controller.handle(.enter))
+        for _ in 0..<100 where repo.texts.isEmpty { try await Task.sleep(for: .milliseconds(10)) }
+        XCTAssertEqual(repo.files.map(\.0), ["shot.png"]); XCTAssertEqual(repo.files.first?.1, 9)
+        XCTAssertEqual(repo.texts.map(\.0), ["see the screenshot"]); XCTAssertNil(repo.texts.first?.1)
+        XCTAssertTrue(state.stagedFiles.isEmpty); XCTAssertTrue(controller.model.isBlank)
+        // Files alone send too; Esc takes the files away and leaves what was typed.
+        controller.stage([StagedFile(name: "a.pdf", data: Data([2]))])
+        controller.model.insertText("draft")
+        XCTAssertTrue(controller.handle(.escape))
+        XCTAssertTrue(state.stagedFiles.isEmpty)
+        XCTAssertEqual(controller.model.text, "draft")
+    }
+
     func testThreadRootIsTheDefaultReply() async {
         let repo = Recorder()
         let (sender, _) = make(repo, threadRoot: 5)

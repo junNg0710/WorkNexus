@@ -49,6 +49,17 @@ final class BoardControllerTests: XCTestCase {
         c.stop()
     }
 
+    /// A scope that reads the settings (a team view leaving executions out) follows a change of them.
+    func testASettingsChangeReScopes() async {
+        let (c, _) = make(tickets: [makeTicket("a"), makeTicket("b", project: "p2")])
+        c.start(); await waitFor { c.tickets.count == 2 }
+        c.scopeTickets = { [unowned c] in c.settings.teamExecutionVisibility["p2"] == false ? $0.filter { $0.projectId != "p2" } : $0 }
+        XCTAssertEqual(Set(ids(c.scoped)), ["a", "b"])
+        c.updateSettings { $0.teamExecutionVisibility["p2"] = false }
+        XCTAssertEqual(ids(c.scoped), ["a"])
+        c.stop()
+    }
+
     func testScopeHookNarrowsTheTickets() async {
         let (c, _) = make(tickets: [makeTicket("a"), makeTicket("b", project: "p2")])
         c.start(); await waitFor { c.tickets.count == 2 }
