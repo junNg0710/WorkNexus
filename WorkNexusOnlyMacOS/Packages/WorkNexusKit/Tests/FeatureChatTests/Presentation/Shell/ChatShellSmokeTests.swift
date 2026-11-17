@@ -12,9 +12,11 @@ final class ChatShellSmokeTests: XCTestCase {
         let users = [ShellMake.user(1, "Me", account: "me", status: "online"), ShellMake.user(2, "Bình Nguyen", role: "pm", status: "away"), ShellMake.user(3, "An", role: "dev")]
         let account = Account(id: "a", workspaceId: "w", providerType: .zentao, handle: "me")
         let events = ChatShellEvents()
-        let root = ChatRootView(account: account, events: events).chatServices(ChatServices(chat: repo)).frame(width: 1400, height: 800)
+        // `WN_SHELL_WIDTH` renders a wider window (how the thread fills a large screen).
+        let width = ProcessInfo.processInfo.environment["WN_SHELL_WIDTH"].flatMap(Double.init).map { CGFloat($0) } ?? 1400
+        let root = ChatRootView(account: account, events: events).chatServices(ChatServices(chat: repo)).frame(width: width, height: 800)
         let host = NSHostingView(rootView: root)
-        host.frame = NSRect(x: 0, y: 0, width: 1400, height: 800)
+        host.frame = NSRect(x: 0, y: 0, width: width, height: 800)
         let window = NSWindow(contentRect: host.frame, styleMask: [.titled], backing: .buffered, defer: false)
         window.contentView = host
         host.layoutSubtreeIfNeeded()

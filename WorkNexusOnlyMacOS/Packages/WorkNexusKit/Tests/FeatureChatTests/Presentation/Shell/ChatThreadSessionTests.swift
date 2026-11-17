@@ -93,9 +93,6 @@ final class ChatThreadSessionTests: XCTestCase {
         XCTAssertEqual(ChatShellLayout.of(width: 800), ChatShellLayout(infoRoom: false, compactList: true))
         XCTAssertTrue(ChatShellLayout.of(width: 900, withList: false).infoRoom, "without a list the whole width is the thread")
         XCTAssertFalse(ChatShellLayout.of(width: 899, withList: false).infoRoom)
-        // A folded chat list hands its width to the messages instead of to the margins around them.
-        XCTAssertEqual(ChatShellLayout.of(width: 1500).messageColumn, ChatShellLayout.messageColumnWidth)
-        XCTAssertEqual(ChatShellLayout.of(width: 1500, withList: false).messageColumn, ChatShellLayout.messageColumnWidth + ChatShellLayout.listWidth)
         // Collapsed by the user: the room is still there (the header toggle can bring the panel back), but it isn't used.
         let hidden = ChatShellLayout.of(width: 1500, infoHidden: true)
         XCTAssertFalse(hidden.infoRoom)

@@ -10,8 +10,6 @@ struct ChatShellLayout: Equatable {
     static let messagesMinWidth: CGFloat = 520
     static let panelRoom: CGFloat = 380
     static let sidePanelWidth: CGFloat = 340
-    /// The widest the column of messages grows beside the chat list; beyond it the window's extra width is margin.
-    static let messageColumnWidth: CGFloat = 1040
     static let headerHeight: CGFloat = 68
     static let subHeaderHeight: CGFloat = 56
 
@@ -19,20 +17,13 @@ struct ChatShellLayout: Equatable {
     var compactList: Bool
     /// Whether the info panel would fit beside the chat (true even while the user has it collapsed).
     var infoFits = false
-    /// Whether the chat list is beside the thread (false: the user folded it away).
-    var listShown = true
-
-    /// The widest the column of messages grows. The width a folded chat list gives up goes to the messages: without
-    /// that the column stayed as narrow as before and the freed space only widened the margins on both sides.
-    var messageColumn: CGFloat { Self.messageColumnWidth + (listShown ? 0 : Self.listWidth) }
 
     static func of(width: CGFloat, withList: Bool = true, infoHidden: Bool = false) -> ChatShellLayout {
         let list = withList ? listWidth : 0
         let fits = width - list - panelRoom >= messagesMinWidth
         let infoRoom = fits && !infoHidden
         let panel = infoRoom ? panelRoom : 0
-        return ChatShellLayout(infoRoom: infoRoom, compactList: width - list - panel < messagesMinWidth, infoFits: fits,
-                               listShown: withList)
+        return ChatShellLayout(infoRoom: infoRoom, compactList: width - list - panel < messagesMinWidth, infoFits: fits)
     }
 }
 
