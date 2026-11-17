@@ -30,6 +30,20 @@ final class BundledStickerPacksTests: XCTestCase {
         XCTAssertEqual(Set(all.map(\.pack)).isSuperset(of: ["Pepe", "PepeAnim", "WorkNexus"]), true)
     }
 
+    /// The WorkNexus work stickers, with the macOS-only "Ko Cần Biết!", "Gửi cái tên ai làm", "Ko quan tâm" and "Thầy vô" among
+    /// them, drawn like the rest (256 × 256).
+    func testTheWorkNexusPackHasTheMacOSOnlyStickers() async throws {
+        let repo = LocalStickerRepository(bundleRoot: stickersRoot, directory: FileManager.default.temporaryDirectory.appendingPathComponent("st_\(UUID().uuidString)"))
+        let pack = try await repo.stickers().get().filter { $0.pack == "WorkNexus" }
+        XCTAssertEqual(pack.count, 16)
+        for name in ["ko_can_biet.png", "gui_ten_ai_lam.png", "ko_quan_tam.png", "thay_vo.png"] {
+            let sticker = try XCTUnwrap(pack.first { $0.name == name }, name)
+            let source = try XCTUnwrap(CGImageSourceCreateWithURL(URL(fileURLWithPath: sticker.location) as CFURL, nil))
+            let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
+            XCTAssertEqual(image.width, 256); XCTAssertEqual(image.height, 256)
+        }
+    }
+
     /// Cute (getstickerpack.com): 21 still stickers, each a small image the chat can send; its source note is not one of them.
     func testCuteIsInTheChatAsStillStickers() async throws {
         let repo = LocalStickerRepository(bundleRoot: stickersRoot, directory: FileManager.default.temporaryDirectory.appendingPathComponent("st_\(UUID().uuidString)"))

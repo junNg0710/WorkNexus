@@ -35,7 +35,7 @@ struct ChatStickerGrid: View {
                         }.aspectRatio(1, contentMode: .fit)
                     }
                     ForEach(stickers) { s in
-                        StickerTile(help: s.name, action: { onPick(s) }) { ChatStickerImage(sticker: s, animated: true).padding(theme.spacing.s4) }
+                        StickerTile(action: { onPick(s) }) { ChatStickerImage(sticker: s, animated: true).padding(theme.spacing.s4) }
                             .aspectRatio(1, contentMode: .fit)
                             .contextMenu {
                                 if editable {
@@ -75,16 +75,18 @@ struct ChatStickerGrid: View {
 private struct StickerTile<Content: View>: View {
     @Environment(\.appTheme) private var theme
     @State private var hovering = false
-    let help: String
+    /// Only the "add" tile explains itself; a sticker is its own picture (its file name is noise).
+    var help: String?
     let action: () -> Void
     @ViewBuilder let content: Content
 
     var body: some View {
-        Button(action: action) {
+        let tile = Button(action: action) {
             content.frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(hovering ? theme.colors.panel2 : .clear, in: RoundedRectangle(cornerRadius: theme.radii.md))
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain).onHover { hovering = $0 }.help(help)
+        .buttonStyle(.plain).onHover { hovering = $0 }
+        if let help { tile.help(help) } else { tile }
     }
 }

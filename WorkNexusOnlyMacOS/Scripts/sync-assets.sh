@@ -6,7 +6,8 @@ DST="$ROOT/WorkNexusOnlyMacOS/App/Resources"
 mkdir -p "$DST"
 rsync -a --delete "$ROOT/assets/fonts/" "$DST/Fonts/"
 rsync -a --delete "$ROOT/assets/brands/" "$DST/Brands/"
-# HyperRabbit and Cute are macOS-only packs: not in the Flutter assets, so they are kept (an excluded folder is not deleted).
-rsync -a --delete --exclude 'HyperRabbit' --exclude 'Cute' "$ROOT/assets/stickers/" "$DST/Stickers/"
+# HyperRabbit and Cute are macOS-only packs, and ko_can_biet.png / gui_ten_ai_lam.png / ko_quan_tam.png / thay_vo.png macOS-only WorkNexus stickers
+# (Scripts/make-sticker.py): not in the Flutter assets, so they are kept (an excluded path is not deleted).
+rsync -a --delete --exclude 'HyperRabbit' --exclude 'Cute' --exclude '/WorkNexus/ko_can_biet.png' --exclude '/WorkNexus/gui_ten_ai_lam.png' --exclude '/WorkNexus/ko_quan_tam.png' --exclude '/WorkNexus/thay_vo.png' "$ROOT/assets/stickers/" "$DST/Stickers/"
 rsync -a --delete --exclude '*.ico' "$ROOT/assets/tray/" "$DST/Tray/"
 echo "assets synced -> $DST"
