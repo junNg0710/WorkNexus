@@ -11,6 +11,8 @@ final class DiagnosticsTests: XCTestCase {
         func flush() {}
     }
 
+    enum ToolError: Error { case cancelled, offline }
+
     private var sink = Collect()
     override func setUp() { sink = Collect(); Diagnostics.install(sink, now: { Date(timeIntervalSince1970: 0) }) }
     override func tearDown() { Diagnostics.install(nil) }
@@ -39,12 +41,16 @@ final class DiagnosticsTests: XCTestCase {
         Diagnostics.request("zentao", method: "GET", url: url, status: 200, elapsed: 0.1)
         Diagnostics.request("zentao", method: "GET", url: url, status: nil, error: CancellationError(), elapsed: 0.1)
         Diagnostics.request("zentao", method: "GET", url: url, status: nil, error: URLError(.cancelled), elapsed: 0.1)
+        // A tool's own "cancelled" (an image load given up as the user moved on, logged as an error before).
+        Diagnostics.request("zentao", method: "GET", url: url, status: nil, error: ToolError.cancelled, elapsed: 0)
+        Diagnostics.request("zentao", method: "GET", url: url, status: nil, error: Failure.cancelled("cancelled"), elapsed: 0)
         XCTAssertTrue(sink.entries.isEmpty, "a success or a cancelled request is not a failure")
         Diagnostics.request("zentao", method: "GET", url: url, status: 404, elapsed: 0.25)
         Diagnostics.request("zentao", method: "GET", url: url, status: 401, elapsed: 0.1)
         Diagnostics.request("zentao", method: "GET", url: url, status: 502, elapsed: 0.1)
         Diagnostics.request("zentao", method: "GET", url: url, status: nil, error: URLError(.notConnectedToInternet), elapsed: 0.1)
-        XCTAssertEqual(sink.entries.map(\.0.level), [.warning, .error, .error, .error])
+        Diagnostics.request("zentao", method: "GET", url: url, status: nil, error: ToolError.offline, elapsed: 0.1)
+        XCTAssertEqual(sink.entries.map(\.0.level), [.warning, .error, .error, .error, .error])
         XCTAssertEqual(sink.entries[0].0.message, "GET zt.example.com/api.php/v1/bugs/1 → HTTP 404 (250 ms)")
         XCTAssertEqual(sink.entries[0].0.area, "zentao")
     }

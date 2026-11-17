@@ -99,6 +99,7 @@ struct ZentaoAttachmentViewer: View {
                     Spacer()
                     if saving { ProgressView().controlSize(.small) }
                     AppIconButton("square.and.arrow.down", help: appString("save", "Save"), action: save)
+                    if !expanded { ViewerSizeButtons() }
                     AppIconButton("xmark", help: appString("close", "Close"), action: onClose)
                 }
                 .padding(theme.spacing.s12)

@@ -1,4 +1,5 @@
 /// Not in the Flutter app.
+import CoreDomain
 import Foundation
 
 /// A message taken out of the chat as text: copied, or quoted in a ticket.
@@ -28,8 +29,6 @@ enum ChatMessageExport {
     }
 
     static func stamp(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd HH:mm"
-        return f.string(from: date)
+        CachedDateFormatter.string(date, format: "yyyy-MM-dd HH:mm", locale: .current)
     }
 }

@@ -24,12 +24,7 @@ struct ChatImageBody: View {
     @State private var error: String?
 
     private var key: TransferKey { TransferKey(accountId: message.accountId, content: .image(image)) }
-    private var isSticker: Bool {
-        let ext = (image.name as NSString).pathExtension.lowercased()
-        if ext == "tgs" { return true }
-        guard ext == "webp" || ext == "gif", let w = image.width, let h = image.height else { return false }
-        return max(w, h) <= 512   // a sticker-sized webp / gif (Telegram stickers are 512 px at most)
-    }
+    private var isSticker: Bool { IsStickerImage()(image) }
 
     /// The image scaled down (never up) into the max box, or a fixed placeholder when the sender did not record a size.
     private var size: CGSize {
@@ -55,7 +50,7 @@ struct ChatImageBody: View {
             if let error { Text(error).font(theme.typography.caption).foregroundStyle(theme.colors.red) }
         }
         .task(id: message.gid + String(message.sendState == .sent)) { await load() }
-        .sheet(isPresented: $viewing) { ChatImageViewer(accountId: message.accountId, chatGid: message.chatGid, image: image) }
+        .sheet(isPresented: $viewing) { ChatImageViewer(accountId: message.accountId, chatGid: message.chatGid, item: .image(image)) }
     }
 
     @ViewBuilder private var content: some View {

@@ -84,8 +84,12 @@ public enum Diagnostics {
         }
     }
 
+    /// A request given up because nobody needed it any more (the user moved on): not a failure worth recording. Besides the
+    /// system's own, a tool's error type says so with a `cancelled` case (`ZenTaoError.cancelled`, `Failure.cancelled`).
     static func isCancellation(_ error: Error) -> Bool {
         if error is CancellationError { return true }
+        if let f = error as? Failure, case .cancelled = f { return true }
+        if String(describing: error) == "cancelled" { return true }
         let ns = error as NSError
         return ns.domain == NSURLErrorDomain && ns.code == NSURLErrorCancelled
     }

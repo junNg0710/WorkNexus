@@ -12,6 +12,8 @@ struct ChatImageViewerActions {
     var onSticker: (() -> Void)?
     var onOpen: () -> Void
     var onClose: () -> Void
+    /// Zoom, rotate, copy and save as sticker apply to a picture; a video has its own controls.
+    var pictureTools = true
 }
 
 /// The picture's name and facts (place among the chat's pictures, size in pixels, file size) on the left; zoom, rotate,
@@ -35,18 +37,21 @@ struct ChatImageViewerBar: View {
             }
             .layoutPriority(1)
             Spacer(minLength: theme.spacing.s12)
-            AppIconButton("minus.magnifyingglass", help: appString("chatZoomOut", "Zoom out")) { actions.onZoom(1 / 1.25) }
-            Button(action: actions.onFit) {
-                Text("\(Int((zoom * 100).rounded()))%").font(theme.typography.metaStrong).monospacedDigit().foregroundStyle(theme.colors.tx2)
-                    .frame(minWidth: 44)
+            if actions.pictureTools {
+                AppIconButton("minus.magnifyingglass", help: appString("chatZoomOut", "Zoom out")) { actions.onZoom(1 / 1.25) }
+                Button(action: actions.onFit) {
+                    Text("\(Int((zoom * 100).rounded()))%").font(theme.typography.metaStrong).monospacedDigit().foregroundStyle(theme.colors.tx2)
+                        .frame(minWidth: 44)
+                }
+                .buttonStyle(.plain).help(appString("chatZoomFit", "Fit to screen"))
+                AppIconButton("plus.magnifyingglass", help: appString("chatZoomIn", "Zoom in")) { actions.onZoom(1.25) }
+                AppIconButton("rotate.right", help: appString("chatRotate", "Rotate"), action: actions.onRotate)
+                Divider().frame(height: theme.sizes.icon20).padding(.horizontal, theme.spacing.s4)
             }
-            .buttonStyle(.plain).help(appString("chatZoomFit", "Fit to screen"))
-            AppIconButton("plus.magnifyingglass", help: appString("chatZoomIn", "Zoom in")) { actions.onZoom(1.25) }
-            AppIconButton("rotate.right", help: appString("chatRotate", "Rotate"), action: actions.onRotate)
-            Divider().frame(height: theme.sizes.icon20).padding(.horizontal, theme.spacing.s4)
             AppIconButton("square.and.arrow.down", help: appString("chatSaveAs", "Save as…"), action: actions.onSaveAs)
-            AppIconButton("doc.on.doc", help: appString("chatCopyImage", "Copy image"), action: actions.onCopy)
+            if actions.pictureTools { AppIconButton("doc.on.doc", help: appString("chatCopyImage", "Copy image"), action: actions.onCopy) }
             ViewerMoreMenu(actions: actions)
+            ViewerSizeButtons()
             AppIconButton("xmark", help: appString("chatClosePanel", "Close"), action: actions.onClose)
         }
         .padding(.horizontal, theme.spacing.s16)
@@ -64,7 +69,7 @@ private struct ViewerMoreMenu: View {
 
     var body: some View {
         Menu {
-            if let onSticker = actions.onSticker {
+            if actions.pictureTools, let onSticker = actions.onSticker {
                 Button(action: onSticker) { Label(appString("chatSaveSticker", "Save as sticker"), systemImage: "face.smiling") }
             }
             Button(action: actions.onOpen) { Label(appString("chatOpenWith", "Open in default app"), systemImage: "arrow.up.forward.app") }

@@ -25,9 +25,7 @@ func monthDay(_ date: Date, locale: Locale = .current) -> String {
 func parseZenTaoDate(_ raw: String?) -> Date? {
     let text = raw?.trimmingCharacters(in: .whitespaces) ?? ""
     guard text.count >= 10, let year = Int(text.prefix(4)), year >= 2000 else { return nil }
-    let f = DateFormatter()
-    f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"; f.isLenient = false
-    return f.date(from: String(text.prefix(10)))
+    return CachedDateFormatter.date(from: String(text.prefix(10)), format: "yyyy-MM-dd")
 }
 
 /// Colour for a ZenTao status code across bugs, tasks, stories, todos and executions. Only `active` differs by

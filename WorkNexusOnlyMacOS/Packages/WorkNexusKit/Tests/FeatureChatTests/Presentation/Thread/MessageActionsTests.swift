@@ -31,6 +31,15 @@ final class MessageActionsTests: XCTestCase {
         ctx.actions(for: m, settings: ChatSettings(), inThread: inThread).map(\.id)
     }
 
+    /// A right-click on the text: the words picked, then copy, reply, forward - not Font, Spelling or Services.
+    func testTheTextMenuIsShort() {
+        let m = Make.message(content: .text("hello world"), serverId: 5)
+        let ctx = context(forward: true)
+        XCTAssertEqual(ctx.textMenu(for: m, settings: ChatSettings(), selection: "world").map(\.title), [L.copySelection, L.copy, L.reply, L.forward])
+        XCTAssertEqual(ctx.textMenu(for: m, settings: ChatSettings(), selection: nil).map(\.title), [L.copy, L.reply, L.forward])
+        XCTAssertEqual(ctx.textMenu(for: m, settings: ChatSettings(), selection: "").count, 3)
+    }
+
     func testStoredTextOffersReplyAndCopy() {
         let m = Make.message(content: .text("hi"), serverId: 5)
         XCTAssertEqual(ids(context(), m), ["reply", "copy", "select"])

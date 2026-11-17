@@ -27,6 +27,21 @@ struct ChatShellLayout: Equatable {
     }
 }
 
+/// The layout for each way the list and the info panel can be shown, at one width. The shell keeps this instead of the
+/// width itself, so resizing the window redraws it only when a layout actually changes (not at every point of the drag).
+struct ChatShellLayouts: Equatable {
+    var shown, listHidden, infoHidden, bothHidden: ChatShellLayout
+
+    init(width: CGFloat) {
+        shown = .of(width: width); listHidden = .of(width: width, withList: false)
+        infoHidden = .of(width: width, infoHidden: true); bothHidden = .of(width: width, withList: false, infoHidden: true)
+    }
+
+    func pick(listHidden list: Bool, infoHidden info: Bool) -> ChatShellLayout {
+        switch (list, info) { case (false, false): shown; case (true, false): listHidden; case (false, true): infoHidden; case (true, true): bothHidden }
+    }
+}
+
 private struct ChatShellLayoutKey: EnvironmentKey { static let defaultValue = ChatShellLayout(infoRoom: false, compactList: false) }
 extension EnvironmentValues {
     var chatShellLayout: ChatShellLayout {

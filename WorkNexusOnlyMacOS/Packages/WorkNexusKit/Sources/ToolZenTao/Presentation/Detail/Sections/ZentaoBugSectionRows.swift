@@ -67,8 +67,7 @@ struct ZentaoTaskSectionRows {
         // Like ZenTao's Basic Info: what the task is, how far along, then where it sits and what it comes from.
         var progress = ""
         if let s = summary {
-            let f = NumberFormatter(); f.numberStyle = .percent; f.maximumFractionDigits = 0
-            progress = f.string(from: NSNumber(value: s.progress)) ?? ""
+            progress = ZentaoNumberFormat.percent.string(from: NSNumber(value: s.progress)) ?? ""
         }
         classification = Self.filled([
             (appString("status", "Status"), ticket.providerStatus),

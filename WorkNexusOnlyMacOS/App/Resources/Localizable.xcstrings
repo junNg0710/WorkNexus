@@ -30566,6 +30566,57 @@
           }
         }
       }
+    },
+    "viewerSmaller": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smaller viewer"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thu nhỏ khung xem"
+          }
+        }
+      }
+    },
+    "viewerLarger": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Larger viewer"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phóng to khung xem"
+          }
+        }
+      }
+    },
+    "chatCopySelection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy selection"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sao chép đoạn đã chọn"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

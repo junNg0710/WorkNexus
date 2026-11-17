@@ -169,6 +169,8 @@ public final class ChatShellModel {
     // MARK: commands (use cases and CRUD pass-through)
 
     func report(_ f: Failure) {
+        // Work given up because the user moved on (another chat opened) is not a failure to show.
+        if case .cancelled = f { return }
         toasts.show(ChatShellLabels.failureText(f), kind: { if case .expired = f { .warning } else { .error } }())
     }
 

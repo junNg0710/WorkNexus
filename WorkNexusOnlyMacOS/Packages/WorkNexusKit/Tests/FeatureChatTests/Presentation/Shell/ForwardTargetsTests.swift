@@ -43,6 +43,15 @@ final class ForwardTargetsTests: XCTestCase {
         XCTAssertFalse(ForwardChatMessage(repo).canForward(Make.message("p", mine: true)))   // not stored yet
     }
 
+    /// Work given up because the user moved on (marking a chat read as another opens) shows no error.
+    @MainActor func testACancelledActionIsNoFailureToShow() {
+        let model = ChatShellModel(accountId: "a", selfAccount: "me", repository: StubChatRepository())
+        model.report(.cancelled("cancelled"))
+        XCTAssertTrue(model.toasts.toasts.isEmpty)
+        model.report(.network("down"))
+        XCTAssertEqual(model.toasts.toasts.count, 1)
+    }
+
     @MainActor func testShellModelForwardReportsFailureAndAnswersWhetherItWorked() async {
         final class Repo: StubChatRepository, @unchecked Sendable {
             var result: Outcome<Void> = .success(())

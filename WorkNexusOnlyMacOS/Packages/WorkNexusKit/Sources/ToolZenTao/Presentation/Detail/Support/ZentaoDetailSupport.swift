@@ -6,10 +6,21 @@ import SwiftUI
 
 /// Hours as ZenTao shows them: at most two decimals, no trailing zeros (`2.5`, `16`).
 public func zentaoHoursText(_ hours: Double) -> String {
-    let f = NumberFormatter()
-    f.locale = Locale(identifier: "en_US_POSIX"); f.minimumFractionDigits = 0; f.maximumFractionDigits = 2
-    f.numberStyle = .decimal; f.usesGroupingSeparator = false
-    return f.string(from: NSNumber(value: hours)) ?? "\(hours)"
+    ZentaoNumberFormat.hours.string(from: NSNumber(value: hours)) ?? "\(hours)"
+}
+
+/// Number formatters made once (making one costs far more than using it; detail rows redraw often).
+enum ZentaoNumberFormat {
+    nonisolated(unsafe) static let hours: NumberFormatter = {
+        let f = NumberFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX"); f.minimumFractionDigits = 0; f.maximumFractionDigits = 2
+        f.numberStyle = .decimal; f.usesGroupingSeparator = false
+        return f
+    }()
+    nonisolated(unsafe) static let percent: NumberFormatter = {
+        let f = NumberFormatter(); f.numberStyle = .percent; f.maximumFractionDigits = 0
+        return f
+    }()
 }
 
 /// Hours typed in a field: 0 when empty, NaN (refused) when not a number. A comma counts as the decimal point.

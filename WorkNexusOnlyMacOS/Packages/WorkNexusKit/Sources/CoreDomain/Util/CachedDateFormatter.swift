@@ -24,6 +24,11 @@ public enum CachedDateFormatter {
         formatter(kind: "t", pattern: template, locale: locale, timeZone: timeZone, calendar: calendar).string(from: date)
     }
 
+    /// The date `text` holds in the fixed `format`, read strictly (nil for anything else).
+    public static func date(from text: String, format: String, locale: Locale = posix, timeZone: TimeZone = .current) -> Date? {
+        formatter(kind: "p", pattern: format, locale: locale, timeZone: timeZone, calendar: nil).date(from: text)
+    }
+
     private static func formatter(kind: String, pattern: String, locale: Locale, timeZone: TimeZone, calendar: Calendar?) -> DateFormatter {
         let key = "\(kind)|\(pattern)|\(locale.identifier)|\(timeZone.identifier)|\(calendar.map { "\($0.identifier)" } ?? "-")"
         return store.lock.withLock {
@@ -32,6 +37,7 @@ public enum CachedDateFormatter {
             if let calendar { f.calendar = calendar }
             f.locale = locale; f.timeZone = timeZone
             if kind == "t" { f.setLocalizedDateFormatFromTemplate(pattern) } else { f.dateFormat = pattern }
+            if kind == "p" { f.isLenient = false }
             store.formatters[key] = f
             return f
         }

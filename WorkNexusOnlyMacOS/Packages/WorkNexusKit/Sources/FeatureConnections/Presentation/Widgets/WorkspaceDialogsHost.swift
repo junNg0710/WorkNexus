@@ -12,12 +12,18 @@ struct WorkspaceDialogsHost<Content: View>: View {
     @Binding var creating: Bool
     @Binding var editing: Workspace?
     let onCreated: (Workspace) -> Void
-    @ViewBuilder let content: () -> Content
+    /// Built once here, not stored as a closure: it wraps the whole app, and a stored closure re-ran on every redraw.
+    let content: Content
     /// The draft the create dialog starts from; a fresh id each time it opens.
     @State private var draft = Self.newDraft()
 
+    init(model: ConnectionsModel, creating: Binding<Bool>, editing: Binding<Workspace?>, onCreated: @escaping (Workspace) -> Void,
+         @ViewBuilder content: () -> Content) {
+        self.model = model; _creating = creating; _editing = editing; self.onCreated = onCreated; self.content = content()
+    }
+
     var body: some View {
-        content()
+        content
             .task { model.start() }
             .onChange(of: creating) { _, on in if on { draft = Self.newDraft() } }
             .appDialog(isPresented: $creating) {

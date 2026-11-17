@@ -113,9 +113,11 @@ final class DropColorTests: XCTestCase {
     }
 
     func testTheViewerFollowsItsWindowWithinLimits() {
-        XCTAssertEqual(AdaptiveViewerFrame<EmptyView>.size(in: CGSize(width: 1000, height: 800), expanded: false), CGSize(width: 800, height: 680))
-        XCTAssertEqual(AdaptiveViewerFrame<EmptyView>.size(in: CGSize(width: 2000, height: 1400), expanded: false), CGSize(width: 960, height: 720))
-        XCTAssertEqual(AdaptiveViewerFrame<EmptyView>.size(in: CGSize(width: 300, height: 200), expanded: false), CGSize(width: 360, height: 320))
+        // The share of the space picked with the viewer's bigger / smaller buttons (large by default), no fixed cap.
+        XCTAssertEqual(AdaptiveViewerFrame<EmptyView>.size(in: CGSize(width: 1000, height: 800), expanded: false), CGSize(width: 920, height: 736))
+        XCTAssertEqual(AdaptiveViewerFrame<EmptyView>.size(in: CGSize(width: 2000, height: 1400), expanded: false, level: .medium),
+                       CGSize(width: 2000 * 0.76, height: 1400 * 0.76))
+        XCTAssertEqual(AdaptiveViewerFrame<EmptyView>.size(in: CGSize(width: 300, height: 200), expanded: false), CGSize(width: 300, height: 200))
         XCTAssertEqual(AdaptiveViewerFrame<EmptyView>.size(in: CGSize(width: 1000, height: 800), expanded: true), CGSize(width: 1000, height: 800))
     }
 }

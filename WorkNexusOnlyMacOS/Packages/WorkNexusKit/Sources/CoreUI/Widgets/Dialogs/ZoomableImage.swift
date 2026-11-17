@@ -34,7 +34,7 @@ public struct ZoomableImage: View {
     public var body: some View {
         GeometryReader { geo in
             let size = geo.size
-            Image(nsImage: image).resizable().scaledToFit().padding(inset)
+            ZoomablePicture(image: image).padding(inset)
                 .frame(width: size.width, height: size.height)
                 .scaleEffect(zoom.scale).offset(zoom.offset)
                 .frame(width: size.width, height: size.height)
@@ -136,5 +136,33 @@ private struct ScrollZoomCatcher: NSViewRepresentable {
         }
 
         deinit { if let monitor { NSEvent.removeMonitor(monitor) } }
+    }
+}
+
+/// The picture itself: a GIF with frames plays (`NSImageView` animates them); a still picture is a plain image.
+private struct ZoomablePicture: View {
+    let image: NSImage
+    var body: some View {
+        if image.isAnimatedGIF { AnimatedImageView(image: image) } else { Image(nsImage: image).resizable().scaledToFit() }
+    }
+}
+
+private struct AnimatedImageView: NSViewRepresentable {
+    let image: NSImage
+    func makeNSView(context: Context) -> NSImageView {
+        let v = NSImageView()
+        v.imageScaling = .scaleProportionallyUpOrDown
+        v.animates = true
+        v.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        v.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+        return v
+    }
+    func updateNSView(_ v: NSImageView, context: Context) { if v.image !== image { v.image = image } }
+}
+
+extension NSImage {
+    /// A GIF with more than one frame.
+    var isAnimatedGIF: Bool {
+        representations.contains { (($0 as? NSBitmapImageRep)?.value(forProperty: .frameCount) as? Int ?? 0) > 1 }
     }
 }

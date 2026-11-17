@@ -66,10 +66,15 @@ struct ConnectDialogHost<Content: View>: View {
     @Environment(\.toasts) private var toasts
     let model: ConnectionsModel
     @Binding var isPresented: Bool
-    @ViewBuilder let content: () -> Content
+    /// Built once here, not stored as a closure: it wraps the whole app, and a stored closure re-ran on every redraw.
+    let content: Content
+
+    init(model: ConnectionsModel, isPresented: Binding<Bool>, @ViewBuilder content: () -> Content) {
+        self.model = model; _isPresented = isPresented; self.content = content()
+    }
 
     var body: some View {
-        content()
+        content
             .task { model.start() }
             .appDialog(isPresented: $isPresented) {
                 ConnectAccountDialog(model: model, onClose: { isPresented = false },

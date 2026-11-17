@@ -33,6 +33,7 @@ public struct ChatRootView: View {
 struct ChatShellView: View {
     @Environment(\.appTheme) private var theme
     @State private var model: ChatShellModel
+    @State private var layouts = ChatShellLayouts(width: ChatShellLayout.listWidth + ChatShellLayout.messagesMinWidth + ChatShellLayout.panelRoom)
     private let visibility = ChatPanelVisibility.shared
     let openChat: Binding<String?>?
 
@@ -51,19 +52,19 @@ struct ChatShellView: View {
             if let trust = model.needsTrust {
                 ChatTrustGate(model: model, host: trust.host)
             } else {
-                GeometryReader { geo in
-                    let layout = ChatShellLayout.of(width: geo.size.width, withList: !visibility.listHidden,
-                                                    infoHidden: visibility.infoHidden)
-                    HStack(spacing: 0) {
-                        if !visibility.listHidden {
-                            ConversationListPane(model: model, compact: layout.compactList)
-                                .frame(width: layout.compactList ? ChatShellLayout.listCompactWidth : ChatShellLayout.listWidth)
-                                .transition(.move(edge: .leading))
-                        }
-                        ChatThreadArea(model: model).environment(\.chatShellLayout, layout)
+                let layout = layouts.pick(listHidden: visibility.listHidden, infoHidden: visibility.infoHidden)
+                HStack(spacing: 0) {
+                    if !visibility.listHidden {
+                        ConversationListPane(model: model, compact: layout.compactList)
+                            .frame(width: layout.compactList ? ChatShellLayout.listCompactWidth : ChatShellLayout.listWidth)
+                            .transition(.move(edge: .leading))
                     }
-                    .animation(.easeOut(duration: theme.motion.base), value: visibility.listHidden)
+                    ChatThreadArea(model: model).environment(\.chatShellLayout, layout)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .animation(.easeOut(duration: theme.motion.base), value: visibility.listHidden)
+                // Only a change of layout redraws the shell, not every point of a window resize.
+                .onGeometryChange(for: ChatShellLayouts.self) { ChatShellLayouts(width: $0.size.width) } action: { layouts = $0 }
             }
         }
         .background(theme.colors.bg)

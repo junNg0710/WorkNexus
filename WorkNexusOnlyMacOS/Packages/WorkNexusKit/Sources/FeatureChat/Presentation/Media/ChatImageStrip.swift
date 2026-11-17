@@ -4,21 +4,21 @@ import CoreDomain
 import CoreUI
 import SwiftUI
 
-/// The chat's photos as a row of small thumbnails along the bottom of the image viewer: the one on show is ringed, a click
-/// shows another. Thumbnails load as they scroll into view.
+/// The chat's pictures and videos as a row of small thumbnails along the bottom of the media viewer: the one on show is
+/// ringed, a click shows another; a video carries a play mark. Thumbnails load as they scroll into view.
 struct ChatImageStrip: View {
     @Environment(\.appTheme) private var theme
     let accountId: String
-    let images: [ImageContent]
-    let current: ImageContent
-    let onPick: (ImageContent) -> Void
+    let items: [ChatMediaItem]
+    let current: ChatMediaItem
+    let onPick: (ChatMediaItem) -> Void
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: theme.spacing.s6) {
-                    ForEach(images, id: \.self) { image in
-                        StripThumb(accountId: accountId, image: image, selected: image == current) { onPick(image) }.id(image)
+                    ForEach(items, id: \.self) { item in
+                        StripThumb(accountId: accountId, item: item, selected: item == current) { onPick(item) }.id(item)
                     }
                 }
                 .padding(.horizontal, theme.spacing.s12).padding(.vertical, theme.spacing.s8)
@@ -36,7 +36,7 @@ private struct StripThumb: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatServices) private var services
     let accountId: String
-    let image: ImageContent
+    let item: ChatMediaItem
     let selected: Bool
     let onTap: () -> Void
     @State private var thumbnail: NSImage?
@@ -48,6 +48,10 @@ private struct StripThumb: View {
             ZStack {
                 theme.colors.skel2
                 if let thumbnail { Image(nsImage: thumbnail).resizable().scaledToFill() }
+                if case .video = item {
+                    Image(systemName: "play.fill").font(.system(size: theme.sizes.icon14)).foregroundStyle(theme.colors.onScrim)
+                        .padding(theme.spacing.s6).background(theme.colors.scrim.opacity(0.55), in: Circle())
+                }
             }
             .frame(width: side, height: side).clipShape(RoundedRectangle(cornerRadius: theme.radii.sm))
             .overlay(RoundedRectangle(cornerRadius: theme.radii.sm).stroke(selected ? theme.colors.onScrim : .clear, lineWidth: theme.borders.thick))
@@ -56,10 +60,15 @@ private struct StripThumb: View {
             .animation(.easeOut(duration: theme.motion.fast), value: selected)
         }
         .buttonStyle(.plain)
-        .task(id: image) {
+        .task(id: item) {
             guard let repo = services?.chat else { return }
-            if let b64 = image.inlineBase64, let d = Data(base64Encoded: b64, options: .ignoreUnknownCharacters) { thumbnail = NSImage(data: d); return }
-            if case .success(let d) = await repo.loadAttachment(accountId: accountId, content: .image(image), thumbnail: true) { thumbnail = NSImage(data: d) }
+            switch item {
+            case .image(let image):
+                if let b64 = image.inlineBase64, let d = Data(base64Encoded: b64, options: .ignoreUnknownCharacters) { thumbnail = NSImage(data: d); return }
+                if case .success(let d) = await repo.loadAttachment(accountId: accountId, content: .image(image), thumbnail: true) { thumbnail = NSImage(data: d) }
+            case .video(let file):
+                if case .success(let d) = await repo.videoThumbnail(accountId: accountId, video: .file(file)) { thumbnail = NSImage(data: d) }
+            }
         }
     }
 }

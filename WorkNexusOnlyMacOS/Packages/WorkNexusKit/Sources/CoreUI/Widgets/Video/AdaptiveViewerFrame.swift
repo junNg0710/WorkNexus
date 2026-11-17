@@ -11,19 +11,21 @@ public struct AdaptiveViewerFrame<Content: View>: View {
     let content: Content
     public init(expanded: Bool, @ViewBuilder content: () -> Content) { self.expanded = expanded; self.content = content() }
 
-    /// The viewer's size in a space of `container`.
-    public static func size(in container: CGSize, expanded: Bool) -> CGSize {
-        expanded ? container : CGSize(width: min(max(container.width * 0.8, 360), 960), height: min(max(container.height * 0.85, 320), 720))
+    /// The viewer's size in a space of `container`: all of it when expanded, else the share picked with the viewer's bigger /
+    /// smaller buttons (`ViewerSizeButtons`).
+    public static func size(in container: CGSize, expanded: Bool, level: ViewerSizeLevel = .large) -> CGSize {
+        expanded ? container : ViewerSize.of(window: container, level: level)
     }
 
     public var body: some View {
         GeometryReader { geo in
-            let size = Self.size(in: geo.size, expanded: expanded)
+            let size = Self.size(in: geo.size, expanded: expanded, level: ViewerSizePreference.shared.level)
             content.frame(width: size.width, height: size.height)
                 .background(theme.colors.card, in: RoundedRectangle(cornerRadius: expanded ? 0 : theme.radii.lg))
                 .clipShape(RoundedRectangle(cornerRadius: expanded ? 0 : theme.radii.lg))
                 .overlay(RoundedRectangle(cornerRadius: expanded ? 0 : theme.radii.lg).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .animation(.easeOut(duration: theme.motion.base), value: size)
         }
     }
 }

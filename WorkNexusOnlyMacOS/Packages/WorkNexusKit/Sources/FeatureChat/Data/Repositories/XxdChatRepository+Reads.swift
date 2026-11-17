@@ -91,6 +91,7 @@ extension XxdChatRepository {
             guard let r = try await local.conversation(accountId, chatGid), r.lastReadIndex < r.lastMessageIndex else { return .success(()) }
             row = r
             try await local.setLastReadIndex(accountId, chatGid, r.lastMessageIndex)
+        } catch is CancellationError { return .failure(.cancelled("cancelled"))
         } catch { return .failure(.storage("Could not mark the chat read: \(error.localizedDescription)")) }
         // Offline: read locally now; the server keeps its own value until the chat is read again while connected.
         guard let session = session(accountId), await session.isOnline() else { return .success(()) }

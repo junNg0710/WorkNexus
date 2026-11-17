@@ -4,22 +4,26 @@ import CoreDomain
 import CoreUI
 import SwiftUI
 
-/// Full-size image viewer sheet, as large as most of the window it opens over: zoom (buttons, pinch, double-click to fit),
-/// rotate, drag to pan, previous/next among the chat's images (the arrows at the picture's sides, or the strip of thumbnails
-/// along the bottom), save a copy, copy, save as sticker and open in the default app. Keys: ←/→, +/−, 0 (fit), R (rotate), Esc.
+/// Full-size media viewer sheet, as large as most of the window it opens over. Pictures: zoom (buttons, pinch, double-click to
+/// fit), rotate, drag to pan; a GIF or an animated WebP plays. Videos play on the stage with their controls. Previous/next
+/// among the chat's pictures and videos (the arrows at the sides, or the strip of thumbnails along the bottom) - stickers are
+/// left out. Save a copy, copy, save as sticker and open in the default app. Keys: ←/→, +/−, 0 (fit), R (rotate), Esc.
 struct ChatImageViewer: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatServices) private var services
     @Environment(\.dismiss) private var dismiss
     let accountId: String
     let chatGid: String
-    @State var image: ImageContent
-    @State private var images: [ImageContent] = []
+    @State var item: ChatMediaItem
+    @State private var items: [ChatMediaItem] = []
     @State private var data: Data?
     /// The picture decoded once per load (not on every redraw).
     @State private var picture: NSImage?
+    /// The picture has frames to play (a GIF, an animated WebP).
+    @State private var animated = false
     @State private var hovering = false
-    @State private var size = ChatViewerSize.current
+    /// Most of the window it opens over, at the size picked with the bigger / smaller buttons.
+    private var size: CGSize { ViewerSize.current(ViewerSizePreference.shared.level) }
     @State private var failed = false
     @State private var scale: CGFloat = 1
     @State private var base: CGFloat = 1
@@ -29,35 +33,39 @@ struct ChatImageViewer: View {
     @State private var dragStart = CGSize.zero
     @State private var note: String?
 
-    private var content: MessageContent { .image(image) }
-    private var index: Int? { images.firstIndex(of: image) }
+    private var content: MessageContent { item.content }
+    private var index: Int? { items.firstIndex(of: item) }
+    private var isVideo: Bool { if case .video = item { true } else { false } }
 
-    init(accountId: String, chatGid: String, image: ImageContent) {
-        self.accountId = accountId; self.chatGid = chatGid; _image = State(initialValue: image)
+    init(accountId: String, chatGid: String, item: ChatMediaItem) {
+        self.accountId = accountId; self.chatGid = chatGid; _item = State(initialValue: item)
     }
 
     private var actions: ChatImageViewerActions {
         ChatImageViewerActions(onZoom: zoom, onFit: fit, onRotate: rotate, onSaveAs: saveAs, onCopy: copy,
-                               onSticker: services?.stickers == nil ? nil : saveSticker, onOpen: openExternally, onClose: { dismiss() })
+                               onSticker: services?.stickers == nil ? nil : saveSticker, onOpen: openExternally, onClose: { dismiss() },
+                               pictureTools: !isVideo)
     }
 
     /// "3 / 11 · 2880 × 1800 · 1.2 MB": what is known of the picture on show.
     private var facts: String {
         var parts: [String] = []
-        if let i = index, images.count > 1 { parts.append("\(i + 1) / \(images.count)") }
+        if let i = index, items.count > 1 { parts.append("\(i + 1) / \(items.count)") }
         if let rep = picture?.representations.first, rep.pixelsWide > 0 { parts.append("\(rep.pixelsWide) × \(rep.pixelsHigh)") }
-        else if let w = image.width, let h = image.height, w > 0 { parts.append("\(w) × \(h)") }
-        if image.size > 0 { parts.append(AttachmentActions.byteCount(image.size)) }
+        else if case .image(let image) = item, let w = image.width, let h = image.height, w > 0 { parts.append("\(w) × \(h)") }
+        if item.size > 0 { parts.append(AttachmentActions.byteCount(item.size)) }
         return parts.joined(separator: " · ")
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            ChatImageViewerBar(name: image.name, facts: facts, note: note, zoom: scale, actions: actions)
+            ChatImageViewerBar(name: item.name, facts: facts, note: note, zoom: scale, actions: actions)
             ZStack {
                 theme.colors.scrim.opacity(0.92)
-                if let picture {
-                    Image(nsImage: picture).resizable().scaledToFit().padding(theme.spacing.s16)
+                if case .video(let file) = item {
+                    ChatViewerVideoStage(accountId: accountId, file: file).id(file)
+                } else if let picture {
+                    ChatViewerPicture(picture: picture, data: animated ? data : nil).padding(theme.spacing.s16)
                         .rotationEffect(.degrees(Double(turns) * 90)).scaleEffect(scale).offset(offset)
                         .gesture(DragGesture().onChanged { offset = CGSize(width: dragStart.width + $0.translation.width, height: dragStart.height + $0.translation.height) }
                             .onEnded { _ in dragStart = offset })
@@ -66,7 +74,7 @@ struct ChatImageViewer: View {
                 } else if failed {
                     Text(appString("chatAttachmentFailed", "Couldn't load the attachment")).foregroundStyle(theme.colors.onScrim)
                 } else { ProgressView().tint(theme.colors.onScrim) }
-                if images.count > 1 {
+                if items.count > 1 {
                     HStack {
                         ChatImageStageArrow(next: false) { step(-1) }
                         Spacer(minLength: 0)
@@ -78,19 +86,20 @@ struct ChatImageViewer: View {
             }
             .clipped()
             .onHover { hovering = $0 }
-            if images.count > 1 { ChatImageStrip(accountId: accountId, images: images, current: image) { image = $0 } }
+            if items.count > 1 { ChatImageStrip(accountId: accountId, items: items, current: item) { item = $0 } }
         }
         .frame(width: size.width, height: size.height)
+        .animation(.easeOut(duration: theme.motion.base), value: ViewerSizePreference.shared.level)
         .background(theme.colors.scrim)
-        .task(id: image) { await load() }
+        .task(id: item) { await load() }
         .task { await loadSiblings() }
         .onKeyPress(.leftArrow) { step(-1); return .handled }
         .onKeyPress(.rightArrow) { step(1); return .handled }
         .onKeyPress(.escape) { dismiss(); return .handled }
-        .onKeyPress(characters: ["+", "="]) { _ in zoom(1.25); return .handled }
-        .onKeyPress(characters: ["-"]) { _ in zoom(1 / 1.25); return .handled }
-        .onKeyPress(characters: ["0"]) { _ in fit(); return .handled }
-        .onKeyPress(characters: ["r", "R"]) { _ in rotate(); return .handled }
+        .onKeyPress(characters: ["+", "="]) { _ in zoom(1.25); return isVideo ? .ignored : .handled }
+        .onKeyPress(characters: ["-"]) { _ in zoom(1 / 1.25); return isVideo ? .ignored : .handled }
+        .onKeyPress(characters: ["0"]) { _ in fit(); return isVideo ? .ignored : .handled }
+        .onKeyPress(characters: ["r", "R"]) { _ in rotate(); return isVideo ? .ignored : .handled }
         .focusable().focusEffectDisabled()
     }
 
@@ -99,7 +108,8 @@ struct ChatImageViewer: View {
     private func zoom(_ factor: CGFloat) { scale = max(0.2, min(8, scale * factor)); base = scale }
 
     private func load() async {
-        data = nil; picture = nil; failed = false; fit(); turns = 0
+        data = nil; picture = nil; animated = false; failed = false; fit(); turns = 0
+        guard case .image(let image) = item else { return }
         guard let repo = services?.chat else { failed = true; return }
         if let b64 = image.inlineBase64, let d = Data(base64Encoded: b64, options: .ignoreUnknownCharacters) { show(d); return }
         switch await repo.loadAttachment(accountId: accountId, content: content, thumbnail: false) {
@@ -111,6 +121,7 @@ struct ChatImageViewer: View {
     private func show(_ d: Data) {
         data = d
         picture = NSImage(data: d)
+        animated = StickerDecoder.isAnimated(d)
         if picture == nil { failed = true }
     }
 
@@ -123,24 +134,26 @@ struct ChatImageViewer: View {
         }
     }
 
-    /// The chat's loaded images, for previous/next.
+    /// The chat's loaded pictures and videos, for previous/next; stickers are left out.
     private func loadSiblings() async {
         guard let repo = services?.chat else { return }
+        var stickerNames: Set<String> = []
+        if case .success(let known)? = await services?.stickers?.stickers() { stickerNames = Set(known.map(\.name)) }
         for await messages in repo.watchAttachments(accountId: accountId, chatGid: chatGid) {
-            images = messages.compactMap { $0.deleted ? nil : $0.content.asImage }
+            items = ListViewerMedia()(messages, current: item, stickerNames: stickerNames)
             return
         }
     }
 
     private func step(_ d: Int) {
-        guard let i = index, !images.isEmpty else { return }
-        image = images[(i + d + images.count) % images.count]
+        guard let i = index, !items.isEmpty else { return }
+        item = items[(i + d + items.count) % items.count]
     }
 
     private func saveAs() {
         guard let repo = services?.chat else { return }
         Task {
-            switch await AttachmentActions.saveAs(TransferKey(accountId: accountId, content: content), name: image.name, repo) {
+            switch await AttachmentActions.saveAs(TransferKey(accountId: accountId, content: content), name: item.name, repo) {
             case .success?: say(appString("chatSaved", "Saved"))
             case .failure(let f)?: say(f.message)
             case nil: break

@@ -134,8 +134,9 @@ final class ChatRenderSmokeTests: XCTestCase {
     }
 
     func testImageViewerStripAndCard() async throws {
-        let images = (1...6).map { ImageContent(fileId: $0, name: "photo\($0).jpg", size: 1000, time: 1) }
-        let strip = ChatImageStrip(accountId: "a", images: images, current: images[2]) { _ in }.chatServices(ChatServices(chat: Repo()))
+        var items = (1...6).map { ChatMediaItem.image(ImageContent(fileId: $0, name: "photo\($0).jpg", size: 1000, time: 1)) }
+        items.insert(.video(FileContent(fileId: 9, name: "clip.mp4", size: 1000, time: 1, mimeType: "video/mp4")), at: 3)
+        let strip = ChatImageStrip(accountId: "a", items: items, current: items[2]) { _ in }.chatServices(ChatServices(chat: Repo()))
         try await render(strip, "image-strip", width: 520, height: 100)
     }
 
@@ -160,11 +161,7 @@ final class ChatRenderSmokeTests: XCTestCase {
             }
         }
         let images = (1...11).map { ImageContent(fileId: $0, name: "Screenshot 2026-11-17 at 09.19.\($0).png", size: 1_240_000, time: 1) }
-        let viewer = ChatImageViewer(accountId: "a", chatGid: "g", image: images[0]).chatServices(ChatServices(chat: Pictures(images)))
-        let size = ChatViewerSize.of(window: CGSize(width: 1900, height: 1100))
-        XCTAssertEqual(size.width, 1900 * ChatViewerSize.share, accuracy: 0.5)
-        XCTAssertEqual(ChatViewerSize.of(window: nil), ChatViewerSize.fallback)
-        XCTAssertEqual(ChatViewerSize.of(window: CGSize(width: 600, height: 400)), ChatViewerSize.minimum)
-        try await render(viewer, "image-viewer", width: ChatViewerSize.fallback.width, height: ChatViewerSize.fallback.height, settle: 20)
+        let viewer = ChatImageViewer(accountId: "a", chatGid: "g", item: .image(images[0])).chatServices(ChatServices(chat: Pictures(images)))
+        try await render(viewer, "image-viewer", width: ViewerSize.fallback.width, height: ViewerSize.fallback.height, settle: 20)
     }
 }

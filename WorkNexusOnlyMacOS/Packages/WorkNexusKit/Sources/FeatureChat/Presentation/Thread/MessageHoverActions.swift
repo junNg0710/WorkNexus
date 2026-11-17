@@ -5,7 +5,8 @@ import SwiftUI
 /// Zalo-style message actions: round buttons beside the bubble, level with its bottom edge, shown while the pointer is
 /// over the message — the first actions (reply, open thread) and React as buttons, the rest under "…". They sit in the
 /// bubble's row (outside the bubble, so they are clickable), keeping their space while hidden so nothing shifts on hover.
-/// A right-click opens the whole list as a menu (reply stands apart from the rest; destructive actions come last).
+/// A right-click opens the whole list as a menu (reply stands apart from the rest; destructive actions come last); on the
+/// text, a short one (copy the selection or the message, reply, forward, translate).
 struct MessageHoverActions<Content: View>: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatSettings) private var settings
@@ -30,6 +31,11 @@ struct MessageHoverActions<Content: View>: View {
             if alignEnd { buttons }
             // The menu's rows are worked out when it opens, not for every row of the list on every redraw.
             content.contextMenu { MessageContextMenu(ctx: ctx, message: message, inThread: inThread, picking: $picking) }
+                // On the text itself a right-click would open the text system's menu (Font, Spelling, Services…): a short
+                // chat menu answers it instead.
+                .background(MessageTextRightClick(active: hovering && !ctx.state.isSelecting) { selection in
+                    ctx.textMenu(for: message, settings: settings, selection: selection)
+                })
             if !alignEnd { buttons }
         }
         .onHover { hovering = $0 }

@@ -19,14 +19,15 @@ struct ChatVideoViewer: View {
     var onClosed: (TimeInterval?) -> Void = { _ in }
     @State private var player: ChatVideoPlayer?
     @State private var failure: String?
-    /// Most of the window it opens over.
-    @State private var size = ChatViewerSize.current
+    /// Most of the window it opens over, at the size picked with the bigger / smaller buttons.
+    private var size: CGSize { ViewerSize.current(ViewerSizePreference.shared.level) }
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: theme.spacing.s8) {
                 Text(file.name).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx).lineLimit(1)
                 Spacer()
+                ViewerSizeButtons()
                 AppIconButton("xmark", help: appString("chatClosePanel", "Close")) { dismiss() }
             }
             .padding(.horizontal, theme.spacing.s12).frame(height: theme.sizes.titleBar - theme.spacing.s8)
@@ -46,6 +47,7 @@ struct ChatVideoViewer: View {
             }
         }
         .frame(width: size.width, height: size.height)
+        .animation(.easeOut(duration: theme.motion.base), value: ViewerSizePreference.shared.level)
         .focusable().focused($focused).focusEffectDisabled()
         .onKeyPress(.space) { player?.toggle(); return player == nil ? .ignored : .handled }
         .onKeyPress(.leftArrow) { player?.skip(by: -ChatVideoPlayer.seekStep); return player == nil ? .ignored : .handled }

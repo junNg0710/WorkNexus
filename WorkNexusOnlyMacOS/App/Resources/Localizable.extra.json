@@ -1462,5 +1462,17 @@
   "zentaoHiddenFromTeamView": {
     "en": "Not in the team view: its tasks show only here",
     "vi": "Không hiện trong chế độ Team: task của nó chỉ xem ở đây"
+  },
+  "viewerSmaller": {
+    "en": "Smaller viewer",
+    "vi": "Thu nhỏ khung xem"
+  },
+  "viewerLarger": {
+    "en": "Larger viewer",
+    "vi": "Phóng to khung xem"
+  },
+  "chatCopySelection": {
+    "en": "Copy selection",
+    "vi": "Sao chép đoạn đã chọn"
   }
 }

@@ -44,7 +44,6 @@ public struct InlineImage: View {
         }
         .sheet(item: $viewer) { req in
             ImageViewerDialog(data: req.data, externalUrl: req.externalUrl, onOpenExternally: req.onOpenExternally) { viewer = nil }
-                .frame(minWidth: 720, minHeight: 520)
         }
     }
 }

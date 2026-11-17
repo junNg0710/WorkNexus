@@ -39,6 +39,7 @@ enum L {
     static var openThread: String { appString("chatOpenThread", "Open thread") }
     static var forward: String { appString("chatForward", "Forward") }
     static var copy: String { appString("chatCopy", "Copy text") }
+    static var copySelection: String { appString("chatCopySelection", "Copy selection") }
     static var copied: String { appString("chatCopied", "Copied") }
     static var hideTranslation: String { appString("chatShowOriginal", "Hide translation") }
     static var translate: String { appString("chatTranslate", "Translate") }
