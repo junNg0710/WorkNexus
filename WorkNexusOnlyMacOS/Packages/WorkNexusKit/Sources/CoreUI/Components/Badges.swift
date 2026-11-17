@@ -72,13 +72,40 @@ public struct AppStateView: View {
     public var body: some View {
         VStack(spacing: theme.spacing.s12) {
             switch kind {
-            case .loading: ProgressView().controlSize(.small)
+            case .loading: SkeletonRows()
             case .empty(let m): Text(m).font(theme.typography.body).foregroundStyle(theme.colors.tx3)
             case .error(let m):
                 Text(m).font(theme.typography.body).foregroundStyle(theme.colors.red).multilineTextAlignment(.center)
                 if let retry { AppButton("Retry", systemImage: "arrow.clockwise", action: retry) }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity).padding(theme.spacing.s24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isLoading ? .top : .center).padding(theme.spacing.s24)
+    }
+
+    private var isLoading: Bool { if case .loading = kind { true } else { false } }
+}
+
+/// Rows of placeholders (an avatar and two lines each) for a list or panel that is loading; it fades in after a moment,
+/// so a load that is quick shows no flash of placeholders.
+public struct SkeletonRows: View {
+    @Environment(\.appTheme) private var theme
+    var count: Int
+    @State private var shown = false
+    public init(count: Int = 6) { self.count = count }
+    public var body: some View {
+        VStack(alignment: .leading, spacing: theme.spacing.s16) {
+            ForEach(0..<count, id: \.self) { i in
+                HStack(spacing: theme.spacing.s12) {
+                    SkeletonBox(width: 32, height: 32, radius: theme.radii.pill)
+                    VStack(alignment: .leading, spacing: theme.spacing.s6) {
+                        SkeletonBox(width: [180, 140, 210, 120, 160, 190][i % 6], height: 12, radius: theme.radii.xs)
+                        SkeletonBox(height: 10, radius: theme.radii.xs).padding(.trailing, CGFloat([40, 90, 20, 120, 60, 70][i % 6]))
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .opacity(shown ? 1 : 0)
+        .task { try? await Task.sleep(for: .milliseconds(120)); withAnimation(.easeOut(duration: theme.motion.base)) { shown = true } }
     }
 }

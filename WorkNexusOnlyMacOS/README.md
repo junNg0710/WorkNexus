@@ -38,3 +38,6 @@ Deviations from the Dart rail: ZenTao has one rail button per account (its Tasks
 
 ### Build
 `xcodegen generate && xcodebuild -project WorkNexusOnlyMacOS.xcodeproj -scheme WorkNexus -configuration Debug build`. Extra l10n keys that are not in `lib/l10n/*.arb` live in `App/Resources/Localizable.extra.json`; `Scripts/gen-l10n.py` merges them.
+
+### Diagnostics
+Errors are written to `~/Library/Application Support/<bundle id>/Logs/worknexus.log` (rotated at 1 MB, 5 files, 7 days) and mirrored to the system log (Console.app, subsystem `com.worknexus`). Report through `Diagnostics.error/warning/info(area, message)` (CoreDomain) from any layer; messages are redacted (URL queries, passwords, tokens, cookies) and an error carries the user's last steps (`Diagnostics.step`, fed from the navigation state). Failed HTTP requests of the ZenTao, GitLab and GitHub clients, sync failures, chat failures and error toasts are recorded automatically; crash and hang reports arrive through MetricKit on a later launch. Settings → Local data → Diagnostics opens the folder or exports a zip for a bug report. Nothing is sent anywhere.

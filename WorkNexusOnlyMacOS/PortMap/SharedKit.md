@@ -119,3 +119,9 @@ Dart under `lib/`, Swift under `Packages/WorkNexusKit/Sources/`. SharedKit paths
 | Title-bar search (not in Dart) | - | Presentation/Shell/GlobalSearchField.swift (key / title over the active workspace's synced tickets) |
 | Sync persistence | settings_sync_status_repository.dart, ticket_store.dart, source_list_cache.dart | CorePersistence `GRDBSyncStatusRepository` (migration `core_v2`, table `accountSyncState`), `GRDBDetailStore` (comments + activity replaced in one transaction, `DetailWriting.replaceDetail`), `GRDBSourceListSnapshots`; adapters in App/Sources/Persistence |
 | Ticket links | features/chat/.../ticket_link_handler.dart | App/Sources/TicketLinkHandler.swift (`LinkStage.app`) |
+
+### macOS-only: loading placeholders
+
+- `KeepAliveStack` anchors every kept section to the top at the viewport's size (`minWidth/minHeight: 0`): a section whose content was still small while loading was centred in the window, leaving an empty band above its header.
+- `BoardSkeleton` / `TableSkeleton` fill the board area from the top-left (no horizontal scroll view, which centred them vertically) and fade in after 120 ms, so a quick load shows no flash. `AppStateView(.loading)` shows `SkeletonRows` instead of a spinner.
+- `SkeletonBox` draws a plain placeholder with one shared sweep of light (`SkeletonSheen`: same clock, positioned in window coordinates), still under Reduce Motion. The ZenTao people strip keeps its row as placeholders while a board loads, so the board does not jump.

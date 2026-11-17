@@ -82,6 +82,34 @@ final class RenderSmokeTests: XCTestCase {
         try render("empty-state", BoardEmptyState(controller: c), size: CGSize(width: 500, height: 300))
     }
 
+    /// Loading: the toolbar stays at the top and the placeholders fill the board area below it, sweeping together.
+    func testLoadingPlaceholdersFillTheBoardFromTheTop() async throws {
+        let toolbar = VStack(alignment: .leading, spacing: 8) {
+            Text("Product › VN_IM_Chat · Bugs").font(.headline)
+            HStack { ForEach(0..<6, id: \.self) { _ in SkeletonBox(width: 110, height: 28, radius: 14) } }
+        }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
+        let board = ZStack { VStack(spacing: 0) { toolbar; BoardSkeleton() }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) }
+        try await renderAfterFadeIn("loading-board", board, size: CGSize(width: 1200, height: 760))
+        try await renderAfterFadeIn("loading-table", VStack(spacing: 0) { toolbar; TableSkeleton() }, size: CGSize(width: 1000, height: 600))
+        try await renderAfterFadeIn("loading-rows", AppStateView(.loading), size: CGSize(width: 420, height: 420), dark: true)
+    }
+
+    /// Like `render`, but waits with the main queue free, so the placeholders' fade-in (a task) has run.
+    private func renderAfterFadeIn<V: View>(_ name: String, _ view: V, size: CGSize, dark: Bool = false) async throws {
+        var settings = AppSettings(); if dark { settings.variant = .dark }
+        let theme = AppTheme(settings: settings)
+        let host = NSHostingView(rootView: view.environment(\.appTheme, theme).frame(width: size.width, height: size.height)
+            .background(theme.colors.bg).environment(\.colorScheme, theme.colorScheme))
+        host.frame = CGRect(origin: .zero, size: size)
+        let window = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: false)
+        window.contentView = host
+        for _ in 0..<15 { try await Task.sleep(for: .milliseconds(50)); host.layoutSubtreeIfNeeded() }
+        let rep = try XCTUnwrap(host.bitmapImageRepForCachingDisplay(in: host.bounds))
+        host.cacheDisplay(in: host.bounds, to: rep)
+        try FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
+        try rep.representation(using: .png, properties: [:])!.write(to: outDir.appendingPathComponent("\(name).png"))
+    }
+
     func testDetailPanel() async throws {
         let store = FakeStore()
         let t = makeTicket("d1", account: "ztB", provider: .zentao, key: "101", status: .inprogress, priority: .high, title: "Login crashes on submit",

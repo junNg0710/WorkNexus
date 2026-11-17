@@ -63,10 +63,13 @@ final class BoardControllerTests: XCTestCase {
         let (c, _) = make(tickets: [makeTicket("a")])
         c.openBoard("zentao.bugs|a|1")
         c.toggleSeverity(1)
+        c.toggleZenTaoStatus("resolvedVerify")
         c.openBoard("gitlab.mrs|a|2")
         XCTAssertTrue(c.filter.severities.isEmpty)
+        XCTAssertTrue(c.filter.zentaoStatuses.isEmpty, "only ZenTao boards start on statuses")
         c.openBoard("zentao.bugs|a|1")
         XCTAssertEqual(c.filter.severities, [1])
+        XCTAssertEqual(c.filter.zentaoStatuses, BoardController.openBugStatuses.union(["resolvedVerify"]))
     }
 
     func testAZenTaoTaskBoardOpensOnTheWorkStillToDoAndKeepsWhatTheUserMadeOfIt() {
@@ -77,7 +80,7 @@ final class BoardControllerTests: XCTestCase {
         // Cleared by the user: it stays cleared when the board is left and opened again.
         c.clearAll()
         c.openBoard("zentao.bugs|a|1")
-        XCTAssertTrue(c.filter.zentaoStatuses.isEmpty, "bugs open on every status of their tab")
+        XCTAssertEqual(c.filter.zentaoStatuses, ["newUnconfirmed", "confirmedToFix"], "bugs open on the ones still to fix")
         c.openBoard("zentao.tasks|a|5")
         XCTAssertTrue(c.filter.zentaoStatuses.isEmpty)
         // Another execution is another board: it starts on the default.

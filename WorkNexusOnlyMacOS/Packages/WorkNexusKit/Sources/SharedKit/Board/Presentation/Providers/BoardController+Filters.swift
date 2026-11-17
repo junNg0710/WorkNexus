@@ -19,12 +19,16 @@ public extension BoardController {
     /// The statuses a ZenTao task board opens on: the work still to do. Done, closed and cancelled tasks are one click
     /// away in Filters (not in the Flutter app, which opens on every status).
     static let openTaskStatuses: Set<String> = [BoardZenTaoTaskColumn.notStarted, .inProgress, .paused].reduce(into: []) { $0.insert($1.rawValue) }
+    /// The statuses a ZenTao bug board opens on: the bugs still to be fixed (new and confirmed); resolved, postponed,
+    /// non-fix and closed bugs are one click away in Filters.
+    static let openBugStatuses: Set<String> = [BoardZenTaoBugColumn.newUnconfirmed, .confirmedToFix].reduce(into: []) { $0.insert($1.rawValue) }
 
     /// The filter a board starts with the first time it is opened in a session (after that it is the one it was left with).
     private func initial(for key: String, current: FilterState? = nil) -> FilterState {
         var base = current.map(cleared) ?? FilterState()
         if key.hasPrefix("zentao.") { base.savedView = .all }
         if key.hasPrefix("zentao.tasks|") { base.zentaoStatuses = Self.openTaskStatuses }
+        if key.hasPrefix("zentao.bugs|") { base.zentaoStatuses = Self.openBugStatuses }
         return base
     }
 

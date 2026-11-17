@@ -77,12 +77,14 @@ public struct FileDropTarget<Content: View>: View {
 
 /// The outline and hint shown while files hover: accent over the target under the pointer, muted over the other
 /// targets of its group.
-struct FileDropOverlay: View {
+public struct FileDropOverlay: View {
     @Environment(\.appTheme) private var theme
     let hint: String
     let active: Bool
 
-    var body: some View {
+    public init(hint: String, active: Bool) { self.hint = hint; self.active = active }
+
+    public var body: some View {
         let tint = active ? theme.colors.accent : theme.colors.tx2
         ZStack {
             RoundedRectangle(cornerRadius: theme.radii.md).fill(tint.opacity(active ? 0.08 : 0.04))

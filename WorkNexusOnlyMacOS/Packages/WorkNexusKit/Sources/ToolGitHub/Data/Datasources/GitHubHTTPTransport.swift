@@ -1,3 +1,4 @@
+import CoreDomain
 import Foundation
 
 /// Ported from: lib/tools/github/data/datasources/github_client.dart (dio setup: timeouts, badCertificateCallback).
@@ -38,8 +39,17 @@ final class GitHubHTTPTransport: Sendable {
     deinit { if ownsSession { session.finishTasksAndInvalidate() } }
 
     func send(_ request: URLRequest, accept: (Int) -> Bool = { (200..<300).contains($0) }) async throws -> GitHubHTTPResponse {
-        let (data, response) = try await session.data(for: request)
+        let started = Date(), method = request.httpMethod ?? "GET"
+        let data: Data, response: URLResponse
+        do { (data, response) = try await session.data(for: request) } catch {
+            if let url = request.url { Diagnostics.request("github", method: method, url: url, status: nil, error: error, elapsed: Date().timeIntervalSince(started)) }
+            throw error
+        }
         guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+        // A status the caller accepts (a probe that expects 404) is not a failure.
+        if let url = request.url, !accept(http.statusCode) {
+            Diagnostics.request("github", method: method, url: url, status: http.statusCode, elapsed: Date().timeIntervalSince(started))
+        }
         var headers: [String: String] = [:]
         for (key, value) in http.allHeaderFields { headers["\(key)".lowercased()] = "\(value)" }
         guard accept(http.statusCode) else {

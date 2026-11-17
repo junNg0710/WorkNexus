@@ -50,6 +50,21 @@ public struct ApplyViewPages: Sendable {
     }
 }
 
+/// Folds a fresh read of a view's first page into what it has loaded (not in the Flutter app): tickets made since join it,
+/// the pages already loaded stay, and the total follows the server. New tickets come first in the fetch order (newest), so
+/// the pages after the first only shift down onto tickets already loaded: nothing is skipped.
+public struct ApplyViewHead: Sendable {
+    public init() {}
+    public func callAsFunction(_ state: PagedViewState, _ head: ViewPage) -> PagedViewState {
+        var next = state
+        next.ids.formUnion(head.tickets.map(\.id))
+        next.total = head.total
+        // A view that had been read to its end has more again when it grew past what was read.
+        if !next.hasMore, head.hasMore, next.page * kPagedViewPageSize < head.total { next.hasMore = true }
+        return next
+    }
+}
+
 public struct ViewLoadRequest: Sendable {
     public var state: PagedViewState
     public var filtered: Bool

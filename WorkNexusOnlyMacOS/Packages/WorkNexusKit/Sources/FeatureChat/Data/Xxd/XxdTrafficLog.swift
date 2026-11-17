@@ -16,6 +16,7 @@ public struct XxdTrafficLog: Sendable {
     }
 
     func failed(_ api: String, _ elapsed: TimeInterval, _ f: Failure) {
+        Diagnostics.error("chat", "\(api) failed: \(f.message) (\(Int(elapsed * 1000)) ms)")
         logger.error("← \(api, privacy: .public) failed: \(f.message, privacy: .public) (\(Int(elapsed * 1000)) ms)")
     }
 
@@ -27,7 +28,9 @@ public struct XxdTrafficLog: Sendable {
         case .connecting: logger.info("connecting")
         case .online: logger.info("online")
         case .reconnecting(let a, let d, let f): logger.warning("reconnecting #\(a) in \(Int(d)) s (\(f.message, privacy: .public))")
-        case .stopped(let f, _): logger.error("stopped: \(f.message, privacy: .public)")
+        case .stopped(let f, _):
+            logger.error("stopped: \(f.message, privacy: .public)")
+            Diagnostics.error("chat", "Connection stopped: \(f.message)")
         }
     }
 }

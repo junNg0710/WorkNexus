@@ -60,6 +60,7 @@ public struct ZentaoBugsSection: View {
             if related { state.setBugTab(.relatedToMe) } else if state.bugTab == .relatedToMe { state.setBugTab(.unclosed) }
         }
         .onChange(of: viewMode, initial: true) { _, mode in state.bugListMode = mode == "list"; state.refreshFetchSorts() }
+        .zentaoAutoRefresh(state)
     }
 }
 
@@ -72,7 +73,7 @@ private struct ZentaoBugsBody: View {
         } else if let failure = state.bugSlice.failure, state.bugBoard.scoped.isEmpty {
             AppStateView(.error(failure.message)) { state.reopenBugStreams() }
         } else if state.bugSlice.isLoading && state.bugBoard.scoped.isEmpty {
-            BoardSkeleton()
+            if list { TableSkeleton() } else { BoardSkeleton() }
         } else if list {
             ZentaoBugTableView(state: state)
         } else {

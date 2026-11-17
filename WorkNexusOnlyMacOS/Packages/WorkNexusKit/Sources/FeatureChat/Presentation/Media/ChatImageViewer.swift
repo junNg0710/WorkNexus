@@ -4,9 +4,9 @@ import CoreDomain
 import CoreUI
 import SwiftUI
 
-/// Full-size image viewer sheet: zoom (buttons, pinch, double-click to fit), rotate, drag to pan, previous/next among the chat's
-/// images (arrows, or the strip of thumbnails along the bottom), save a copy, copy, save as sticker and open in the default app.
-/// Keys: ←/→, +/−, 0 (fit), R (rotate), Esc.
+/// Full-size image viewer sheet, as large as most of the window it opens over: zoom (buttons, pinch, double-click to fit),
+/// rotate, drag to pan, previous/next among the chat's images (the arrows at the picture's sides, or the strip of thumbnails
+/// along the bottom), save a copy, copy, save as sticker and open in the default app. Keys: ←/→, +/−, 0 (fit), R (rotate), Esc.
 struct ChatImageViewer: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatServices) private var services
@@ -16,6 +16,10 @@ struct ChatImageViewer: View {
     @State var image: ImageContent
     @State private var images: [ImageContent] = []
     @State private var data: Data?
+    /// The picture decoded once per load (not on every redraw).
+    @State private var picture: NSImage?
+    @State private var hovering = false
+    @State private var size = ChatViewerSize.current
     @State private var failed = false
     @State private var scale: CGFloat = 1
     @State private var base: CGFloat = 1
@@ -32,15 +36,28 @@ struct ChatImageViewer: View {
         self.accountId = accountId; self.chatGid = chatGid; _image = State(initialValue: image)
     }
 
+    private var actions: ChatImageViewerActions {
+        ChatImageViewerActions(onZoom: zoom, onFit: fit, onRotate: rotate, onSaveAs: saveAs, onCopy: copy,
+                               onSticker: services?.stickers == nil ? nil : saveSticker, onOpen: openExternally, onClose: { dismiss() })
+    }
+
+    /// "3 / 11 · 2880 × 1800 · 1.2 MB": what is known of the picture on show.
+    private var facts: String {
+        var parts: [String] = []
+        if let i = index, images.count > 1 { parts.append("\(i + 1) / \(images.count)") }
+        if let rep = picture?.representations.first, rep.pixelsWide > 0 { parts.append("\(rep.pixelsWide) × \(rep.pixelsHigh)") }
+        else if let w = image.width, let h = image.height, w > 0 { parts.append("\(w) × \(h)") }
+        if image.size > 0 { parts.append(AttachmentActions.byteCount(image.size)) }
+        return parts.joined(separator: " · ")
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            ViewerBar(name: image.name, position: index.map { ($0 + 1, images.count) }, note: note,
-                      canStep: images.count > 1, onStep: step, onZoom: zoom, onFit: fit, onRotate: rotate, onSaveAs: saveAs, onCopy: copy,
-                      onSticker: services?.stickers == nil ? nil : saveSticker, onOpen: openExternally, onClose: { dismiss() })
+            ChatImageViewerBar(name: image.name, facts: facts, note: note, zoom: scale, actions: actions)
             ZStack {
-                theme.colors.scrim.opacity(0.9)
-                if let data, let img = NSImage(data: data) {
-                    Image(nsImage: img).resizable().scaledToFit()
+                theme.colors.scrim.opacity(0.92)
+                if let picture {
+                    Image(nsImage: picture).resizable().scaledToFit().padding(theme.spacing.s16)
                         .rotationEffect(.degrees(Double(turns) * 90)).scaleEffect(scale).offset(offset)
                         .gesture(DragGesture().onChanged { offset = CGSize(width: dragStart.width + $0.translation.width, height: dragStart.height + $0.translation.height) }
                             .onEnded { _ in dragStart = offset })
@@ -49,12 +66,22 @@ struct ChatImageViewer: View {
                 } else if failed {
                     Text(appString("chatAttachmentFailed", "Couldn't load the attachment")).foregroundStyle(theme.colors.onScrim)
                 } else { ProgressView().tint(theme.colors.onScrim) }
+                if images.count > 1 {
+                    HStack {
+                        ChatImageStageArrow(next: false) { step(-1) }
+                        Spacer(minLength: 0)
+                        ChatImageStageArrow(next: true) { step(1) }
+                    }
+                    .opacity(hovering ? 1 : 0)
+                    .animation(.easeOut(duration: theme.motion.fast), value: hovering)
+                }
             }
             .clipped()
+            .onHover { hovering = $0 }
             if images.count > 1 { ChatImageStrip(accountId: accountId, images: images, current: image) { image = $0 } }
         }
-        .frame(minWidth: 720, idealWidth: 960, minHeight: 520, idealHeight: 680)
-        .background(theme.colors.card)
+        .frame(width: size.width, height: size.height)
+        .background(theme.colors.scrim)
         .task(id: image) { await load() }
         .task { await loadSiblings() }
         .onKeyPress(.leftArrow) { step(-1); return .handled }
@@ -72,12 +99,27 @@ struct ChatImageViewer: View {
     private func zoom(_ factor: CGFloat) { scale = max(0.2, min(8, scale * factor)); base = scale }
 
     private func load() async {
-        data = nil; failed = false; fit(); turns = 0
+        data = nil; picture = nil; failed = false; fit(); turns = 0
         guard let repo = services?.chat else { failed = true; return }
-        if let b64 = image.inlineBase64, let d = Data(base64Encoded: b64, options: .ignoreUnknownCharacters) { data = d; return }
+        if let b64 = image.inlineBase64, let d = Data(base64Encoded: b64, options: .ignoreUnknownCharacters) { show(d); return }
         switch await repo.loadAttachment(accountId: accountId, content: content, thumbnail: false) {
-        case .success(let d): data = d
+        case .success(let d): show(d)
         case .failure: failed = true
+        }
+    }
+
+    private func show(_ d: Data) {
+        data = d
+        picture = NSImage(data: d)
+        if picture == nil { failed = true }
+    }
+
+    /// A confirmation beside the name, gone after a moment.
+    private func say(_ text: String) {
+        note = text
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(2))
+            if note == text { note = nil }
         }
     }
 
@@ -99,8 +141,8 @@ struct ChatImageViewer: View {
         guard let repo = services?.chat else { return }
         Task {
             switch await AttachmentActions.saveAs(TransferKey(accountId: accountId, content: content), name: image.name, repo) {
-            case .success?: note = appString("chatSaved", "Saved")
-            case .failure(let f)?: note = f.message
+            case .success?: say(appString("chatSaved", "Saved"))
+            case .failure(let f)?: say(f.message)
             case nil: break
             }
         }
@@ -109,15 +151,15 @@ struct ChatImageViewer: View {
     private func copy() {
         guard let data else { return }
         copyImageToClipboard(data)
-        note = appString("chatCopied", "Copied")
+        say(appString("chatCopied", "Copied"))
     }
 
     private func saveSticker() {
         guard let repo = services?.chat, let stickers = services?.stickers else { return }
         Task {
             switch await SaveImageAsSticker(repo, stickers)(accountId: accountId, content: content) {
-            case .success: note = appString("chatStickerSaved", "Saved to your stickers")
-            case .failure(let f): note = f.message
+            case .success: say(appString("chatStickerSaved", "Saved to your stickers"))
+            case .failure(let f): say(f.message)
             }
         }
     }
@@ -129,48 +171,5 @@ struct ChatImageViewer: View {
                 NSWorkspace.shared.open(URL(fileURLWithPath: path))
             }
         }
-    }
-}
-
-private struct ViewerBar: View {
-    @Environment(\.appTheme) private var theme
-    let name: String
-    let position: (Int, Int)?
-    let note: String?
-    let canStep: Bool
-    let onStep: (Int) -> Void
-    let onZoom: (CGFloat) -> Void
-    let onFit: () -> Void
-    let onRotate: () -> Void
-    let onSaveAs: () -> Void
-    let onCopy: () -> Void
-    let onSticker: (() -> Void)?
-    let onOpen: () -> Void
-    let onClose: () -> Void
-
-    var body: some View {
-        HStack(spacing: theme.spacing.s4) {
-            Text(name).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx).lineLimit(1)
-            if let position { Text("\(position.0) / \(position.1)").font(theme.typography.meta).foregroundStyle(theme.colors.tx3) }
-            if let note { Text(note).font(theme.typography.meta).foregroundStyle(theme.colors.accent).padding(.leading, theme.spacing.s8) }
-            Spacer(minLength: theme.spacing.s8)
-            if canStep {
-                AppIconButton("chevron.left", help: appString("chatPrevious", "Previous")) { onStep(-1) }
-                AppIconButton("chevron.right", help: appString("chatNext", "Next")) { onStep(1) }
-            }
-            AppIconButton("minus.magnifyingglass", help: appString("chatZoomOut", "Zoom out")) { onZoom(1 / 1.25) }
-            AppIconButton("plus.magnifyingglass", help: appString("chatZoomIn", "Zoom in")) { onZoom(1.25) }
-            AppIconButton("arrow.up.left.and.arrow.down.right", help: appString("chatZoomFit", "Fit to screen"), action: onFit)
-            AppIconButton("rotate.right", help: appString("chatRotate", "Rotate"), action: onRotate)
-            AppIconButton("square.and.arrow.down", help: appString("chatSaveAs", "Save as…"), action: onSaveAs)
-            AppIconButton("doc.on.doc", help: appString("chatCopyImage", "Copy image"), action: onCopy)
-            if let onSticker { AppIconButton("face.smiling", help: appString("chatSaveSticker", "Save as sticker"), action: onSticker) }
-            AppIconButton("arrow.up.forward.app", help: appString("chatOpenWith", "Open in default app"), action: onOpen)
-            AppIconButton("xmark", help: appString("chatClosePanel", "Close"), action: onClose)
-        }
-        .padding(.horizontal, theme.spacing.s12)
-        .frame(height: theme.sizes.titleBar - theme.spacing.s8)
-        .background(theme.colors.panel)
-        .overlay(alignment: .bottom) { Rectangle().fill(theme.colors.line).frame(height: theme.borders.hairline) }
     }
 }

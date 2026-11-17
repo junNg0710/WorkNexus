@@ -55,6 +55,10 @@ struct KeepAliveStack: View {
                 let active = key == activeKey && visible
                 if let view = store.views[key] {
                     view
+                        // Anchored to the top and as large as the viewport: a section whose content is still small (a
+                        // loading skeleton) was centred in the window, leaving an empty band above its header.
+                        // minWidth/minHeight 0: never larger than the viewport, however wide its content wants to be.
+                        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
                         .environment(\.sectionIsActive, active)
                         .opacity(active ? 1 : 0)
                         .allowsHitTesting(active)

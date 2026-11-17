@@ -45,6 +45,8 @@ final class CompositionRoot {
     /// The "New todo" dialog any place of the app may ask for (a chat message → "Create todo").
     let todoPrompt: ZentaoTodoPrompt
     let platform: PlatformServices
+    /// The diagnostics log; set up first so everything after it can report.
+    let diagnostics: DiagnosticsWiring
     let autoUpdate: AutoUpdatePreference
 
     /// Own release identity: the Flutter app's releases ship `WorkNexus-macos-universal.zip` — never offer those to this app.
@@ -52,6 +54,7 @@ final class CompositionRoot {
                                               macAssetName: "WorkNexusMac-macos-universal.zip")
 
     init() throws {
+        diagnostics = DiagnosticsWiring()
         let env = ProcessInfo.processInfo.environment
         isDemo = DemoMode.isEnabled
         let registrars = [ZentaoModuleData().migrations, ChatFeature.migrationRegistrar, MiniAppsFeature.migrationRegistrar]
@@ -130,7 +133,7 @@ final class CompositionRoot {
         // view before the first mini app page can exist (a page waits for them), and `start()` runs after the first render.
         if !DemoMode.isEnabled { miniApps.startSessionCookies() }
         autoUpdate = MarkerFileAutoUpdatePreference(file: PlatformPaths.applicationSupport().appendingPathComponent("auto_update.txt"))
-        update = AppUpdateFeature.makeModel(config: Self.updateConfig, preference: autoUpdate, quit: { DispatchQueue.main.async { NSApp.terminate(nil) } })
+        update = AppUpdateFeature.makeModel(config: Self.updateConfig, preference: autoUpdate, quit: { DispatchQueue.main.async { AppQuit.now() } })
         overview = OverviewHolder(services: services, nav: shell.nav, registry: registry, workspaceId: shell.workspace?.id)
         platform = PlatformServices(isDemo: DemoMode.isEnabled)
         let todoPrompt = ZentaoTodoPrompt(todos: wiring.todos)
@@ -151,6 +154,7 @@ final class CompositionRoot {
 
     /// Starts everything that runs for the life of the app (after the window exists).
     func start() async {
+        diagnostics.follow(nav: shell.nav)
         shell.start()
         connections.model.start()
         overview.start()

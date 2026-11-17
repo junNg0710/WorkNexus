@@ -26,7 +26,23 @@ public struct PasteboardKit {
         if let tiff = pasteboard.data(forType: .tiff), let rep = NSBitmapImageRep(data: tiff) {
             return rep.representation(using: .png, properties: [:])
         }
+        // Any other picture (JPEG, HEIC, PDF…) as long as it is the clipboard's content, not a rendering of copied text.
+        if holdsOtherImage, let image = NSImage(pasteboard: pasteboard), let tiff = image.tiffRepresentation,
+           let rep = NSBitmapImageRep(data: tiff) {
+            return rep.representation(using: .png, properties: [:])
+        }
         return nil
+    }
+
+    /// Whether a paste would bring files or an image (what `readAttachments` finds), without reading them.
+    public func hasAttachments() -> Bool {
+        pasteboard.canReadObject(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true])
+            || pasteboard.availableType(from: [.png, .tiff]) != nil || holdsOtherImage
+    }
+
+    /// An image in another format, on a clipboard that holds no text (apps that copy text often add a picture of it).
+    private var holdsOtherImage: Bool {
+        pasteboard.availableType(from: [.string]) == nil && pasteboard.canReadObject(forClasses: [NSImage.self], options: nil)
     }
 
     /// Paths of regular files copied on the clipboard (e.g. from Finder).
@@ -57,3 +73,4 @@ public struct PasteboardKit {
 public func copyImageToClipboard(_ data: Data) { PasteboardKit().copyImage(data) }
 public func readClipboardImage() -> Data? { PasteboardKit().readImage() }
 public func readClipboardAttachments() -> [ClipboardAttachment]? { PasteboardKit().readAttachments() }
+public func clipboardHasAttachments() -> Bool { PasteboardKit().hasAttachments() }

@@ -123,6 +123,7 @@ final class PresentationBoardsTests: XCTestCase {
         let env = BoardsEnv()
         env.pages.script = ["unresolved": manyBugs(120)]
         env.state.openProduct(env.product())
+        env.state.bugBoard.clearAll()   // from the default open statuses to no filter: one page per load
         await env.wait { env.state.bugStreams.views[.unresolved]?.started == true }
         XCTAssertEqual(env.state.bugStreams.views[.unresolved]?.ids.count, 50)
         XCTAssertTrue(env.state.bugStream(.confirmedToFix).hasMore)
@@ -130,6 +131,33 @@ final class PresentationBoardsTests: XCTestCase {
         XCTAssertEqual(env.state.bugStreams.views[.unresolved]?.ids.count, 100)
         env.state.bugBoard.toggleSeverity(1)
         XCTAssertTrue(env.state.bugBoard.filter.narrowsTickets)
+    }
+
+    /// A bug filed elsewhere shows on the board once it is read again, and the pages already scrolled through stay.
+    func testRefreshingTheBoardOnScreenAddsNewTicketsAndKeepsTheLoadedPages() async {
+        let env = BoardsEnv()
+        let bugs = manyBugs(120)
+        env.pages.script = ["unresolved": bugs]
+        env.state.openProduct(env.product())
+        env.state.bugBoard.clearAll()
+        await env.wait { env.state.bugStreams.views[.unresolved]?.started == true }
+        await env.state.bugStreams.loadMore(.unresolved, visible: 50)
+        XCTAssertEqual(env.state.bugStreams.views[.unresolved]?.ids.count, 100)
+        // Bug 500 is filed on the web: the newest first, at the top of the view.
+        env.pages.script = ["unresolved": [boardBug("500")] + bugs]
+        let before = env.pages.calls.count
+        await env.state.refreshShownBoards()
+        let unresolved = env.state.bugStreams.views[.unresolved]
+        XCTAssertTrue(unresolved?.ids.contains(boardBug("500").id) == true)
+        XCTAssertEqual(unresolved?.ids.count, 101, "the two pages already read are kept")
+        XCTAssertEqual(unresolved?.page, 2)
+        XCTAssertEqual(unresolved?.total, 121)
+        XCTAssertTrue(env.pages.calls.dropFirst(before).allSatisfy { $0.page == 1 }, "only first pages are read again")
+        // A board that is not on screen is not read.
+        env.state.bugBoard.isActive = false
+        let quiet = env.pages.calls.count
+        await env.state.refreshShownBoards()
+        XCTAssertEqual(env.pages.calls.count, quiet)
     }
 
     func testAFailedViewWaitsForRetryAndTheSliceReportsLoadingThenData() async {
@@ -357,6 +385,7 @@ final class PresentationBoardsTests: XCTestCase {
         // A view that has loaded keeps only the tickets it holds: the views must hold these.
         env.pages.script = ["unresolved": Array(bugs[0...1]), "toclosed": [bugs[2]]]
         env.state.openProduct(env.product())
+        env.state.bugBoard.clearAll()   // the resolved bug is outside the default open statuses
         await env.wait { env.state.bugBoard.scoped.count == 3 }
         let table = ZentaoBoards.bugTable(env.state)
         XCTAssertNil(table.pending)

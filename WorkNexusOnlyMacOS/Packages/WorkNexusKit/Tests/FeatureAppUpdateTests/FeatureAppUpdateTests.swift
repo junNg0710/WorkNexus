@@ -174,10 +174,37 @@ final class GitHubUpdateRepositoryTests: XCTestCase {
         XCTAssertThrowsError(try GitHubReleaseDataSource.parseRelease(Data(pre.utf8)))
     }
 
+    /// The whole swap, as it runs after the app quits: the helper (in a session of its own) waits for the old process,
+    /// puts the new bundle in place, drops the old one, and logs what it did.
+    func testTheHelperSwapsTheAppOnceTheOldProcessHasQuit() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("swap_\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let installed = dir.appendingPathComponent("WorkNexusMac.app"), staged = dir.appendingPathComponent("build/WorkNexusMac.app")
+        try FileManager.default.createDirectory(at: installed, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: staged, withIntermediateDirectories: true)
+        try Data("1.5.0".utf8).write(to: installed.appendingPathComponent("version"))
+        try Data("1.5.1".utf8).write(to: staged.appendingPathComponent("version"))
+        let script = dir.appendingPathComponent("install_update.sh"), log = dir.appendingPathComponent("update.log")
+        try MacOSUpdateInstaller.script.write(to: script, atomically: true, encoding: .utf8)
+        // The "app": a process that ends a moment later.
+        let app = Process(); app.executableURL = URL(fileURLWithPath: "/bin/sleep"); app.arguments = ["0.6"]
+        try app.run()
+        var env = ProcessInfo.processInfo.environment; env["WN_UPDATE_NO_OPEN"] = "1"
+        try MacOSUpdateInstaller.spawnDetached(["/bin/sh", script.path, "\(app.processIdentifier)", installed.path, staged.path, log.path],
+                                               environment: env)
+        let version = installed.appendingPathComponent("version")
+        for _ in 0..<50 where (try? String(contentsOf: version, encoding: .utf8)) != "1.5.1" { Thread.sleep(forTimeInterval: 0.1) }
+        XCTAssertEqual(try String(contentsOf: version, encoding: .utf8), "1.5.1")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: installed.path + ".previous"), "the old build is dropped")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: staged.path), "the new build was moved, not copied")
+        XCTAssertTrue(try String(contentsOf: log, encoding: .utf8).contains("== "), "the helper says what it is doing")
+    }
+
     func testMacInstallerScriptShape() {
         XCTAssertTrue(MacOSUpdateInstaller.script.hasPrefix("#!/bin/sh\n"))
         XCTAssertTrue(MacOSUpdateInstaller.script.contains("mv \"$2\" \"$backup\""))
-        XCTAssertTrue(MacOSUpdateInstaller.script.hasSuffix("open \"$2\"\n"))
+        XCTAssertTrue(MacOSUpdateInstaller.script.hasSuffix("|| open \"$2\"\n"))
+        XCTAssertTrue(MacOSUpdateInstaller.script.contains("-gt \(MacOSUpdateInstaller.waitLimit * 10 / 3) ]"), "a helper never waits forever")
     }
 }
 

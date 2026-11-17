@@ -75,17 +75,41 @@ public struct StatusDot: View {
 /// Shimmering placeholder block.
 public struct SkeletonBox: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var width: CGFloat?; var height: CGFloat; var radius: CGFloat?
-    @State private var phase: CGFloat = 0
     public init(width: CGFloat? = nil, height: CGFloat = 12, radius: CGFloat? = nil) {
         self.width = width; self.height = height; self.radius = radius
     }
     public var body: some View {
-        let c = theme.colors
-        RoundedRectangle(cornerRadius: radius ?? theme.radii.sm)
-            .fill(LinearGradient(colors: [c.skel, c.skel2, c.skel], startPoint: UnitPoint(x: -1 + 2 * phase, y: 0),
-                                 endPoint: UnitPoint(x: 2 * phase, y: 0)))
+        let shape = RoundedRectangle(cornerRadius: radius ?? theme.radii.sm)
+        shape.fill(theme.colors.skel)
+            .overlay { if !reduceMotion { SkeletonSheen().clipShape(shape) } }
             .frame(width: width, height: height).frame(maxWidth: width == nil ? .infinity : nil)
-            .onAppear { withAnimation(.linear(duration: 1.3).repeatForever(autoreverses: false)) { phase = 1.5 } }
+    }
+}
+
+/// The light that sweeps across loading placeholders. Every placeholder on screen reads the same clock and its own place
+/// in the window, so one band of light crosses them all together, left to right, as on a native placeholder - not each
+/// box flickering on its own.
+struct SkeletonSheen: View {
+    @Environment(\.appTheme) private var theme
+    /// One sweep, and how far it travels (wider than any window).
+    static let period: TimeInterval = 1.6
+    static let travel: CGFloat = 2600
+    static let band: CGFloat = 320
+
+    var body: some View {
+        GeometryReader { geo in
+            let frame = geo.frame(in: .global)
+            TimelineView(.animation(minimumInterval: 1 / 30)) { context in
+                let t = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: Self.period) / Self.period
+                let center = -Self.band + CGFloat(t) * Self.travel - frame.minX
+                LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: theme.colors.skel2, location: 0.5),
+                                       .init(color: .clear, location: 1)],
+                               startPoint: UnitPoint(x: (center - Self.band / 2) / max(frame.width, 1), y: 0.5),
+                               endPoint: UnitPoint(x: (center + Self.band / 2) / max(frame.width, 1), y: 0.5))
+            }
+        }
+        .allowsHitTesting(false)
     }
 }

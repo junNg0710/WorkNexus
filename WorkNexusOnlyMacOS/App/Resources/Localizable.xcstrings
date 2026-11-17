@@ -25263,6 +25263,159 @@
         }
       }
     },
+    "diagnosticsClear": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xoá"
+          }
+        }
+      }
+    },
+    "diagnosticsCleared": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error log cleared"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã xoá log lỗi"
+          }
+        }
+      }
+    },
+    "diagnosticsExport": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xuất…"
+          }
+        }
+      }
+    },
+    "diagnosticsExportFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save the diagnostics: %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không lưu được file chẩn đoán: %1$@"
+          }
+        }
+      }
+    },
+    "diagnosticsExported": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostics saved"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã lưu file chẩn đoán"
+          }
+        }
+      }
+    },
+    "diagnosticsHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Errors and the steps before them are kept on this Mac for 7 days, to trace problems. Nothing is sent anywhere. Passwords, tokens and the text of messages and tickets are never recorded."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lỗi và các bước ngay trước đó được lưu trên máy này 7 ngày để truy vết sự cố. Không gửi đi đâu. Mật khẩu, token và nội dung tin nhắn, ticket không bao giờ được ghi lại."
+          }
+        }
+      }
+    },
+    "diagnosticsLogs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error log"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log lỗi"
+          }
+        }
+      }
+    },
+    "diagnosticsOpen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open folder"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở thư mục"
+          }
+        }
+      }
+    },
+    "diagnosticsTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostics"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chẩn đoán lỗi"
+          }
+        }
+      }
+    },
     "dropFilesToAttach": {
       "extractionState": "manual",
       "localizations": {

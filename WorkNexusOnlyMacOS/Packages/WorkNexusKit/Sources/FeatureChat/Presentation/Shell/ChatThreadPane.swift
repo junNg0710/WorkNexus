@@ -18,12 +18,16 @@ struct ChatThreadPane: View {
             VStack(spacing: 0) {
                 ChatThreadHeader(model: model, session: session)
                 if session.search.isOpen { ChatThreadSearchBar(model: model, session: session) }
-                MessageListView(state: state)
-                    .overlay(alignment: .topLeading) { ChatFloatingVideo(model: state.video) }
-                ChatComposerView(state: state, hint: shellString("chatMessageTo", "Type @ to mention, message {name}",
-                                                                 ["name": ChatShellLabels.title(state.chat, state.users)]))
-                    // "Multiple select" covers the composer with its bar; what was being written stays underneath.
-                    .overlay { if state.isSelecting { ChatSelectionBar(model: model, state: state) } }
+                VStack(spacing: 0) {
+                    MessageListView(state: state)
+                        .overlay(alignment: .topLeading) { ChatFloatingVideo(model: state.video) }
+                    ChatComposerView(state: state, hint: shellString("chatMessageTo", "Type @ to mention, message {name}",
+                                                                     ["name": ChatShellLabels.title(state.chat, state.users)]))
+                        // "Multiple select" covers the composer with its bar; what was being written stays underneath.
+                        .overlay { if state.isSelecting { ChatSelectionBar(model: model, state: state) } }
+                }
+                // Files and pictures dropped on the messages or the input wait in the input to be sent.
+                .chatFileDrop(state: state)
             }
             .frame(maxWidth: .infinity)
             .background { ChatWallpaperView() }

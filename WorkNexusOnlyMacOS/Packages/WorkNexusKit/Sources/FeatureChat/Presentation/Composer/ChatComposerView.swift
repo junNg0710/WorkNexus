@@ -3,7 +3,8 @@ import AppKit
 import CoreUI
 import SwiftUI
 
-/// Message input: Enter sends, Shift+Enter adds a line; pasted, picked or dropped files wait in the input (which then takes no
+/// Message input: Enter sends, Shift+Enter adds a line; pasted, picked or dropped files (dropped anywhere on the chat,
+/// `chatFileDrop`) wait in the input (which then takes no
 /// text) until sent. A message picked with "reply" shows above the input and the next send answers it; in a reply thread
 /// (`threadRootId`) sends answer its root unless another message is picked.
 public struct ChatComposerView: View {
@@ -14,7 +15,6 @@ public struct ChatComposerView: View {
     let hint: String?
     @State private var controller: ChatComposerController
     @State private var inputHeight: CGFloat = 0
-    @State private var dropTargeted = false
     /// The input holds a tall block of lines (Markdown mode's expand toggle) instead of growing with its text.
     @State private var expanded = false
 
@@ -60,11 +60,6 @@ public struct ChatComposerView: View {
         }
         .background(theme.colors.panel)
         .overlay(alignment: .top) { Rectangle().fill(theme.colors.line).frame(height: theme.borders.hairline) }
-        .overlay { if dropTargeted { DropHint() } }
-        .dropDestination(for: URL.self) { urls, _ in
-            controller.stage(urls: urls.filter(\.isFileURL))
-            return true
-        } isTargeted: { dropTargeted = $0 }
         .onChange(of: controller.model.revision) { _, _ in controller.textChanged() }
         .onChange(of: state.pendingInsertion) { _, text in takeInsertion(text) }
         .onChange(of: state.replyDraft?.gid) { _, gid in if gid != nil { controller.model.requestFocus() } }
@@ -147,17 +142,5 @@ private struct ComposerErrorLine: View {
             .padding(.horizontal, theme.spacing.s12)
             .background(theme.colors.red.opacity(0.08))
         }
-    }
-}
-
-private struct DropHint: View {
-    @Environment(\.appTheme) private var theme
-    var body: some View {
-        RoundedRectangle(cornerRadius: theme.radii.md)
-            .strokeBorder(theme.colors.accent, style: StrokeStyle(lineWidth: theme.borders.medium, dash: [6, 4]))
-            .background(theme.colors.sel, in: RoundedRectangle(cornerRadius: theme.radii.md))
-            .overlay(Text(appString("dropFilesToStage", "Drop files to add them to the message")).font(theme.typography.label).foregroundStyle(theme.colors.accent))
-            .padding(theme.spacing.s4)
-            .allowsHitTesting(false)
     }
 }

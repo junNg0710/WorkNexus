@@ -106,6 +106,19 @@ final class BoardUseCaseTests: XCTestCase {
         XCTAssertEqual(SavedFilterMapper.decode(#"{"statuses":["done","nope"]}"#).statuses, [.done])
     }
 
+    // MARK: ApplyViewHead
+
+    func testApplyViewHeadAddsWhatIsNewAndKeepsWhatWasRead() {
+        func t(_ id: String) -> Ticket { makeTicket(id) }
+        let read = PagedViewState(ids: ["a", "b", "c"], page: 2, total: 60, hasMore: true)
+        let next = ApplyViewHead()(read, ViewPage(tickets: [t("new"), t("a")], total: 61, hasMore: true))
+        XCTAssertEqual(next.ids, ["a", "b", "c", "new"]); XCTAssertEqual(next.page, 2); XCTAssertEqual(next.total, 61)
+        // A view read to its end that grew past what was read has more again; one that did not stays done.
+        let done = PagedViewState(ids: ["a"], page: 1, total: 50, hasMore: false)
+        XCTAssertTrue(ApplyViewHead()(done, ViewPage(tickets: [t("x")], total: 51, hasMore: true)).hasMore)
+        XCTAssertFalse(ApplyViewHead()(done, ViewPage(tickets: [t("x")], total: 50, hasMore: false)).hasMore)
+    }
+
     // MARK: SwitchBoardFilter
     func testSwitchBoardFilter() {
         let sw = SwitchBoardFilter()

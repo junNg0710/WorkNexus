@@ -89,7 +89,9 @@ public final class UpdateModel {
         let progress = ProgressRelay { [weak self] p in Task { @MainActor in self?.report(update, p) } }
         switch await downloadUpdate(update, onProgress: { progress.send($0) }) {
         case .success(let path): state = .ready(update, stagedPath: path)
-        case .failure(let f): state = .failed(update, message: f.message)
+        case .failure(let f):
+            Diagnostics.error("update", "Downloading \(update.latestVersion) failed: \(f.message)")
+            state = .failed(update, message: f.message)
         }
     }
 
@@ -101,7 +103,11 @@ public final class UpdateModel {
     public func installAndRestart() async {
         guard case .ready(let update, let path) = state else { return }
         state = .installing(update)
-        if case .failure(let f) = await installUpdate(stagedPath: path) { state = .failed(update, message: f.message) }
+        Diagnostics.info("update", "Installing \(update.latestVersion): the app quits and the helper swaps it in")
+        if case .failure(let f) = await installUpdate(stagedPath: path) {
+            Diagnostics.error("update", "Installing \(update.latestVersion) failed: \(f.message)")
+            state = .failed(update, message: f.message)
+        }
     }
 }
 

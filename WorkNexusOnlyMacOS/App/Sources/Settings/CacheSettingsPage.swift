@@ -31,6 +31,7 @@ struct CacheSettingsPage: View {
                     return root.coordinator.clearAttachmentStorage()
                 })
             }
+            DiagnosticsCard(log: root.diagnostics.log)
         }
     }
 }

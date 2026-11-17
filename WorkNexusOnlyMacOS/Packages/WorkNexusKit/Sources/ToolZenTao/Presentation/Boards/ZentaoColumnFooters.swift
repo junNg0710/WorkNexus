@@ -10,10 +10,14 @@ struct ZentaoBugColumnFooter: View {
 
     var body: some View {
         let view = ZenTaoBugStream.of(column, related: state.bugRelated)
-        PagedColumnFooter(stream: state.bugStream(column), visible: visible, filtered: state.bugBoard.filter.narrowsTickets,
-                          errorText: appString("bugTabLoadFailed", "Couldn't load bugs"),
-                          onLoadMore: { Task { await state.bugStreams.loadMore(view, visible: visible) } },
-                          onRetry: { Task { await state.bugStreams.retry(view) } })
+        // A status the filter leaves out shows nothing however many pages are read: its column does not scan.
+        let statuses = state.bugBoard.filter.zentaoStatuses
+        if statuses.isEmpty || statuses.contains(column.name) {
+            PagedColumnFooter(stream: state.bugStream(column), visible: visible, filtered: state.bugBoard.filter.narrowsTickets,
+                              errorText: appString("bugTabLoadFailed", "Couldn't load bugs"),
+                              onLoadMore: { Task { await state.bugStreams.loadMore(view, visible: visible) } },
+                              onRetry: { Task { await state.bugStreams.retry(view) } })
+        }
     }
 }
 

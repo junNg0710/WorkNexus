@@ -138,4 +138,33 @@ final class ChatRenderSmokeTests: XCTestCase {
         let strip = ChatImageStrip(accountId: "a", images: images, current: images[2]) { _ in }.chatServices(ChatServices(chat: Repo()))
         try await render(strip, "image-strip", width: 520, height: 100)
     }
+
+    /// The viewer over a picture of the app itself, with the chat's other pictures in the strip; sized for a large window.
+    func testImageViewerFillsALargeWindow() async throws {
+        final class Pictures: StubChatRepository, @unchecked Sendable {
+            let images: [ImageContent]
+            init(_ images: [ImageContent]) { self.images = images; super.init() }
+            override func watchAttachments(accountId: String, chatGid: String) -> AsyncStream<[ChatMessage]> {
+                let messages = images.enumerated().map { Make.message("p\($0.offset)", content: .image($0.element), serverId: $0.offset + 1) }
+                return AsyncStream { $0.yield(messages); $0.finish() }
+            }
+            override func loadAttachment(accountId: String, content: MessageContent, thumbnail: Bool) async -> Outcome<Data> {
+                let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 1440, pixelsHigh: 900, bitsPerSample: 8, samplesPerPixel: 4,
+                                           hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+                NSGraphicsContext.saveGraphicsState()
+                NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+                NSColor(calibratedRed: 0.62, green: 0.78, blue: 0.55, alpha: 1).setFill(); NSRect(x: 0, y: 0, width: 1440, height: 900).fill()
+                NSColor.white.setFill(); NSRect(x: 160, y: 120, width: 1120, height: 660).fill()
+                NSGraphicsContext.restoreGraphicsState()
+                return .success(rep.representation(using: .png, properties: [:])!)
+            }
+        }
+        let images = (1...11).map { ImageContent(fileId: $0, name: "Screenshot 2026-11-17 at 09.19.\($0).png", size: 1_240_000, time: 1) }
+        let viewer = ChatImageViewer(accountId: "a", chatGid: "g", image: images[0]).chatServices(ChatServices(chat: Pictures(images)))
+        let size = ChatViewerSize.of(window: CGSize(width: 1900, height: 1100))
+        XCTAssertEqual(size.width, 1900 * ChatViewerSize.share, accuracy: 0.5)
+        XCTAssertEqual(ChatViewerSize.of(window: nil), ChatViewerSize.fallback)
+        XCTAssertEqual(ChatViewerSize.of(window: CGSize(width: 600, height: 400)), ChatViewerSize.minimum)
+        try await render(viewer, "image-viewer", width: ChatViewerSize.fallback.width, height: ChatViewerSize.fallback.height, settle: 20)
+    }
 }

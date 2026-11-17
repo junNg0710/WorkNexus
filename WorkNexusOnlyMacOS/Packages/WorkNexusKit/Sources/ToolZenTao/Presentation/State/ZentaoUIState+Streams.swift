@@ -20,6 +20,14 @@ extension ZentaoUIState {
         taskStreams.open(views: ZenTaoTaskColumn.allCases, opening: none ? [] : ZenTaoTaskColumn.allCases, finished: none)
     }
 
+    /// Picks up tickets made or changed elsewhere on the board on screen: the first page of each of its views is read
+    /// again and merged in (`PagedViewsController.refreshHeads`). A team board reads every person whole, so it is left
+    /// to its own refresh.
+    public func refreshShownBoards() async {
+        if taskBoard.isActive, execution != nil, taskTeam == nil { await taskStreams.refreshHeads() }
+        if bugBoard.isActive, product != nil, bugTeam == nil { await bugStreams.refreshHeads() }
+    }
+
     func fetchBugPage(_ view: ZenTaoBugStream, page: Int, limit: Int, cancel: CancelSignal) async -> Outcome<ViewPage> {
         guard let product else { return .failure(.cancelled("No product is selected")) }
         let sort = bugFetchSort, pages = deps.viewPages

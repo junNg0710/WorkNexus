@@ -51,6 +51,26 @@ public final class PagedViewsController<V: Hashable & Sendable> {
         views[view] = ApplyViewPages()(ViewPagesResult(state: views[view] ?? plan.loading, pages: pages))
     }
 
+    /// Reads the first page of every view that has loaded again and adds what is new (a ticket made elsewhere since),
+    /// keeping the pages already loaded: the board picks up new work without losing its place. A view that is loading,
+    /// failed or not started is left alone; a failed read changes nothing (the next one tries again).
+    public func refreshHeads() async {
+        let gen = generation, cancel = self.cancel, fetch = fetchPage
+        let ready = views.filter { $0.value.started && !$0.value.loading && $0.value.failure == nil }.map(\.key)
+        guard !ready.isEmpty else { return }
+        let heads = await withTaskGroup(of: (V, Outcome<ViewPage>).self) { group in
+            for view in ready { group.addTask { (view, await fetch(view, 1, kPagedViewPageSize, cancel)) } }
+            var out: [(V, Outcome<ViewPage>)] = []
+            for await r in group { out.append(r) }
+            return out
+        }
+        if cancel.isCancelled || gen != generation { return }
+        for (view, result) in heads {
+            guard case .success(let head) = result, let state = views[view], !state.loading else { continue }
+            views[view] = ApplyViewHead()(state, head)
+        }
+    }
+
     /// Clears a failed page and tries again.
     public func retry(_ view: V) async {
         if var s = views[view] { s.failure = nil; views[view] = s }

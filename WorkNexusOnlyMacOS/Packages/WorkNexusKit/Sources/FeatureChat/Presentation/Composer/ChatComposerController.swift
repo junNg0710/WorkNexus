@@ -161,7 +161,8 @@ final class ChatComposerController {
 
     /// Files or an image on the clipboard are staged (true); false leaves plain text to the text view.
     func pasteAttachments() -> Bool {
-        guard let items = readClipboardAttachments() else { return false }
+        // Only folders copied: nothing to send, so the paste falls through to text (their paths).
+        guard let items = readClipboardAttachments(), !items.isEmpty else { return false }
         stage(items.map { StagedFile(name: $0.name, data: $0.data, mimeType: ChatStaging.mimeType(forName: $0.name)) })
         return true
     }

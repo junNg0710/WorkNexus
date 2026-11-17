@@ -137,6 +137,31 @@ final class PasteboardKitTests: XCTestCase {
         let pb = board(); defer { pb.releaseGlobally() }
         pb.clearContents(); pb.setString("just text", forType: .string)
         XCTAssertNil(PasteboardKit(pasteboard: pb).readAttachments())
+        XCTAssertFalse(PasteboardKit(pasteboard: pb).hasAttachments())
+    }
+
+    /// What a screenshot to the clipboard leaves (an image, no text) is an attachment, in TIFF as in PNG.
+    func testAScreenshotOnTheClipboardIsAnAttachment() throws {
+        let pb = board(); defer { pb.releaseGlobally() }
+        let kit = PasteboardKit(pasteboard: pb)
+        XCTAssertFalse(kit.hasAttachments())
+        let tiff = try XCTUnwrap(NSImage(data: pngData(width: 6, height: 4))?.tiffRepresentation)
+        pb.clearContents(); pb.setData(tiff, forType: .tiff)
+        XCTAssertTrue(kit.hasAttachments())
+        let png = try XCTUnwrap(kit.readImage())
+        XCTAssertEqual(NSBitmapImageRep(data: png)?.pixelsWide, 6)
+        XCTAssertEqual(png.prefix(4), Data([0x89, 0x50, 0x4E, 0x47]), "read back as PNG")
+    }
+
+    /// A JPEG on its own (as some apps copy a picture) is pasted as a picture.
+    func testAnImageInAnotherFormatIsAnAttachment() throws {
+        let pb = board(); defer { pb.releaseGlobally() }
+        let rep = try XCTUnwrap(NSBitmapImageRep(data: pngData(width: 5, height: 5)))
+        let jpeg = try XCTUnwrap(rep.representation(using: .jpeg, properties: [:]))
+        let kit = PasteboardKit(pasteboard: pb)
+        pb.clearContents(); pb.setData(jpeg, forType: NSPasteboard.PasteboardType("public.jpeg"))
+        XCTAssertTrue(kit.hasAttachments())
+        XCTAssertEqual(try XCTUnwrap(kit.readAttachments()).first.flatMap { NSBitmapImageRep(data: $0.data)?.pixelsWide }, 5)
     }
 }
 

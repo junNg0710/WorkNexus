@@ -16,7 +16,14 @@ struct ZentaoPeopleStrip: View {
         let narrowing = !leader.quick.isEmpty || !leader.trimmedKeyword.isEmpty
         // While chips or a keyword narrow the board, people with nothing left are noise: only the picked ones stay.
         let rows = state.workload(bugs: bugs).filter { !narrowing || $0.open > 0 || leader.people.contains($0.login) }
-        if rows.count > 1 || !leader.people.isEmpty {
+        let loading = (bugs ? state.bugSlice.isLoading : state.taskSlice.isLoading) || (state.team(bugs: bugs)?.isLoading ?? false)
+        if loading && rows.count <= 1 && leader.people.isEmpty {
+            // The row the people will fill, held while the board loads: the board below does not jump down when they come.
+            HStack(spacing: theme.spacing.s6) {
+                ForEach(0..<6, id: \.self) { i in SkeletonBox(width: [72, 132, 118, 150, 104, 126][i], height: theme.sizes.control32 - theme.spacing.s4, radius: theme.radii.pill) }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        } else if rows.count > 1 || !leader.people.isEmpty {
             let total = rows.reduce(0) { $0 + $1.open }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: theme.spacing.s6) {

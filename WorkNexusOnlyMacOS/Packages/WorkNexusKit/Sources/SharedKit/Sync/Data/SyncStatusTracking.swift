@@ -12,6 +12,7 @@ public func trackSyncStatus<T: Sendable>(_ repo: SyncStatusRepository?, accountI
     switch result {
     case .success: repo.report(accountId: accountId, status: .idle(lastSyncedAt: Date()))
     case .failure(let f):
+        Diagnostics.error("sync", "Account \(accountId): \(f.message)")
         switch f {
         case .auth: repo.report(accountId: accountId, status: .authExpired)
         case .network: repo.report(accountId: accountId, status: .offline)

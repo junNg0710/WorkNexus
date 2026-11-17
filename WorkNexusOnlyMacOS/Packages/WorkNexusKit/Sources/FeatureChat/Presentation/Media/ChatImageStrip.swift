@@ -26,9 +26,9 @@ struct ChatImageStrip: View {
             .onAppear { proxy.scrollTo(current, anchor: .center) }
             .onChange(of: current) { _, new in withAnimation(.easeOut(duration: theme.motion.base)) { proxy.scrollTo(new, anchor: .center) } }
         }
-        .frame(height: theme.sizes.control36 + theme.spacing.s24)
-        .background(theme.colors.panel)
-        .overlay(alignment: .top) { Rectangle().fill(theme.colors.line).frame(height: theme.borders.hairline) }
+        .frame(height: StripThumb.side + theme.spacing.s20)
+        // Part of the dark stage, so the picture and its neighbours read as one surface.
+        .background(theme.colors.scrim.opacity(0.85))
     }
 }
 
@@ -40,17 +40,20 @@ private struct StripThumb: View {
     let selected: Bool
     let onTap: () -> Void
     @State private var thumbnail: NSImage?
+    static let side: CGFloat = 60
 
     var body: some View {
-        let side = theme.sizes.control36 + theme.spacing.s8
+        let side = Self.side
         Button(action: onTap) {
             ZStack {
                 theme.colors.skel2
                 if let thumbnail { Image(nsImage: thumbnail).resizable().scaledToFill() }
             }
             .frame(width: side, height: side).clipShape(RoundedRectangle(cornerRadius: theme.radii.sm))
-            .overlay(RoundedRectangle(cornerRadius: theme.radii.sm).stroke(selected ? theme.colors.accent : .clear, lineWidth: theme.borders.thick))
-            .opacity(selected ? 1 : 0.75)
+            .overlay(RoundedRectangle(cornerRadius: theme.radii.sm).stroke(selected ? theme.colors.onScrim : .clear, lineWidth: theme.borders.thick))
+            .opacity(selected ? 1 : 0.55)
+            .scaleEffect(selected ? 1 : 0.92)
+            .animation(.easeOut(duration: theme.motion.fast), value: selected)
         }
         .buttonStyle(.plain)
         .task(id: image) {

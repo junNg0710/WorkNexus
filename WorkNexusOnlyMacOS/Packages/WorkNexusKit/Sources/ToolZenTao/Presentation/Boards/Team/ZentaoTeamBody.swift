@@ -17,7 +17,7 @@ struct ZentaoTeamBody: View {
             let reason: String = { if case .failed(let m)? = team.loads.values.first(where: \.isFailed) { return m } else { return "" } }()
             AppStateView(.error(reason)) { state.loadTeam(bugs: bugs, only: nil) }
         } else if team.isLoading, board.scoped.isEmpty {
-            BoardSkeleton()
+            if list { TableSkeleton() } else { BoardSkeleton() }
         } else if bugs {
             if list { ZentaoBugTableView(state: state) } else if let deps { ZentaoBugBoardView(deps: deps, state: state) }
         } else {

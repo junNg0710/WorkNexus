@@ -19,6 +19,8 @@ struct ChatVideoViewer: View {
     var onClosed: (TimeInterval?) -> Void = { _ in }
     @State private var player: ChatVideoPlayer?
     @State private var failure: String?
+    /// Most of the window it opens over.
+    @State private var size = ChatViewerSize.current
 
     var body: some View {
         VStack(spacing: 0) {
@@ -43,7 +45,7 @@ struct ChatVideoViewer: View {
                 } else { ProgressView().tint(theme.colors.onScrim).frame(maxHeight: .infinity) }
             }
         }
-        .frame(minWidth: 640, idealWidth: 900, minHeight: 420, idealHeight: 600)
+        .frame(width: size.width, height: size.height)
         .focusable().focused($focused).focusEffectDisabled()
         .onKeyPress(.space) { player?.toggle(); return player == nil ? .ignored : .handled }
         .onKeyPress(.leftArrow) { player?.skip(by: -ChatVideoPlayer.seekStep); return player == nil ? .ignored : .handled }

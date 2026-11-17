@@ -1,5 +1,6 @@
 /// Ported from: lib/features/chat/presentation/widgets/{chat_composer_field,chat_composer_input,chat_composer_plain_input,chat_editor_styles}.dart
 import AppKit
+import CoreUI
 import SwiftUI
 
 /// A key the composer takes before the text view does.
@@ -8,6 +9,8 @@ enum ComposerKeyEvent { case enter, tab, up, down, escape, toggleMarkdown }
 final class ComposerNSTextView: NSTextView {
     var onKey: ((ComposerKeyEvent) -> Bool)?
     var onPaste: (() -> Bool)?
+    /// Whether the clipboard holds files or an image (replaced in tests, which must not touch the user's clipboard).
+    var clipboardHasAttachments: () -> Bool = { CoreUI.clipboardHasAttachments() }
 
     override func keyDown(with event: NSEvent) {
         // An IME composing (Unikey, Pinyin…) owns the keys until it commits.
@@ -35,6 +38,18 @@ final class ComposerNSTextView: NSTextView {
     override func paste(_ sender: Any?) {
         if onPaste?() == true { return }
         pasteAsPlainText(sender)
+    }
+
+    /// A plain-text view offers Paste only for text: with a screenshot (an image and nothing else) on the clipboard, Edit ›
+    /// Paste and ⌘V stayed disabled and `paste(_:)` never ran. Files and images on the clipboard enable it too.
+    override func validateMenuItem(_ item: NSMenuItem) -> Bool {
+        if item.action == #selector(paste(_:)), clipboardHasAttachments() { return true }
+        return super.validateMenuItem(item)
+    }
+
+    override func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {
+        if item.action == #selector(paste(_:)), clipboardHasAttachments() { return true }
+        return super.validateUserInterfaceItem(item)
     }
 }
 

@@ -1,3 +1,4 @@
+import CoreDomain
 import Observation
 import SwiftUI
 
@@ -28,6 +29,8 @@ public final class AppToastController {
     public init() {}
 
     public func show(_ message: String, kind: AppToastKind = .success) {
+        // A failure the user was shown is a failure worth tracing.
+        if kind == .error { Diagnostics.error("ui", message) }
         let t = AppToast(id: nextId, message: message, kind: kind)
         nextId += 1
         toasts = Array(([t] + toasts.filter { $0.message != message }).prefix(Self.maxShown))

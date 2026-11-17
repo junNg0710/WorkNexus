@@ -215,6 +215,42 @@
     "en": "Two panes",
     "vi": "Hai khung"
   },
+  "diagnosticsClear": {
+    "en": "Clear",
+    "vi": "Xoá"
+  },
+  "diagnosticsCleared": {
+    "en": "Error log cleared",
+    "vi": "Đã xoá log lỗi"
+  },
+  "diagnosticsExport": {
+    "en": "Export…",
+    "vi": "Xuất…"
+  },
+  "diagnosticsExportFailed": {
+    "en": "Couldn't save the diagnostics: %1$@",
+    "vi": "Không lưu được file chẩn đoán: %1$@"
+  },
+  "diagnosticsExported": {
+    "en": "Diagnostics saved",
+    "vi": "Đã lưu file chẩn đoán"
+  },
+  "diagnosticsHint": {
+    "en": "Errors and the steps before them are kept on this Mac for 7 days, to trace problems. Nothing is sent anywhere. Passwords, tokens and the text of messages and tickets are never recorded.",
+    "vi": "Lỗi và các bước ngay trước đó được lưu trên máy này 7 ngày để truy vết sự cố. Không gửi đi đâu. Mật khẩu, token và nội dung tin nhắn, ticket không bao giờ được ghi lại."
+  },
+  "diagnosticsLogs": {
+    "en": "Error log",
+    "vi": "Log lỗi"
+  },
+  "diagnosticsOpen": {
+    "en": "Open folder",
+    "vi": "Mở thư mục"
+  },
+  "diagnosticsTitle": {
+    "en": "Diagnostics",
+    "vi": "Chẩn đoán lỗi"
+  },
   "dropFilesToAttach": {
     "en": "Drop files to attach",
     "vi": "Thả tệp để đính kèm"

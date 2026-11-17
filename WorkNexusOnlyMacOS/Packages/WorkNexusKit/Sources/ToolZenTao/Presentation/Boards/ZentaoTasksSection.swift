@@ -54,6 +54,7 @@ public struct ZentaoTasksSection: View {
             state.loadBoardMembers(bugs: false); state.loadModuleNames(bugs: false)
         }
         .onChange(of: viewMode, initial: true) { _, mode in state.taskListMode = mode == "list"; state.refreshFetchSorts() }
+        .zentaoAutoRefresh(state)
     }
 }
 
@@ -70,7 +71,7 @@ private struct ZentaoTasksBody: View {
         } else if let failure = state.taskSlice.failure, state.taskBoard.scoped.isEmpty {
             AppStateView(.error(failure.message)) { state.reopenTaskStreams() }
         } else if state.taskSlice.isLoading && state.taskBoard.scoped.isEmpty {
-            BoardSkeleton()
+            if list { TableSkeleton() } else { BoardSkeleton() }
         } else if list {
             ZentaoTaskTableView(state: state)
         } else {

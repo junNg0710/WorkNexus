@@ -89,11 +89,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             sender.reply(toApplicationShouldTerminate: true)
         }
         Task { @MainActor in await root.miniApps.stopSessionCookies(); reply() }
-        Task { @MainActor in try? await Task.sleep(for: Self.quitGrace); reply() }
+        // A run-loop timer, not a task: while the app waits for this answer, a quit asked from main-queue work leaves the
+        // main queue blocked, and a timer still fires there. Without it the app hung in "quitting" for good (the update
+        // never installed).
+        let grace = Timer(timeInterval: Self.quitGrace, repeats: false) { _ in MainActor.assumeIsolated { reply() } }
+        RunLoop.main.add(grace, forMode: .common)
         return .terminateLater
     }
 
-    private static let quitGrace: Duration = .milliseconds(1500)
+    private static let quitGrace: TimeInterval = 1.5
+}
+
+/// Quitting the app from code.
+enum AppQuit {
+    /// Asks the app to quit from a run-loop timer: called from main-queue work (a task, a dispatched block), a direct
+    /// `NSApp.terminate` would wait inside that work for answers queued behind it, and never quit.
+    @MainActor static func now() {
+        NSApp.perform(#selector(NSApplication.terminate(_:)), with: nil, afterDelay: 0)
+    }
 }
 
 /// Menu-bar commands (Settings…, search, refresh, new bug/task) so the app behaves like a Mac app, not a web view. ⌘K and ⌘R

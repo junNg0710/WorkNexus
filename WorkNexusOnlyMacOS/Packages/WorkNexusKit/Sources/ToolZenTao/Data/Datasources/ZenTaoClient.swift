@@ -140,8 +140,17 @@ public final class ZenTaoClient: @unchecked Sendable {
             // Proceed without a token when login fails; the resulting 401 is handled below.
             if let t = try? await ensureToken() { ZenTaoHeaders.set(&request.headers, "Token", t) }
         }
-        let response = try await transport.send(request)
-        if response.status == 401, !request.isAuthCall, !retried {
+        let started = Date()
+        let response: ZenTaoResponse
+        do { response = try await transport.send(request) } catch {
+            Diagnostics.request("zentao", method: request.method, url: request.url, status: nil, error: error, elapsed: Date().timeIntervalSince(started))
+            throw error
+        }
+        let willSignInAgain = response.status == 401 && !request.isAuthCall && !retried
+        // An expired session is routine (ZenTao drops it on every other login): it is noted, and an error only if signing in again fails.
+        if willSignInAgain { Diagnostics.info("zentao", "\(Diagnostics.describe(method: request.method, url: request.url)) → HTTP 401, signing in again") }
+        else { Diagnostics.request("zentao", method: request.method, url: request.url, status: response.status, elapsed: Date().timeIntervalSince(started)) }
+        if willSignInAgain {
             do {
                 var again = request
                 ZenTaoHeaders.set(&again.headers, "Token", try await reauthenticate())
