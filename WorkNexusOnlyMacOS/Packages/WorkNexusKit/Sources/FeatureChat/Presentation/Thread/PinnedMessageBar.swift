@@ -21,6 +21,7 @@ public struct PinnedMessageBar: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(L.pinnedBarTitle).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx)
                     Text(preview).font(theme.typography.paragraph).foregroundStyle(theme.colors.tx2).lineLimit(1).truncationMode(.tail)
+                        .chatPrivacyFade()
                 }
                 Spacer(minLength: theme.spacing.s8)
                 if others > 0 {

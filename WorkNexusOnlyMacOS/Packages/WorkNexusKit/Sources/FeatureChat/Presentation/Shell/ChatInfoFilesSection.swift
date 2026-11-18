@@ -20,7 +20,14 @@ struct ChatInfoFilesSection: View {
                       onSeeAll: (split?.media.isEmpty ?? true) ? nil : seeAll) {
                 if let split {
                     if split.media.isEmpty { AppInlineNote(shellString("chatNoMedia", "No photos or videos yet")) }
-                    else { ChatMediaGrid(model: model, media: Array(split.media.prefix(Self.previewMedia))) }
+                    else {
+                        // Hidden: empty tiles, so the thumbnails are not even loaded.
+                        ChatPrivacyMasked(part: .message) {
+                            ChatMediaGrid(model: model, media: Array(split.media.prefix(Self.previewMedia)))
+                        } mask: {
+                            ChatHiddenMediaGrid(count: min(split.media.count, Self.previewMedia))
+                        }
+                    }
                 } else { AppInlineSpinner() }
             }
             FilesCard(title: split.map { "\(shellString("chatFiles", "Files")) (\($0.files.count))" } ?? shellString("chatFiles", "Files"),
@@ -30,7 +37,9 @@ struct ChatInfoFilesSection: View {
                     else {
                         VStack(alignment: .leading, spacing: 0) {
                             ForEach(split.files.prefix(Self.previewFiles)) { m in
-                                if let f = m.content.asFile { ChatFileRow(model: model, message: m, file: f) }
+                                if let f = m.content.asFile {
+                                    ChatPrivacyMasked(part: .message) { ChatFileRow(model: model, message: m, file: f) } mask: { ChatHiddenFileRow() }
+                                }
                             }
                         }
                     }

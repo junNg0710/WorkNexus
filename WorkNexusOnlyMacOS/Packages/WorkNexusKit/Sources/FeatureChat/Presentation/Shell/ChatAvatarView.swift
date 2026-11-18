@@ -20,6 +20,7 @@ struct ChatAvatarView: View {
     enum Size { case small, medium, large }
 
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let name: String
     var style = ChatAvatarStyle()
     var presence: ChatPresence?
@@ -27,6 +28,9 @@ struct ChatAvatarView: View {
     var size: Size = .medium
     /// Exact size; overrides `size`.
     var diameter: CGFloat?
+    /// The privacy mode hides who this is: a plain placeholder covers the picture (see `privacyMasked`).
+    private(set) var masked = false
+    private(set) var maskedGroup = false
 
     init(name: String, style: ChatAvatarStyle = ChatAvatarStyle(), presence: ChatPresence? = nil,
          verified: ChatVerifiedBadge? = nil, size: Size = .medium, diameter: CGFloat? = nil) {
@@ -58,8 +62,21 @@ struct ChatAvatarView: View {
         }
     }
 
+    /// This avatar with the privacy mode's placeholder over it while `masked` (people for a `group`, else a person); the
+    /// presence dot stays, the "verified" check (a rank) goes.
+    func privacyMasked(_ masked: Bool, group: Bool = false) -> ChatAvatarView {
+        var copy = self
+        copy.masked = masked; copy.maskedGroup = group
+        return copy
+    }
+
     var body: some View {
         picture
+            // Over the picture, which stays loaded underneath: pointing at it shows it again without a reload.
+            .overlay {
+                ZStack { if masked { ChatPrivacyAvatarFace(group: maskedGroup, side: side).transition(.opacity) } }
+                    .animation(ChatPrivacyMotion.ease(reduced: reduceMotion), value: masked)
+            }
             .frame(width: side, height: side).clipShape(Circle())
             .overlay(alignment: .bottomTrailing) { presenceDot }
             .overlay(alignment: .topTrailing) { verifiedCheck }
@@ -84,7 +101,7 @@ struct ChatAvatarView: View {
     }
 
     @ViewBuilder private var verifiedCheck: some View {
-        if let verified {
+        if let verified, !masked {
             let check = min(max(side * 0.36, theme.spacing.s12), theme.sizes.icon20)
             Image(systemName: "checkmark.seal.fill").font(.system(size: check))
                 .foregroundStyle(Self.rankColor(verified.rank, theme))

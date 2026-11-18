@@ -46,6 +46,8 @@ struct ThreadRowView: View, Equatable {
                         .padding(.horizontal, side)
                 }
             }
+            // A message that arrives while the chat is open fades in; loaded pages and rows scrolled back show as they are.
+            .modifier(ChatRowEntrance(fresh: ctx.model.arrivals.isFresh(m.gid)))
             // One accessibility element per message (its words read together) instead of one per name, line, badge and
             // button: with an accessibility client running, every element of a row scrolling into view had SwiftUI walk
             // the whole window for focus - a sixth of the main thread while scrolling.

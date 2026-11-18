@@ -69,6 +69,8 @@ struct ChatShellView: View {
         }
         .background(theme.colors.bg)
         .environment(\.chatPanelVisibility, visibility)
+        // What the privacy mode hides, read by the list, the open chat and its panels.
+        .chatPrivacyRoot()
         .toastHost(model.toasts)
         .appDialog(isPresented: Binding(get: { model.showTrust && model.needsTrust != nil }, set: { model.showTrust = $0 })) {
             if let trust = model.needsTrust { ChatTrustDialog(model: model, request: trust) }

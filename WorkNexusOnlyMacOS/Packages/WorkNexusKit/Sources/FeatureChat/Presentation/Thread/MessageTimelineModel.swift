@@ -63,6 +63,8 @@ final class MessageTimelineModel {
     var notify: (String) -> Void = { _ in }
     /// Translations shown under messages.
     let translation: MessageTranslationController
+    /// Messages that just arrived while the chat is open: their rows ease in (`ChatRowEntrance`).
+    let arrivals = ChatArrivals()
 
     var typingRoster = TypingRoster()
     var replies: [ChatMessage] = []
@@ -172,6 +174,7 @@ final class MessageTimelineModel {
         guard let newest = before.last?.gid, let last = list.last, last.gid != newest,
               let at = list.firstIndex(where: { $0.gid == newest }) else { return }
         let arrived = list[(at + 1)...]
+        arrivals.note(arrived.map(\.gid))
         let selfId = state.selfUserId
         // Own message: from far up, an animated trip down; at the bottom already, the list's bottom anchor keeps it in view,
         // and an extra animated scroll only made the newest bubble jump at the bottom edge.

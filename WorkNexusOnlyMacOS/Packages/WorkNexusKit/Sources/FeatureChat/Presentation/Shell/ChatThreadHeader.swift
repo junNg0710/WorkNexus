@@ -20,9 +20,9 @@ struct ChatThreadHeader: View {
         HStack {
             Button(action: showInfo) {
                 HStack(spacing: theme.spacing.s12) {
-                    ChatAvatarView(chat: chat, title: title, users: users, size: .large)
+                    ChatPrivacyAvatar(avatar: ChatAvatarView(chat: chat, title: title, users: users, size: .large), group: chat.type != .one2one)
                     VStack(alignment: .leading, spacing: theme.spacing.s2) {
-                        Text(title).font(theme.typography.titleSm).foregroundStyle(theme.colors.tx).lineLimit(1)
+                        ChatPrivacyText(text: title, part: .identity, font: theme.typography.titleSm, color: theme.colors.tx)
                         Subtitle(chat: chat, users: users, memberCount: session.memberCount, presence: presence)
                     }
                     Spacer(minLength: 0)
@@ -76,10 +76,14 @@ private struct Subtitle: View {
                     Image(systemName: chat.isMyCloud ? "lock" : chat.type == .one2one ? "at" : "person")
                         .font(.system(size: theme.sizes.icon12)).foregroundStyle(theme.colors.tx2)
                 }
-                Text(text).font(theme.typography.meta).foregroundStyle(theme.colors.tx2).lineLimit(1)
+                // The peer's account names them as much as the title does; a count or a status does not.
+                ChatPrivacyText(text: text, part: chatSubtitleNamesPeer(text, peerAccount: peerAccount) ? .identity : nil,
+                                font: theme.typography.meta, color: theme.colors.tx2)
             }
         }
     }
+
+    private var peerAccount: String? { chat.peerUserId.flatMap { users[$0]?.account } }
 
     private var text: String? {
         if chat.isMyCloud { return shellString("chatMyCloudHint", "Notes, links and files you keep for yourself") }

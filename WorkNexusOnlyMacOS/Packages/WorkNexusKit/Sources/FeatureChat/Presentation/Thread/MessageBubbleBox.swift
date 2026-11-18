@@ -1,4 +1,5 @@
 /// Ported from: lib/features/chat/presentation/widgets/message_bubble_box.dart
+import CoreUI
 import SwiftUI
 
 /// A message bubble's own shape: its fill, border, corners and tail. Under the pointer the fill (and its tail) takes
@@ -26,7 +27,7 @@ struct MessageBubbleBox<Content: View>: View {
             .background(shape.fill(color))
             .overlay { if let border { shape.stroke(border.color, lineWidth: 1) } }
             .onHover { hovered = $0 }
-            .animation(.easeOut(duration: 0.12), value: hovered)
+            .animation(.easeOut(duration: AppMotion().fast), value: hovered)
             // Room for the tail: the shape draws it outside the box, into this padding.
             .padding(.leading, tail != nil && !mine ? BubbleTail.width : 0)
             .padding(.trailing, tail != nil && mine ? BubbleTail.width : 0)

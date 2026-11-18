@@ -19,6 +19,8 @@ public struct ChatSettings: Equatable, Sendable {
     public var textScale: Double = 1
     public var translationLang = "vi"
     public var translationModel = ""
+    /// The privacy mode (hiding chats on screen); the views read what it hides from `\.chatPrivacyHidden`.
+    public var privacy = ChatPrivacy()
 
     public init() {}
     public init(_ s: AppSettings) {
@@ -27,7 +29,7 @@ public struct ChatSettings: Equatable, Sendable {
         notifyWhileViewing = s.chatNotifyWhileViewing; sendTypingStatus = s.chatSendTypingStatus; reactions = s.chatReactions
         cacheLimitMb = s.chatCacheLimitMb; autoDownloadVideos = s.chatAutoDownloadVideos
         autoDownloadVideoMb = s.chatAutoDownloadVideoMb; textScale = s.chatTextScale
-        translationLang = s.translationLang; translationModel = s.translationModel
+        translationLang = s.translationLang; translationModel = s.translationModel; privacy = s.chatPrivacy
     }
 }
 

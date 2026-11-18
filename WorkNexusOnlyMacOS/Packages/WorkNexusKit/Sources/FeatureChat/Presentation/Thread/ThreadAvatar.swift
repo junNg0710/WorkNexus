@@ -7,16 +7,24 @@ import SwiftUI
 /// square, with a "verified" check in the colour of their rank.
 struct ThreadAvatar: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let name: String
     let imageUrl: String?
     var shape: ChatAvatarShape = .circle
     var diameter: CGFloat = 32
     var verifiedRank: ChatRoleRank?
+    /// The privacy mode hides who sent it: a plain placeholder covers the face (still loaded underneath).
+    var masked = false
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            face.frame(width: diameter, height: diameter).clipShape(clip)
-            if let verifiedRank {
+            face
+                .overlay {
+                    ZStack { if masked { ChatPrivacyAvatarFace(group: false, side: diameter).transition(.opacity) } }
+                        .animation(ChatPrivacyMotion.ease(reduced: reduceMotion), value: masked)
+                }
+                .frame(width: diameter, height: diameter).clipShape(clip)
+            if let verifiedRank, !masked {
                 Image(systemName: "checkmark.seal.fill")
                     .font(.system(size: max(10, diameter * 0.36)))
                     .foregroundStyle(color(for: verifiedRank))
@@ -65,6 +73,7 @@ struct ThreadAvatar: View {
 /// The column beside a run of messages that holds the sender's avatar: as wide as the avatar on every message, so bubbles
 /// line up, with the avatar itself only where the style puts it (`visible`).
 struct MessageAvatarSlot: View {
+    @Environment(\.chatPrivacyHidden) private var hidden
     let ctx: ThreadContext
     let senderId: Int
     let name: String
@@ -76,7 +85,8 @@ struct MessageAvatarSlot: View {
             if visible {
                 Button { ctx.actions.openProfile(senderId) } label: {
                     ThreadAvatar(name: name, imageUrl: ctx.users[senderId]?.avatarUrl, shape: style.avatarShape,
-                                 diameter: style.avatarSize, verifiedRank: chatRoleRank(of: ctx.users[senderId]?.role))
+                                 diameter: style.avatarSize, verifiedRank: chatRoleRank(of: ctx.users[senderId]?.role),
+                                 masked: hidden.contains(.identity))
                 }
                 .buttonStyle(.plain)
                 .help(name)

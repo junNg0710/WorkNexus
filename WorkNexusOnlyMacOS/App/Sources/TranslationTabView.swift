@@ -84,7 +84,7 @@ private struct TranslationLoadingState: View {
         VStack(alignment: .leading, spacing: theme.spacing.s8) {
             HStack(spacing: theme.spacing.s8) {
                 ProgressView().controlSize(.small)
-                Text(appString("translating", "Translating with OpenCode…")).font(theme.typography.metaStrong).foregroundStyle(theme.colors.tx)
+                Text(appFormat("translating", "Translating with %1$@…", "OpenCode")).font(theme.typography.metaStrong).foregroundStyle(theme.colors.tx)
             }
             .padding(.bottom, theme.spacing.s12)
             SkeletonBox(width: 200, height: 13)

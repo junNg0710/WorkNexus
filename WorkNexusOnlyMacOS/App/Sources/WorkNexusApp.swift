@@ -144,6 +144,13 @@ private struct AppCommands: Commands {
                 else if let id = accountId, let sync = root?.shell.services.sync { Task { _ = await sync.sync(accountId: id) } }
             }
             .keyboardShortcut("r", modifiers: .command).disabled(boardRefresh == nil && accountId == nil)
+            Divider()
+            // The chat's privacy mode, from anywhere in the app: at hand the moment a screen is shared.
+            Toggle(appString("chatPrivacyMode", "Privacy mode"), isOn: Binding(
+                get: { root?.shell.settings.chatPrivacy.enabled ?? false },
+                set: { on in root?.shell.updateSettings { $0.chatPrivacy.enabled = on } }))
+                .keyboardShortcut(ChatPrivacyShortcut.key, modifiers: ChatPrivacyShortcut.modifiers)
+                .disabled(root == nil)
         }
     }
 }

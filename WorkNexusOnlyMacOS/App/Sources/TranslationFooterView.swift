@@ -41,10 +41,11 @@ struct TranslationFooterView: View {
 
     private func label(_ state: TranslationState) -> String {
         switch state {
-        case .loading: appString("translating", "Translating with OpenCode…")
+        // The strings name the engine since the upstream sync; this port translates with OpenCode only.
+        case .loading: appFormat("translating", "Translating with %1$@…", "OpenCode")
         case .error: appString("retry", "Retry")
-        case .none: appString("translate", "Translate with OpenCode")
-        default: appString("retranslate", "Re-translate with OpenCode")
+        case .none: appFormat("translate", "Translate with %1$@", "OpenCode")
+        default: appFormat("retranslate", "Re-translate with %1$@", "OpenCode")
         }
     }
 }

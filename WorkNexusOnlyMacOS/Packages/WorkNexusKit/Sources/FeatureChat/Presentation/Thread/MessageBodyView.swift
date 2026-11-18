@@ -4,7 +4,22 @@ import CoreUI
 import SwiftUI
 
 /// The content of a message, by content type. Images, files and videos are the Media slice's (`MessageMediaAdapter`).
+/// A picture (an image, a sticker, a video, a big emoji) is covered whole in grey while the privacy mode hides messages; the
+/// rest fades with the bubble's insides (`MessageBubbleContent`).
 struct MessageBodyView: View {
+    let ctx: ThreadContext
+    let message: ChatMessage
+
+    var body: some View {
+        if !message.deleted, isChatPicture(message.content) {
+            MessageBodyContent(ctx: ctx, message: message).chatPrivacyCover()
+        } else {
+            MessageBodyContent(ctx: ctx, message: message)
+        }
+    }
+}
+
+private struct MessageBodyContent: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatBubbleInk) private var ink
     let ctx: ThreadContext

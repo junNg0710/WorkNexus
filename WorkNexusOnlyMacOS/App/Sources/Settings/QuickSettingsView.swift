@@ -76,7 +76,7 @@ struct QuickSettingsGroup<Content: View>: View {
     }
 }
 
-/// The Chat tab: how the chat looks, what it notifies about, what it downloads.
+/// The Chat tab: how the chat looks, what it notifies about, what it downloads, and its privacy (the privacy mode, typing).
 struct QuickSettingsChatTab: View {
     let shell: ShellModel
 
@@ -101,7 +101,7 @@ struct QuickSettingsChatTab: View {
         }
         QuickSettingsGroup(title: appString("chatStorage", "Downloaded chat files")) {
             SettingsToggleRow(label: appString("chatAutoDownloadVideos", "Download videos automatically"), isOn: s.chatAutoDownloadVideos) { on in shell.updateSettings { $0.chatAutoDownloadVideos = on } }
-            SettingsToggleRow(label: appString("chatSendTyping", "Let others see when I'm typing"), isOn: s.chatSendTypingStatus) { on in shell.updateSettings { $0.chatSendTypingStatus = on } }
         }
+        QuickSettingsGroup(title: appString("chatPrivacy", "Privacy")) { ChatPrivacySettingsRows(shell: shell) }
     }
 }

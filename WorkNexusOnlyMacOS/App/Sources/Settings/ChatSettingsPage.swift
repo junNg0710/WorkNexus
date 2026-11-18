@@ -5,8 +5,8 @@ import SharedKit
 import SwiftUI
 
 /// Ported from: lib/features/chat/presentation/widgets/chat_appearance_settings.dart + the chat cards of Quick Settings:
-/// the chat's look (style, accent bubbles, the wallpaper picker, text size), messaging, notifications and the downloaded
-/// files' limit and auto-download.
+/// the chat's look (style, accent bubbles, the wallpaper picker, text size), messaging, privacy (the privacy mode, typing),
+/// notifications and the downloaded files' limit and auto-download.
 struct ChatSettingsPage: View {
     let shell: ShellModel
 
@@ -28,11 +28,12 @@ struct ChatSettingsPage: View {
             }
             SettingsCard(title: appString("chatMessaging", "Messaging")) {
                 SettingsToggleRow(label: appString("chatSendMarkdown", "Send messages as Markdown"), isOn: s.chatSendMarkdown) { on in shell.updateSettings { $0.chatSendMarkdown = on } }
-                SettingsToggleRow(label: appString("chatSendTyping", "Let others see when I'm typing"), isOn: s.chatSendTypingStatus) { on in shell.updateSettings { $0.chatSendTypingStatus = on } }
                 SettingsToggleRow(label: appString("chatReactions", "Reactions"),
                                   hint: appString("chatReactionsHint", "Show a reply that is just an emoji as a reaction under the message it answers, and react to messages."),
                                   isOn: s.chatReactions) { on in shell.updateSettings { $0.chatReactions = on } }
             }
+            // The privacy mode (hiding chats on screen, ⌘⇧H) and whether others see you typing.
+            SettingsCard(title: appString("chatPrivacy", "Privacy")) { ChatPrivacySettingsRows(shell: shell) }
             SettingsCard(title: appString("notifications", "Notifications")) {
                 SettingsToggleRow(label: appString("chatNotify", "Notify about new messages"), isOn: s.chatNotifications) { on in shell.updateSettings { $0.chatNotifications = on } }
                 SettingsToggleRow(label: appString("chatNotifyViewing", "Also while I'm looking at the chat"), isOn: s.chatNotifyWhileViewing) { on in shell.updateSettings { $0.chatNotifyWhileViewing = on } }

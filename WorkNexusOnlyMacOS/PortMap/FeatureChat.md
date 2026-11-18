@@ -213,6 +213,12 @@ file (the Dart side is the first four sources named there). Tests live in `Tests
 | Presentation/Stickers/StickerImportErrors.swift | import_sticker_pack_dialog.dart (failure switch) |
 | Presentation/Style/ChatWallpaperPreview.swift | providers (`chatWallpaperPreviewProvider`, `shownChatWallpaperProvider`) |
 | Presentation/Thread/MergeRequestFreshness.swift | providers/merge_request_providers.dart (`_kFresh`, refetch on resume) |
+| Domain/ValueObjects/ChatPrivacyPart.swift | lib/features/chat/domain/value_objects/chat_privacy_part.dart |
+| Domain/UseCases/ShouldHideChatPart.swift | lib/features/chat/domain/usecases/should_hide_chat_part.dart<br>message_body.dart (`isChatPicture`)<br>chat_info_panel.dart, chat_thread_header.dart (subtitle masks) |
+| Presentation/Privacy/ChatPrivacyEnvironment.swift | providers/chat_privacy_providers.dart<br>lib/core/widgets/privacy_mask.dart (`PrivacyRevealRegion`) |
+| Presentation/Privacy/ChatPrivacyMasks.swift | lib/core/widgets/privacy_mask.dart (`PrivacyMask`, `PrivacyFade`, `PrivacyCover`)<br>chat_privacy_mask.dart |
+| Presentation/Privacy/ChatPrivacyPlaceholders.swift | chat_avatar.dart (`_Placeholder`)<br>chat_info_files_section.dart (`_HiddenMediaGrid`, `_HiddenFileRow`) |
+| Presentation/Thread/ChatRowEntrance.swift | lib/core/widgets/app_entrance.dart<br>message_list_item.dart (a message arriving while the chat is open) |
 
 Files without a one-to-one Dart source (Swift-only glue): `ChatFeature.swift`, `Module.swift`, `Support/JSONParser.swift`, `Support/JSONValue.swift`, `Support/RX.swift`, `Data/Xxd/ApiSchemeCodec+Coding.swift`, `Data/Xxd/XxdHTTPTransport.swift`, `Data/Repositories/XxdChatRepository+Actions.swift`, `Data/Repositories/XxdChatRepository+Reads.swift`, `Data/Local/ChatLocalDatasource+Messages.swift`, `Data/Local/ChatRows.swift`, `Data/Support/AsyncStreamExtras.swift`, `Data/Support/Broadcast.swift`, `Domain/UseCases/RepositoryPassthroughUseCases.swift`, `Domain/ValueObjects/ChatCancelToken.swift`, `Domain/ValueObjects/ChatEmojiTables.swift`, `Presentation/ChatServices.swift`, `Presentation/Shell/ChatThreadState.swift`
 
@@ -271,3 +277,26 @@ Mirrors the message menu of ZenTao's own desktop client.
 - Cancelled work is no failure: `ChatShellModel.report` drops `.cancelled`, and `Diagnostics.request` skips a tool's `cancelled` error.
 - Pictures in the chat are decoded once at display size off the main thread and kept for rows scrolled back (`ChatImageBody`; they were decoded in `body` on every redraw), and animated (tgs) stickers are parsed once (`StickerDecoder`).
 - Scrolling (from a Time Profiler trace of a laggy chat): a message row is one accessibility element (with an accessibility client running, each element of a row scrolling in had SwiftUI walk the window for focus, ~16% of the main thread); rows do not light up as they pass under a still pointer while the list scrolls (`ChatScrollActivity`); the right-click catcher is attached only to the row under the pointer.
+
+### Privacy mode and motion (upstream e9d8abab … cbf4fda7)
+
+- **Setting** (`CoreDomain/Entities/ChatPrivacy.swift` ← `lib/core/settings/chat_privacy.dart`, `AppSettings.chatPrivacy`, read through
+  `ChatSettings.privacy`): master switch plus previews / names and avatars / messages. Shown in Quick Settings ▸ Chat ▸ Privacy (with
+  "Show when I'm typing", as in Flutter) and on the Chat settings page (`App/Sources/Settings/ChatPrivacySettings.swift`).
+- **Shortcut** ⌘⇧H is a menu command (View ▸ Privacy mode, `AppCommands`) instead of a `HardwareKeyboard` handler: it works wherever
+  focus is in the window and shows its state as a checkmark.
+- **One environment value** (`\.chatPrivacyHidden`, set by `chatPrivacyRoot()` in `ChatShellView`) instead of a provider per mask; a
+  reveal region (`chatPrivacyRevealRegion()`: the chat above the input, the info / pinned / thread panels) overrides it with "nothing" while
+  the pointer is on it, so entering or leaving redraws the masks once and scrolling never does. A chat-list row is its own region and adds a
+  hover handler only while something is hidden (`chatPrivacyRowReveal()`).
+- **Masks**: names / previews / details as a fixed run of dots (crossfade), avatars under a neutral placeholder laid over the loaded picture
+  (no reload on reveal), a bubble's insides fade to 15 % with the bubble left solid, pictures (images, stickers, videos, big emoji) under an
+  opaque grey box (`panel2` + `skel2`), the info panel's media / files as empty tiles and blank rows, the composer hint "message ••••••".
+- **Adapted**: reveal is on pointer only — no keyboard-focus reveal (the native rows and panels are not focus targets). Pinned cards and
+  thread replies show a text preview here (not a full bubble), so their whole body fades. Sender names above bubbles stay, as in Flutter.
+- **Motion**: masks ease (`AppMotion.base`); a message arriving while the chat is open fades in (`ChatArrivals` notes what came after
+  the first page, `ChatRowEntrance`) — not the height growth (it would relayout the lazy list every frame); the message list fades in as a
+  chat opens (scoped to its opacity); side panels over the messages slide with the scrim fading, beside them the room is taken at once and
+  only the contents slide 8 % and fade (`ChatPanelEntrance`), a panel there from the start does not slide; the chat list's selection fill
+  eases; the bubble hover tint uses `AppMotion.fast`. All skipped with Reduce Motion. The Flutter perf tests (`chat_page_perf_test`,
+  `chat_message_list_perf_test`) are not ported: every animation here is an opacity or offset of one view, with nothing re-laid out per frame.
