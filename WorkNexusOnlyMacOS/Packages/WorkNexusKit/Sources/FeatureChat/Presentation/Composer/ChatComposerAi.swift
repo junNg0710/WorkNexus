@@ -22,7 +22,7 @@ struct ChatAiContext {
     var model: String? { settings.translationModel.isEmpty ? nil : settings.translationModel }
 
     /// The AI backend is set up (asks the host, which explains how to set one up when it is not).
-    func ready() async -> Bool { await services.ensureTranslatorReady?() ?? true }
+    func ready() async -> Bool { await (services.ensureAiReady ?? services.ensureTranslatorReady)?() ?? true }
 
     /// The newest `limit` stored messages of the chat (the transcript orders them itself).
     func latest(_ limit: Int) async -> [ChatMessage] {

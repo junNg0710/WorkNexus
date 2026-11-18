@@ -36,8 +36,8 @@ struct TranslationTabView: View {
         let lang = translationLanguage(for: shell.settings.translationLang)
         DetailScrollBody(layout: layout) {
             VStack(alignment: state == .none ? .center : .leading, spacing: 0) {
-                if state == .none { TranslationEmptyState(flag: lang.flag, language: lang.nativeName) }
-                if state == .loading { TranslationLoadingState() }
+                if state == .none { TranslationEmptyState(flag: lang.flag, language: lang.nativeName, backend: hub.backendName) }
+                if state == .loading { TranslationLoadingState(backend: hub.backendName) }
                 if state == .outdated {
                     TranslationBanner(text: appString("translationOutdatedBanner", "Original changed since last translation. Showing the earlier version."), hue: theme.colors.amber)
                 }
@@ -50,7 +50,7 @@ struct TranslationTabView: View {
                     if state == .done {
                         HStack(spacing: theme.spacing.s6) {
                             Circle().fill(theme.colors.green).frame(width: theme.spacing.s6, height: theme.spacing.s6)
-                            Text("\(appString("translated", "Translated")) · via OpenCode").font(theme.typography.caption).foregroundStyle(theme.colors.tx3)
+                            Text("\(appString("translated", "Translated")) · via \(Self.via(record))").font(theme.typography.caption).foregroundStyle(theme.colors.tx3)
                         }
                         .padding(.top, theme.spacing.s16)
                     }
@@ -60,18 +60,25 @@ struct TranslationTabView: View {
         }
         .task { model.start() }
     }
+
+    /// What made the record: its model when one was recorded, else OpenCode (whose default records no model).
+    private static func via(_ record: TranslationRecord) -> String {
+        let m = record.model.trimmingCharacters(in: .whitespaces)
+        return m.isEmpty || m == "opencode default" ? "OpenCode" : m
+    }
 }
 
 private struct TranslationEmptyState: View {
     @Environment(\.appTheme) private var theme
     let flag: String
     let language: String
+    let backend: String
 
     var body: some View {
         VStack(spacing: theme.spacing.s8) {
             Text(flag).font(theme.typography.display).padding(.top, theme.spacing.s24)
             Text(appString("notTranslated", "Not translated")).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx)
-            Text(appFormat("runOpenCodeToTranslate", "Run OpenCode to generate a %1$@ version.", language))
+            Text(appFormat("runBackendToTranslate", "Run %1$@ to generate a %2$@ version.", backend, language))
                 .font(theme.typography.paragraph).foregroundStyle(theme.colors.tx2).multilineTextAlignment(.center)
         }
     }
@@ -79,12 +86,13 @@ private struct TranslationEmptyState: View {
 
 private struct TranslationLoadingState: View {
     @Environment(\.appTheme) private var theme
+    let backend: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacing.s8) {
             HStack(spacing: theme.spacing.s8) {
                 ProgressView().controlSize(.small)
-                Text(appFormat("translating", "Translating with %1$@…", "OpenCode")).font(theme.typography.metaStrong).foregroundStyle(theme.colors.tx)
+                Text(appFormat("translating", "Translating with %1$@…", backend)).font(theme.typography.metaStrong).foregroundStyle(theme.colors.tx)
             }
             .padding(.bottom, theme.spacing.s12)
             SkeletonBox(width: 200, height: 13)

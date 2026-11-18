@@ -4,12 +4,15 @@ import FeatureTranslation
 import SwiftUI
 
 /// Ported from: lib/features/translation/presentation/widgets/translation_opencode_key_field.dart
-/// The API key OpenCode translates with, for the provider of the chosen model (`opencode/…` → `opencode`). It is written to
-/// OpenCode's own credential store, so it is the key the CLI uses. Shows what is saved (masked) and where to get a key.
+/// The API key OpenCode runs with, for the provider of `model` (`opencode/…` → `opencode`; the model OpenCode is chosen with,
+/// see `AiSettingsLogic.openCodeKeyModel`). It is written to OpenCode's own credential store, so it is the key the CLI uses.
+/// Shows what is saved (masked) and where to get a key.
 struct TranslationOpenCodeKeyField: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.toasts) private var toasts
     let root: CompositionRoot
+    /// The `provider/model` OpenCode runs; empty for its default.
+    let model: String
     @State private var key = ""
     @State private var obscure = true
     @State private var saving = false
@@ -17,7 +20,7 @@ struct TranslationOpenCodeKeyField: View {
     @State private var auth: OpenCodeProviderAuth?
 
     var body: some View {
-        let providerId = openCodeProvider(of: root.shell.settings.translationModel)
+        let providerId = openCodeProvider(of: model)
         let canSave = !saving && !key.trimmingCharacters(in: .whitespaces).isEmpty
         VStack(alignment: .leading, spacing: theme.spacing.s8) {
             TranslationTextField(label: appFormat("translationOpenCodeKey", "API key · %1$@", providerId), text: $key, secure: obscure,

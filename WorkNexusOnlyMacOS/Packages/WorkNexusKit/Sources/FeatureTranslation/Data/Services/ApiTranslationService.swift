@@ -16,16 +16,28 @@ public struct URLSessionTranslationClient: TranslationHTTPClient {
     }
 }
 
+/// The API backend as the router drives it: each call carries the config of the provider + model it runs on.
+/// Not in the Flutter app (there the service read its one config itself).
+public protocol ConfiguredTranslationBackend: Sendable {
+    func contentHash(_ source: TicketSource) -> String
+    func translate(ticketId: String, source: TicketSource, sourceHash: String, targetLang: String,
+                   config: TranslationApiConfig) async -> Outcome<TranslationRecord>
+    func translateText(key: String, text: String, targetLang: String, config: TranslationApiConfig) async -> Outcome<TextTranslation>
+    func complete(key: String, prompt: String, config: TranslationApiConfig) async -> Outcome<TextTranslation>
+    func cancel(_ key: String) async
+}
+
 /// Ported from: lib/features/translation/data/api_translation_service.dart
-/// Translates through any OpenAI-compatible `/chat/completions` endpoint with the user's own key (Gemini, Groq, OpenRouter, Ollama, …).
-public final class ApiTranslationService: TranslationService, @unchecked Sendable {
+/// Translates through any OpenAI-compatible `/chat/completions` endpoint with the user's own key (OpenAI, Claude, Gemini,
+/// Groq, OpenRouter, Ollama, …). The router passes the config per call; as a plain `TranslationService` it reads `config`.
+public final class ApiTranslationService: TranslationService, ConfiguredTranslationBackend, @unchecked Sendable {
     private let http: TranslationHTTPClient
-    /// The configuration in force right now; read per call so a saved change applies without restarting.
+    /// The configuration for calls that carry none (the `TranslationService` methods); read per call.
     private let config: @Sendable () async -> TranslationApiConfig?
     private static let templateVersion = "api-v1"
     private let running = Locked<[String: Task<(Data, HTTPURLResponse), Error>]>([:])
 
-    public init(http: TranslationHTTPClient = URLSessionTranslationClient(), config: @escaping @Sendable () async -> TranslationApiConfig?) {
+    public init(http: TranslationHTTPClient = URLSessionTranslationClient(), config: @escaping @Sendable () async -> TranslationApiConfig? = { nil }) {
         self.http = http; self.config = config
     }
 
@@ -35,44 +47,64 @@ public final class ApiTranslationService: TranslationService, @unchecked Sendabl
         running.withLock { $0.removeValue(forKey: ticketId) }?.cancel()
     }
 
+    // MARK: TranslationService (config from the provider closure)
+
     public func translate(ticketId: String, source: TicketSource, sourceHash: String, targetLang: String,
                           model: String?) async -> Outcome<TranslationRecord> {
+        guard let cfg = await config() else { return .failure(Self.notSetUp) }
+        return await translate(ticketId: ticketId, source: source, sourceHash: sourceHash, targetLang: targetLang, config: cfg)
+    }
+
+    public func translateText(key: String, text: String, targetLang: String, model: String?) async -> Outcome<TextTranslation> {
+        guard let cfg = await config() else { return .failure(Self.notSetUp) }
+        return await translateText(key: key, text: text, targetLang: targetLang, config: cfg)
+    }
+
+    /// The model is the configured one: with an API key the user's setting is in charge.
+    public func complete(key: String, prompt: String, model: String?) async -> Outcome<TextTranslation> {
+        guard let cfg = await config() else { return .failure(Self.notSetUp) }
+        return await complete(key: key, prompt: prompt, config: cfg)
+    }
+
+    // MARK: ConfiguredTranslationBackend
+
+    public func translate(ticketId: String, source: TicketSource, sourceHash: String, targetLang: String,
+                          config cfg: TranslationApiConfig) async -> Outcome<TranslationRecord> {
         let language = translationLanguage(for: targetLang)
-        let cfg = await config()
         switch await complete(key: ticketId, config: cfg, prompt: ticketPrompt(source, language.englishName)) {
         case .failure(let f): return .failure(f)
         case .success(let text):
             guard let parsed = extractTicketJson(text) else { return .failure(.parse("Could not parse the translation: \(text)")) }
             return .success(ticketRecord(parsed: parsed, ticketId: ticketId, source: source, sourceHash: sourceHash,
-                                         lang: language.code, model: cfg?.model ?? "", templateVersion: Self.templateVersion))
+                                         lang: language.code, model: cfg.model, templateVersion: Self.templateVersion))
         }
     }
 
-    public func translateText(key: String, text: String, targetLang: String, model: String?) async -> Outcome<TextTranslation> {
+    public func translateText(key: String, text: String, targetLang: String, config cfg: TranslationApiConfig) async -> Outcome<TextTranslation> {
         let language = translationLanguage(for: targetLang)
-        return await complete(key: key, prompt: textPrompt(text, language.englishName), model: model)
+        return await complete(key: key, prompt: textPrompt(text, language.englishName), config: cfg)
     }
 
-    /// The model is the configured one: with an API key the user's setting is in charge.
-    public func complete(key: String, prompt: String, model: String?) async -> Outcome<TextTranslation> {
-        let cfg = await config()
+    public func complete(key: String, prompt: String, config cfg: TranslationApiConfig) async -> Outcome<TextTranslation> {
         switch await complete(key: key, config: cfg, prompt: prompt) {
         case .failure(let f): return .failure(f)
         case .success(let out):
             let trimmed = out.trimmingCharacters(in: .whitespacesAndNewlines)
-            return trimmed.isEmpty ? .failure(.parse("The model returned no text")) : .success(TextTranslation(trimmed, model: cfg?.model))
+            return trimmed.isEmpty ? .failure(.parse("The model returned no text")) : .success(TextTranslation(trimmed, model: cfg.model))
         }
     }
 
-    private func complete(key: String, config: TranslationApiConfig?, prompt: String) async -> Outcome<String> {
-        guard let config, config.isUsable else { return .failure(.auth("No translation API key is set up")) }
+    private static let notSetUp = Failure.auth("No translation API key is set up")
+
+    private func complete(key: String, config: TranslationApiConfig, prompt: String) async -> Outcome<String> {
+        guard config.isUsable else { return .failure(Self.notSetUp) }
         let base = config.baseUrl.replacingOccurrences(of: "/+$", with: "", options: .regularExpression)
         guard let url = URL(string: "\(base)/chat/completions") else { return .failure(.validation("Invalid API base URL")) }
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.timeoutInterval = 120
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if !config.apiKey.isEmpty { req.setValue("Bearer \(config.apiKey)", forHTTPHeaderField: "Authorization") }
+        ApiRequestHeaders.apply(to: &req, apiKey: config.apiKey)
         let payload: [String: Any] = ["model": config.model, "temperature": 0.2,
                                       "messages": [["role": "user", "content": prompt]]]
         req.httpBody = try? JSONSerialization.data(withJSONObject: payload)

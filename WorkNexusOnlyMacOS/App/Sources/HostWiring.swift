@@ -104,7 +104,7 @@ struct HostWiring {
             let l = translationLanguage(for: shell.settings.translationLang)
             return "\(l.flag) \(l.nativeName)"
         }
-        let hub = TranslationHub(feature: r.translation, settings: { shell.settings }, gate: .shared)
+        let hub = TranslationHub(feature: r.translation, aiSetup: r.aiSetup, settings: { shell.settings }, gate: .shared)
         OpenCodeLinkGate.shared.install(feature: r.translation) { shell.nav.select(.settings); shell.nav.setSettingsSection("translation") }
         ext.translationTab = { ticket, layout in AnyView(TranslationTabView(ticket: ticket, layout: layout, hub: hub, shell: shell).id(ticket.id)) }
         ext.translationFooter = { ticket in AnyView(TranslationFooterView(ticket: ticket, hub: hub, shell: shell).id(ticket.id)) }

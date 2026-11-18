@@ -26,15 +26,6 @@ private func tempDir() -> URL {
     return d
 }
 
-private struct Marker: TranslationService {
-    let name: String
-    func contentHash(_ source: TicketSource) -> String { name }
-    func translate(ticketId: String, source: TicketSource, sourceHash: String, targetLang: String, model: String?) async -> Outcome<TranslationRecord> { .failure(.agent(name)) }
-    func translateText(key: String, text: String, targetLang: String, model: String?) async -> Outcome<TextTranslation> { .success(TextTranslation(name)) }
-    func complete(key: String, prompt: String, model: String?) async -> Outcome<TextTranslation> { .success(TextTranslation(name)) }
-    func cancel(_ ticketId: String) async {}
-}
-
 // MARK: api_translation_service_test.dart
 
 final class ApiTranslationServiceTests: XCTestCase {
@@ -64,12 +55,6 @@ final class ApiTranslationServiceTests: XCTestCase {
         XCTAssertEqual(messages?.first?["content"] as? String, "Summarize this")
     }
 
-    func testRoutingSendsAPromptToThePickedBackend() async {
-        let routing = RoutingTranslationService(api: Marker(name: "api"), openCode: Marker(name: "opencode"), config: { nil })
-        let r = await routing.complete(key: "k", prompt: "p", model: nil)
-        XCTAssertEqual(r.value?.text, "opencode")
-    }
-
     func testTicketReplyWrappedInCodeFenceIsParsed() async {
         let http = StubHTTP(200, reply("```json\n{\"title\":\"Tiêu đề\",\"body\":\"Nội dung\"}\n```"))
         let r = await service(http).translate(ticketId: "t", source: TicketSource(title: "Title", body: "Body"), sourceHash: "h", targetLang: "vi", model: nil)
@@ -97,19 +82,6 @@ final class ApiTranslationServiceTests: XCTestCase {
     func testEmptyReplyIsParseFailure() async {
         let r = await service(StubHTTP(200, reply("   "))).translateText(key: "k", text: "x", targetLang: "vi", model: nil)
         guard case .failure(.parse) = r else { return XCTFail("expected parse failure") }
-    }
-
-    func testRoutingPicksBackendByConfig() async {
-        func run(_ c: TranslationApiConfig?) async -> String? {
-            let routing = RoutingTranslationService(api: Marker(name: "api"), openCode: Marker(name: "opencode"), config: { c })
-            return await routing.translateText(key: "k", text: "x", targetLang: "vi", model: nil).value?.text
-        }
-        let apiPick = await run(config), nilPick = await run(nil)
-        var off = config; off.enabled = false
-        let offPick = await run(off)
-        XCTAssertEqual(apiPick, "api")
-        XCTAssertEqual(nilPick, "opencode")
-        XCTAssertEqual(offPick, "opencode")
     }
 }
 

@@ -15,8 +15,11 @@ public struct ChatServices: Sendable {
     /// already told the user how to fix it (`ensureOpenCodeLinked`). nil: always ready.
     public var ensureTranslatorReady: (@Sendable () async -> Bool)?
     /// The AI backend for summaries, reply ideas and draft rewrites (the translation backend, adapted by the host); nil hides
-    /// the ✨ AI help. Asked through `ensureTranslatorReady` first, as it needs the same setup.
+    /// the ✨ AI help. Asked through `ensureAiReady` first (`ensureTranslatorReady` when that is nil).
     public var ai: ChatAiTextGenerator?
+    /// Asked before the ✨ AI help runs: false means it cannot (its provider is not set up) and the host has told the user.
+    /// The AI may run on another provider than translation, so it has a check of its own. nil: `ensureTranslatorReady`.
+    public var ensureAiReady: (@Sendable () async -> Bool)?
     /// The languages a summary can be written in (the translation languages).
     public var aiLanguages: [ChatAiLanguage] = []
     /// Turns sticker suggestions on or off (the ✨ menu's switch); the host saves it in `AppSettings.chatStickerSuggestions`.

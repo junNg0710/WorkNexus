@@ -35,6 +35,8 @@ final class CompositionRoot {
     let liveSettings = LiveSettings()
     let notifier: DesktopNotifier
     let translation: TranslationFeature
+    /// The saved AI providers and the provider + model of translation and of AI in chat, for the views (labels, settings).
+    let aiSetup: AiSetupStore
     let connections: ConnectionsFeature
     let miniApps: MiniAppsFeature
     let update: UpdateModel
@@ -122,6 +124,7 @@ final class CompositionRoot {
         let notifier = DesktopNotifier()
         self.notifier = notifier
         translation = TranslationFeature.make(database: db, credentials: credentials)
+        aiSetup = AiSetupStore(repository: translation.aiSetup)
         let profiles = wiring.profiles
         self.profiles = profiles
         connections = ConnectionsFeature(services: services, db: db, afterAccountAdded: { account in
@@ -173,6 +176,8 @@ final class CompositionRoot {
         overview.follow(workspaceId: shell.workspace?.id)
         miniApps.model.start()
         Task { for await s in services.settings.watch() { liveSettings.set(s); chat.apply(s); aiTools.apply(s) } }
+        // The "Translate with …" labels read the saved AI setup; it migrates an earlier build's single API config on this load.
+        Task { [aiSetup] in await aiSetup.load() }
         await seedWorkspaceIfEmpty()
         if isDemo {
             await DemoSeed.insert(services: services)

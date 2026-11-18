@@ -3,19 +3,23 @@ import Foundation
 
 /// Ported from: lib/features/translation/data/datasources/openai_model_catalog_datasource.dart
 /// Reads `GET {baseUrl}/models`, the listing every OpenAI-compatible endpoint (Gemini, Groq, OpenRouter, Ollama) serves.
+/// Anthropic's `/v1/models` has the same `data[].id` shape but pages by 20 and wants its own headers (macOS only).
 public struct OpenAIModelCatalogDataSource: TranslationApiModelCatalog {
     private let http: TranslationHTTPClient
     public init(http: TranslationHTTPClient = URLSessionTranslationClient()) { self.http = http }
 
-    /// Models that cannot answer a chat prompt; Gemini lists them alongside the chat ones.
-    private static let nonChat = try! NSRegularExpression(pattern: "embed|tts|whisper|imagen|veo|aqa|moderation", options: .caseInsensitive)
+    /// Models that cannot answer a chat prompt; Gemini, OpenAI, Mistral and xAI list them alongside the chat ones.
+    private static let nonChat = try! NSRegularExpression(
+        pattern: "embed|tts|whisper|image|veo|aqa|moderation|dall-e|realtime|transcribe|audio|sora|ocr", options: .caseInsensitive)
 
     public func listModels(baseUrl: String, apiKey: String) async -> Outcome<[String]> {
         let base = baseUrl.replacingOccurrences(of: "/+$", with: "", options: .regularExpression)
-        guard let url = URL(string: "\(base)/models") else { return .failure(.validation("Invalid API base URL")) }
+        guard var url = URL(string: "\(base)/models") else { return .failure(.validation("Invalid API base URL")) }
+        // Anthropic returns 20 models a page unless asked for more (its maximum is 1000).
+        if ApiRequestHeaders.isAnthropic(url) { url = URL(string: "\(base)/models?limit=1000") ?? url }
         var req = URLRequest(url: url)
         req.timeoutInterval = 20
-        if !apiKey.isEmpty { req.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization") }
+        ApiRequestHeaders.apply(to: &req, apiKey: apiKey)
         do {
             let (data, response) = try await http.send(req)
             if response.statusCode == 401 || response.statusCode == 403 { return .failure(.auth("The API rejected the key")) }

@@ -1675,8 +1675,148 @@
     "en": "All quiet — nothing waiting",
     "vi": "Mọi thứ ổn — không có gì đang chờ"
   },
-  "runOpenCodeToTranslate": {
-    "en": "Run OpenCode to generate a %1$@ version.",
-    "vi": "Chạy OpenCode để tạo bản dịch %1$@."
+  "aiChatSameAsTranslation": {
+    "en": "Same as translation",
+    "vi": "Giống phần dịch"
+  },
+  "aiChatSameHint": {
+    "en": "AI in chat runs on %1$@.",
+    "vi": "AI trong chat chạy bằng %1$@."
+  },
+  "aiChatSection": {
+    "en": "AI in chat",
+    "vi": "AI trong chat"
+  },
+  "aiChatSubtitle": {
+    "en": "Who writes chat summaries, reply ideas and rewrites (✨).",
+    "vi": "Ai viết tóm tắt chat, gợi ý trả lời và viết lại (✨)."
+  },
+  "aiModelApply": {
+    "en": "Apply",
+    "vi": "Áp dụng"
+  },
+  "aiModelBackToList": {
+    "en": "Back to list",
+    "vi": "Quay lại danh sách"
+  },
+  "aiModelId": {
+    "en": "Model id",
+    "vi": "Mã model"
+  },
+  "aiModelSuggested": {
+    "en": "Suggested (%1$@)",
+    "vi": "Đề xuất (%1$@)"
+  },
+  "aiModelTypeOwn": {
+    "en": "Type a model",
+    "vi": "Nhập model"
+  },
+  "aiOpenCodeBuiltIn": {
+    "en": "Built in: the opencode CLI, with its own login and models",
+    "vi": "Có sẵn: CLI opencode, với đăng nhập và model riêng"
+  },
+  "aiProviderAdd": {
+    "en": "Add provider",
+    "vi": "Thêm nhà cung cấp"
+  },
+  "aiProviderAddAction": {
+    "en": "Add",
+    "vi": "Thêm"
+  },
+  "aiProviderAddTitle": {
+    "en": "Add AI provider",
+    "vi": "Thêm nhà cung cấp AI"
+  },
+  "aiProviderAdded": {
+    "en": "Added %1$@ — pick it under Translation or AI in chat",
+    "vi": "Đã thêm %1$@ — chọn nó ở phần Dịch hoặc AI trong chat"
+  },
+  "aiProviderEditTitle": {
+    "en": "Edit %1$@",
+    "vi": "Sửa %1$@"
+  },
+  "aiProviderKeepKey": {
+    "en": "Leave empty to keep %1$@",
+    "vi": "Để trống để giữ %1$@"
+  },
+  "aiProviderName": {
+    "en": "Name",
+    "vi": "Tên"
+  },
+  "aiProviderNoKey": {
+    "en": "No key",
+    "vi": "Không có key"
+  },
+  "aiProviderNotReadyChatBody": {
+    "en": "AI in chat runs on %1$@, which has no API key or model yet. Add them under Settings → Translation, or pick another provider for AI in chat.",
+    "vi": "AI trong chat chạy bằng %1$@, nhưng nhà cung cấp này chưa có API key hoặc model. Hãy thêm trong Cài đặt → Dịch thuật, hoặc chọn nhà cung cấp khác cho AI trong chat."
+  },
+  "aiProviderNotReadyTitle": {
+    "en": "%1$@ is not set up",
+    "vi": "%1$@ chưa được thiết lập"
+  },
+  "aiProviderNotReadyTranslationBody": {
+    "en": "Translation runs on %1$@, which has no API key or model yet. Add them under Settings → Translation, or pick another translation provider.",
+    "vi": "Phần dịch chạy bằng %1$@, nhưng nhà cung cấp này chưa có API key hoặc model. Hãy thêm trong Cài đặt → Dịch thuật, hoặc chọn nhà cung cấp dịch khác."
+  },
+  "aiProviderRemove": {
+    "en": "Remove",
+    "vi": "Xoá"
+  },
+  "aiProviderRemoved": {
+    "en": "Removed %1$@",
+    "vi": "Đã xoá %1$@"
+  },
+  "aiProviderRemovedBothFallback": {
+    "en": "Removed %1$@ — translation and AI in chat now use OpenCode",
+    "vi": "Đã xoá %1$@ — phần dịch và AI trong chat giờ dùng OpenCode"
+  },
+  "aiProviderRemovedChatFallback": {
+    "en": "Removed %1$@ — AI in chat now uses OpenCode",
+    "vi": "Đã xoá %1$@ — AI trong chat giờ dùng OpenCode"
+  },
+  "aiProviderRemovedTranslationFallback": {
+    "en": "Removed %1$@ — translation now uses OpenCode",
+    "vi": "Đã xoá %1$@ — phần dịch giờ dùng OpenCode"
+  },
+  "aiProviderSaved": {
+    "en": "Saved %1$@",
+    "vi": "Đã lưu %1$@"
+  },
+  "aiProviderTest": {
+    "en": "Test",
+    "vi": "Kiểm tra"
+  },
+  "aiProviderTestOk": {
+    "en": "Connected — %1$@ models",
+    "vi": "Đã kết nối — %1$@ model"
+  },
+  "aiProvidersSection": {
+    "en": "AI providers",
+    "vi": "Nhà cung cấp AI"
+  },
+  "aiProvidersSubtitle": {
+    "en": "OpenCode uses the CLI and its login; the others use your own API key, kept in the Keychain. Save as many as you like.",
+    "vi": "OpenCode dùng CLI và đăng nhập của nó; các nhà cung cấp khác dùng API key của bạn, lưu trong Keychain. Lưu bao nhiêu tuỳ ý."
+  },
+  "aiSetupLoadFailed": {
+    "en": "Couldn't read the saved AI providers. Everything runs on OpenCode until you save them again.",
+    "vi": "Không đọc được các nhà cung cấp AI đã lưu. Mọi thứ chạy bằng OpenCode cho tới khi bạn lưu lại."
+  },
+  "aiSetupSaveFailed": {
+    "en": "Couldn't save the AI settings.",
+    "vi": "Không lưu được cài đặt AI."
+  },
+  "aiTranslationSubtitle": {
+    "en": "The language tickets and chat messages are translated into, and who translates them.",
+    "vi": "Ngôn ngữ dịch ticket và tin nhắn chat, và ai dịch chúng."
+  },
+  "openCodeNotLinkedChatBody": {
+    "en": "AI in chat runs on OpenCode, and no authenticated OpenCode provider was found. Run the command below in a terminal, or pick an API provider for AI in chat under Settings → Translation.",
+    "vi": "AI trong chat chạy bằng OpenCode, nhưng không tìm thấy nhà cung cấp OpenCode nào đã xác thực. Hãy chạy lệnh bên dưới trong terminal, hoặc chọn nhà cung cấp API cho AI trong chat trong Cài đặt → Dịch thuật."
+  },
+  "runBackendToTranslate": {
+    "en": "Run %1$@ to generate a %2$@ version.",
+    "vi": "Chạy %1$@ để tạo bản dịch %2$@."
   }
 }

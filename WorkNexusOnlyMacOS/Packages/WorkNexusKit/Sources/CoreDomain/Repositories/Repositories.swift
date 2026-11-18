@@ -45,4 +45,6 @@ public protocol CredentialStore: Sendable {
 public enum CredentialKey {
     public static func accountSecret(_ accountId: String) -> String { "secret:\(accountId)" }
     public static let translationApi = "translation:api"
+    /// Not in the Flutter app: every saved AI provider and the model choice per purpose (FeatureTranslation's `AiSetup`).
+    public static let aiSetup = "ai:setup"
 }

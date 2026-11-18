@@ -35,7 +35,7 @@ final class TranslationTabModel {
         }
     }
 
-    /// Translates through OpenCode / the API key, first making sure one is linked; a run in flight is left alone.
+    /// Translates through the provider chosen for translation, first making sure it is set up; a run in flight is left alone.
     func translate(_ ticket: Ticket) {
         guard !loading else { return }
         loading = true; failure = nil
@@ -62,13 +62,18 @@ final class TranslationTabModel {
 @MainActor
 final class TranslationHub {
     let feature: TranslationFeature
+    /// What translation runs on, for the "Translate with …" labels.
+    let aiSetup: AiSetupStore
     let settings: () -> AppSettings
     let gate: OpenCodeLinkGate
     private var models: [String: TranslationTabModel] = [:]
 
-    init(feature: TranslationFeature, settings: @escaping () -> AppSettings, gate: OpenCodeLinkGate) {
-        self.feature = feature; self.settings = settings; self.gate = gate
+    init(feature: TranslationFeature, aiSetup: AiSetupStore, settings: @escaping () -> AppSettings, gate: OpenCodeLinkGate) {
+        self.feature = feature; self.aiSetup = aiSetup; self.settings = settings; self.gate = gate
     }
+
+    /// The translation backend's name: `OpenAI (gpt-5-mini)`, `OpenCode`.
+    var backendName: String { aiSetup.backendName(.translation, legacyModel: settings().translationModel) }
 
     func model(for ticketId: String) -> TranslationTabModel {
         if let m = models[ticketId] { return m }

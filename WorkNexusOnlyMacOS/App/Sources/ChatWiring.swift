@@ -44,9 +44,11 @@ final class ChatWiring {
             bundledStickers: Bundle.main.url(forResource: "Stickers", withExtension: nil),
             translator: TranslationChatAdapter(service: translation.service),
             ensureTranslatorReady: { await OpenCodeLinkGate.shared.ensureLinked() },
-            // The ✨ AI help (summaries, reply ideas, rewrites) runs on the translation backend; its summaries can be written
-            // in any of the translation languages.
+            // The ✨ AI help (summaries, reply ideas, rewrites) runs on the translation service, routed to the provider + model
+            // chosen for AI in chat; its summaries can be written in any of the translation languages.
             ai: TranslationChatAiTextGenerator(service: translation.service),
+            // The AI help may run on another provider than translation (Settings → Translation → AI in chat).
+            ensureAiReady: { await OpenCodeLinkGate.shared.ensureLinked(.chat) },
             aiLanguages: translationLanguages.map { ChatAiLanguage(code: $0.code, englishName: $0.englishName, nativeName: $0.nativeName, flag: $0.flag) },
             setStickerSuggestions: { on in Task { @MainActor in shell.updateSettings { $0.chatStickerSuggestions = on } } },
             ticketLookup: { url in

@@ -33508,19 +33508,614 @@
         }
       }
     },
-    "runOpenCodeToTranslate": {
+    "aiChatSameAsTranslation": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run OpenCode to generate a %1$@ version."
+            "value": "Same as translation"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chạy OpenCode để tạo bản dịch %1$@."
+            "value": "Giống phần dịch"
+          }
+        }
+      }
+    },
+    "aiChatSameHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI in chat runs on %1$@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI trong chat chạy bằng %1$@."
+          }
+        }
+      }
+    },
+    "aiChatSection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI in chat"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI trong chat"
+          }
+        }
+      }
+    },
+    "aiChatSubtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who writes chat summaries, reply ideas and rewrites (✨)."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ai viết tóm tắt chat, gợi ý trả lời và viết lại (✨)."
+          }
+        }
+      }
+    },
+    "aiModelApply": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Áp dụng"
+          }
+        }
+      }
+    },
+    "aiModelBackToList": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to list"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quay lại danh sách"
+          }
+        }
+      }
+    },
+    "aiModelId": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model id"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mã model"
+          }
+        }
+      }
+    },
+    "aiModelSuggested": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested (%1$@)"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đề xuất (%1$@)"
+          }
+        }
+      }
+    },
+    "aiModelTypeOwn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type a model"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhập model"
+          }
+        }
+      }
+    },
+    "aiOpenCodeBuiltIn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Built in: the opencode CLI, with its own login and models"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Có sẵn: CLI opencode, với đăng nhập và model riêng"
+          }
+        }
+      }
+    },
+    "aiProviderAdd": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add provider"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm nhà cung cấp"
+          }
+        }
+      }
+    },
+    "aiProviderAddAction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm"
+          }
+        }
+      }
+    },
+    "aiProviderAddTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add AI provider"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm nhà cung cấp AI"
+          }
+        }
+      }
+    },
+    "aiProviderAdded": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added %1$@ — pick it under Translation or AI in chat"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã thêm %1$@ — chọn nó ở phần Dịch hoặc AI trong chat"
+          }
+        }
+      }
+    },
+    "aiProviderEditTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sửa %1$@"
+          }
+        }
+      }
+    },
+    "aiProviderKeepKey": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave empty to keep %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Để trống để giữ %1$@"
+          }
+        }
+      }
+    },
+    "aiProviderName": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tên"
+          }
+        }
+      }
+    },
+    "aiProviderNoKey": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No key"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có key"
+          }
+        }
+      }
+    },
+    "aiProviderNotReadyChatBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI in chat runs on %1$@, which has no API key or model yet. Add them under Settings → Translation, or pick another provider for AI in chat."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI trong chat chạy bằng %1$@, nhưng nhà cung cấp này chưa có API key hoặc model. Hãy thêm trong Cài đặt → Dịch thuật, hoặc chọn nhà cung cấp khác cho AI trong chat."
+          }
+        }
+      }
+    },
+    "aiProviderNotReadyTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is not set up"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ chưa được thiết lập"
+          }
+        }
+      }
+    },
+    "aiProviderNotReadyTranslationBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation runs on %1$@, which has no API key or model yet. Add them under Settings → Translation, or pick another translation provider."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phần dịch chạy bằng %1$@, nhưng nhà cung cấp này chưa có API key hoặc model. Hãy thêm trong Cài đặt → Dịch thuật, hoặc chọn nhà cung cấp dịch khác."
+          }
+        }
+      }
+    },
+    "aiProviderRemove": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xoá"
+          }
+        }
+      }
+    },
+    "aiProviderRemoved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã xoá %1$@"
+          }
+        }
+      }
+    },
+    "aiProviderRemovedBothFallback": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed %1$@ — translation and AI in chat now use OpenCode"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã xoá %1$@ — phần dịch và AI trong chat giờ dùng OpenCode"
+          }
+        }
+      }
+    },
+    "aiProviderRemovedChatFallback": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed %1$@ — AI in chat now uses OpenCode"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã xoá %1$@ — AI trong chat giờ dùng OpenCode"
+          }
+        }
+      }
+    },
+    "aiProviderRemovedTranslationFallback": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed %1$@ — translation now uses OpenCode"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã xoá %1$@ — phần dịch giờ dùng OpenCode"
+          }
+        }
+      }
+    },
+    "aiProviderSaved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã lưu %1$@"
+          }
+        }
+      }
+    },
+    "aiProviderTest": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiểm tra"
+          }
+        }
+      }
+    },
+    "aiProviderTestOk": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected — %1$@ models"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã kết nối — %1$@ model"
+          }
+        }
+      }
+    },
+    "aiProvidersSection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI providers"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhà cung cấp AI"
+          }
+        }
+      }
+    },
+    "aiProvidersSubtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenCode uses the CLI and its login; the others use your own API key, kept in the Keychain. Save as many as you like."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenCode dùng CLI và đăng nhập của nó; các nhà cung cấp khác dùng API key của bạn, lưu trong Keychain. Lưu bao nhiêu tuỳ ý."
+          }
+        }
+      }
+    },
+    "aiSetupLoadFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't read the saved AI providers. Everything runs on OpenCode until you save them again."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không đọc được các nhà cung cấp AI đã lưu. Mọi thứ chạy bằng OpenCode cho tới khi bạn lưu lại."
+          }
+        }
+      }
+    },
+    "aiSetupSaveFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save the AI settings."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không lưu được cài đặt AI."
+          }
+        }
+      }
+    },
+    "aiTranslationSubtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The language tickets and chat messages are translated into, and who translates them."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ngôn ngữ dịch ticket và tin nhắn chat, và ai dịch chúng."
+          }
+        }
+      }
+    },
+    "openCodeNotLinkedChatBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI in chat runs on OpenCode, and no authenticated OpenCode provider was found. Run the command below in a terminal, or pick an API provider for AI in chat under Settings → Translation."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI trong chat chạy bằng OpenCode, nhưng không tìm thấy nhà cung cấp OpenCode nào đã xác thực. Hãy chạy lệnh bên dưới trong terminal, hoặc chọn nhà cung cấp API cho AI trong chat trong Cài đặt → Dịch thuật."
+          }
+        }
+      }
+    },
+    "runBackendToTranslate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run %1$@ to generate a %2$@ version."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chạy %1$@ để tạo bản dịch %2$@."
           }
         }
       }

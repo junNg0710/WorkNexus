@@ -5,12 +5,11 @@ import CoreDomain
 import XCTest
 @testable import FeatureTranslation
 
-private final class FakeConfigRepo: TranslationApiConfigRepository, @unchecked Sendable {
-    var config: TranslationApiConfig?
+private final class FakeSetupRepo: AiSetupRepository, @unchecked Sendable {
+    var setup = AiSetup.empty
     var fails = false
-    func load() async -> Outcome<TranslationApiConfig?> { fails ? .failure(.storage("keychain")) : .success(config) }
-    func save(_ config: TranslationApiConfig) async -> Outcome<Void> { self.config = config; return .success(()) }
-    func clear() async -> Outcome<Void> { config = nil; return .success(()) }
+    func load() async -> Outcome<AiSetup> { fails ? .failure(.storage("keychain")) : .success(setup) }
+    func save(_ setup: AiSetup) async -> Outcome<Void> { self.setup = setup; return .success(()) }
 }
 
 private struct FakeCli: OpenCodeCli {
@@ -19,40 +18,67 @@ private struct FakeCli: OpenCodeCli {
     func listModels() async -> [String] { [] }
 }
 
-private let usable = TranslationApiConfig(presetId: "gemini", baseUrl: "https://g.example/v1", model: "m", apiKey: "k")
+private let gemini = AiProvider(id: "gemini", presetId: "gemini", name: "Google Gemini", baseUrl: "https://g.example/v1", apiKey: "k")
 
 final class CheckTranslationReadyTests: XCTestCase {
-    func testAUsableApiKeyIsEnoughWithoutOpenCode() async {
-        let repo = FakeConfigRepo(); repo.config = usable
-        let check = CheckTranslationReady(apiConfig: repo, cli: FakeCli(authed: false))
-        let viaKey = await check.translatesWithApiKey(), ready = await check()
+    func testAUsableProviderIsEnoughWithoutOpenCode() async {
+        let repo = FakeSetupRepo(); repo.setup = AiSetup(providers: [gemini], translation: AiModelChoice(providerId: "gemini", model: "m"))
+        let check = CheckTranslationReady(setup: repo, cli: FakeCli(authed: false))
+        let viaKey = await check.usesApiProvider(), ready = await check()
         XCTAssertTrue(viaKey); XCTAssertTrue(ready)
     }
 
-    func testASwitchedOffKeyFallsBackToOpenCodeLogin() async {
-        let repo = FakeConfigRepo(); repo.config = usable; repo.config?.enabled = false
-        let linked = CheckTranslationReady(apiConfig: repo, cli: FakeCli(authed: true))
-        let unlinked = CheckTranslationReady(apiConfig: repo, cli: FakeCli(authed: false))
-        let a = await linked.translatesWithApiKey(), b = await linked(), c = await unlinked()
-        XCTAssertFalse(a); XCTAssertTrue(b); XCTAssertFalse(c)
+    func testOpenCodeChoiceNeedsAnOpenCodeLogin() async {
+        let repo = FakeSetupRepo(); repo.setup = AiSetup(providers: [gemini], translation: .openCodeDefault)
+        let linked = CheckTranslationReady(setup: repo, cli: FakeCli(authed: true))
+        let unlinked = CheckTranslationReady(setup: repo, cli: FakeCli(authed: false))
+        let a = await linked.usesApiProvider(), b = await linked(), c = await unlinked.readiness()
+        XCTAssertFalse(a); XCTAssertTrue(b); XCTAssertEqual(c, .openCodeNotLinked)
     }
 
     func testNothingConfiguredOrAnUnreadableStoreIsNotReady() async {
-        let repo = FakeConfigRepo()
-        let none = await CheckTranslationReady(apiConfig: repo, cli: FakeCli(authed: false))()
+        let repo = FakeSetupRepo()
+        let none = await CheckTranslationReady(setup: repo, cli: FakeCli(authed: false))()
         XCTAssertFalse(none)
         repo.fails = true
-        let unreadable = await CheckTranslationReady(apiConfig: repo, cli: FakeCli(authed: false))()
+        let unreadable = await CheckTranslationReady(setup: repo, cli: FakeCli(authed: false))()
         XCTAssertFalse(unreadable)
+    }
+
+    func testReadinessIsPerPurpose() async {
+        var keyless = gemini; keyless.id = "nokey"; keyless.apiKey = ""
+        let repo = FakeSetupRepo()
+        repo.setup = AiSetup(providers: [gemini, keyless], translation: AiModelChoice(providerId: "gemini"),
+                             chat: AiModelChoice(providerId: "nokey"))
+        let check = CheckTranslationReady(setup: repo, cli: FakeCli(authed: false))
+        let translation = await check.readiness(.translation), chat = await check.readiness(.chat)
+        XCTAssertEqual(translation, .ready)
+        XCTAssertEqual(chat, .providerNotUsable(name: "Google Gemini"))
+        // Chat on OpenCode while translation uses the key: only chat needs the CLI login.
+        repo.setup.chat = .openCodeDefault
+        let chatOnOpenCode = await check.readiness(.chat), stillReady = await check(.translation)
+        XCTAssertEqual(chatOnOpenCode, .openCodeNotLinked)
+        XCTAssertTrue(stillReady)
+        // Same as translation: chat is ready whenever translation is.
+        repo.setup.chat = nil
+        let same = await check(.chat)
+        XCTAssertTrue(same)
+    }
+
+    func testAKeylessPresetIsUsableAndAProviderWithoutModelIsNot() async {
+        let ollama = AiProvider(id: "ollama", presetId: "ollama", name: "Ollama", baseUrl: "http://localhost:11434/v1")
+        let custom = AiProvider(id: "custom", presetId: "custom", name: "Mine", baseUrl: "https://x.test/v1", apiKey: "k")
+        let repo = FakeSetupRepo()
+        repo.setup = AiSetup(providers: [ollama, custom], translation: AiModelChoice(providerId: "ollama"), chat: AiModelChoice(providerId: "custom"))
+        let check = CheckTranslationReady(setup: repo, cli: FakeCli(authed: false))
+        let a = await check(.translation), b = await check.readiness(.chat)
+        XCTAssertTrue(a, "Ollama needs no key and has a default model")
+        XCTAssertEqual(b, .providerNotUsable(name: "Mine"), "a custom endpoint has no default model")
     }
 }
 
 final class TranslationSettingsLogicTests: XCTestCase {
-    func testActivePresetAndSummary() {
-        XCTAssertEqual(TranslationSettingsLogic.activePreset(nil), .openCode)
-        XCTAssertEqual(TranslationSettingsLogic.activePreset(usable).id, "gemini")
-        var off = usable; off.enabled = false
-        XCTAssertEqual(TranslationSettingsLogic.activePreset(off), .openCode)
+    func testSummary() {
         XCTAssertEqual(TranslationSettingsLogic.summary(languageName: "Tiếng Việt", backendName: "Google Gemini"), "Tiếng Việt · Google Gemini")
     }
 
@@ -69,31 +95,6 @@ final class TranslationSettingsLogicTests: XCTestCase {
         XCTAssertFalse(TranslationSettingsLogic.canListModels(baseUrl: "https://x", apiKey: " ", needsKey: true))
         XCTAssertTrue(TranslationSettingsLogic.canListModels(baseUrl: "https://x", apiKey: "", needsKey: false))
         XCTAssertTrue(TranslationSettingsLogic.canListModels(baseUrl: "https://x", apiKey: "k", needsKey: true))
-    }
-
-    func testSavingNeedsEndpointModelAndKey() {
-        let gemini = TranslationApiPreset.byId("gemini"), ollama = TranslationApiPreset.byId("ollama")
-        XCTAssertTrue(TranslationSettingsLogic.canSave(preset: gemini, baseUrl: "u", model: "m", apiKey: "k", saving: false))
-        XCTAssertFalse(TranslationSettingsLogic.canSave(preset: gemini, baseUrl: "u", model: "m", apiKey: " ", saving: false))
-        XCTAssertTrue(TranslationSettingsLogic.canSave(preset: ollama, baseUrl: "u", model: "m", apiKey: "", saving: false))
-        XCTAssertFalse(TranslationSettingsLogic.canSave(preset: ollama, baseUrl: "u", model: "", apiKey: "", saving: false))
-        XCTAssertFalse(TranslationSettingsLogic.canSave(preset: ollama, baseUrl: "u", model: "m", apiKey: "", saving: true))
-    }
-
-    func testPickingRestoresTheSavedProvidersFieldsAndSwitchesItBackOn() {
-        var saved = usable
-        let gemini = TranslationApiPreset.byId("gemini"), groq = TranslationApiPreset.byId("groq")
-        let restored = TranslationSettingsLogic.fields(for: gemini, saved: saved)
-        XCTAssertEqual(restored.model, "m"); XCTAssertEqual(restored.apiKey, "k")
-        let other = TranslationSettingsLogic.fields(for: groq, saved: saved)
-        XCTAssertEqual(other.model, groq.defaultModel); XCTAssertEqual(other.apiKey, "")
-        // OpenCode takes over at once, the key kept but off; picking the saved provider again turns it on.
-        let off = TranslationSettingsLogic.configOnPick(preset: .openCode, saved: saved)
-        XCTAssertEqual(off?.enabled, false); XCTAssertEqual(off?.apiKey, "k")
-        saved.enabled = false
-        XCTAssertEqual(TranslationSettingsLogic.configOnPick(preset: gemini, saved: saved)?.enabled, true)
-        XCTAssertNil(TranslationSettingsLogic.configOnPick(preset: groq, saved: saved))
-        XCTAssertNil(TranslationSettingsLogic.configOnPick(preset: .openCode, saved: nil))
     }
 
     func testKeyStatus() {

@@ -3,22 +3,20 @@ import CoreUI
 import FeatureTranslation
 import SwiftUI
 
-/// Ported from: lib/features/translation/presentation/widgets/translation_settings_card.dart
-/// One collapsible card for everything translation: the target language and the one provider (with its model) that
-/// translates. Collapsed it states what is in force (`Tiếng Việt · Google Gemini`).
+/// Ported from: lib/features/translation/presentation/widgets/translation_settings_card.dart (several providers and a choice
+/// per purpose: not in the Flutter app)
+/// One collapsible card for everything AI: the providers (OpenCode built in, plus endpoints saved with a key), what translation
+/// runs on (language, provider, model) and what AI in chat runs on. Collapsed it states what translates
+/// (`Tiếng Việt · OpenAI (gpt-5-mini)`).
 struct TranslationSettingsPage: View {
     @Environment(\.appTheme) private var theme
     let root: CompositionRoot
     @State private var expanded = true
-    @State private var saved: TranslationApiConfig?
-    @State private var loadFailed = false
-    @State private var loaded = false
 
     var body: some View {
-        let shell = root.shell, s = shell.settings
-        let backend = TranslationSettingsLogic.activePreset(saved)
+        let shell = root.shell, s = shell.settings, store = root.aiSetup
         let summary = TranslationSettingsLogic.summary(languageName: translationLanguage(for: s.translationLang).nativeName,
-                                                       backendName: TranslationApiForm.name(of: backend))
+                                                       backendName: store.backendName(.translation, legacyModel: s.translationModel))
         SettingsPage(title: appString("translation", "Translation")) {
             VStack(alignment: .leading, spacing: 0) {
                 Button { withAnimation(.easeOut(duration: theme.motion.base)) { expanded.toggle() } } label: {
@@ -35,34 +33,41 @@ struct TranslationSettingsPage: View {
                 }
                 .buttonStyle(.plain)
                 if expanded {
-                    TranslationSection(title: appString("translationLanguageSection", "Translation language"),
-                                       hint: appString("translationLanguageSubtitle", "The language tickets and chat messages are translated into.")) {
-                        TranslationLanguageControl(value: s.translationLang) { v in shell.updateSettings { $0.translationLang = v } }
-                    }
-                    TranslationSection(title: appString("translationProviderSection", "Translation provider"),
-                                       hint: appString("translationProviderSubtitle", "Who translates tickets and chat messages. OpenCode uses the CLI and its login; the others use your own API key.")) {
-                        if loaded {
-                            TranslationApiForm(root: root, saved: saved, loadFailed: loadFailed) { saved = $0 }
-                        } else { AppInlineSpinner() }
+                    if store.loaded {
+                        if store.loadFailed {
+                            AppInlineNote(appString("aiSetupLoadFailed", "Couldn't read the saved AI providers. Everything runs on OpenCode until you save them again."), isError: true)
+                                .padding(.horizontal, theme.spacing.s16).padding(.bottom, theme.spacing.s12)
+                        }
+                        TranslationSection(title: appString("aiProvidersSection", "AI providers"),
+                                           hint: appString("aiProvidersSubtitle", "OpenCode uses the CLI and its login; the others use your own API key, kept in the Keychain. Save as many as you like.")) {
+                            AiProvidersSection(root: root)
+                        }
+                        TranslationSection(title: appString("translationProviderSection", "Translation provider"),
+                                           hint: appString("aiTranslationSubtitle", "The language tickets and chat messages are translated into, and who translates them.")) {
+                            VStack(alignment: .leading, spacing: theme.spacing.s12) {
+                                FieldBlock(label: appString("translationLanguage", "Translation language")) {
+                                    TranslationLanguageControl(value: s.translationLang) { v in shell.updateSettings { $0.translationLang = v } }
+                                }
+                                AiModelChoiceFields(root: root, purpose: .translation)
+                            }
+                        }
+                        TranslationSection(title: appString("aiChatSection", "AI in chat"),
+                                           hint: appString("aiChatSubtitle", "Who writes chat summaries, reply ideas and rewrites (✨).")) {
+                            AiChatChoiceSection(root: root)
+                        }
+                    } else {
+                        AppInlineSpinner().padding(theme.spacing.s16)
                     }
                 }
             }
             .background(theme.colors.card, in: RoundedRectangle(cornerRadius: theme.radii.lg))
             .overlay(RoundedRectangle(cornerRadius: theme.radii.lg).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
         }
-        .task { await load() }
-    }
-
-    private func load() async {
-        switch await root.translation.apiConfig.load() {
-        case .success(let cfg): saved = cfg
-        case .failure: loadFailed = true
-        }
-        loaded = true
+        .task { if !root.aiSetup.loaded { await root.aiSetup.load() } }
     }
 }
 
-/// A titled block inside the card: `trailing` sits beside the title (a short control), the content below it (a form).
+/// A titled block inside the card: a title and hint over its content.
 private struct TranslationSection<Content: View>: View {
     @Environment(\.appTheme) private var theme
     let title: String

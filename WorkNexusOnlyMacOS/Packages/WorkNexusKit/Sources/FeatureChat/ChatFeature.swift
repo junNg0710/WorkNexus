@@ -21,7 +21,8 @@ import GRDB
 ///    (read `\.chatServices` / `\.chatSettings`; the host saves what they report). `ChatPersonChip`, `ChatPersonChatButton` and
 ///    `ChatPersonAvatar` are the person hooks (tapping opens the 1:1 chat through `ChatServices.showChat`).
 /// 8. **Host hooks on `ChatServices`** — `ticketLookup` / `mergeRequests` (link cards), `showChat`, `openTicket`,
-///    `ensureTranslatorReady` (the "OpenCode not linked" gate before a message is translated or the AI is asked), `ai` +
+///    `ensureTranslatorReady` (the "OpenCode not linked" gate before a message is translated), `ensureAiReady` (the same gate
+///    for the AI help, whose provider may differ; falls back to `ensureTranslatorReady`), `ai` +
 ///    `aiLanguages` (the ✨ AI help: summaries, reply ideas, rewrites) and `setStickerSuggestions` (saves the ✨ menu's switch).
 ///
 /// 9. **AI tools (MCP)** — `makeLocalApi(directory:)` (the loopback chat API, started with `ChatLocalApiHandlers.using(repository)`
@@ -55,7 +56,8 @@ public enum ChatFeature {
     /// - Parameter bundledStickers: a folder of `<pack>/<image>` sticker sets shipped in the app (nil: none).
     public static func makeServices(repository: ChatRepository, db: AppDatabase, credentials: CredentialStore, bundledStickers: URL? = nil,
                                     translator: ChatTextTranslator? = nil, ensureTranslatorReady: (@Sendable () async -> Bool)? = nil,
-                                    ai: ChatAiTextGenerator? = nil, aiLanguages: [ChatAiLanguage] = [],
+                                    ai: ChatAiTextGenerator? = nil, ensureAiReady: (@Sendable () async -> Bool)? = nil,
+                                    aiLanguages: [ChatAiLanguage] = [],
                                     setStickerSuggestions: (@Sendable (Bool) -> Void)? = nil,
                                     translations: MessageTranslationRepository? = nil,
                                     ticketLookup: (@Sendable (String) async -> Ticket?)? = nil, mergeRequests: MergeRequestLinkService? = nil,
@@ -70,7 +72,7 @@ public enum ChatFeature {
             translator: translator, ensureTranslatorReady: ensureTranslatorReady, telegramTokens: CredentialTelegramTokenStore(store: credentials),
             stickerImport: ImportStickerPack(source, converter, stickers), ticketLookup: ticketLookup, mergeRequests: mergeRequests,
             showChat: showChat, openTicket: openTicket)
-        services.ai = ai; services.aiLanguages = aiLanguages; services.setStickerSuggestions = setStickerSuggestions
+        services.ai = ai; services.ensureAiReady = ensureAiReady; services.aiLanguages = aiLanguages; services.setStickerSuggestions = setStickerSuggestions
         return services
     }
 

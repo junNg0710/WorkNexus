@@ -17,6 +17,14 @@ public protocol TranslationApiConfigRepository: Sendable {
     func clear() async -> Outcome<Void>
 }
 
+/// Not in the Flutter app: every saved AI provider (keys included) and the provider + model of each purpose.
+public protocol AiSetupRepository: Sendable {
+    /// The saved setup; `AiSetup.empty` (OpenCode for everything) when nothing was set up. A setup saved by an earlier build
+    /// as one `TranslationApiConfig` is migrated on the first load.
+    func load() async -> Outcome<AiSetup>
+    func save(_ setup: AiSetup) async -> Outcome<Void>
+}
+
 /// Ported from: lib/features/translation/domain/repositories/translation_api_model_catalog.dart
 /// The models an OpenAI-compatible endpoint offers, so the user picks one instead of typing a name the provider may have renamed.
 public protocol TranslationApiModelCatalog: Sendable {

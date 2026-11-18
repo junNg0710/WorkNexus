@@ -5,14 +5,17 @@ import Foundation
 import Observation
 import SwiftUI
 
-/// Ported from: lib/core/widgets/opencode_not_linked_dialog.dart (`ensureOpenCodeLinked`, `OpenCodeNotLinkedDialog`)
-/// The check every translation passes first: a usable API key, or an OpenCode with an authenticated provider. When neither is
-/// there the "OpenCode not linked" dialog explains how to link it and the translation does not start, rather than failing with
-/// a raw CLI error. Used by the ticket translation footer and the chat message translation.
+/// Ported from: lib/core/widgets/opencode_not_linked_dialog.dart (`ensureOpenCodeLinked`, `OpenCodeNotLinkedDialog`); per purpose
+/// and with saved API providers: not in the Flutter app.
+/// The check every AI run passes first: the provider chosen for its purpose is usable (a key, or one it does not need), or it
+/// runs on an OpenCode with an authenticated provider. When it is not, a dialog explains how to fix it and the run does not
+/// start, rather than failing with a raw CLI error. Used by the ticket translation footer, chat message translation and the
+/// chat's AI help.
 @MainActor @Observable
 final class OpenCodeLinkGate {
     static let shared = OpenCodeLinkGate()
-    var isShowingDialog = false
+    /// What the dialog explains; nil while it is closed.
+    var problem: AiSetupProblem?
     @ObservationIgnored private var check: CheckTranslationReady?
     /// "Open settings" in the dialog: the translation settings page.
     @ObservationIgnored var openSettings: () -> Void = {}
@@ -20,35 +23,62 @@ final class OpenCodeLinkGate {
     private init() {}
 
     func install(feature: TranslationFeature, openSettings: @escaping () -> Void) {
-        check = CheckTranslationReady(apiConfig: feature.apiConfig, cli: feature.openCodeCli)
+        check = CheckTranslationReady(setup: feature.aiSetup, cli: feature.openCodeCli)
         self.openSettings = openSettings
     }
 
-    /// True when a translation can run; otherwise shows the dialog and returns false.
-    func ensureLinked() async -> Bool {
+    /// True when a run for `purpose` can start; otherwise shows the dialog and returns false.
+    func ensureLinked(_ purpose: AiPurpose = .translation) async -> Bool {
         guard let check else { return true }
-        if await check() { return true }
-        isShowingDialog = true
+        let readiness = await check.readiness(purpose)
+        if readiness == .ready { return true }
+        problem = AiSetupProblem(purpose: purpose, readiness: readiness)
         return false
     }
 }
 
-/// Explains how to link OpenCode when no provider is authenticated: run the CLI login, or switch translation to an API-key
-/// provider in Settings.
+/// Why an AI run of `purpose` could not start.
+struct AiSetupProblem: Equatable {
+    let purpose: AiPurpose
+    let readiness: AiReadiness
+}
+
+/// Explains what to set up: link OpenCode (the CLI login) when the run would go to OpenCode, or finish the chosen provider;
+/// either way another provider can be picked in Settings.
 struct OpenCodeNotLinkedDialog: View {
     @Environment(\.appTheme) private var theme
+    let problem: AiSetupProblem
     let onClose: () -> Void
     let onOpenSettings: () -> Void
 
+    private var title: String {
+        if case .providerNotUsable(let name) = problem.readiness { return appFormat("aiProviderNotReadyTitle", "%1$@ is not set up", name) }
+        return appString("openCodeNotLinkedTitle", "OpenCode not linked")
+    }
+
+    private var message: String {
+        switch (problem.readiness, problem.purpose) {
+        case (.providerNotUsable(let name), .chat):
+            appFormat("aiProviderNotReadyChatBody", "AI in chat runs on %1$@, which has no API key or model yet. Add them under Settings → Translation, or pick another provider for AI in chat.", name)
+        case (.providerNotUsable(let name), _):
+            appFormat("aiProviderNotReadyTranslationBody", "Translation runs on %1$@, which has no API key or model yet. Add them under Settings → Translation, or pick another translation provider.", name)
+        case (_, .chat):
+            appString("openCodeNotLinkedChatBody", "AI in chat runs on OpenCode, and no authenticated OpenCode provider was found. Run the command below in a terminal, or pick an API provider for AI in chat under Settings → Translation.")
+        default:
+            appString("openCodeNotLinkedBody", "No authenticated OpenCode provider was found. Add an API key under Settings → Translation, run the command below in a terminal, or pick another translation provider (Gemini, Groq, …).")
+        }
+    }
+
     var body: some View {
-        AppDialogFrame(title: appString("openCodeNotLinkedTitle", "OpenCode not linked"), maxWidth: theme.sizes.dialogSm, onClose: onClose) {
+        AppDialogFrame(title: title, maxWidth: theme.sizes.dialogSm, onClose: onClose) {
             VStack(alignment: .leading, spacing: theme.spacing.s12) {
-                Text(appString("openCodeNotLinkedBody", "No authenticated OpenCode provider was found. Add an API key under Settings → Translation, run the command below in a terminal, or pick another translation provider (Gemini, Groq, …)."))
-                    .font(theme.typography.paragraph).foregroundStyle(theme.colors.tx2)
-                Text("opencode auth login").font(theme.typography.mono).foregroundStyle(theme.colors.tx).textSelection(.enabled)
-                    .padding(.horizontal, theme.spacing.s12).padding(.vertical, theme.spacing.s10).frame(maxWidth: .infinity, alignment: .leading)
-                    .background(theme.colors.panel2, in: RoundedRectangle(cornerRadius: theme.radii.md))
-                    .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
+                Text(message).font(theme.typography.paragraph).foregroundStyle(theme.colors.tx2).fixedSize(horizontal: false, vertical: true)
+                if problem.readiness == .openCodeNotLinked {
+                    Text("opencode auth login").font(theme.typography.mono).foregroundStyle(theme.colors.tx).textSelection(.enabled)
+                        .padding(.horizontal, theme.spacing.s12).padding(.vertical, theme.spacing.s10).frame(maxWidth: .infinity, alignment: .leading)
+                        .background(theme.colors.panel2, in: RoundedRectangle(cornerRadius: theme.radii.md))
+                        .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
+                }
             }
             .padding(.horizontal, theme.spacing.s24).padding(.bottom, theme.spacing.s24)
         } actions: {
@@ -59,14 +89,14 @@ struct OpenCodeNotLinkedDialog: View {
     }
 }
 
-/// Presents the "OpenCode not linked" dialog (window-level) whenever the gate asks for it.
+/// Presents the dialog (window-level) whenever the gate asks for it.
 struct OpenCodeLinkGateHost: ViewModifier {
     @Bindable var gate: OpenCodeLinkGate
 
     func body(content: Content) -> some View {
-        content.appDialog(isPresented: $gate.isShowingDialog) {
-            OpenCodeNotLinkedDialog(onClose: { gate.isShowingDialog = false },
-                                    onOpenSettings: { gate.isShowingDialog = false; gate.openSettings() })
+        content.appDialog(item: $gate.problem) { problem in
+            OpenCodeNotLinkedDialog(problem: problem, onClose: { gate.problem = nil },
+                                    onOpenSettings: { gate.problem = nil; gate.openSettings() })
         }
     }
 }
