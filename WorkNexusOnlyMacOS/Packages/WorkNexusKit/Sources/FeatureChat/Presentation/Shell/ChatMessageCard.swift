@@ -18,7 +18,7 @@ struct ChatMessageCard<Trailing: View>: View {
         ChatPanelCard {
             VStack(alignment: .leading, spacing: theme.spacing.s12) {
                 HStack(spacing: theme.spacing.s12) {
-                    ChatAvatarView(userId: message.senderId, users: users, showPresence: false)
+                    ChatPrivacyAvatar(avatar: ChatAvatarView(userId: message.senderId, users: users, showPresence: false))
                     VStack(alignment: .leading, spacing: theme.spacing.s2) {
                         Text(ChatShellLabels.userName(users, message.senderId)).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx).lineLimit(1)
                         HStack(spacing: theme.spacing.s4) {
@@ -31,6 +31,8 @@ struct ChatMessageCard<Trailing: View>: View {
                 }
                 Text(ChatShellLabels.preview(message)).font(theme.typography.body).foregroundStyle(theme.colors.tx)
                     .lineLimit(message.deleted ? 1 : 6).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
+                    // The card stays solid under the faded words (the body here is always words: a picture shows as its label).
+                    .chatPrivacyFade()
                 HStack(spacing: theme.spacing.s4) {
                     Text(shellString("chatDateAtTime", "{date} at {time}", [
                         "date": message.sentAt.formatted(.dateTime.day(.twoDigits).month(.twoDigits).year()),

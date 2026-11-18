@@ -21,17 +21,25 @@ struct ChatInfoPanel: View {
                            onClose: layout.infoRoom ? nil : { session.state.closePanel() }) {
             ScrollView {
                 VStack(spacing: 0) {
-                    ChatAvatarView(chat: chat, title: title, users: users, diameter: theme.sizes.control36 * 2)
+                    ChatPrivacyAvatar(avatar: ChatAvatarView(chat: chat, title: title, users: users, diameter: theme.sizes.control36 * 2),
+                                      group: !oneToOne)
                     if !oneToOne, PinChatMessage(model.repository).canPin(chat, selfUserId: model.selfUserId, selfAccount: model.selfAccount) {
                         AppButton(shellString("chatChangeGroupAvatar", "Change group picture"), systemImage: "camera", kind: .ghost) {
                             model.groupAvatarChat = chat
                         }
                         .padding(.top, theme.spacing.s4)
                     }
-                    Text(title).font(theme.typography.titleSm).foregroundStyle(theme.colors.tx).multilineTextAlignment(.center)
-                        .textSelection(.enabled).padding(.top, theme.spacing.s12)
+                    ChatPrivacyMasked(part: .identity, alignment: .center) {
+                        Text(title).font(theme.typography.titleSm).foregroundStyle(theme.colors.tx).multilineTextAlignment(.center)
+                            .textSelection(.enabled)
+                    } mask: {
+                        Text(chatPrivacyMaskText).font(theme.typography.titleSm).foregroundStyle(theme.colors.tx)
+                    }
+                    .padding(.top, theme.spacing.s12)
                     if let subtitle = subtitle(chat, peer) {
-                        Text(subtitle).font(theme.typography.meta).foregroundStyle(theme.colors.tx2)
+                        // The peer's @account names them as much as the title does; a count or a status stays.
+                        ChatPrivacyText(text: subtitle, part: chatSubtitleNamesPeer(subtitle, peerAccount: nil) ? .identity : nil,
+                                        font: theme.typography.meta, color: theme.colors.tx2)
                     }
                     ChatInfoDetails(chat: chat, peer: peer, users: users, roleNames: model.roleNames)
                         .padding(.top, theme.spacing.s20)
@@ -49,6 +57,8 @@ struct ChatInfoPanel: View {
                 }
                 .padding(theme.spacing.s12)
             }
+            // Pointing anywhere on the panel shows all of it while the privacy mode hides it.
+            .chatPrivacyRevealRegion()
         }
     }
 
@@ -73,7 +83,7 @@ private struct ChatInfoDetails: View {
         if !rows.isEmpty {
             ChatPanelCard {
                 VStack(alignment: .leading, spacing: 0) {
-                    ForEach(rows.indices, id: \.self) { i in ChatDetailRow(icon: rows[i].icon, label: rows[i].label, value: rows[i].value).padding(.top, i == 0 ? 0 : theme.spacing.s12) }
+                    ForEach(rows.indices, id: \.self) { i in ChatDetailRow(icon: rows[i].icon, label: rows[i].label, value: rows[i].value, privacyPart: .identity).padding(.top, i == 0 ? 0 : theme.spacing.s12) }
                 }
             }
         }
@@ -103,6 +113,8 @@ private struct ChatInfoDetails: View {
 struct ChatDetailRow: View {
     @Environment(\.appTheme) private var theme
     let icon: String, label: String, value: String
+    /// Shows the value as dots while the privacy mode hides this part.
+    var privacyPart: ChatPrivacyPart?
 
     var body: some View {
         HStack(alignment: .top, spacing: theme.spacing.s12) {
@@ -110,7 +122,12 @@ struct ChatDetailRow: View {
                 .frame(width: theme.sizes.icon20)
             VStack(alignment: .leading, spacing: 0) {
                 Text(label).font(theme.typography.caption).foregroundStyle(theme.colors.tx2)
-                Text(value).font(theme.typography.body).foregroundStyle(theme.colors.tx).textSelection(.enabled)
+                // Every detail here names or places a person (a role, contacts, an owner, a date): dots while names hide.
+                ChatPrivacyMasked(part: privacyPart) {
+                    Text(value).font(theme.typography.body).foregroundStyle(theme.colors.tx).textSelection(.enabled)
+                } mask: {
+                    Text(chatPrivacyMaskText).font(theme.typography.body).foregroundStyle(theme.colors.tx)
+                }
             }
             Spacer(minLength: 0)
         }

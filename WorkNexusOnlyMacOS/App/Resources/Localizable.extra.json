@@ -1674,5 +1674,9 @@
   "petSayAllQuiet": {
     "en": "All quiet — nothing waiting",
     "vi": "Mọi thứ ổn — không có gì đang chờ"
+  },
+  "runOpenCodeToTranslate": {
+    "en": "Run OpenCode to generate a %1$@ version.",
+    "vi": "Chạy OpenCode để tạo bản dịch %1$@."
   }
 }

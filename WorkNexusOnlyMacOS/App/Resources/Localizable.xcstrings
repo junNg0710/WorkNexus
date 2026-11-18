@@ -33507,6 +33507,23 @@
           }
         }
       }
+    },
+    "runOpenCodeToTranslate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run OpenCode to generate a %1$@ version."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chạy OpenCode để tạo bản dịch %1$@."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

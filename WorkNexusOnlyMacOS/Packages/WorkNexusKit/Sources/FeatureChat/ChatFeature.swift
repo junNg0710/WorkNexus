@@ -25,7 +25,7 @@ import GRDB
 ///
 /// Settings read from `AppSettings` (via `ChatSettings`): chatAppearance, chatPrimaryBubbles, chatWallpaper, chatWallpaperDim,
 /// chatSendMarkdown, chatNotifications, chatNotifyWhileViewing, chatSendTypingStatus, chatReactions, chatCacheLimitMb,
-/// chatAutoDownloadVideos, chatAutoDownloadVideoMb, chatTextScale, translationLang, translationModel.
+/// chatAutoDownloadVideos, chatAutoDownloadVideoMb, chatTextScale, chatPrivacy, translationLang, translationModel.
 public enum ChatFeature {
     public static var migrationRegistrar: MigrationRegistrar { ChatMigrations.registrar }
 

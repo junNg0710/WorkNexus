@@ -42,6 +42,8 @@ struct PinnedMessagesPanel: View {
                     }
                     .padding(theme.spacing.s12)
                 }
+                // Pointing anywhere on the pins shows all of them while the privacy mode hides them.
+                .chatPrivacyRevealRegion()
             }
         }
         .task(id: ids) { pinned.track(ids) }

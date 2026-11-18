@@ -64,6 +64,8 @@ public struct AppSizes: Sendable {
 
 public struct AppMotion: Sendable {
     public let fast: Double = 0.12, base: Double = 0.18, slow: Double = 0.25
+    /// The tokens are constants: views that animate without reading the theme (a cheap row) use `AppMotion()` directly.
+    public init() {}
 }
 
 public struct AppTypography: Sendable {

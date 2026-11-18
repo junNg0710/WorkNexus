@@ -13,6 +13,8 @@ struct ConversationRow: View {
         let chat = item.chat
         ConversationTile(chat: data, selected: chat.gid == model.selectedGid,
                          highlighted: model.isSearching && chat.gid == model.highlightedGid, compact: compact)
+            // Pointing anywhere on the row shows its name, avatar and preview together while the privacy mode hides them.
+            .chatPrivacyRowReveal()
             .onTapGesture { model.select(chat.gid) }
             .contextMenu {
                 Button { model.setStarred(chat, !chat.starred) } label: {

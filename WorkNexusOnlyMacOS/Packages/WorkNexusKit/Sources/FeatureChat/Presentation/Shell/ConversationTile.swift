@@ -7,6 +7,8 @@ import SwiftUI
 struct ConversationTile: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatSettings) private var settings
+    @Environment(\.chatPrivacyHidden) private var hidden
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let chat: ConversationRowData
     let selected: Bool
     let highlighted: Bool
@@ -16,16 +18,21 @@ struct ConversationTile: View {
         let unread = chat.chat.unreadCount > 0
         HStack(spacing: theme.spacing.s12) {
             ChatAvatarView(chat: chat.chat, title: chat.title, users: chat.users)
+                .privacyMasked(hidden.contains(.identity), group: chat.chat.type != .one2one)
             VStack(alignment: .leading, spacing: theme.spacing.s2) {
                 HStack {
-                    Text(chat.title).font(unread ? theme.typography.bodyStrong : theme.typography.body)
-                        .foregroundStyle(theme.colors.tx).lineLimit(1)
+                    ChatPrivacyText(text: chat.title, part: .identity, font: unread ? theme.typography.bodyStrong : theme.typography.body,
+                                    color: theme.colors.tx)
                     Spacer(minLength: theme.spacing.s4)
                     Text(ChatShellLabels.listTime(chat.chat.lastActiveAt)).font(theme.typography.caption)
                         .foregroundStyle(unread ? theme.colors.accent : theme.colors.tx3)
                 }
                 HStack(spacing: theme.spacing.s6) {
-                    ConversationPreviewLine(chat: chat.chat, lastSender: chat.lastSender, typing: chat.typing, reactions: settings.reactions)
+                    ChatPrivacyMasked(part: .preview) {
+                        ConversationPreviewLine(chat: chat.chat, lastSender: chat.lastSender, typing: chat.typing, reactions: settings.reactions)
+                    } mask: {
+                        Text(chatPrivacyMaskText).font(theme.typography.meta).foregroundStyle(theme.colors.tx2).lineLimit(1)
+                    }
                     Spacer(minLength: 0)
                     if chat.chat.muted { Image(systemName: "bell.slash").font(.system(size: theme.sizes.icon12)).foregroundStyle(theme.colors.tx3) }
                     if chat.chat.starred { Image(systemName: "pin.fill").font(.system(size: theme.sizes.icon12)).foregroundStyle(theme.colors.tx3) }
@@ -35,9 +42,14 @@ struct ConversationTile: View {
         }
         .padding(.horizontal, compact ? theme.spacing.s12 : theme.spacing.s20).padding(.vertical, theme.spacing.s8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(selected ? theme.colors.sel : (highlighted ? theme.colors.panel2 : .clear))
+        // The selection fill eases from the row left to the row picked (only those two rows change).
+        .background { (selected ? theme.colors.sel : (highlighted ? theme.colors.panel2 : .clear)).animation(fillEase, value: selected) }
         .contentShape(Rectangle())
     }
+}
+
+extension ConversationTile {
+    private var fillEase: Animation? { reduceMotion ? nil : .easeOut(duration: theme.motion.fast) }
 }
 
 /// Everything a row draws, resolved by the list (so a typing signal redraws only the rows it concerns).

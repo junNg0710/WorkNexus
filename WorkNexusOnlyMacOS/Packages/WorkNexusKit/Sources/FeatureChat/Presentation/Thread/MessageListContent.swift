@@ -10,6 +10,7 @@ struct MessageListContent: View {
     @Environment(\.chatSettings) private var settings
     @Environment(\.appTheme) private var theme
     @Environment(\.toasts) private var toasts
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var model: MessageTimelineModel
     /// The list comes in a frame or two after the rest of the chat (see `ChatOpeningStage`).
     @State private var stage = ChatOpeningStage.chrome
@@ -26,8 +27,10 @@ struct MessageListContent: View {
         let showSenders = state.chat.type != .one2one
         ZStack(alignment: .bottomTrailing) {
             if stage.showsList {
+                // Only the messages fade in as a chat opens: the header, input and panels look alike from chat to chat, and
+                // fading them reads as a flicker. Only the opacity animates, never the rows coming in.
                 MessageListScroll(ctx: ThreadContext(model: model, actions: actions), showSenders: showSenders, stage: stage)
-                    .opacity(stage.isVisible ? 1 : 0)
+                    .animation(reduceMotion ? nil : .easeOut(duration: theme.motion.base)) { $0.opacity(stage.isVisible ? 1 : 0) }
             }
             if stage.showsList && model.rows.isEmpty && !model.loadFailed {
                 (model.loaded && !model.loadingOlder ? AppStateView(.empty(L.noMessages)) : AppStateView(.loading))

@@ -7,6 +7,7 @@ import SwiftUI
 /// Ported from: lib/features/chat/presentation/widgets/thread_pane.dart
 struct ChatThreadPane: View {
     @Environment(\.chatShellLayout) private var layout
+    @Environment(\.chatPrivacyHidden) private var privacyHidden
     @Environment(\.chatServices) private var services
     let model: ChatShellModel
     let session: ChatThreadSession
@@ -16,21 +17,24 @@ struct ChatThreadPane: View {
         let panel = state.effectivePanel(infoRoom: layout.infoRoom)
         ChatSidePanelHost(infoRoom: layout.infoRoom, showsPanel: panel != nil, onDismiss: { state.closePanel() }) {
             VStack(spacing: 0) {
-                ChatThreadHeader(model: model, session: session)
-                if session.search.isOpen { ChatThreadSearchBar(model: model, session: session) }
+                // Pointing anywhere on the chat above the input shows all of it while the privacy mode hides it. Not the
+                // input: the user types there.
                 VStack(spacing: 0) {
+                    ChatThreadHeader(model: model, session: session)
+                    if session.search.isOpen { ChatThreadSearchBar(model: model, session: session) }
                     // Dropped on the messages, files go out at once; dropped on the input, they wait there (as in Flutter).
                     MessageListView(state: state)
                         .overlay(alignment: .topLeading) { ChatFloatingVideo(model: state.video) }
                         .chatFileDrop(state: state, mode: .send)
-                    ChatComposerView(state: state, hint: shellString("chatMessageTo", "Type @ to mention, message {name}",
-                                                                     ["name": ChatShellLabels.title(state.chat, state.users)]))
-                        .chatFileDrop(state: state, mode: .stage)
-                        // "Multiple select" covers the composer with its bar; what was being written stays underneath.
-                        .overlay { if state.isSelecting { ChatSelectionBar(model: model, state: state) } }
                 }
-                .chatDropZones()
+                .chatPrivacyRevealRegion()
+                ChatComposerView(state: state, hint: shellString("chatMessageTo", "Type @ to mention, message {name}",
+                                                                 ["name": composerName(state)]))
+                    .chatFileDrop(state: state, mode: .stage)
+                    // "Multiple select" covers the composer with its bar; what was being written stays underneath.
+                    .overlay { if state.isSelecting { ChatSelectionBar(model: model, state: state) } }
             }
+            .chatDropZones()
             .frame(maxWidth: .infinity)
             .background { ChatWallpaperView() }
             .chatStyleScope()
@@ -48,6 +52,11 @@ struct ChatThreadPane: View {
 }
 
 extension ChatThreadPane {
+    /// The chat's name in the input's hint, or dots while the privacy mode hides names (no reveal on hover: it is a hint).
+    private func composerName(_ state: ChatThreadState) -> String {
+        privacyHidden.contains(.identity) ? chatPrivacyMaskText : ChatShellLabels.title(state.chat, state.users)
+    }
+
     /// What the message list asks of the rest of the chat UI: open a profile; save an image as a sticker.
     @MainActor private func threadActions(_ state: ChatThreadState) -> ChatThreadActions {
         var actions = ChatThreadActions(openProfile: { model.profileUserId = $0 },

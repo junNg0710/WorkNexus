@@ -37,6 +37,8 @@ struct ReplyThreadPanel: View {
                 }
                 .padding(theme.spacing.s16)
             }
+            // Pointing anywhere on the thread shows all of it while the privacy mode hides it.
+            .chatPrivacyRevealRegion()
         }
         .task(id: rootId) {
             for await m in model.repository.watchMessage(accountId: state.accountId, chatGid: state.chatGid, serverId: rootId) { root = .some(m) }
@@ -54,13 +56,14 @@ private struct ReplyRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: theme.spacing.s10) {
-            ChatAvatarView(userId: message.senderId, users: users, size: .small, showPresence: false)
+            ChatPrivacyAvatar(avatar: ChatAvatarView(userId: message.senderId, users: users, size: .small, showPresence: false))
             VStack(alignment: .leading, spacing: theme.spacing.s2) {
                 HStack(spacing: theme.spacing.s6) {
                     Text(ChatShellLabels.userName(users, message.senderId)).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx)
                     Text(message.sentAt.formatted(date: .abbreviated, time: .shortened)).font(theme.typography.caption).foregroundStyle(theme.colors.tx3)
                 }
                 Text(ChatShellLabels.preview(message)).font(theme.typography.body).foregroundStyle(theme.colors.tx).textSelection(.enabled)
+                    .chatPrivacyFade()
             }
             Spacer(minLength: 0)
             AppIconButton("arrowshape.turn.up.left", help: shellString("chatReply", "Reply"), action: onReply)
