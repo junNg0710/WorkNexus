@@ -12,7 +12,9 @@ public struct PetView: View {
     let director: PetDirector
     let sheet: PetSpriteSheet
     /// How wide the character is drawn; its height keeps the sheet's cell proportions.
-    var width: CGFloat = 84
+    var width: CGFloat = PetView.defaultWidth
+    /// How wide the pet is drawn in the window.
+    public static let defaultWidth: CGFloat = 84
     /// Whether a sheet that can look turns its head toward the pointer while it idles.
     var followsCursor = false
     /// Whether the frame clock stops while the app's window cannot be seen (not for a pet that floats on its own).
@@ -27,7 +29,7 @@ public struct PetView: View {
     @State private var gazeTracker = PetGazeTracker()
     @State private var hovering = false
 
-    public init(director: PetDirector, sheet: PetSpriteSheet, width: CGFloat = 84, followsCursor: Bool = false,
+    public init(director: PetDirector, sheet: PetSpriteSheet, width: CGFloat = PetView.defaultWidth, followsCursor: Bool = false,
                 pausesWithApp: Bool = true, movable: Bool = true, showsBubble: Bool = true, onTap: (() -> Void)? = nil, onMoved: ((Double, Double) -> Void)? = nil) {
         self.director = director; self.sheet = sheet; self.width = width; self.followsCursor = followsCursor
         self.pausesWithApp = pausesWithApp; self.movable = movable; self.showsBubble = showsBubble; self.onTap = onTap; self.onMoved = onMoved
@@ -83,6 +85,8 @@ public struct PetView: View {
             .frame(width: width, height: height)
             .opacity(director.mood == .offline ? 0.55 : 1)
             .contentShape(Rectangle())
+            .accessibilityElement()
+            .accessibilityLabel(director.status ?? "")
             .onHover { hovering = $0 }
             .overlay(alignment: .bottom) {
                 // Above its head, as wide as a bubble gets; it never takes the pointer from what is under it.
@@ -97,6 +101,9 @@ public struct PetView: View {
                     }
                     .offset(y: -height)
                         .allowsHitTesting(false)
+                        // Not an accessibility element: one appearing makes SwiftUI walk the window for focus whenever an
+                        // accessibility client runs. What it says is the sprite's label instead.
+                        .accessibilityHidden(true)
                         .transition(.opacity)
                 }
             }

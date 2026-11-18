@@ -272,6 +272,17 @@ final class DesktopNotifierTests: XCTestCase {
         try? await Task.sleep(for: .milliseconds(20)); tap.cancel()
     }
 
+    @MainActor func testTheTrayMenuCanHoldAnOnOffItem() {
+        let tray = StatusItemService(strings: StatusItemStrings(openApp: "Open", quitApp: "Quit"))
+        XCTAssertEqual(tray.menuTitles, ["Open", "-", "Quit"])
+        var toggled = 0
+        tray.setToggle(StatusItemToggle(title: "Hide the pet", systemImage: "pawprint") { toggled += 1 })
+        XCTAssertEqual(tray.menuTitles, ["Open", "Hide the pet", "-", "Quit"])
+        tray.setToggle(nil)
+        XCTAssertEqual(tray.menuTitles, ["Open", "-", "Quit"])
+        XCTAssertEqual(toggled, 0)
+    }
+
     func testStatusItemStringsDefaultToTheLocalizedTrayLabels() {
         let s = StatusItemStrings()
         XCTAssertFalse(s.openApp.isEmpty); XCTAssertFalse(s.quitApp.isEmpty)

@@ -30,6 +30,7 @@ struct FloatingPetContent: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 .allowsHitTesting(false)
+                .accessibilityHidden(true)
             }
             PetView(director: director, sheet: sheet, width: width, followsCursor: followsCursor, pausesWithApp: false, movable: false,
                     showsBubble: false, onTap: onOpen)

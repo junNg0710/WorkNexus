@@ -10,6 +10,19 @@ public struct StatusItemStrings: Sendable, Equatable {
     }
 }
 
+/// An item of the tray menu between "Open" and "Quit" that turns something on or off (the pet): its title says what a
+/// click does ("Show the pet" / "Hide the pet"). Not in the Flutter app.
+public struct StatusItemToggle {
+    public var title: String
+    /// An SF Symbol shown before the title.
+    public var systemImage: String?
+    public var action: () -> Void
+
+    public init(title: String, systemImage: String? = nil, action: @escaping () -> Void) {
+        self.title = title; self.systemImage = systemImage; self.action = action
+    }
+}
+
 /// Owns the menu-bar status item and translates its menu clicks into app actions. Clicking the icon pops the menu
 /// (Open / Quit), as the Flutter tray does on macOS.
 @MainActor
@@ -19,6 +32,7 @@ public final class StatusItemService: NSObject {
     private var onQuit: (() async -> Void)?
     private var strings: StatusItemStrings
     private var toolTip: String?
+    private var toggle: StatusItemToggle?
 
     public var isReady: Bool { item != nil }
 
@@ -63,6 +77,15 @@ public final class StatusItemService: NSObject {
         item?.menu = makeMenu()
     }
 
+    /// Shows `toggle` in the menu (nil takes it out). The menu is rebuilt, so call it again whenever the title changes.
+    public func setToggle(_ toggle: StatusItemToggle?) {
+        self.toggle = toggle
+        item?.menu = makeMenu()
+    }
+
+    /// The titles of the menu, separators as "-" (for tests).
+    var menuTitles: [String] { makeMenu().items.map { $0.isSeparatorItem ? "-" : $0.title } }
+
     public func dispose() {
         if let item { NSStatusBar.system.removeStatusItem(item) }
         item = nil; onOpen = nil; onQuit = nil
@@ -74,10 +97,18 @@ public final class StatusItemService: NSObject {
         open.target = self
         let quit = NSMenuItem(title: strings.quitApp, action: #selector(quitClicked), keyEquivalent: "")
         quit.target = self
-        menu.addItem(open); menu.addItem(.separator()); menu.addItem(quit)
+        menu.addItem(open)
+        if let toggle {
+            let t = NSMenuItem(title: toggle.title, action: #selector(toggleClicked), keyEquivalent: "")
+            t.target = self
+            t.image = toggle.systemImage.flatMap { NSImage(systemSymbolName: $0, accessibilityDescription: nil) }
+            menu.addItem(t)
+        }
+        menu.addItem(.separator()); menu.addItem(quit)
         return menu
     }
 
     @objc private func openClicked() { if let a = onOpen { Task { await a() } } }
+    @objc private func toggleClicked() { toggle?.action() }
     @objc private func quitClicked() { if let a = onQuit { Task { await a() } } }
 }

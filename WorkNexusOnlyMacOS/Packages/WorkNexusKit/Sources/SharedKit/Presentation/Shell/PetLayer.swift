@@ -17,6 +17,8 @@ struct PetLayer: View {
     @State private var director = PetDirector()
     @State private var bundled = PetSpriteSheet.bundled()
     private static let xKey = "pet.x", yKey = "pet.y"
+    /// The room's margin inside the window.
+    static let inset: CGFloat = 8
     /// The floating pet's size: a little bigger than in the window, where the content is around it.
     static let floatingWidth: CGFloat = 96
 
@@ -48,10 +50,18 @@ struct PetLayer: View {
         ZStack {
             Color.clear.allowsHitTesting(false)
             if settings.showPet, settings.petDisplay == .inWindow, let sheet {
-                PetView(director: director, sheet: sheet, followsCursor: settings.petFollowsCursor) { x, y in
-                    UserDefaults.standard.set(x, forKey: Self.xKey); UserDefaults.standard.set(y, forKey: Self.yKey)
+                // In a graph of its own: the pet's frames, walks and bubbles never re-render the window (`PetStage`).
+                let director = director, inset = Self.inset
+                PetStage(petRect: { size in
+                    PetView.spriteRect(director: director, room: CGSize(width: size.width - 2 * inset, height: size.height - 2 * inset),
+                                       width: PetView.defaultWidth).offsetBy(dx: inset, dy: inset)
+                }) {
+                    PetView(director: director, sheet: sheet, followsCursor: settings.petFollowsCursor) { x, y in
+                        UserDefaults.standard.set(x, forKey: Self.xKey); UserDefaults.standard.set(y, forKey: Self.yKey)
+                    }
+                    .padding(inset)
+                    .environment(\.appTheme, theme)
                 }
-                .padding(8)
             }
         }
         .onAppear {

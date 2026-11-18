@@ -30,6 +30,8 @@ public final class CloseToTrayLifecycle: NSObject, NSWindowDelegate {
     public func setTrayIcon(_ image: NSImage?) { tray.setIcon(image) }
     public func setTrayToolTip(_ name: String?) { tray.setToolTip(name) }
     public func updateStrings(_ strings: StatusItemStrings) { tray.updateStrings(strings) }
+    /// The on/off item of the tray menu (show / hide the pet); nil takes it out.
+    public func setTrayToggle(_ toggle: StatusItemToggle?) { tray.setToggle(toggle) }
 
     public func open() {
         NSApp.activate(ignoringOtherApps: true)

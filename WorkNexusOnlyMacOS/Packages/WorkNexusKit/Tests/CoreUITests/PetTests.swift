@@ -308,6 +308,20 @@ final class PetTests: XCTestCase {
         XCTAssertGreaterThan(PetView.bubbleShift(petLeft: 0, petWidth: 84, roomWidth: 1000), 0)
     }
 
+    func testThePointerIsTakenOnlyOverThePet() {
+        let d = director()
+        d.place(x: 0.5, y: 1)
+        let rect = PetView.spriteRect(director: d, room: CGSize(width: 1084, height: 591), width: 84)
+        XCTAssertEqual(rect, CGRect(x: 500, y: 500, width: 84, height: 91))   // the middle of the bottom
+        XCTAssertFalse(PetStageHostingView<Color>.takesPointer(at: NSPoint(x: 100, y: 100), petRect: rect))   // content under it
+        XCTAssertTrue(PetStageHostingView<Color>.takesPointer(at: NSPoint(x: 540, y: 540), petRect: rect))     // the pet itself
+        XCTAssertFalse(PetStageHostingView<Color>.takesPointer(at: NSPoint(x: 540, y: 540), petRect: nil))     // no pet shown
+        let host = PetStageHostingView(rootView: Color.clear)
+        host.frame = NSRect(x: 0, y: 0, width: 1084, height: 591)
+        host.petRect = { _ in rect }
+        XCTAssertNil(host.hitTest(NSPoint(x: 100, y: 100)))
+    }
+
     func testReducedMotionKeepsItStill() {
         let d = director()
         d.reduceMotion = true

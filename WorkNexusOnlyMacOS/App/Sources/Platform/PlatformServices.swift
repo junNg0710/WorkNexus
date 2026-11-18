@@ -35,7 +35,18 @@ final class PlatformServices {
         observeChanges({ shell.settings.localeCode }) { [lifecycle] code in
             AppLanguage.apply(code)
             lifecycle.updateStrings(Self.trayStrings)
+            lifecycle.setTrayToggle(Self.petToggle(shell))
         }
+        // "Show the pet" / "Hide the pet" in the tray menu, following the setting (also when it changes in Settings).
+        lifecycle.setTrayToggle(Self.petToggle(shell))
+        observeChanges({ shell.settings.showPet }) { [lifecycle] _ in lifecycle.setTrayToggle(Self.petToggle(shell)) }
+    }
+
+    /// The tray item that shows or hides the pet, wherever it stands (in the window or on the desktop).
+    static func petToggle(_ shell: ShellModel) -> StatusItemToggle {
+        let shown = shell.settings.showPet
+        return StatusItemToggle(title: shown ? appString("petHide", "Hide the pet") : appString("showPet", "Show the pet"),
+                                systemImage: "pawprint") { shell.updateSettings { $0.showPet.toggle() } }
     }
 
     /// The tray menu's labels in the language in use.
