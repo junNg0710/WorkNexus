@@ -11,11 +11,16 @@ public struct MarkdownText: View {
     let data: String; let fontSize: CGFloat; let color: Color?; let height: CGFloat
     let images: BodyImageHooks; let linkColor: Color?; let onLinkTap: ((String) -> Void)?
     let linkStyle: BodyLinkStyle
+    let selectsAcross: Bool
 
+    /// `selectsAcrossBlocks` joins paragraphs, headings, lists and quotes into one text so a drag picks across them
+    /// (chat messages); otherwise every block is laid out on its own (headings scaled, lists with hanging indents).
     public init(_ data: String, fontSize: CGFloat = 13, color: Color? = nil, height: CGFloat = 1.6,
                 images: BodyImageHooks = BodyImageHooks(), isPlainLink: ((String) -> Bool)? = nil,
-                underlineLinksOnHover: Bool = false, linkColor: Color? = nil, onLinkTap: ((String) -> Void)? = nil) {
+                underlineLinksOnHover: Bool = false, linkColor: Color? = nil, selectsAcrossBlocks: Bool = false,
+                onLinkTap: ((String) -> Void)? = nil) {
         self.linkStyle = BodyLinkStyle(isPlain: isPlainLink, underlineOnHover: underlineLinksOnHover)
+        self.selectsAcross = selectsAcrossBlocks
         self.data = data; self.fontSize = fontSize; self.color = color; self.height = height
         self.images = images; self.linkColor = linkColor; self.onLinkTap = onLinkTap
     }
@@ -43,7 +48,11 @@ public struct MarkdownText: View {
             Text("—").font(theme.typography.font(size: fontSize)).foregroundStyle(theme.colors.tx3)
         } else {
             BodyLinkScope(linkColor: linkColor, onLinkTap: onLinkTap, linkStyle: linkStyle) {
-                BodyBlocksView(blocks: blocks, fontSize: fontSize, lineHeight: height, ink: color ?? theme.colors.tx, images: images)
+                if selectsAcross {
+                    FlowingBlocksView(blocks: blocks, fontSize: fontSize, lineHeight: height, ink: color ?? theme.colors.tx, images: images)
+                } else {
+                    BodyBlocksView(blocks: blocks, fontSize: fontSize, lineHeight: height, ink: color ?? theme.colors.tx, images: images)
+                }
             }
         }
     }

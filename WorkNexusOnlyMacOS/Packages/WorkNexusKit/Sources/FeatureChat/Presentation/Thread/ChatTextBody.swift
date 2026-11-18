@@ -13,7 +13,8 @@ struct ChatTextBody: View {
     var body: some View {
         if markdown {
             MarkdownText(text, fontSize: ink.fontSize, color: ink.text.color, height: 1.5,
-                         isPlainLink: { ChatTextLabels.mentionUserId($0) != nil }, linkColor: ink.link.color) { link in
+                         isPlainLink: { ChatTextLabels.mentionUserId($0) != nil }, linkColor: ink.link.color,
+                         selectsAcrossBlocks: true) { link in
                 if let id = ChatTextLabels.mentionUserId(link) { ctx.actions.openProfile(id) } else { ctx.openLink(link) }
             }
             .textSelection(.enabled)

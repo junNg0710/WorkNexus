@@ -42,7 +42,7 @@ private struct NestedBlocks: View {
 struct BodyBlockView: View {
     @Environment(\.appTheme) private var theme
     let block: BodyBlock; let fontSize: CGFloat; let lineHeight: CGFloat; let ink: Color; let images: BodyImageHooks
-    private static let headingScale: [CGFloat] = [1, 1.6, 1.4, 1.2, 1.1, 1, 1]
+    static let headingScale: [CGFloat] = [1, 1.6, 1.4, 1.2, 1.1, 1, 1]
 
     private func nested(_ b: [BodyBlock], ink: Color? = nil) -> NestedBlocks {
         NestedBlocks(blocks: b, fontSize: fontSize, lineHeight: lineHeight, ink: ink ?? self.ink, images: images)
