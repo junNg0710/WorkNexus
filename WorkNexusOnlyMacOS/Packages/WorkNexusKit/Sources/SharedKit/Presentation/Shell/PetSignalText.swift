@@ -37,6 +37,12 @@ enum PetSignalText {
             : appString("petSayUnreadChatOther", "%1$@ unread chat messages").replacingOccurrences(of: "%1$@", with: "\(count)")
     }
 
+    /// A chat message as the pet says it: "Chat: text", or "Group · Sender: text".
+    static func chat(_ news: PetChatNews) -> String {
+        let from = news.sender.map { "\(news.title) · \($0)" } ?? news.title
+        return from.isEmpty ? news.body : "\(from): \(news.body)"
+    }
+
     static var synced: String { appString("petSaySynced", "All synced") }
     static var celebrated: String { appString("petSayResolved", "Ticket resolved — nice work!") }
 

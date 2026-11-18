@@ -1539,6 +1539,18 @@
     "en": "Looks toward the pointer (pets that can)",
     "vi": "Nhìn theo con trỏ (với thú cưng hỗ trợ)"
   },
+  "zentaoPinToPanel": {
+    "en": "Pin to the side panel",
+    "vi": "Ghim vào thanh bên"
+  },
+  "zentaoUnpinFromPanel": {
+    "en": "Unpin from the side panel",
+    "vi": "Bỏ ghim khỏi thanh bên"
+  },
+  "petShowsDetails": {
+    "en": "Says what a new message or notification says",
+    "vi": "Hiện nội dung tin nhắn và thông báo mới"
+  },
   "petChoose": {
     "en": "Choose a pet",
     "vi": "Chọn thú cưng"

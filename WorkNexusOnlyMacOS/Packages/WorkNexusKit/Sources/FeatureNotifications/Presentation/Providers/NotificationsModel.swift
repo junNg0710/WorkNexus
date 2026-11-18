@@ -46,6 +46,13 @@ public final class NotificationsModel {
     // MARK: Derived
 
     public var unreadCount: Int { notifications.filter { !$0.read }.count }
+    /// What the newest unread notification says, as its desktop alert does: "JunNg assigned Bug · #6492 Feed: video...".
+    public var newestUnreadText: String? {
+        let unread = notifications.filter { !$0.read }
+        guard let n = unread.max(by: { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }) ?? unread.first else { return nil }
+        let object = [n.objectId.map { "#\($0)" }, n.objectTitle].compactMap { $0 }.joined(separator: " ")
+        return object.isEmpty ? NotificationStrings.eventText(n) : "\(NotificationStrings.eventText(n)) · \(object)"
+    }
     /// The notifications shown on the panel, grouped by day.
     public var days: [NotificationDay] { GroupNotificationsByDay()(notifications, unreadOnly: unreadOnly) }
     public var isRefreshing: Bool { refreshState == .loading }

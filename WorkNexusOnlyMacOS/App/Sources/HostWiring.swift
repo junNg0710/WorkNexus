@@ -50,6 +50,7 @@ struct HostWiring {
         host.quickSettings = { AnyView(QuickSettingsView(root: r)) }
         host.petSheet = { r.petLibrary.sheet(for: shell.settings.petId) }
         host.petWaiting = { r.notifications?.unreadCount ?? 0 }
+        host.petNewestWaiting = { r.notifications?.newestUnreadText }
         host.revealApp = { NSApp.activate(); _ = r.platform.reopenWindow() }
         // On the Chat page the title bar searches the chats and their stored messages; a hit opens the chat (at the message).
         let chat = r.chat

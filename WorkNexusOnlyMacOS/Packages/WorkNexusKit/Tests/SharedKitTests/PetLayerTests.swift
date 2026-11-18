@@ -24,13 +24,21 @@ final class PetLayerTests: XCTestCase {
     func testThePetSettingsDefaultToTheBuiltInPetInTheWindow() throws {
         let s = try JSONDecoder().decode(AppSettings.self, from: Data("{}".utf8))
         XCTAssertNil(s.petId); XCTAssertEqual(s.petDisplay, .inWindow); XCTAssertTrue(s.petFollowsCursor)
+        XCTAssertTrue(s.petShowsDetails, "it says what a message or notification says unless told not to")
         var chosen = AppSettings()
-        chosen.petId = "fox"; chosen.petDisplay = .floating; chosen.petFollowsCursor = false
+        chosen.petId = "fox"; chosen.petDisplay = .floating; chosen.petFollowsCursor = false; chosen.petShowsDetails = false
         let back = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(chosen))
         XCTAssertEqual(back.petId, "fox"); XCTAssertEqual(back.petDisplay, .floating); XCTAssertFalse(back.petFollowsCursor)
+        XCTAssertFalse(back.petShowsDetails)
         // An unknown display (a newer build) falls back rather than losing the settings.
         let odd = try JSONDecoder().decode(AppSettings.self, from: Data(#"{"petDisplay": "orbit", "showPet": false}"#.utf8))
         XCTAssertEqual(odd.petDisplay, .inWindow); XCTAssertFalse(odd.showPet)
+    }
+
+    func testThePetSaysWhatAChatMessageSays() {
+        XCTAssertEqual(PetSignalText.chat(PetChatNews(title: "Lan", sender: nil, body: "ok em", number: 1)), "Lan: ok em")
+        XCTAssertEqual(PetSignalText.chat(PetChatNews(title: "Team", sender: "Lan", body: "Photo", number: 2)), "Team · Lan: Photo")
+        XCTAssertEqual(PetSignalText.chat(PetChatNews(title: "", sender: nil, body: "hi", number: 3)), "hi")
     }
 
     func testThePetSaysWhatItReactsTo() {

@@ -13,6 +13,11 @@ final class ChatOpeningStageTests: XCTestCase {
         XCTAssertFalse(ChatOpeningStage.chrome.showsList)
         XCTAssertTrue(ChatOpeningStage.newest.showsList)
         XCTAssertTrue(ChatOpeningStage.all.showsList)
+        // The newest rows are built hidden: the list is seen only whole, so nothing pops in above them.
+        XCTAssertFalse(ChatOpeningStage.chrome.isVisible)
+        XCTAssertFalse(ChatOpeningStage.newest.isVisible)
+        XCTAssertTrue(ChatOpeningStage.all.isVisible)
+        XCTAssertLessThan(ChatOpeningStage.newestCount, 10, "under a screenful, or the list ends up scrolled past its rows")
     }
 
     func testTheNewestStageShowsTheLastRowsOnly() {

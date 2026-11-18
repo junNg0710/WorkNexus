@@ -6,7 +6,8 @@ import SwiftUI
 /// Ported from: lib/tools/zentao/presentation/widgets/{zentao_execution_popover,zentao_execution_list}.dart
 /// The picker of the Tasks side panel and header: search, Mine / Others tabs and the account's projects with their
 /// open task counts; a project opens to its executions, which are what is picked (ZenTao lists tasks per
-/// execution). Picking one opens its task board and calls `onClose`. With no `account`, the rail's is used.
+/// execution). Picking one opens its task board and calls `onClose`; right-clicking one pins it to the side panel. With
+/// no `account`, the rail's is used.
 struct ZentaoExecutionPopover: View {
     let state: ZentaoUIState
     var account: Account?
@@ -48,6 +49,8 @@ struct ZentaoExecutionList: View {
             projects: state.projects[accountId]?.value ?? [], tickets: state.taskBoard.tickets, account: account,
             accountId: accountId, search: search, tab: tab)
         let open = state.execution?.accountId == accountId ? state.execution : nil
+        let prefix = "\(accountId):"
+        let pinned = Set(state.taskBoard.settings.pinnedExecutions.filter { $0.hasPrefix(prefix) }.map { String($0.dropFirst(prefix.count)) })
         if choices.isEmpty {
             ZentaoPickerEmpty(systemImage: "folder.badge.questionmark", text: appString("zentaoNoProjectsFound", "No projects found"))
         } else {
@@ -59,6 +62,7 @@ struct ZentaoExecutionList: View {
                             expandedByDefault: !search.trimmingCharacters(in: .whitespaces).isEmpty,
                             executions: state.executionsOf(accountId: accountId, projectId: choice.id),
                             onExpand: { state.loadExecutions(accountId: accountId, projectId: choice.id) },
+                            pinnedIds: pinned, onTogglePin: { state.togglePinnedExecution(accountId: accountId, executionId: $0.id) },
                             onSelect: onSelect)
                     }
                 }

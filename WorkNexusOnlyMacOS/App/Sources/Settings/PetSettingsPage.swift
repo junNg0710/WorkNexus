@@ -25,6 +25,10 @@ struct PetSettingsPage: View {
                 SettingsToggleRow(label: appString("petFollowsCursor", "Looks toward the pointer (pets that can)"), isOn: s.petFollowsCursor) { on in
                     shell.updateSettings { $0.petFollowsCursor = on }
                 }
+                SettingsToggleRow(label: appString("petShowsDetails", "Says what a new message or notification says"),
+                                  isOn: s.petShowsDetails) { on in
+                    shell.updateSettings { $0.petShowsDetails = on }
+                }
             }
             SettingsCard(title: appString("petChoose", "Choose a pet")) {
                 PetGalleryView(library: root.petLibrary, gallery: root.petGallery, selectedId: s.petId) { id in

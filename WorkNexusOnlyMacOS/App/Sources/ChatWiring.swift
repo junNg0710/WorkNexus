@@ -117,7 +117,9 @@ final class ChatWiring {
             repository: repository, sink: sink, texts: Self.texts,
             preferences: { [live] in
                 let s = live.value
-                return ChatNotificationPreferences(enabled: s.chatNotifications, whileViewing: s.chatNotifyWhileViewing, reactions: s.chatReactions)
+                // The pet hears of new messages too (when it says what they say), even with system notifications off.
+                return ChatNotificationPreferences(enabled: s.chatNotifications || (s.showPet && s.petShowsDetails),
+                                                   whileViewing: s.chatNotifyWhileViewing, reactions: s.chatReactions)
             },
             // Only the chat open on screen counts as looked at (the Chat place showing, the app in front is checked by the
             // rule); a notification for any other chat comes through even while the Chat place is focused.
@@ -212,8 +214,9 @@ struct TranslationChatAdapter: ChatTextTranslator {
     }
 }
 
-/// Chat -> OS notifications. Whether a message deserves one (not the chat the user is looking at, unless "notify while
-/// viewing" is on) was decided by the bridge's `ShouldNotifyChatMessage`; this only raises it.
+/// Chat -> OS notifications, and the pet. Whether a message deserves one (not the chat the user is looking at, unless
+/// "notify while viewing" is on) was decided by the bridge's `ShouldNotifyChatMessage`; this raises the notification when
+/// chat notifications are on, and hands the message to the pet when it says what messages say (`petShowsDetails`).
 final class ChatNotificationSinkImpl: ChatNotificationSink, @unchecked Sendable {
     private let notifier: DesktopNotifier
     private let shell: ShellModel
@@ -226,6 +229,12 @@ final class ChatNotificationSinkImpl: ChatNotificationSink, @unchecked Sendable 
     var appIsFocused: Bool { onMain { NSApp.isActive && NSApp.keyWindow != nil } }
 
     func deliver(_ n: ChatNotification) {
+        let s = live.value
+        if s.showPet && s.petShowsDetails {
+            let shell = shell
+            Task { @MainActor in shell.announceChat(title: n.title, sender: n.subtitle, body: n.body) }
+        }
+        guard s.chatNotifications else { return }
         let title = n.title, body = n.subtitle.map { "\($0): \(n.body)" } ?? n.body
         let id = n.chatGid.hashValue & 0x7fffffff, payload = "chat:\(n.accountId):\(n.chatGid)"
         Task { await notifier.show(id: id, title: title, body: body, payload: payload) }

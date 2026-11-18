@@ -102,6 +102,22 @@ final class NotificationsModelTests: XCTestCase {
         h.model.stop()
     }
 
+    func testTheNewestUnreadNotificationIsWhatThePetSays() async {
+        let h = make(); h.model.start(); await settle()
+        h.ws.emit([account]); await settle()
+        XCTAssertNil(h.model.newestUnreadText)
+        let old = Date(timeIntervalSince1970: 1_000), new = Date(timeIntervalSince1970: 2_000)
+        h.repo.emit([
+            ZenTaoNotification(accountId: "zt", id: "1", summary: "Other assigned Bug", objectType: "bug", objectId: "6", objectTitle: "Old", createdAt: old),
+            ZenTaoNotification(accountId: "zt", id: "2", summary: "Other assigned Bug", objectType: "bug", objectId: "7", objectTitle: "Login fails", createdAt: new),
+            ZenTaoNotification(accountId: "zt", id: "3", summary: "Other assigned Bug", objectType: "bug", objectId: "8", objectTitle: "Read",
+                               read: true, createdAt: new.addingTimeInterval(60)),
+        ]); await settle()
+        let text = try? XCTUnwrap(h.model.newestUnreadText)
+        XCTAssertTrue(text?.hasSuffix("#7 Login fails") == true, text ?? "nil")
+        h.model.stop()
+    }
+
     func testOwnActionsAreHiddenByRealname() async {
         let h = make(); h.model.start(); await settle()
         h.ws.emit([account]); await settle()

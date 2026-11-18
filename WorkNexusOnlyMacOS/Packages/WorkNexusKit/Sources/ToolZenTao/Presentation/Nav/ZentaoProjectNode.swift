@@ -5,7 +5,7 @@ import SwiftUI
 /// Ported from: lib/tools/zentao/presentation/widgets/zentao_popover_tree_node.dart
 /// A project in the execution picker: a container - tapping it opens or closes its executions, which are what the
 /// user picks (a project is never selected). It opens by itself while it holds the open execution, or while a search
-/// is typed; `onExpand` asks for its executions each time it opens.
+/// is typed; `onExpand` asks for its executions each time it opens. Right-clicking an execution pins it to the side panel.
 struct ZentaoProjectNode: View {
     @Environment(\.appTheme) private var theme
     let choice: ZentaoProjectChoice
@@ -14,13 +14,17 @@ struct ZentaoProjectNode: View {
     var expandedByDefault = false
     let executions: ZentaoLoad<[ProviderExecution]>?
     let onExpand: () -> Void
+    let pinnedIds: Set<String>
+    let onTogglePin: (ProviderExecution) -> Void
     let onSelect: (ProviderExecution) -> Void
     @State private var expanded: Bool
 
     init(choice: ZentaoProjectChoice, openExecutionId: String?, openProjectId: String?, expandedByDefault: Bool = false,
-         executions: ZentaoLoad<[ProviderExecution]>?, onExpand: @escaping () -> Void, onSelect: @escaping (ProviderExecution) -> Void) {
+         executions: ZentaoLoad<[ProviderExecution]>?, onExpand: @escaping () -> Void, pinnedIds: Set<String> = [],
+         onTogglePin: @escaping (ProviderExecution) -> Void = { _ in }, onSelect: @escaping (ProviderExecution) -> Void) {
         self.choice = choice; self.openExecutionId = openExecutionId; self.openProjectId = openProjectId
-        self.expandedByDefault = expandedByDefault; self.executions = executions; self.onExpand = onExpand; self.onSelect = onSelect
+        self.expandedByDefault = expandedByDefault; self.executions = executions; self.onExpand = onExpand
+        self.pinnedIds = pinnedIds; self.onTogglePin = onTogglePin; self.onSelect = onSelect
         _expanded = State(initialValue: expandedByDefault || openProjectId == choice.id)
     }
 
@@ -40,7 +44,8 @@ struct ZentaoProjectNode: View {
                 .padding(.horizontal, theme.spacing.s4).padding(.vertical, theme.spacing.s6)
             }
             if expanded {
-                ZentaoProjectExecutions(executions: executions, openExecutionId: openExecutionId, onSelect: onSelect)
+                ZentaoProjectExecutions(executions: executions, openExecutionId: openExecutionId, pinnedIds: pinnedIds,
+                                        onTogglePin: onTogglePin, onSelect: onSelect)
             }
         }
         // The project of the open execution unfolds when the open execution moves into it.
@@ -54,6 +59,8 @@ private struct ZentaoProjectExecutions: View {
     @Environment(\.appTheme) private var theme
     let executions: ZentaoLoad<[ProviderExecution]>?
     let openExecutionId: String?
+    let pinnedIds: Set<String>
+    let onTogglePin: (ProviderExecution) -> Void
     let onSelect: (ProviderExecution) -> Void
 
     var body: some View {
@@ -63,7 +70,11 @@ private struct ZentaoProjectExecutions: View {
             ZentaoNodeNote(text: appString("noExecutions", "No executions"))
         case .loaded(let list):
             VStack(spacing: theme.spacing.s2) {
-                ForEach(list) { e in ZentaoExecutionItem(execution: e, selected: e.id == openExecutionId) { onSelect(e) } }
+                ForEach(list) { e in
+                    let pinned = pinnedIds.contains(e.id)
+                    ZentaoExecutionItem(execution: e, selected: e.id == openExecutionId, pinned: pinned) { onSelect(e) }
+                        .zentaoPinMenu(pinned: pinned) { onTogglePin(e) }
+                }
             }
         case .failed:
             ZentaoNodeNote(text: appString("executionsUnavailable", "Can't load executions"))
@@ -79,6 +90,7 @@ private struct ZentaoExecutionItem: View {
     @Environment(\.appTheme) private var theme
     let execution: ProviderExecution
     let selected: Bool
+    var pinned = false
     let onTap: () -> Void
 
     var body: some View {
@@ -88,6 +100,7 @@ private struct ZentaoExecutionItem: View {
                 Circle().fill(c.accent.opacity(selected ? 1 : 0.7)).frame(width: theme.spacing.s6, height: theme.spacing.s6)
                 Text(execution.name).font(theme.typography.mono.weight(selected ? .semibold : .regular))
                     .foregroundStyle(selected ? c.accent : c.tx).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                if pinned { ZentaoPinMark() }
             }
             .padding(.leading, theme.spacing.s24 + theme.spacing.s4).padding(.trailing, theme.spacing.s8).padding(.vertical, theme.spacing.s4)
         }

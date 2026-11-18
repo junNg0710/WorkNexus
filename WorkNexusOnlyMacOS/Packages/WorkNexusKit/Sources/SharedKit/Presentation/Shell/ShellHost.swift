@@ -47,6 +47,8 @@ public struct ShellHost {
     public var petSheet: () -> PetSpriteSheet? = { nil }
     /// How many things wait for the user (unread ZenTao notifications): the pet waits with them and says how many.
     public var petWaiting: () -> Int = { 0 }
+    /// What the newest unread ZenTao notification says, for the pet to say it (`petShowsDetails`); nil: none.
+    public var petNewestWaiting: () -> String? = { nil }
     /// Brings the app's window forward (a click on the floating pet).
     public var revealApp: () -> Void = {}
     public init() {}

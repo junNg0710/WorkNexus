@@ -25,7 +25,10 @@ struct MessageListContent: View {
         // Group chats show sender names; one-to-one chats do not.
         let showSenders = state.chat.type != .one2one
         ZStack(alignment: .bottomTrailing) {
-            if stage.showsList { MessageListScroll(ctx: ThreadContext(model: model, actions: actions), showSenders: showSenders, stage: stage) }
+            if stage.showsList {
+                MessageListScroll(ctx: ThreadContext(model: model, actions: actions), showSenders: showSenders, stage: stage)
+                    .opacity(stage.isVisible ? 1 : 0)
+            }
             if stage.showsList && model.rows.isEmpty && !model.loadFailed {
                 (model.loaded && !model.loadingOlder ? AppStateView(.empty(L.noMessages)) : AppStateView(.loading))
                     .allowsHitTesting(false)
@@ -36,6 +39,10 @@ struct MessageListContent: View {
             }
             .padding(.trailing, theme.spacing.s24).padding(.bottom, theme.spacing.s16)
         }
+        // Always the whole room between the header and the composer: before the list comes in (`ChatOpeningStage.chrome`)
+        // the stack had nothing to fill it, so the chat shrank to its header and composer in the middle of the pane, with
+        // no wallpaper, for the frames the opening took.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .chatStyleScope()
         .task {
             model.report = { toasts?.show($0, kind: .error) }

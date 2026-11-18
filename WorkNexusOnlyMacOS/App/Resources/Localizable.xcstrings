@@ -30890,6 +30890,57 @@
         }
       }
     },
+    "zentaoPinToPanel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin to the side panel"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghim vào thanh bên"
+          }
+        }
+      }
+    },
+    "zentaoUnpinFromPanel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpin from the side panel"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bỏ ghim khỏi thanh bên"
+          }
+        }
+      }
+    },
+    "petShowsDetails": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Says what a new message or notification says"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện nội dung tin nhắn và thông báo mới"
+          }
+        }
+      }
+    },
     "petChoose": {
       "extractionState": "manual",
       "localizations": {

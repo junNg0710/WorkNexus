@@ -104,6 +104,13 @@ public final class ShellModel {
     /// Sets off the celebration (a bug or task resolved). ZenTao views call it through `\.celebrate`.
     public func celebrate() { celebration.celebrate() }
 
+    /// The newest chat message worth telling the user about, for the pet to say (`petShowsDetails`).
+    public private(set) var petChatNews: PetChatNews?
+    /// A new chat message came that the user is not looking at: the pet says what it says.
+    public func announceChat(title: String, sender: String?, body: String) {
+        petChatNews = PetChatNews(title: title, sender: sender, body: body, number: (petChatNews?.number ?? 0) + 1)
+    }
+
     public func account(_ id: String) -> Account? { accounts.first { $0.id == id } }
     public func theme(systemIsDark: Bool) -> AppTheme { AppTheme(settings: settings, systemIsDark: systemIsDark) }
 

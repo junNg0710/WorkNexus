@@ -38,6 +38,10 @@ struct PetLayer: View {
     }
 
     private var settings: AppSettings { model.settings }
+    /// Whether it says what a message or notification says (the setting), not only that one came.
+    private var details: Bool { settings.petShowsDetails }
+    /// How long it says a message or notification: a little longer than a short line, to be read.
+    static let detailDuration: TimeInterval = 9
     private var sheet: PetSpriteSheet? { model.host.petSheet() ?? bundled }
     private var floats: Bool { settings.showPet && settings.petDisplay == .floating && sheet != nil }
     private var waiting: Int { model.host.petWaiting() }
@@ -69,8 +73,13 @@ struct PetLayer: View {
             director.celebrate(); director.say(PetSignalText.celebrated)
         }
         .onChange(of: model.host.chatTotalUnread()) { old, new in
-            guard new > old else { return }
+            // With the details on, the message itself is news (`petChatNews`), said when it comes.
+            guard new > old, !details else { return }
             director.notify(); director.say(PetSignalText.newChats(new - old))
+        }
+        .onChange(of: model.petChatNews) { _, news in
+            guard details, let news else { return }
+            director.notify(); director.say(PetSignalText.chat(news), for: Self.detailDuration)
         }
         .onChange(of: mood, initial: true) { old, mood in
             director.mood = mood
@@ -82,7 +91,9 @@ struct PetLayer: View {
         }
         // More notifications waiting while it already waits is news too.
         .onChange(of: waiting) { old, new in
-            if new > old, mood == .attention { director.say(PetSignalText.waiting(new)) }
+            guard new > old, mood == .attention else { return }
+            if details, let text = model.host.petNewestWaiting() { director.say(text, for: Self.detailDuration) }
+            else { director.say(PetSignalText.waiting(new)) }
         }
         .onChange(of: status, initial: true) { _, s in director.status = s }
         .onChange(of: FloatingKey(floats: floats, sheet: sheet.map { ObjectIdentifier($0.atlas) }, follows: settings.petFollowsCursor,

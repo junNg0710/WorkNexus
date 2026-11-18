@@ -56,6 +56,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var petDisplay: PetDisplay = .inWindow
     /// Whether a pet that can look around turns toward the pointer while it idles (macOS only).
     public var petFollowsCursor = true
+    /// Whether the pet says what a new chat message or ZenTao notification says, rather than only that one came (macOS only).
+    public var petShowsDetails = true
 
     public init() {}
 
@@ -88,6 +90,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         s.viewModes = v(.viewModes, s.viewModes); s.showPet = v(.showPet, s.showPet)
         s.petId = try? c.decodeIfPresent(String.self, forKey: .petId)
         s.petDisplay = v(.petDisplay, s.petDisplay); s.petFollowsCursor = v(.petFollowsCursor, s.petFollowsCursor)
+        s.petShowsDetails = v(.petShowsDetails, s.petShowsDetails)
         self = s
     }
 }
