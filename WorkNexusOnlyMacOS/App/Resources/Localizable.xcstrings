@@ -30719,6 +30719,74 @@
           }
         }
       }
+    },
+    "diagnosticsPerformance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Performance log"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghi log hiệu năng"
+          }
+        }
+      }
+    },
+    "diagnosticsPerformanceHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While on, stutters (a scroll that jerks, a frame drawn late) and slow work (opening a chat, loading older messages, decoding pictures) are written to the log with where they happened. Turn it on to trace lag, then export the log. Uses a little more power."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khi bật, các lần giật/khựng (cuộn bị giật, khung hình vẽ trễ) và thao tác chậm (mở chat, tải tin cũ, giải mã ảnh) được ghi vào log kèm vị trí xảy ra. Bật lên để truy vết lag, rồi xuất log. Tốn thêm chút pin."
+          }
+        }
+      }
+    },
+    "diagnosticsPerformanceOn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Performance log on"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã bật ghi log hiệu năng"
+          }
+        }
+      }
+    },
+    "diagnosticsPerformanceOff": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Performance log off"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã tắt ghi log hiệu năng"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

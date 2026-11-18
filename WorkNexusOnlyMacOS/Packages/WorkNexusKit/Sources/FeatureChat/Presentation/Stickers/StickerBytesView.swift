@@ -45,7 +45,13 @@ enum StickerDecoder {
 
     static func decode(_ data: Data) -> DecodedSticker {
         if isTgs(data) {
-            if let json = gunzip(data), let a = try? LottieAnimation.from(data: json) { return .lottie(a) }
+            // Parsed once: the JSON of an animated sticker parsed again on every redraw of its row.
+            let key = data as NSData
+            if let hit = lottieCache.object(forKey: key) { return .lottie(hit.animation) }
+            if let json = gunzip(data), let a = try? LottieAnimation.from(data: json) {
+                lottieCache.setObject(LottieBox(a), forKey: key, cost: data.count)
+                return .lottie(a)
+            }
             return .none
         }
         let key = data as NSData
@@ -56,6 +62,8 @@ enum StickerDecoder {
     }
 
     private static let animatedCache = NSCache<NSData, NSNumber>()
+    private final class LottieBox { let animation: LottieAnimation; init(_ a: LottieAnimation) { animation = a } }
+    nonisolated(unsafe) private static let lottieCache: NSCache<NSData, LottieBox> = { let c = NSCache<NSData, LottieBox>(); c.totalCostLimit = 32 << 20; return c }()
 
     /// Whether the image holds more than one frame (an animated GIF, WebP or PNG), as ImageIO reads it.
     static func isAnimated(_ data: Data) -> Bool {

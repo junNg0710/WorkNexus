@@ -172,7 +172,8 @@ final class MessageTimelineModel {
     }
 
     func rebuildRows() {
-        rows = ChatListRows.rows(messages, markerGap: markerGap, typing: !window.isAround && !away && !typing.isEmpty)
+        let typingRow = !window.isAround && !away && !typing.isEmpty, messages = messages, gap = markerGap
+        rows = PerformanceLog.measureSync("chat: build \(messages.count) rows") { ChatListRows.rows(messages, markerGap: gap, typing: typingRow) }
     }
 
     private func awayChanged() {

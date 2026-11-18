@@ -11,6 +11,7 @@ struct DiagnosticsCard: View {
     @Environment(\.toasts) private var toasts
     let log: FileDiagnosticsLog
     @State private var bytes = 0
+    @State private var performance = DiagnosticsWiring.performanceLogOn
 
     var body: some View {
         SettingsCard(title: appString("diagnosticsTitle", "Diagnostics"),
@@ -26,6 +27,13 @@ struct DiagnosticsCard: View {
                         toasts?.show(appString("diagnosticsCleared", "Error log cleared"))
                     }
                 }
+            }
+            SettingsToggleRow(label: appString("diagnosticsPerformance", "Performance log"),
+                              hint: appString("diagnosticsPerformanceHint", "While on, stutters (a scroll that jerks, a frame drawn late) and slow work (opening a chat, loading older messages, decoding pictures) are written to the log with where they happened. Turn it on to trace lag, then export the log. Uses a little more power."),
+                              isOn: performance) { on in
+                performance = on
+                DiagnosticsWiring.setPerformanceLog(on)
+                toasts?.show(on ? appString("diagnosticsPerformanceOn", "Performance log on") : appString("diagnosticsPerformanceOff", "Performance log off"))
             }
         }
         .task { refresh() }

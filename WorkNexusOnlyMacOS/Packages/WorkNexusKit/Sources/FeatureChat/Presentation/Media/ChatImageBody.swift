@@ -19,6 +19,11 @@ struct ChatImageBody: View {
     let image: ImageContent
     let state: ChatThreadState
     @State private var data: Data?
+    /// The picture decoded at display size, off the main thread, once per load. Decoding it in `body` ran again on every
+    /// redraw of the row, on the main thread - a share of the stutter scrolling past pictures.
+    @State private var picture: NSImage?
+    /// A GIF (or an animated WebP) sent as a picture: it plays.
+    @State private var animated = false
     @State private var failed = false
     @State private var viewing = false
     @State private var error: String?
@@ -54,26 +59,46 @@ struct ChatImageBody: View {
     }
 
     @ViewBuilder private var content: some View {
-        if let data {
-            if isSticker { StickerBytesView(data: data, animated: true) }
+        if let data, isSticker {
+            StickerBytesView(data: data, animated: true)
+        } else if let data, animated {
             // A GIF (or an animated WebP) sent as a picture plays in the chat.
-            else if StickerDecoder.isAnimated(data) { FrameAnimatedImage(data: data, animated: true) }
-            else if let img = Self.downsampled(data, maxPixel: size.width * 2) { Image(nsImage: img).resizable().scaledToFill() }
-            else { Placeholder(broken: true) }
+            FrameAnimatedImage(data: data, animated: true)
+        } else if let picture {
+            Image(nsImage: picture).resizable().scaledToFill()
         } else {
-            Placeholder(broken: failed)
+            Placeholder(broken: failed || (data != nil && !isSticker))
         }
     }
 
     private func load() async {
+        // Seen before (scrolled back into view): the decoded picture is there at once.
+        if picture == nil, !isSticker, let hit = Self.decoded.object(forKey: decodedKey) { picture = hit }
         // Small images travel inline; an own image not uploaded yet shows the picked bytes.
-        if let b64 = image.inlineBase64, let d = Data(base64Encoded: b64, options: .ignoreUnknownCharacters) { data = d; return }
+        if let b64 = image.inlineBase64, let d = Data(base64Encoded: b64, options: .ignoreUnknownCharacters) { await show(d); return }
         guard let repo = services?.chat else { failed = true; return }
-        if image.fileId == 0, message.sendState != .sent, let local = repo.pendingUploadBytes(messageGid: message.gid) { data = local; return }
+        if image.fileId == 0, message.sendState != .sent, let local = repo.pendingUploadBytes(messageGid: message.gid) { await show(local); return }
         switch await repo.loadAttachment(accountId: message.accountId, content: .image(image), thumbnail: image.hasThumb) {
-        case .success(let d): data = d
+        case .success(let d): await show(d)
         case .failure: failed = true
         }
+    }
+
+    /// Pictures already decoded at display size, so a row scrolled back into view shows at once (no placeholder, no
+    /// second decode).
+    nonisolated(unsafe) private static let decoded: NSCache<NSString, NSImage> = { let c = NSCache<NSString, NSImage>(); c.totalCostLimit = 96 << 20; return c }()
+    private var decodedKey: NSString { "\(message.gid)|\(image.fileId)|\(image.name)|\(Int(size.width))|\(image.hasThumb)" as NSString }
+
+    /// Decodes `d` at display size off the main thread, then shows it.
+    private func show(_ d: Data) async {
+        if isSticker { data = d; return }
+        if let hit = Self.decoded.object(forKey: decodedKey) { picture = hit; data = d; return }
+        let maxPixel = size.width * 2
+        let (decoded, moving) = await PerformanceLog.measure("chat: decode picture \(image.width ?? 0)×\(image.height ?? 0)", slowerThan: 0.03) {
+            await Task.detached(priority: .userInitiated) { (Self.downsampled(d, maxPixel: maxPixel), StickerDecoder.isAnimated(d)) }.value
+        }
+        animated = moving; picture = moving ? nil : decoded; data = d
+        if let decoded, !moving { Self.decoded.setObject(decoded, forKey: decodedKey, cost: Int(decoded.size.width * decoded.size.height * 4)) }
     }
 
     /// Downloads (if needed) and opens the viewer.

@@ -45,7 +45,10 @@ extension MessageTimelineModel {
         let shown = messages
         let inWindow = window.isAround
         loadFailed = false
-        let result = await LoadOlderMessages(services.chat)(accountId: accountId, chatGid: chatGid, oldestShown: shown.first, inWindow: inWindow)
+        let repo = services.chat, account = accountId, gid = chatGid
+        let result = await PerformanceLog.measure("chat: load older messages", slowerThan: 0.3) {
+            await LoadOlderMessages(repo)(accountId: account, chatGid: gid, oldestShown: shown.first, inWindow: inWindow)
+        }
         switch result {
         case .success(let n) where n > 0:
             let grown = window.growingOlder(shown: messages.count, by: min(n, ChatMessageWindow.pageSize))
@@ -80,7 +83,10 @@ extension MessageTimelineModel {
 
     private func fetchNewer() async {
         guard case .around(let from, _) = window, let newest = messages.last else { loadingNewer = false; return }
-        let result = await LoadNewerMessages(services.chat)(accountId: accountId, chatGid: chatGid, newestShown: newest, windowFrom: from)
+        let repo = services.chat, account = accountId, gid = chatGid
+        let result = await PerformanceLog.measure("chat: load newer messages", slowerThan: 0.3) {
+            await LoadNewerMessages(repo)(accountId: account, chatGid: gid, newestShown: newest, windowFrom: from)
+        }
         switch result {
         case .success(let v) where v.added > 0: grow(to: window.growingNewer(by: v.added)); return
         case .success(let v):

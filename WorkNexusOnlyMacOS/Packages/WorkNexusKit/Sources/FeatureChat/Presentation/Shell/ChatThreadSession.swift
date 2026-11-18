@@ -51,7 +51,11 @@ final class ChatThreadSession {
         })
         tasks.append(Task { [weak self] in
             guard let self else { return }
-            if case .failure(let f) = await RefreshChatMessages(repository)(accountId: id, chatGid: gid) { onFailure(f); return }
+            let repository = repository
+            let refreshed = await PerformanceLog.measure("chat: open (refresh newest messages)", slowerThan: 0.5) {
+                await RefreshChatMessages(repository)(accountId: id, chatGid: gid)
+            }
+            if case .failure(let f) = refreshed { onFailure(f); return }
             await markRead()
         })
     }

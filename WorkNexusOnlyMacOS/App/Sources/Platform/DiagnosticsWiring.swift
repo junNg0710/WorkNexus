@@ -35,6 +35,21 @@ final class DiagnosticsWiring: NSObject {
             try? FileManager.default.removeItem(at: marker)
         }
         MXMetricManager.shared.add(self)
+        if Self.performanceLogOn { Self.setPerformanceLog(true) }
+    }
+
+    // MARK: Performance log
+
+    private static let performanceKey = "diagnostics.performanceLog"
+
+    /// Whether the user turned the performance log on (Settings › Local data › Diagnostics); kept on this Mac.
+    static var performanceLogOn: Bool { UserDefaults.standard.bool(forKey: performanceKey) }
+
+    /// Turns the performance log on or off: slow work and screen stutters are written to the log only while it is on.
+    static func setPerformanceLog(_ on: Bool) {
+        UserDefaults.standard.set(on, forKey: performanceKey)
+        PerformanceLog.setEnabled(on)
+        FrameStutterMonitor.shared.setRunning(on)
     }
 
     /// Keeps the place on screen as the user's steps (which part of the app, which ticket, the editor, a mini app).

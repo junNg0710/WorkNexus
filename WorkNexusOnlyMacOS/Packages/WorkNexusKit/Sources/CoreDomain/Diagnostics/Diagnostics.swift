@@ -33,6 +33,8 @@ public enum Diagnostics {
         let lock = NSLock()
         var sink: DiagnosticsSink?
         var trail: [String] = []
+        /// The latest step, kept after an error empties the trail: where the user is now.
+        var place: String?
         var now: @Sendable () -> Date = Date.init
     }
     private static let state = State()
@@ -49,11 +51,15 @@ public enum Diagnostics {
     public static func step(_ step: String) {
         let s = redact(step)
         state.lock.withLock {
+            state.place = s
             guard state.trail.last != s else { return }
             state.trail.append(s)
             if state.trail.count > trailLength { state.trail.removeFirst(state.trail.count - trailLength) }
         }
     }
+
+    /// Where the user is now (the latest step), for an entry that says where it happened.
+    public static var place: String? { state.lock.withLock { state.place } }
 
     public static func flush() { state.lock.withLock { state.sink }?.flush() }
 
