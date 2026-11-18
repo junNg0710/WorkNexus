@@ -107,5 +107,7 @@ public enum ChatMigrations {
                 t.primaryKey(["accountId", "fileId"])
             }
         }
+        // Read-only views under the Flutter app's table names, for the bundled MCP server.
+        McpCompatMigration.register(&migrator)
     }
 }

@@ -37,6 +37,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var chatAutoDownloadVideos = true
     public var chatAutoDownloadVideoMb = 20
     public var chatTextScale: Double = 1
+    /// Whether local AI tools (the bundled MCP server) may use chat through the loopback chat API: send messages, load older
+    /// history, download attachments. Off by default.
+    public var chatLocalApi = false
     public var miniAppLiveLimit = 5
     public var miniAppNotifyInBackground = true
     public var accentColorValue: Int?
@@ -80,7 +83,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         s.chatReactions = v(.chatReactions, s.chatReactions); s.chatCacheLimitMb = v(.chatCacheLimitMb, s.chatCacheLimitMb)
         s.chatAutoDownloadVideos = v(.chatAutoDownloadVideos, s.chatAutoDownloadVideos)
         s.chatAutoDownloadVideoMb = v(.chatAutoDownloadVideoMb, s.chatAutoDownloadVideoMb)
-        s.chatTextScale = v(.chatTextScale, s.chatTextScale); s.miniAppLiveLimit = v(.miniAppLiveLimit, s.miniAppLiveLimit)
+        s.chatTextScale = v(.chatTextScale, s.chatTextScale); s.chatLocalApi = v(.chatLocalApi, s.chatLocalApi)
+        s.miniAppLiveLimit = v(.miniAppLiveLimit, s.miniAppLiveLimit)
         s.miniAppNotifyInBackground = v(.miniAppNotifyInBackground, s.miniAppNotifyInBackground)
         s.accentColorValue = try? c.decodeIfPresent(Int.self, forKey: .accentColorValue)
         s.pinnedProjects = v(.pinnedProjects, s.pinnedProjects); s.pinnedExecutions = v(.pinnedExecutions, s.pinnedExecutions)

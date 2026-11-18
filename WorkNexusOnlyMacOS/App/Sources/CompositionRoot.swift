@@ -45,6 +45,8 @@ final class CompositionRoot {
     let ticketLinks: TicketLinkHandler
     let notifications: NotificationsModel?
     let chat: ChatWiring
+    /// The local chat API for AI tools and the MCP setup guide.
+    let aiTools: AiToolsWiring
     /// The "New todo" dialog any place of the app may ask for (a chat message → "Create todo").
     let todoPrompt: ZentaoTodoPrompt
     let platform: PlatformServices
@@ -148,6 +150,7 @@ final class CompositionRoot {
         self.todoPrompt = todoPrompt
         chat = ChatWiring(db: db, services: services, shell: shell, notifier: notifier, translation: translation, live: live,
                           todoPrompt: todoPrompt, isDemo: DemoMode.isEnabled)
+        aiTools = AiToolsWiring(db: db, repository: chat.repository, isDemo: DemoMode.isEnabled)
         let bridge = chat.dockBadgeBridge
         let notificationsModel = NotificationsFeature.makeModel(
             services: services,
@@ -169,7 +172,7 @@ final class CompositionRoot {
         observeChanges({ [shell] in shell.workspace?.id }) { [overview] id in overview.follow(workspaceId: id) }
         overview.follow(workspaceId: shell.workspace?.id)
         miniApps.model.start()
-        Task { for await s in services.settings.watch() { liveSettings.set(s); chat.apply(s) } }
+        Task { for await s in services.settings.watch() { liveSettings.set(s); chat.apply(s); aiTools.apply(s) } }
         await seedWorkspaceIfEmpty()
         if isDemo {
             await DemoSeed.insert(services: services)
@@ -179,6 +182,7 @@ final class CompositionRoot {
         }
         await coordinator.purgeAttachmentCache()
         platform.start(shell: shell)
+        aiTools.start()
         update.start()
         notifications?.start()
         let accounts = await currentAccounts(services.workspaces)

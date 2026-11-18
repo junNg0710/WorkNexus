@@ -37,6 +37,12 @@ public final class AppDatabase: @unchecked Sendable {
         return try AppDatabase(writer: try DatabasePool(path: path.path, configuration: config), registrars: registrars)
     }
 
+    /// The database file; nil for an in-memory database.
+    public var fileURL: URL? {
+        let path = writer.path
+        return path.isEmpty || path == ":memory:" || path.hasPrefix("file::memory:") ? nil : URL(fileURLWithPath: path)
+    }
+
     public static func inMemory(registrars: [MigrationRegistrar] = []) throws -> AppDatabase {
         try AppDatabase(writer: try DatabaseQueue(), registrars: registrars)
     }

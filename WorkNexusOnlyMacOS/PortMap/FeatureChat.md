@@ -213,6 +213,24 @@ file (the Dart side is the first four sources named there). Tests live in `Tests
 | Presentation/Stickers/StickerImportErrors.swift | import_sticker_pack_dialog.dart (failure switch) |
 | Presentation/Style/ChatWallpaperPreview.swift | providers (`chatWallpaperPreviewProvider`, `shownChatWallpaperProvider`) |
 | Presentation/Thread/MergeRequestFreshness.swift | providers/merge_request_providers.dart (`_kFresh`, refetch on resume) |
+| Domain/Repositories/ChatLocalApi.swift | lib/features/chat/domain/repositories/chat_local_api.dart |
+| Domain/Repositories/McpSetupRepository.swift | lib/features/chat/domain/repositories/mcp_setup_repository.dart |
+| Domain/Entities/McpSetup.swift | lib/features/chat/domain/entities/mcp_setup.dart, domain/value_objects/mcp_client_config.dart |
+| Domain/UseCases/LocalApiUseCases.swift | lib/features/chat/domain/usecases/load_older_timeline_page.dart, fetch_message_attachment.dart (+ the handlers of chat_local_api_providers.dart) |
+| Domain/UseCases/McpSetupUseCases.swift | lib/features/chat/domain/usecases/prepare_mcp_setup.dart, refresh_mcp_script.dart, build_mcp_client_configs.dart |
+| Data/LocalApi/ChatLocalApiServer.swift | lib/features/chat/data/datasources/chat_local_api_server.dart, data/repositories/server_chat_local_api.dart |
+| Data/LocalApi/ChatLocalApiRouter.swift | chat_local_api_server.dart (`_handle`, `_reply`, `_authorized`) |
+| Data/LocalApi/LocalHttpRequestReader.swift | chat_local_api_server.dart (`_readBody`; dart:io's HTTP parsing) |
+| Data/LocalApi/LocalApiDiscoveryFile.swift | chat_local_api_server.dart (`_writeDiscovery`) |
+| Data/Local/McpCompatMigration.swift | mcp/src/worknexus.js (the drift-named views its SQL reads) |
+| Data/Mcp/McpScriptInstaller.swift | lib/features/chat/data/datasources/mcp_script_installer.dart |
+| Data/Mcp/NodeRuntimeProbe.swift | lib/features/chat/data/datasources/node_runtime_probe.dart (macOS branch) |
+| Data/Mcp/LocalMcpSetupRepository.swift | lib/features/chat/data/repositories/local_mcp_setup_repository.dart |
+| Presentation/Mcp/McpSetupModel.swift | presentation/providers/mcp_setup_providers.dart |
+| Presentation/Mcp/McpSetupDialog.swift | presentation/widgets/mcp_setup_dialog.dart |
+| Presentation/Mcp/McpSetupNodeStatus.swift | presentation/widgets/mcp_setup_node_status.dart |
+| Presentation/Mcp/McpSetupClientSection.swift | presentation/widgets/mcp_setup_client_section.dart |
+| (App) AiToolsWiring.swift, Settings/ChatAiToolsCard.swift | providers/chat_local_api_providers.dart (`chatLocalApiRunnerProvider`), mcp_setup_providers.dart (`mcpScriptRefreshProvider`), widgets/chat_local_api_settings.dart |
 
 Files without a one-to-one Dart source (Swift-only glue): `ChatFeature.swift`, `Module.swift`, `Support/JSONParser.swift`, `Support/JSONValue.swift`, `Support/RX.swift`, `Data/Xxd/ApiSchemeCodec+Coding.swift`, `Data/Xxd/XxdHTTPTransport.swift`, `Data/Repositories/XxdChatRepository+Actions.swift`, `Data/Repositories/XxdChatRepository+Reads.swift`, `Data/Local/ChatLocalDatasource+Messages.swift`, `Data/Local/ChatRows.swift`, `Data/Support/AsyncStreamExtras.swift`, `Data/Support/Broadcast.swift`, `Domain/UseCases/RepositoryPassthroughUseCases.swift`, `Domain/ValueObjects/ChatCancelToken.swift`, `Domain/ValueObjects/ChatEmojiTables.swift`, `Presentation/ChatServices.swift`, `Presentation/Shell/ChatThreadState.swift`
 
@@ -247,6 +265,30 @@ Mirrors the message menu of ZenTao's own desktop client.
 - **Create bug / Create task / Create todo** (`Thread/MessageActions.swift`, domain `DraftTicketFromMessages`, `Thread/ChatMessageExport.swift`): offered on a message with text or code when the host sets `ChatShellEvents.onCreateTicket`. The message's first line becomes the title; the body quotes the message and says which chat and who it came from. The app (`ChatWiring`) opens the full bug / task editor filled in (`AppNavController.openEditor(_:prefill:)` → `TicketEditorPrefill`, laid over ZenTao's form above its steps template), or the "New todo" dialog (`ToolZenTao/Presentation/Widgets/ZentaoTodoDialog.swift`).
 - **Select multiple** (`ChatThreadState.selection`, `Thread/MessageSelectionRow.swift`, `Shell/ChatSelectionBar.swift`): a click picks or drops a row; the bar in the composer's place copies the picked messages as one transcript, forwards them (oldest first, `ChatForwardRequest`), or starts a bug / task / todo quoting all of them. Esc or ✕ leaves.
 - **Todo** (`ZenTaoTodos` ← `ZenTaoTodoService`, `CreateZenTaoTodo`): `POST /api.php/v1/todos` as a plain all-day todo of the signed-in user. **Unverified against a real server.**
+
+### AI tools: the MCP server and the local chat API (upstream af279543, c283f226, 675e6c87, a40d3471, 8e7055e7)
+
+The bundled MCP server (`assets/mcp/worknexus-mcp.mjs`, copied by `Scripts/sync-assets.sh` to `App/Resources/Mcp/`) is the
+Flutter app's, **unchanged**. It reaches the app two ways, and both are native here:
+
+- **Reads** (list / read / search ZenTao chats) go straight to the app's SQLite file, with drift's schema. `McpCompatMigration`
+  (`chat_mcp_compat_v1`, registered by `ChatMigrations.registrar`) adds read-only views under the drift names
+  (`chat_accounts`, `chat_conversations`, `chat_messages`, `chat_users`; GRDB dates → Unix seconds) and a virtual generated
+  column `accounts.base_url`. A later migration that rebuilds `accounts` must keep that column. The server would look for the
+  Flutter app's database (`com.worknexus.workNexus`), so every config entry the guide shows sets `WORKNEXUS_DB` to this app's.
+- **Send / load older / attachment** go through the loopback API (`ChatLocalApiServer`, Network.framework): 127.0.0.1 on a
+  free port, same endpoints, JSON and status codes, bearer token compared in constant time, `Origin` refused, bodies capped at
+  64 KB (an oversized one drained, then 413). Discovery `chat_local_api.json` `{version, port, token, pid}` beside the
+  database, mode 0600 from creation. **Token**: a new one every start, kept in memory and in that file only — not in the
+  Keychain (the unchanged server only reads the file), never in the database or the log. Nothing about a request is logged.
+- Lifecycle: `AiToolsWiring` (App) starts / stops the API with `AppSettings.chatLocalApi` (off by default; JSON settings row,
+  no schema change), removes the file on quit, refreshes an installed server copy once per launch. Not run in demo mode.
+- Settings › Chat › **AI tools**: "Connect an AI tool (MCP)" (the guide: copies the server to
+  `<app support>/mcp/worknexus-mcp.mjs`, finds Node.js 22.13+ via the login shell then the usual places, shows the Claude Code
+  command, the Claude Desktop entry and a generic entry) and the "Let local AI tools use chat" switch. Quick Settings › Chat
+  has the switch and a button to that page.
+- Not ported: Windows / Linux branches (`where`, `%APPDATA%`). TBChat reading in the server is independent of the app and
+  works as is.
 
 ### macOS-only: paste, drop and the picture viewer
 
