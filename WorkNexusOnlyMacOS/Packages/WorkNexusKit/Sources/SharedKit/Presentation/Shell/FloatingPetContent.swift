@@ -1,8 +1,9 @@
 import CoreUI
 import SwiftUI
 
-/// What the floating panel holds: the pet. Dragged it moves the panel, clicked it brings the app forward, and its menu
-/// puts it back in the window or hides it. What it says (or, while the pointer rests on it, the state of things) goes to
+/// What the floating panel holds: the pet. Dragged it moves the panel (and makes that its new place to stroll around),
+/// clicked it brings the app forward, and its menu puts it back in the window or hides it. When it walks the panel goes
+/// with it (`FloatingPetPanel.follow`). What it says (or, while the pointer rests on it, the state of things) goes to
 /// the bubble's own panel above it (`FloatingPetPanel.setBubble`), so the pet's panel never changes size. Not in the
 /// Flutter app.
 struct FloatingPetContent: View {
@@ -23,14 +24,22 @@ struct FloatingPetContent: View {
             .frame(width: width, height: height)
             .onHover { hovering = $0 }
             .gesture(DragGesture(minimumDistance: 3)
-                .onChanged { _ in FloatingPetPanel.shared.drag(ended: false) }
-                .onEnded { _ in FloatingPetPanel.shared.drag(ended: true) })
+                .onChanged { _ in
+                    if director.walk != nil { director.place(x: director.x(at: Date()), y: director.y) }   // stops the walk
+                    FloatingPetPanel.shared.drag(ended: false)
+                }
+                .onEnded { _ in
+                    FloatingPetPanel.shared.drag(ended: true)
+                    let stroll = FloatingPetPanel.shared.stroll
+                    director.roomWidth = stroll.points; director.place(x: stroll.x, y: director.y)
+                })
             .contextMenu {
                 Button(appString("trayOpenApp", "Open WorkNexus"), action: onOpen)
                 Button(appString("petShowInWindow", "Put the pet back in the window"), action: onDock)
                 Divider()
                 Button(appString("petHide", "Hide the pet"), action: onHide)
             }
+            .onChange(of: director.walk) { _, walk in FloatingPetPanel.shared.follow(walk) }
             .onChange(of: director.bubble(hovering: hovering), initial: true) { _, text in FloatingPetPanel.shared.setBubble(text) }
     }
 }

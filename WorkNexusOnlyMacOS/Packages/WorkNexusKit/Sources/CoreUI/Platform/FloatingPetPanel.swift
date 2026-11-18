@@ -1,4 +1,5 @@
 import AppKit
+import QuartzCore
 import SwiftUI
 
 /// The pet floating on the desktop: a small borderless, see-through panel above other apps' windows, on every Space and
@@ -9,7 +10,10 @@ import SwiftUI
 /// bubble drew its content one frame late in the new frame, so the pet jumped aside (and was cut in half) each time the
 /// bubble came or went. The bubble has a panel of its own right above the pet's, always the same size, that the pointer
 /// goes through. Near a screen edge the bubble's panel is kept on the screen and its tail is drawn `tailShift` points off
-/// its middle, so it still points at the pet. Not in the Flutter app.
+/// its middle, so it still points at the pet.
+///
+/// Now and then the pet strolls along a strip around the place it was put (`strollSpan`, kept on its screen): its
+/// director decides the walk, the panel follows it at the display's rate (`follow`). Not in the Flutter app.
 @MainActor
 public final class FloatingPetPanel {
     public static let shared = FloatingPetPanel()
@@ -25,6 +29,12 @@ public final class FloatingPetPanel {
     private var petSize = CGSize.zero
     /// Where the pet stands on the desktop: its bottom centre.
     private var anchor = NSPoint.zero
+    /// Where it was put (shown, or dragged to): the middle of the strip it strolls along.
+    private var home = NSPoint.zero
+    private var walk: PetDirector.Walk?
+    private var ticker: DisplayTicker?
+    /// What the bubble shows now, so it is drawn again only when that changes (not on every step of a walk).
+    private var shownBubble: (text: String, tailShift: CGFloat)?
     private let defaults: UserDefaults
     static let xKey = "pet.floating.centerX", yKey = "pet.floating.bottomY"
 
@@ -48,6 +58,7 @@ public final class FloatingPetPanel {
             let saved = savedAnchor.map { NSPoint(x: $0.x - petSize.width / 2, y: $0.y) }
             let origin = Self.onScreen(origin: saved, size: petSize, screens: NSScreen.screens.map(\.visibleFrame))
             anchor = NSPoint(x: origin.x + petSize.width / 2, y: origin.y)
+            home = anchor
         }
         layout()
         if !panel.isVisible { panel.orderFrontRegardless(); layout() }
@@ -58,6 +69,49 @@ public final class FloatingPetPanel {
         guard text != bubbleText else { return }
         bubbleText = text
         layout()
+    }
+
+    /// How wide the strip is that the pet strolls along, around the place it was put.
+    static let strollSpan: CGFloat = 360
+
+    /// The strip a pet `petWidth` wide strolls along around `home` (kept inside `screen`): where its middle is at the left
+    /// end, and how many points it can go from there.
+    static func strip(home: CGFloat, petWidth: CGFloat, span: CGFloat, screen: CGRect?) -> (start: CGFloat, travel: CGFloat) {
+        var minX = home - span / 2
+        if let screen, screen.width >= span { minX = min(max(minX, screen.minX), screen.maxX - span) }
+        return (minX + petWidth / 2, max(span - petWidth, 1))
+    }
+
+    private var currentStrip: (start: CGFloat, travel: CGFloat) {
+        Self.strip(home: home.x, petWidth: petSize.width, span: Self.strollSpan, screen: Self.screen(at: home))
+    }
+
+    /// Where along its strip the pet stands (0 at the left end, 1 at the right) and how long the strip is, in points: what
+    /// its director needs to plan a walk.
+    public var stroll: (x: Double, points: Double) {
+        let s = currentStrip
+        return (Double((anchor.x - s.start) / s.travel), Double(s.travel))
+    }
+
+    /// Moves the panel along with the pet's walk until it is over (nil: it stands, wherever it got to).
+    public func follow(_ walk: PetDirector.Walk?) {
+        self.walk = walk
+        guard walk != nil, dragStart == nil, let view = panel?.contentView else { stopTicker(); return }
+        if ticker == nil { ticker = DisplayTicker(view: view) { [weak self] in self?.step() } }
+    }
+
+    private func step() {
+        guard let walk, dragStart == nil else { stopTicker(); return }
+        let s = currentStrip, now = Date()
+        anchor.x = s.start + CGFloat(walk.x(at: now)) * s.travel
+        layout()
+        if walk.isOver(at: now) { self.walk = nil; stopTicker() }
+    }
+
+    private func stopTicker() { ticker?.stop(); ticker = nil }
+
+    private static func screen(at point: NSPoint) -> CGRect? {
+        NSScreen.screens.first { $0.frame.contains(point) }?.visibleFrame ?? NSScreen.main?.visibleFrame
     }
 
     /// The bubble's panel: room for the widest bubble and its tail.
@@ -77,20 +131,25 @@ public final class FloatingPetPanel {
         let petFrame = CGRect(x: anchor.x - petSize.width / 2, y: anchor.y, width: petSize.width, height: petSize.height)
         if panel.frame != petFrame { panel.setFrame(petFrame, display: true) }
         guard let text = bubbleText, let makeBubble, panel.isVisible else { bubblePanel?.orderOut(nil); return }
-        let screen = NSScreen.screens.first { $0.frame.contains(anchor) }?.visibleFrame ?? NSScreen.main?.visibleFrame
-        let placed = Self.frame(anchor: NSPoint(x: anchor.x, y: petFrame.maxY), size: Self.bubbleSize, screen: screen)
+        let placed = Self.frame(anchor: NSPoint(x: anchor.x, y: petFrame.maxY), size: Self.bubbleSize, screen: Self.screen(at: anchor))
         let bubble = bubblePanel ?? makeBubblePanel()
-        if let bubbleHost { bubbleHost.rootView = makeBubble(text, placed.tailShift) } else {
-            let h = NSHostingView(rootView: makeBubble(text, placed.tailShift))
-            bubble.contentView = h
-            bubbleHost = h
+        if shownBubble?.text != text || shownBubble?.tailShift != placed.tailShift {
+            shownBubble = (text, placed.tailShift)
+            if let bubbleHost { bubbleHost.rootView = makeBubble(text, placed.tailShift) } else {
+                let h = NSHostingView(rootView: makeBubble(text, placed.tailShift))
+                bubble.contentView = h
+                bubbleHost = h
+            }
+            bubbleHost?.layoutSubtreeIfNeeded()
         }
         if bubble.frame != placed.frame { bubble.setFrame(placed.frame, display: false) }
-        bubbleHost?.layoutSubtreeIfNeeded()
         if !bubble.isVisible { bubble.orderFrontRegardless() }
     }
 
-    public func hide() { panel?.orderOut(nil); bubblePanel?.orderOut(nil); bubbleText = nil }
+    public func hide() {
+        stopTicker(); walk = nil
+        panel?.orderOut(nil); bubblePanel?.orderOut(nil); bubbleText = nil
+    }
 
     /// Follows a drag of the pet: the panel moves with the pointer; at the end its place is remembered.
     public func drag(ended: Bool) {
@@ -102,6 +161,7 @@ public final class FloatingPetPanel {
         layout()
         if ended {
             dragStart = nil
+            home = anchor
             defaults.set(Double(anchor.x), forKey: Self.xKey); defaults.set(Double(anchor.y), forKey: Self.yKey)
         }
     }
@@ -155,4 +215,22 @@ public final class FloatingPetPanel {
 final class PetPanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
+}
+
+/// Calls `tick` once per frame of the display that `view` is on, until stopped.
+@MainActor
+final class DisplayTicker: NSObject {
+    private var link: CADisplayLink?
+    private let tick: () -> Void
+
+    init(view: NSView, tick: @escaping () -> Void) {
+        self.tick = tick
+        super.init()
+        link = view.displayLink(target: self, selector: #selector(fire))
+        link?.add(to: .main, forMode: .common)
+    }
+
+    @objc private func fire() { tick() }
+
+    func stop() { link?.invalidate(); link = nil }
 }

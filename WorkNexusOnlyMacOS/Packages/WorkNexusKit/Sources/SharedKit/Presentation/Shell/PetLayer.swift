@@ -64,10 +64,7 @@ struct PetLayer: View {
                 }
             }
         }
-        .onAppear {
-            let d = UserDefaults.standard
-            if d.object(forKey: Self.xKey) != nil { director.place(x: d.double(forKey: Self.xKey), y: d.double(forKey: Self.yKey)) }
-        }
+        .onAppear { if !floats { placeInWindow() } }   // floating, its place is along the panel's strip
         .onChange(of: model.celebration.tick) { _, _ in
             director.celebrate(); director.say(PetSignalText.celebrated)
         }
@@ -95,8 +92,11 @@ struct PetLayer: View {
     private struct FloatingKey: Equatable { var floats: Bool; var sheet: ObjectIdentifier?; var follows: Bool; var dark: Bool }
 
     private func showFloating(_ on: Bool) {
-        guard on, let sheet else { director.canWander = true; FloatingPetPanel.shared.hide(); return }
-        director.canWander = false
+        guard on, let sheet else {
+            // Back in the window: it stands where it stood there.
+            if FloatingPetPanel.shared.isShown { FloatingPetPanel.shared.hide(); placeInWindow() }
+            return
+        }
         let width = Self.floatingWidth
         let height = width * CGFloat(PetSpriteSheet.cellHeight) / CGFloat(PetSpriteSheet.cellWidth)
         let content = FloatingPetContent(director: director, sheet: sheet, width: width, followsCursor: settings.petFollowsCursor,
@@ -107,5 +107,14 @@ struct PetLayer: View {
         FloatingPetPanel.shared.show(AnyView(content.environment(\.appTheme, theme)), petSize: CGSize(width: width, height: height)) { text, tail in
             AnyView(FloatingPetBubble(text: text, tailShift: tail).environment(\.appTheme, theme))
         }
+        // On the desktop it strolls along a strip around where it was put.
+        let stroll = FloatingPetPanel.shared.stroll
+        director.roomWidth = stroll.points; director.place(x: stroll.x, y: director.y)
+    }
+
+    /// Where it was left in the window, if anywhere.
+    private func placeInWindow() {
+        let d = UserDefaults.standard
+        if d.object(forKey: Self.xKey) != nil { director.place(x: d.double(forKey: Self.xKey), y: d.double(forKey: Self.yKey)) }
     }
 }

@@ -41,7 +41,7 @@ public final class PetDirector {
     /// How wide the room is, in points (the view says): a walk's time comes from its length on screen, so the character
     /// walks at one pace whatever the window's width.
     public var roomWidth: Double = 800
-    /// Whether it walks about on its own now and then (not in a room as small as itself, like the floating pet's panel).
+    /// Whether it walks about on its own now and then.
     public var canWander = true
     /// The pace of the sheet it is drawn from (the view says).
     public var timing: PetTiming = .steady

@@ -66,6 +66,19 @@ final class PetLayerTests: XCTestCase {
         XCTAssertEqual(corner.frame.midX + corner.tailShift, 1440)
     }
 
+    func testTheFloatingPetStrollsAlongAStripAroundWhereItWasPut() {
+        let screen = CGRect(x: 0, y: 0, width: 1512, height: 950)
+        let span = FloatingPetPanel.strollSpan
+        // In the middle: the strip is centred on its place, which is halfway along.
+        let mid = FloatingPetPanel.strip(home: 700, petWidth: 96, span: span, screen: screen)
+        XCTAssertEqual(mid.travel, span - 96)
+        XCTAssertEqual(mid.start + mid.travel / 2, 700)
+        // Near the right edge: the strip stops at the edge, so the pet strolls to its left.
+        let edge = FloatingPetPanel.strip(home: 1480, petWidth: 96, span: span, screen: screen)
+        XCTAssertEqual(edge.start + edge.travel + 48, 1512)
+        XCTAssertGreaterThan((1480 - edge.start) / edge.travel, 0.5)
+    }
+
     func testTheFloatingPetStaysOnAScreen() {
         let screens = [CGRect(x: 0, y: 0, width: 1440, height: 900), CGRect(x: 1440, y: 0, width: 1920, height: 1080)]
         let size = CGSize(width: 96, height: 104)

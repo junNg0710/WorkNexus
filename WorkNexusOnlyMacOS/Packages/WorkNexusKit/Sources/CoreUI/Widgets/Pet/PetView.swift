@@ -46,7 +46,8 @@ public struct PetView: View {
                 sprite(freeW: freeW, freeH: freeH, bubbleShift: Self.bubbleShift(petLeft: left, petWidth: width, roomWidth: geo.size.width))
                     .offset(x: left, y: CGFloat(director.y) * freeH)
             }
-            .onChange(of: geo.size.width, initial: true) { _, w in director.roomWidth = Double(max(w - width, 1)) }
+            // Only its own room: a pet that does not move about inside (the floating one) walks a strip its panel says.
+            .onChange(of: geo.size.width, initial: true) { _, w in if movable { director.roomWidth = Double(max(w - width, 1)) } }
         }
         .coordinateSpace(name: "petRoom")
         .onChange(of: sheet.timing, initial: true) { _, t in director.timing = t }
