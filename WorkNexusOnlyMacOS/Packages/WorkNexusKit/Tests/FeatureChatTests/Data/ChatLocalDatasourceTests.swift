@@ -45,7 +45,8 @@ final class ChatLocalDatasourceTests: XCTestCase {
         ChatMigrations.registrar(&migrator)
         try migrator.migrate(queue, upTo: ChatMigrations.migrationId)
         try queue.write { try $0.execute(sql: "INSERT INTO chatConversations (accountId, gid, type, name) VALUES ('acc', 'old', 'group', 'Old')") }
-        try migrator.migrate(queue)
+        // Only up to the groups step: later chat migrations (the MCP views) need the core tables this database lacks.
+        try migrator.migrate(queue, upTo: ChatMigrations.groupsMigrationId)
         let row = try queue.read { try Row.fetchOne($0, sql: "SELECT * FROM chatConversations WHERE gid='old'") }
         let chat = ChatConversationRow(row: try XCTUnwrap(row))
         XCTAssertEqual(chat.category, ""); XCTAssertFalse(chat.adminInvite); XCTAssertFalse(chat.isPublic)
