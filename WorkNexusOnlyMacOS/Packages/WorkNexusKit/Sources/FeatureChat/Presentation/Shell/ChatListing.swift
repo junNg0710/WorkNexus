@@ -8,14 +8,20 @@ struct ListedChat: Equatable, Identifiable {
     var id: String { chat.gid }
 }
 
-/// What the chat list shows: hidden and archived chats are left out, the tab and the search text filter, pinned chats
+/// What the chat list shows: hidden and archived chats are left out, the filter (tab, unread, categories) and the search
+/// text narrow it, pinned chats
 /// come first and then the most recently active.
 /// Ported from: lib/features/chat/presentation/widgets/conversation_list_pane.dart
 enum ChatListing {
     static func visible(_ chats: [ChatConversation], users: [Int: ChatUser], tab: ChatListTab, query: String) -> [ListedChat] {
+        visible(chats, users: users, filter: ChatListFilter(tab: tab), query: query)
+    }
+
+    /// The chats `filter` lets through (tab, unread only, categories) whose title matches `query`.
+    static func visible(_ chats: [ChatConversation], users: [Int: ChatUser], filter: ChatListFilter, query: String) -> [ListedChat] {
         let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let listed = chats.enumerated()
-            .filter { !$0.element.hidden && !$0.element.archived && tab.matches($0.element) }
+            .filter { filter.matches($0.element) }
             .map { (index: $0.offset, row: ListedChat(chat: $0.element, title: ChatShellLabels.title($0.element, users))) }
             .filter { q.isEmpty || $0.row.title.lowercased().contains(q) }
         // Stable: chats the repository already ordered keep their order within the same rank.
@@ -48,9 +54,9 @@ enum ChatListing {
 enum ChatPeople {
     static func name(_ u: ChatUser) -> String { u.realname.isEmpty ? u.account : u.realname }
 
-    /// Everyone but yourself and deleted accounts.
-    static func everyone(_ users: [Int: ChatUser], selfId: Int?) -> [ChatUser] {
-        users.values.filter { $0.userId != selfId && !$0.deleted }.sorted { $0.userId < $1.userId }
+    /// Everyone but yourself, deleted accounts and the `excluded` (already in the group being added to).
+    static func everyone(_ users: [Int: ChatUser], selfId: Int?, excluded: Set<Int> = []) -> [ChatUser] {
+        users.values.filter { $0.userId != selfId && !$0.deleted && !excluded.contains($0.userId) }.sorted { $0.userId < $1.userId }
     }
 
     /// The people under a role tab (nil: all) matching `query` in name or account, by name.

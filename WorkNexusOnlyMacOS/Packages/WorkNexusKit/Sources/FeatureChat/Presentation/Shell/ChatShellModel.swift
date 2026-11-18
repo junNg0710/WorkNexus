@@ -26,7 +26,12 @@ public final class ChatShellModel {
     /// The open chat's session; nil when none is selected or the chat is not known yet.
     private(set) var thread: ChatThreadSession?
 
-    var tab: ChatListTab = .all
+    /// The list's tab, "unread only" and the picked categories (see `listFilter` for the one applied).
+    var filter = ChatListFilter()
+    var tab: ChatListTab {
+        get { filter.tab }
+        set { filter.tab = newValue }
+    }
     private(set) var searchText = ""
     var highlightedGid: String?
     var searchPeriod: ChatSearchPeriod = .all
@@ -41,6 +46,9 @@ public final class ChatShellModel {
     var forwardRequest: ChatForwardRequest?
     /// The user picked "Change group avatar" for this chat.
     var groupAvatarChat: ChatConversation?
+    /// A group or category dialog that is open (see `ChatGroupDialog`).
+    var groupDialog: ChatGroupDialog?
+    var showCategoryManager = false
     /// The certificate already put to the user on this visit; asked once per fingerprint.
     private var askedFingerprint: String?
     let toasts = AppToastController()
@@ -54,7 +62,7 @@ public final class ChatShellModel {
 
     // MARK: derived
 
-    var listed: [ListedChat] { ChatListing.visible(conversations, users: users, tab: tab, query: searchText) }
+    var listed: [ListedChat] { ChatListing.visible(conversations, users: users, filter: listFilter, query: searchText) }
     var isSearching: Bool { !searchText.trimmingCharacters(in: .whitespaces).isEmpty }
     func unread(_ tab: ChatListTab) -> Int { ChatListing.unread(conversations, tab: tab) }
     func typing(in gid: String) -> [Int] { typingRoster.typing(in: gid) }
@@ -193,8 +201,8 @@ public final class ChatShellModel {
         }
     }
 
-    func createGroup(name: String, memberIds: [Int]) async -> Bool {
-        switch await CreateGroupChat(repository)(accountId: accountId, name: name, memberIds: memberIds) {
+    func createGroup(name: String, memberIds: [Int], isPublic: Bool = false) async -> Bool {
+        switch await CreateGroupChat(repository)(accountId: accountId, name: name, memberIds: memberIds, isPublic: isPublic) {
         case .success(let gid): tab = .all; setSearch(""); select(gid); return true
         case .failure(let f): report(f); return false
         }

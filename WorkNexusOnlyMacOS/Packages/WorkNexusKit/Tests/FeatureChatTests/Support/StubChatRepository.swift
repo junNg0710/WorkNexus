@@ -65,7 +65,16 @@ class StubChatRepository: ChatRepository, @unchecked Sendable {
     func members(accountId: String, chatGid: String) async -> Outcome<[Int]> { unstubbed() }
     func openDirectChat(accountId: String, userId: Int) async -> Outcome<String> { unstubbed() }
     func refreshUsers(accountId: String) async -> Outcome<Void> { unstubbed() }
-    func createGroupChat(accountId: String, name: String, memberIds: [Int]) async -> Outcome<String> { unstubbed() }
+    func createGroupChat(accountId: String, name: String, memberIds: [Int], isPublic: Bool) async -> Outcome<String> { unstubbed() }
+    func setChatCategory(accountId: String, chatGids: [String], category: String) async -> Outcome<Void> { unstubbed() }
+    func setGroupSettings(accountId: String, chatGid: String, isPublic: Bool, adminInvite: Bool, committers: String) async -> Outcome<Void> { unstubbed() }
+    func setGroupAdmins(accountId: String, chatGid: String, userIds: [Int], admin: Bool) async -> Outcome<Void> { unstubbed() }
+    func transferGroupOwnership(accountId: String, chatGid: String, userId: Int) async -> Outcome<Void> { unstubbed() }
+    func renameGroupChat(accountId: String, chatGid: String, name: String) async -> Outcome<Void> { unstubbed() }
+    func dismissGroupChat(accountId: String, chatGid: String) async -> Outcome<Void> { unstubbed() }
+    func leaveGroupChat(accountId: String, chatGid: String) async -> Outcome<Void> { unstubbed() }
+    func addGroupMembers(accountId: String, chatGid: String, userIds: [Int]) async -> Outcome<Void> { unstubbed() }
+    func removeGroupMembers(accountId: String, chatGid: String, userIds: [Int]) async -> Outcome<Void> { unstubbed() }
     func setGroupAvatar(accountId: String, chatGid: String, text: String?, color: String?, image: Data?) async -> Outcome<Void> { unstubbed() }
     func setMyAvatar(accountId: String, image: Data, crop: ChatAvatarCrop?) async -> Outcome<Void> { unstubbed() }
     func setMyPresence(accountId: String, presence: ChatPresence) async -> Outcome<Void> { unstubbed() }

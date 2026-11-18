@@ -3,7 +3,8 @@ import CoreUI
 import SwiftUI
 
 /// Beside the chat: who the other person is (direct) or what the group is — owner, creation date, pinned messages, members
-/// and shared files — as cards.
+/// and shared files — as cards. For a group's owner and admins, a camera badge on the picture and a pencil beside the name
+/// edit them, and "Group settings" opens its settings; at the bottom its owner dismisses it, anyone else leaves it.
 /// Ported from: lib/features/chat/presentation/widgets/chat_info_panel.dart
 struct ChatInfoPanel: View {
     @Environment(\.appTheme) private var theme
@@ -17,23 +18,25 @@ struct ChatInfoPanel: View {
         let withPeer = oneToOne && !chat.isMyCloud
         let peer = withPeer ? chat.peerUserId.flatMap { users[$0] } : nil
         let title = ChatShellLabels.title(chat, users)
+        let rights = model.groupRights(chat)
         ChatSidePanelFrame(title: shellString("chatInfo", "Chat info"),
                            onClose: layout.infoRoom ? nil : { session.state.closePanel() }) {
             ScrollView {
                 VStack(spacing: 0) {
-                    ChatPrivacyAvatar(avatar: ChatAvatarView(chat: chat, title: title, users: users, diameter: theme.sizes.control36 * 2),
-                                      group: !oneToOne)
-                    if !oneToOne, PinChatMessage(model.repository).canPin(chat, selfUserId: model.selfUserId, selfAccount: model.selfAccount) {
-                        AppButton(shellString("chatChangeGroupAvatar", "Change group picture"), systemImage: "camera", kind: .ghost) {
-                            model.groupAvatarChat = chat
-                        }
-                        .padding(.top, theme.spacing.s4)
+                    // Owner and admins change the picture, as for pinning.
+                    ChatGroupAvatarEditor(editable: !oneToOne && PinChatMessage(model.repository).canPin(chat, selfUserId: model.selfUserId,
+                                                                                                         selfAccount: model.chatSelfAccount),
+                                          onEdit: { model.groupAvatarChat = chat }) {
+                        ChatPrivacyAvatar(avatar: ChatAvatarView(chat: chat, title: title, users: users, diameter: theme.sizes.control36 * 2),
+                                          group: !oneToOne)
                     }
-                    ChatPrivacyMasked(part: .identity, alignment: .center) {
-                        Text(title).font(theme.typography.titleSm).foregroundStyle(theme.colors.tx).multilineTextAlignment(.center)
-                            .textSelection(.enabled)
-                    } mask: {
-                        Text(chatPrivacyMaskText).font(theme.typography.titleSm).foregroundStyle(theme.colors.tx)
+                    ChatGroupTitleEditor(editable: rights.rename, onEdit: { model.groupDialog = .rename(chat) }) {
+                        ChatPrivacyMasked(part: .identity, alignment: .center) {
+                            Text(title).font(theme.typography.titleSm).foregroundStyle(theme.colors.tx).multilineTextAlignment(.center)
+                                .textSelection(.enabled)
+                        } mask: {
+                            Text(chatPrivacyMaskText).font(theme.typography.titleSm).foregroundStyle(theme.colors.tx)
+                        }
                     }
                     .padding(.top, theme.spacing.s12)
                     if let subtitle = subtitle(chat, peer) {
@@ -51,9 +54,15 @@ struct ChatInfoPanel: View {
                             session.state.togglePanel(.members, infoRoom: layout.infoRoom)
                         }
                     }
+                    if rights.editSettings {
+                        ChatPanelLink(icon: "gearshape", label: shellString("chatGroupSettings", "Group settings"), count: nil) {
+                            model.groupDialog = .settings(chat)
+                        }
+                    }
                     ChatInfoStorageCard(repository: model.repository, accountId: model.accountId, chatGid: chat.gid,
                                         onManage: model.events.onOpenStorage)
                     ChatInfoFilesSection(model: model, session: session)
+                    if !oneToOne { ChatGroupExitButton(model: model, chat: chat) }
                 }
                 .padding(theme.spacing.s12)
             }

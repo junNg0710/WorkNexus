@@ -148,6 +148,31 @@ final class ChatLocalDatasource: @unchecked Sendable {
     func setPinned(_ accountId: String, _ gid: String, json: String) async throws { try await setConversation(accountId, gid, "pinnedJson", json) }
     func setStarred(_ accountId: String, _ gid: String, starred: Bool) async throws { try await setConversation(accountId, gid, "starred", starred) }
     func setMuted(_ accountId: String, _ gid: String, muted: Bool) async throws { try await setConversation(accountId, gid, "muted", muted) }
+    func setChatName(_ accountId: String, _ gid: String, _ name: String) async throws { try await setConversation(accountId, gid, "name", name) }
+    /// Archives a chat (or a dismissed group), taking it off the chat list.
+    func setArchived(_ accountId: String, _ gid: String, archived: Bool) async throws { try await setConversation(accountId, gid, "archived", archived) }
+    /// Replaces a group's admin ids (`json` is a JSON array).
+    func setAdmins(_ accountId: String, _ gid: String, json: String) async throws { try await setConversation(accountId, gid, "adminsJson", json) }
+
+    /// Updates a group's settings; a nil one is left as it is.
+    func setGroupSettings(_ accountId: String, _ gid: String, committers: String? = nil, isPublic: Bool? = nil, adminInvite: Bool? = nil) async throws {
+        var sets: [String] = [], args: [DatabaseValue] = []
+        if let committers { sets.append("committers=?"); args.append(committers.databaseValue) }
+        if let isPublic { sets.append("isPublic=?"); args.append(isPublic.databaseValue) }
+        if let adminInvite { sets.append("adminInvite=?"); args.append(adminInvite.databaseValue) }
+        guard !sets.isEmpty else { return }
+        let arguments = StatementArguments(args + [accountId.databaseValue, gid.databaseValue])
+        let sql = "UPDATE chatConversations SET \(sets.joined(separator: ", ")) WHERE accountId=? AND gid=?"
+        try await db.writer.write { try $0.execute(sql: sql, arguments: arguments) }
+    }
+
+    /// Files chats `gids` under `category` ("" for none).
+    func setCategory(_ accountId: String, _ gids: [String], _ category: String) async throws {
+        guard !gids.isEmpty else { return }
+        let marks = gids.map { _ in "?" }.joined(separator: ",")
+        let arguments = StatementArguments([category, accountId] + gids)
+        try await db.writer.write { try $0.execute(sql: "UPDATE chatConversations SET category=? WHERE accountId=? AND gid IN (\(marks))", arguments: arguments) }
+    }
 
     /// Conversations with their last message, pinned first then newest activity, with the chat account's own user id.
     func watchConversations(_ accountId: String) -> AsyncStream<[ChatConversation]> {

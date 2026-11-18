@@ -27,6 +27,12 @@ public struct ChatConversation: Hashable, Sendable, Identifiable {
     public var adminIds: [Int]
     /// Who may send, as xxd stores it; see `CanSendToChat`.
     public var committers: String
+    /// The user's own category the chat is filed under ("" for none).
+    public var category: String
+    /// Only the owner and admins may add people (xxd `adminInvite`).
+    public var adminInvite: Bool
+    /// Anyone may find and join the group (xxd `public`).
+    public var isPublic: Bool
     public var ownerAccount: String?
     /// The group's avatar as stored (xxd JSON); see `ChatGroupAvatar`.
     public var avatarJson: String?
@@ -37,12 +43,13 @@ public struct ChatConversation: Hashable, Sendable, Identifiable {
     public init(accountId: String, gid: String, type: ChatType, name: String, unreadCount: Int = 0, lastActiveAt: Date? = nil,
                 lastMessage: ChatMessage? = nil, peerUserId: Int? = nil, isMyCloud: Bool = false, hidden: Bool = false,
                 archived: Bool = false, starred: Bool = false, muted: Bool = false, pinnedMessageIds: [Int] = [],
-                adminIds: [Int] = [], committers: String = "", ownerAccount: String? = nil, avatarJson: String? = nil,
-                createdAt: Date? = nil) {
+                adminIds: [Int] = [], committers: String = "", category: String = "", adminInvite: Bool = false,
+                isPublic: Bool = false, ownerAccount: String? = nil, avatarJson: String? = nil, createdAt: Date? = nil) {
         self.accountId = accountId; self.gid = gid; self.type = type; self.name = name; self.unreadCount = unreadCount
         self.lastActiveAt = lastActiveAt; self.lastMessage = lastMessage; self.peerUserId = peerUserId
         self.isMyCloud = isMyCloud; self.hidden = hidden; self.archived = archived; self.starred = starred
         self.muted = muted; self.pinnedMessageIds = pinnedMessageIds; self.adminIds = adminIds
-        self.committers = committers; self.ownerAccount = ownerAccount; self.avatarJson = avatarJson; self.createdAt = createdAt
+        self.committers = committers; self.category = category; self.adminInvite = adminInvite; self.isPublic = isPublic
+        self.ownerAccount = ownerAccount; self.avatarJson = avatarJson; self.createdAt = createdAt
     }
 }

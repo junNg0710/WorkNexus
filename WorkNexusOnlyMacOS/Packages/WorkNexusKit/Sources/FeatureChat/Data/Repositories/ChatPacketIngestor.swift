@@ -64,6 +64,9 @@ final class ChatPacketIngestor: @unchecked Sendable {
             }
         case "chatsetavatar":
             if case .object(let o)? = data, let gid = o["gid"]?.string, case .object? = o["avatar"] { try await local.setChatAvatar(accountId, gid, json: o["avatar"]!.serialized()) }
+        case "chatinvite", "chatkick", "chatleave", "chatsetconfig", "chatsetcommitters", "chatsetvisibility", "chatsetcategory",
+             "chataddadmins", "chatremoveadmins", "chatchangeownership", "chatrename", "chatdismiss":
+            try await ingestGroupChange(accountId, packet.apiName, data, selfUserId: selfUserId)
         // ZenTao's notifications and xuanbot replies.
         case "syncnotifications":
             guard let me = selfUserId else { break }
@@ -73,6 +76,47 @@ final class ChatPacketIngestor: @unchecked Sendable {
         default: break
         }
         return IngestFollowUp()
+    }
+
+    /// A group's members, settings, admins, owner, name or category changed: the reply to this account's own request, or a
+    /// push when someone else (or another client of this user) made the change.
+    private func ingestGroupChange(_ accountId: String, _ api: String, _ data: JSONValue?, selfUserId: Int?) async throws {
+        guard case .object(let o)? = data else { return }
+        let gid = o["gid"]?.string
+        switch api {
+        // Members joined or left: the reply is the group itself. This account leaving or being removed takes the group off
+        // its list, as the official client does.
+        case "chatinvite", "chatkick", "chatleave":
+            guard let gid else { return }
+            try await storeChats(accountId, [o])
+            // Ids or user objects, depending on the server.
+            let members = Set((o["members"]?.array ?? []).compactMap { m -> Int? in
+                if case .object(let u) = m { return ChatMappers.int(u["id"]) }
+                return ChatMappers.int(m)
+            })
+            if let me = selfUserId, !members.isEmpty, !members.contains(me) { try await local.setArchived(accountId, gid, archived: true) }
+        // The group's settings changed (`chatsetconfig`), or one of them on older servers; each carries only what it changed.
+        case "chatsetconfig", "chatsetcommitters", "chatsetvisibility":
+            guard let gid else { return }
+            try await local.setGroupSettings(accountId, gid, committers: o.contains("committers") ? ChatMappers.text(o["committers"]) : nil,
+                                             isPublic: o.contains("public") ? ChatMappers.flag(o["public"]) : nil,
+                                             adminInvite: o.contains("adminInvite") ? ChatMappers.flag(o["adminInvite"]) : nil)
+        // Also pushed when the user files chats from another client.
+        case "chatsetcategory":
+            guard let gids = o["gids"]?.array else { return }
+            try await local.setCategory(accountId, gids.compactMap(\.string), ChatMappers.text(o["category"]))
+        case "chataddadmins", "chatremoveadmins":
+            if let gid { try await local.setAdmins(accountId, gid, json: ChatMappers.pinnedJson(o["admins"])) }
+        // The whole group, with its new owner.
+        case "chatchangeownership":
+            if gid != nil { try await storeChats(accountId, [o]) }
+        case "chatrename":
+            if let gid, let name = o["name"]?.string { try await local.setChatName(accountId, gid, name) }
+        // A dismissed group is archived, as the chat list maps `dismissDate`.
+        case "chatdismiss":
+            if let gid { try await local.setArchived(accountId, gid, archived: (ChatMappers.int(o["dismissDate"]) ?? 1) > 0) }
+        default: break
+        }
     }
 
     func storeNotifications(_ accountId: String, _ data: JSONValue?, selfUserId: Int) async throws -> IngestFollowUp {

@@ -87,7 +87,26 @@ public protocol ChatRepository: ChatRuntimeSettings {
     func members(accountId: String, chatGid: String) async -> Outcome<[Int]>
     func openDirectChat(accountId: String, userId: Int) async -> Outcome<String>
     func refreshUsers(accountId: String) async -> Outcome<Void>
-    func createGroupChat(accountId: String, name: String, memberIds: [Int]) async -> Outcome<String>
+    /// Creates a group named `name` with `memberIds` (the signed-in user is added), `isPublic` to let anyone find and join
+    /// it; returns its gid.
+    func createGroupChat(accountId: String, name: String, memberIds: [Int], isPublic: Bool) async -> Outcome<String>
+    /// Files chats `chatGids` under `category` ("" for none).
+    func setChatCategory(accountId: String, chatGids: [String], category: String) async -> Outcome<Void>
+    /// Sets a group's settings: public, admin-only invites and who may post (`committers`, as xxd stores it).
+    func setGroupSettings(accountId: String, chatGid: String, isPublic: Bool, adminInvite: Bool, committers: String) async -> Outcome<Void>
+    /// Makes `userIds` admins of a group (`admin`) or plain members again.
+    func setGroupAdmins(accountId: String, chatGid: String, userIds: [Int], admin: Bool) async -> Outcome<Void>
+    /// Hands a group over to `userId`, its new owner.
+    func transferGroupOwnership(accountId: String, chatGid: String, userId: Int) async -> Outcome<Void>
+    /// Renames a group for every member.
+    func renameGroupChat(accountId: String, chatGid: String, name: String) async -> Outcome<Void>
+    /// Dismisses (disbands) a group for every member; only its owner may.
+    func dismissGroupChat(accountId: String, chatGid: String) async -> Outcome<Void>
+    /// Leaves a group (its owner dismisses it instead).
+    func leaveGroupChat(accountId: String, chatGid: String) async -> Outcome<Void>
+    func addGroupMembers(accountId: String, chatGid: String, userIds: [Int]) async -> Outcome<Void>
+    /// Removes `userIds` from a group; only its owner may.
+    func removeGroupMembers(accountId: String, chatGid: String, userIds: [Int]) async -> Outcome<Void>
     func setGroupAvatar(accountId: String, chatGid: String, text: String?, color: String?, image: Data?) async -> Outcome<Void>
     func setMyAvatar(accountId: String, image: Data, crop: ChatAvatarCrop?) async -> Outcome<Void>
     func setMyPresence(accountId: String, presence: ChatPresence) async -> Outcome<Void>

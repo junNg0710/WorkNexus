@@ -12,6 +12,8 @@ struct NewChatDialog: View {
     @State private var groupName = ""
     @State private var selected: [Int] = []
     @State private var busy = false
+    /// The group being made is public: anyone may find and join it.
+    @State private var isPublic = false
     /// The directory load's outcome; nil while it runs.
     @State private var directoryLoaded: Bool?
 
@@ -24,6 +26,10 @@ struct NewChatDialog: View {
                 if group {
                     TextField("\(shellString("chatGroupName", "Group name")) · \(ChatPeople.defaultGroupName(selected, users: model.users))", text: $groupName)
                         .textFieldStyle(.roundedBorder).onSubmit(start)
+                    ChatSettingsCard {
+                        ChatSwitchRow(label: shellString("chatPublicGroup", "Public group"),
+                                      hint: shellString("chatPublicGroupHint", "Anyone can find this group and join it"), isOn: $isPublic)
+                    }
                 }
                 NewChatPeople(model: model, search: $search, selected: $selected, loading: directoryLoaded == nil,
                               failed: directoryLoaded == false) { Task { await loadDirectory() } }
@@ -52,7 +58,8 @@ struct NewChatDialog: View {
             let ok = selected.count == 1
                 ? await model.openDirectChat(userId: selected[0])
                 : await model.createGroup(name: groupName.trimmingCharacters(in: .whitespaces).isEmpty
-                                          ? ChatPeople.defaultGroupName(selected, users: model.users) : groupName, memberIds: selected)
+                                          ? ChatPeople.defaultGroupName(selected, users: model.users) : groupName, memberIds: selected,
+                                          isPublic: isPublic)
             busy = false
             if ok { model.showNewChat = false }
         }

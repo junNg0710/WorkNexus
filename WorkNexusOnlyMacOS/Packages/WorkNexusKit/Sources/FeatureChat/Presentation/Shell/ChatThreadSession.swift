@@ -85,6 +85,12 @@ final class ChatThreadSession {
         }
     }
 
+    /// Loads the members again after people were added or removed, with the count shown in the info.
+    func reloadMembers() async {
+        await loadMembers()
+        if let ids = memberIds { memberCount = ids.count }
+    }
+
     /// Opens the search bar (also when another slice asks for it with `sidePanel = .search`).
     func toggleSearch() {
         if search.isOpen { search.close(); history.teardown() } else { search.isOpen = true }

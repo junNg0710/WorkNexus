@@ -2,7 +2,7 @@ import CoreDomain
 import CoreUI
 import SwiftUI
 
-/// One chat in the list: its tile with the right-click menu, selecting it on tap.
+/// One chat in the list: its tile with the right-click menu (pin, mute, file under a category), selecting it on tap.
 /// Ported from: lib/features/chat/presentation/widgets/conversation_row.dart (+ conversation_menu.dart)
 struct ConversationRow: View {
     let model: ChatShellModel
@@ -24,6 +24,9 @@ struct ConversationRow: View {
                 Button { model.setMuted(chat, !chat.muted) } label: {
                     Label(chat.muted ? shellString("chatUnmuteChat", "Unmute chat") : shellString("chatMuteChat", "Mute chat"),
                           systemImage: chat.muted ? "bell" : "bell.slash")
+                }
+                Button { model.groupDialog = .category(chat) } label: {
+                    Label(shellString("chatSetCategory", "Category…"), systemImage: "folder.badge.plus")
                 }
             }
     }

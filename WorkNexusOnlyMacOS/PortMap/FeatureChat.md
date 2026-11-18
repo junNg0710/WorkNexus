@@ -219,6 +219,22 @@ file (the Dart side is the first four sources named there). Tests live in `Tests
 | Presentation/Privacy/ChatPrivacyMasks.swift | lib/core/widgets/privacy_mask.dart (`PrivacyMask`, `PrivacyFade`, `PrivacyCover`)<br>chat_privacy_mask.dart |
 | Presentation/Privacy/ChatPrivacyPlaceholders.swift | chat_avatar.dart (`_Placeholder`)<br>chat_info_files_section.dart (`_HiddenMediaGrid`, `_HiddenFileRow`) |
 | Presentation/Thread/ChatRowEntrance.swift | lib/core/widgets/app_entrance.dart<br>message_list_item.dart (a message arriving while the chat is open) |
+| Domain/ValueObjects/ChatCommitters.swift | lib/features/chat/domain/value_objects/chat_committers.dart |
+| Domain/ValueObjects/ChatListFilter.swift | lib/features/chat/domain/value_objects/chat_list_filter.dart |
+| Domain/UseCases/GroupPolicy.swift | the `can…` checks of rename_group_chat, dismiss_group_chat, add_group_members, remove_group_member, leave_group_chat, update_group_settings, set_group_admin, transfer_group_ownership.dart; `ChatGroupRights` ← providers/chat_group_providers.dart |
+| Domain/UseCases/GroupUseCases.swift | lib/features/chat/domain/usecases/{rename_group_chat,dismiss_group_chat,leave_group_chat,add_group_members,remove_group_member,update_group_settings,set_group_admin,transfer_group_ownership}.dart |
+| Domain/UseCases/CategoryUseCases.swift | lib/features/chat/domain/usecases/{list_chat_categories,set_chat_category,rename_chat_category}.dart |
+| Data/Repositories/XxdChatRepository+Groups.swift | lib/features/chat/data/repositories/xxd_chat_repository.dart (createGroupChat … transferGroupOwnership) |
+| Presentation/Groups/ChatShellModel+Groups.swift | providers/{chat_group_controller,chat_group_providers,chat_category_providers}.dart |
+| Presentation/Groups/ChatGroupDialogHost.swift | (Swift-only) presents the group / category dialogs and the confirmations of chat_group_actions.dart, chat_member_menu_button.dart, chat_category_actions.dart |
+| Presentation/Groups/ChatNameDialog.swift | chat_name_dialog.dart |
+| Presentation/Groups/ChatCategoryDialogs.swift | chat_category_actions.dart (`showChatCategoryPicker`), chat_category_manager_dialog.dart |
+| Presentation/Groups/ChatListFilterButton.swift | chat_list_filter_button.dart, chat_list_filter_panel.dart |
+| Presentation/Groups/ChatGroupSettingsDialog.swift | chat_group_settings_dialog.dart, chat_committer_picker.dart |
+| Presentation/Groups/ChatAddMembersDialog.swift | chat_add_members_dialog.dart |
+| Presentation/Groups/ChatGroupControls.swift | chat_group_edit_controls.dart, chat_group_actions.dart (`ChatGroupExitButton`) |
+| Presentation/Groups/ChatMemberMenuButton.swift | chat_member_menu_button.dart |
+| Presentation/Groups/ChatSettingsCard.swift | lib/core/widgets/quick_settings_parts.dart (`QuickSettingsCard`, `QuickSettingsSwitchField`) |
 
 Files without a one-to-one Dart source (Swift-only glue): `ChatFeature.swift`, `Module.swift`, `Support/JSONParser.swift`, `Support/JSONValue.swift`, `Support/RX.swift`, `Data/Xxd/ApiSchemeCodec+Coding.swift`, `Data/Xxd/XxdHTTPTransport.swift`, `Data/Repositories/XxdChatRepository+Actions.swift`, `Data/Repositories/XxdChatRepository+Reads.swift`, `Data/Local/ChatLocalDatasource+Messages.swift`, `Data/Local/ChatRows.swift`, `Data/Support/AsyncStreamExtras.swift`, `Data/Support/Broadcast.swift`, `Domain/UseCases/RepositoryPassthroughUseCases.swift`, `Domain/ValueObjects/ChatCancelToken.swift`, `Domain/ValueObjects/ChatEmojiTables.swift`, `Presentation/ChatServices.swift`, `Presentation/Shell/ChatThreadState.swift`
 
@@ -245,6 +261,25 @@ Files without a one-to-one Dart source (Swift-only glue): `ChatFeature.swift`, `
 - **Person chips**: `ChatPersonChip` opens the one-to-one chat (through `ChatServices.showChat`, which the app wires to the Chat place); `ChatPersonChatButton` / `ChatPersonAvatar` are injected as `\.zentaoDocPersonAction` / `\.zentaoDocPersonFace` in `HostWiring`.
 - **Translation gate**: `ChatServices.ensureTranslatorReady` (the app's `OpenCodeLinkGate`) runs before a message is translated.
 - **Not ported**: the image viewer's strip lists photos only (the Dart strip also lists videos); the OpenCode key field gains a "Remove key" button (absent in the Dart field) backed by `OpenCodeKeyRepository.removeApiKey`.
+
+### Groups and categories (upstream a460437e)
+
+- **Group management** over xxd as the official client does it: rename (`chatRename`), dismiss (`chatDismiss`), add / remove members
+  (`chatInvite` / `chatKick`), leave (`chatLeave`), settings (`chatSetConfig`, falling back to `chatSetVisibility` + `chatSetCommitters`
+  when refused), admins (`chatAddAdmins` / `chatRemoveAdmins`), ownership (`chatChangeOwnership`), public groups (`chatCreate`'s flag).
+  Replies and pushes are stored by `ChatPacketIngestor.ingestGroupChange`; this account leaving or being removed archives the group.
+- **Categories** (`chatSetCategory`): "Category…" in a chat's right-click menu; a filter icon beside the list tabs filters by status
+  (all / unread) and by tags and opens the tag manager (rename / delete refile every chat of the tag).
+- **Schema**: migration `chat_v2_groups` adds `category`, `adminInvite`, `isPublic` to `chatConversations` (Dart schema 64–65).
+- **Deviations**: dialogs are driven by one `ChatShellModel.groupDialog` (plus `showCategoryManager` under it) instead of `showDialog`
+  calls; failures show as the shell's toast and the dialog stays open. The owner / admin checks use the account the chat server
+  reports for the signed-in user (`chatSelfAccount`), falling back to the ZenTao handle until the user list is loaded (Flutter: no
+  rights until then). The info panel's "Group settings" sits before the storage card. Rows of the member list keep their tap (profile);
+  the "…" button is the owner's member menu (`AppNativeMenu`).
+- **Jump to a message** (upstream 0e556fd2): the Flutter sliver correction has no SwiftUI counterpart; what carries over is that a
+  jumped-to row already on screen glides there and any other appears centred at once (`ChatScrollRequest.animates(onScreen:)`).
+  Upstream ec10ce97 needed nothing: the native chat switch never faded the header / composer (`ChatOpeningStage`), and there is no
+  privacy mask or sticker-suggestion setting in Quick Settings.
 
 ### macOS-only: tickets from messages and multiple select (not in the Flutter app)
 

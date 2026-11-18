@@ -141,7 +141,7 @@ private struct AvatarFill: View {
         } else if let bg = style.background, let label = style.label, !label.trimmingCharacters(in: .whitespaces).isEmpty {
             ZStack { Color(argb: 0xFF00_0000 | bg); AvatarText(text: label.trimmingCharacters(in: .whitespaces), ink: theme.colors.accentTx, side: side) }
         } else {
-            let hue = Self.hue(name, theme)
+            let hue = chatNameHue(name, theme)
             ZStack {
                 theme.colors.panel
                 hue.opacity(0.22)
@@ -156,13 +156,14 @@ private struct AvatarFill: View {
         return side < theme.sizes.control32 ? String(full.prefix(1)) : full
     }
 
-    /// One of the theme's colours, picked by a stable hash of the name.
-    static func hue(_ name: String, _ theme: AppTheme) -> Color {
-        let hues = [theme.colors.accent, theme.colors.green, theme.colors.amber, theme.colors.violet, theme.colors.orange, theme.colors.red]
-        var hash = 0
-        for unit in name.utf16 { hash = (hash &* 31 &+ Int(unit)) & 0x7fff_ffff }
-        return hues[hash % hues.count]
-    }
+}
+
+/// The hue for `name` (an avatar's, a category tag's): one of the theme's colours, picked by a stable hash of the name.
+func chatNameHue(_ name: String, _ theme: AppTheme) -> Color {
+    let hues = [theme.colors.accent, theme.colors.green, theme.colors.amber, theme.colors.violet, theme.colors.orange, theme.colors.red]
+    var hash = 0
+    for unit in name.utf16 { hash = (hash &* 31 &+ Int(unit)) & 0x7fff_ffff }
+    return hues[hash % hues.count]
 }
 
 private struct AvatarText: View {

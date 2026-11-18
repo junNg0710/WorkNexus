@@ -109,12 +109,13 @@ public struct CreateGroupChat: Sendable {
     private let repository: ChatRepository
     public init(_ repository: ChatRepository) { self.repository = repository }
 
-    public func callAsFunction(accountId: String, name: String, memberIds: [Int]) async -> Outcome<String> {
+    /// `isPublic` lets anyone find and join the group.
+    public func callAsFunction(accountId: String, name: String, memberIds: [Int], isPublic: Bool = false) async -> Outcome<String> {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return .failure(.unexpected("A group needs a name")) }
         var seen = Set<Int>(), unique: [Int] = []
         for id in memberIds where seen.insert(id).inserted { unique.append(id) }
         guard unique.count >= 2 else { return .failure(.unexpected("A group needs at least two people")) }
-        return await repository.createGroupChat(accountId: accountId, name: trimmed, memberIds: unique)
+        return await repository.createGroupChat(accountId: accountId, name: trimmed, memberIds: unique, isPublic: isPublic)
     }
 }
