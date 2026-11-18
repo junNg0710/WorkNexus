@@ -31,7 +31,8 @@ public protocol TelegramTokenStore: Sendable {
 }
 
 /// Ported from: lib/features/chat/domain/repositories/sticker_repository.dart
-public typealias StickerFile = (name: String, bytes: Data)
+/// A sticker file to keep: its name, image and the emoji it stands for (empty when the set gave none).
+public typealias StickerFile = (name: String, bytes: Data, emoji: String)
 
 public protocol StickerRepository: Sendable {
     func stickers() async -> Outcome<[ChatSticker]>

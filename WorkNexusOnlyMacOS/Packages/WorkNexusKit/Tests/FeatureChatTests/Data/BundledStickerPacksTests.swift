@@ -30,18 +30,34 @@ final class BundledStickerPacksTests: XCTestCase {
         XCTAssertEqual(Set(all.map(\.pack)).isSuperset(of: ["Pepe", "PepeAnim", "WorkNexus"]), true)
     }
 
-    /// The WorkNexus work stickers, with the macOS-only "Ko Cần Biết!", "Gửi cái tên ai làm", "Ko quan tâm" and "Thầy vô" among
-    /// them, drawn like the rest (256 × 256).
+    /// The WorkNexus work stickers, with "Ko Cần Biết!", "Gửi cái tên ai làm", "Ko quan tâm" and "Thầy vô" (drawn for macOS
+    /// first, upstream now) and "Có làm được không?" among them, drawn like the rest (256 × 256).
     func testTheWorkNexusPackHasTheMacOSOnlyStickers() async throws {
         let repo = LocalStickerRepository(bundleRoot: stickersRoot, directory: FileManager.default.temporaryDirectory.appendingPathComponent("st_\(UUID().uuidString)"))
         let pack = try await repo.stickers().get().filter { $0.pack == "WorkNexus" }
-        XCTAssertEqual(pack.count, 16)
-        for name in ["ko_can_biet.png", "gui_ten_ai_lam.png", "ko_quan_tam.png", "thay_vo.png"] {
+        XCTAssertEqual(pack.count, 17)
+        for name in ["ko_can_biet.png", "gui_ten_ai_lam.png", "ko_quan_tam.png", "thay_vo.png", "co_lam_duoc_khong.png"] {
             let sticker = try XCTUnwrap(pack.first { $0.name == name }, name)
             let source = try XCTUnwrap(CGImageSourceCreateWithURL(URL(fileURLWithPath: sticker.location) as CFURL, nil))
             let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
             XCTAssertEqual(image.width, 256); XCTAssertEqual(image.height, 256)
         }
+    }
+
+    /// Bundled stickers carry their set's tags (stickers.json): the emoji they stand for and, for some, words.
+    func testBundledStickersCarryTheirSetsTags() async throws {
+        let repo = LocalStickerRepository(bundleRoot: stickersRoot, directory: FileManager.default.temporaryDirectory.appendingPathComponent("st_\(UUID().uuidString)"))
+        let all = try await repo.stickers().get()
+        let thanks = try XCTUnwrap(all.first { $0.pack == "WorkNexus" && $0.name == "cam_on.png" })
+        XCTAssertTrue(thanks.emoji.hasPrefix("🙏"))
+        XCTAssertTrue(thanks.keywords.contains("cam on"))
+        // Tagged by emoji alone.
+        let laugh = try XCTUnwrap(all.first { $0.pack == "Pepe" && $0.name == "033.webp" })
+        XCTAssertEqual(laugh.emoji, "😂🤣")
+        XCTAssertTrue(laugh.keywords.isEmpty)
+        XCTAssertTrue(all.contains { $0.pack == "PepeAnim" && !$0.emoji.isEmpty })
+        // The tag files are not stickers.
+        XCTAssertFalse(all.contains { $0.name == "stickers.json" })
     }
 
     /// Cute (getstickerpack.com): 21 still stickers, each a small image the chat can send; its source note is not one of them.

@@ -39,6 +39,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var chatTextScale: Double = 1
     /// Hiding chats on screen; see `ChatPrivacy`.
     public var chatPrivacy = ChatPrivacy()
+    /// Stickers offered over the composer while typing and to answer the newest message (turned on and off in its ✨ menu).
+    public var chatStickerSuggestions = true
     public var miniAppLiveLimit = 5
     public var miniAppNotifyInBackground = true
     public var accentColorValue: Int?
@@ -83,7 +85,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         s.chatAutoDownloadVideos = v(.chatAutoDownloadVideos, s.chatAutoDownloadVideos)
         s.chatAutoDownloadVideoMb = v(.chatAutoDownloadVideoMb, s.chatAutoDownloadVideoMb)
         s.chatTextScale = v(.chatTextScale, s.chatTextScale); s.chatPrivacy = v(.chatPrivacy, s.chatPrivacy)
-        s.miniAppLiveLimit = v(.miniAppLiveLimit, s.miniAppLiveLimit)
+        s.chatStickerSuggestions = v(.chatStickerSuggestions, s.chatStickerSuggestions); s.miniAppLiveLimit = v(.miniAppLiveLimit, s.miniAppLiveLimit)
         s.miniAppNotifyInBackground = v(.miniAppNotifyInBackground, s.miniAppNotifyInBackground)
         s.accentColorValue = try? c.decodeIfPresent(Int.self, forKey: .accentColorValue)
         s.pinnedProjects = v(.pinnedProjects, s.pinnedProjects); s.pinnedExecutions = v(.pinnedExecutions, s.pinnedExecutions)

@@ -31,6 +31,7 @@ private struct Marker: TranslationService {
     func contentHash(_ source: TicketSource) -> String { name }
     func translate(ticketId: String, source: TicketSource, sourceHash: String, targetLang: String, model: String?) async -> Outcome<TranslationRecord> { .failure(.agent(name)) }
     func translateText(key: String, text: String, targetLang: String, model: String?) async -> Outcome<TextTranslation> { .success(TextTranslation(name)) }
+    func complete(key: String, prompt: String, model: String?) async -> Outcome<TextTranslation> { .success(TextTranslation(name)) }
     func cancel(_ ticketId: String) async {}
 }
 
@@ -51,6 +52,22 @@ final class ApiTranslationServiceTests: XCTestCase {
         XCTAssertEqual(http.last?.value(forHTTPHeaderField: "Authorization"), "Bearer sk-test")
         let sent = try JSONSerialization.jsonObject(with: XCTUnwrap(http.last?.httpBody)) as? [String: Any]
         XCTAssertEqual(sent?["model"] as? String, "m-1")
+    }
+
+    func testCompleteSendsThePromptAsIsAndReturnsTheReply() async throws {
+        let http = StubHTTP(200, reply(" Three points. "))
+        let r = await service(http).complete(key: "k", prompt: "Summarize this", model: nil)
+        XCTAssertEqual(r.value?.text, "Three points.")
+        let sent = try JSONSerialization.jsonObject(with: XCTUnwrap(http.last?.httpBody)) as? [String: Any]
+        let messages = sent?["messages"] as? [[String: Any]]
+        XCTAssertEqual(messages?.count, 1)
+        XCTAssertEqual(messages?.first?["content"] as? String, "Summarize this")
+    }
+
+    func testRoutingSendsAPromptToThePickedBackend() async {
+        let routing = RoutingTranslationService(api: Marker(name: "api"), openCode: Marker(name: "opencode"), config: { nil })
+        let r = await routing.complete(key: "k", prompt: "p", model: nil)
+        XCTAssertEqual(r.value?.text, "opencode")
     }
 
     func testTicketReplyWrappedInCodeFenceIsParsed() async {

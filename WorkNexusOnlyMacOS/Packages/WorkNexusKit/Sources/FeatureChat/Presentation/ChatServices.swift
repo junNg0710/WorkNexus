@@ -14,6 +14,13 @@ public struct ChatServices: Sendable {
     /// Asked before a message is translated: false means translating cannot run (no OpenCode login / API key) and the host has
     /// already told the user how to fix it (`ensureOpenCodeLinked`). nil: always ready.
     public var ensureTranslatorReady: (@Sendable () async -> Bool)?
+    /// The AI backend for summaries, reply ideas and draft rewrites (the translation backend, adapted by the host); nil hides
+    /// the ✨ AI help. Asked through `ensureTranslatorReady` first, as it needs the same setup.
+    public var ai: ChatAiTextGenerator?
+    /// The languages a summary can be written in (the translation languages).
+    public var aiLanguages: [ChatAiLanguage] = []
+    /// Turns sticker suggestions on or off (the ✨ menu's switch); the host saves it in `AppSettings.chatStickerSuggestions`.
+    public var setStickerSuggestions: (@Sendable (Bool) -> Void)?
     public var telegramTokens: TelegramTokenStore?
     public var stickerImport: ImportStickerPack?
     /// Looks up a ticket by (ZenTao / GitLab / GitHub) URL for link cards; the app wires it to its ticket repository.

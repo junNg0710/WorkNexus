@@ -235,6 +235,24 @@ file (the Dart side is the first four sources named there). Tests live in `Tests
 | Presentation/Groups/ChatGroupControls.swift | chat_group_edit_controls.dart, chat_group_actions.dart (`ChatGroupExitButton`) |
 | Presentation/Groups/ChatMemberMenuButton.swift | chat_member_menu_button.dart |
 | Presentation/Groups/ChatSettingsCard.swift | lib/core/widgets/quick_settings_parts.dart (`QuickSettingsCard`, `QuickSettingsSwitchField`) |
+| Domain/Entities/ChatSummary.swift | lib/features/chat/domain/entities/chat_summary.dart |
+| Domain/Repositories/ChatAiTextGenerator.swift | lib/features/chat/domain/repositories/chat_ai_text_generator.dart (+ `ChatAiLanguage` ← core/util/translation_languages.dart, `ChatAiPeople` ← `chatAiPeopleProvider`) |
+| Domain/UseCases/BuildChatTranscript.swift | lib/features/chat/domain/usecases/build_chat_transcript.dart, extract_ai_json.dart |
+| Domain/UseCases/SummarizeChat.swift | lib/features/chat/domain/usecases/summarize_chat.dart, should_offer_chat_summary.dart (+ `ResolveChatSummaryLanguage` ← widgets/chat_ai_actions.dart) |
+| Domain/UseCases/ChatReplyAiUseCases.swift | lib/features/chat/domain/usecases/suggest_chat_replies.dart, rewrite_chat_draft.dart |
+| Domain/ValueObjects/ChatDraftTone.swift | lib/features/chat/domain/value_objects/chat_draft_tone.dart |
+| Domain/ValueObjects/StickerKeywords.swift | lib/features/chat/domain/value_objects/sticker_keywords.dart |
+| Domain/UseCases/StickerMatching.swift | lib/features/chat/domain/usecases/sticker_matching.dart |
+| Domain/UseCases/SuggestStickers.swift | lib/features/chat/domain/usecases/suggest_stickers.dart, suggest_reply_stickers.dart |
+| Presentation/Composer/ChatComposerAi.swift | providers/chat_ai_providers.dart (`ChatReplySuggestionsController`, `ChatDraftRewriteController`) |
+| Presentation/Composer/ChatComposerController+Ai.swift | widgets/chat_ai_compose_button.dart (`_suggest`, `_rewrite`), chat_reply_suggestions_bar.dart (pick), chat_sticker_suggestions_bar.dart (`_send`) |
+| Presentation/Composer/ChatAiComposeButton.swift | widgets/chat_ai_compose_button.dart |
+| Presentation/Composer/ChatStickerSuggester.swift | providers/sticker_suggestion_providers.dart, chat_sticker_suggestions_bar.dart (state) |
+| Presentation/Composer/ChatSuggestionTray.swift | widgets/chat_suggestion_tray.dart, chat_reply_suggestions_bar.dart, chat_sticker_suggestions_bar.dart |
+| Presentation/Assistant/ChatAssistantModel.swift | providers/chat_ai_providers.dart (unread on open, catch-up, scope, summary language, `ChatSummaryController`), widgets/chat_ai_actions.dart |
+| Presentation/Assistant/ChatAssistantPanel.swift | widgets/chat_assistant_panel.dart |
+| Presentation/Assistant/ChatSummaryView.swift | widgets/chat_summary_view.dart |
+| Presentation/Assistant/ChatAiCatchUpBanner.swift | widgets/chat_ai_catch_up_banner.dart |
 
 Files without a one-to-one Dart source (Swift-only glue): `ChatFeature.swift`, `Module.swift`, `Support/JSONParser.swift`, `Support/JSONValue.swift`, `Support/RX.swift`, `Data/Xxd/ApiSchemeCodec+Coding.swift`, `Data/Xxd/XxdHTTPTransport.swift`, `Data/Repositories/XxdChatRepository+Actions.swift`, `Data/Repositories/XxdChatRepository+Reads.swift`, `Data/Local/ChatLocalDatasource+Messages.swift`, `Data/Local/ChatRows.swift`, `Data/Support/AsyncStreamExtras.swift`, `Data/Support/Broadcast.swift`, `Domain/UseCases/RepositoryPassthroughUseCases.swift`, `Domain/ValueObjects/ChatCancelToken.swift`, `Domain/ValueObjects/ChatEmojiTables.swift`, `Presentation/ChatServices.swift`, `Presentation/Shell/ChatThreadState.swift`
 
@@ -335,3 +353,13 @@ Mirrors the message menu of ZenTao's own desktop client.
   only the contents slide 8 % and fade (`ChatPanelEntrance`), a panel there from the start does not slide; the chat list's selection fill
   eases; the bubble hover tint uses `AppMotion.fast`. All skipped with Reduce Motion. The Flutter perf tests (`chat_page_perf_test`,
   `chat_message_list_perf_test`) are not ported: every animation here is an opacity or offset of one view, with nothing re-laid out per frame.
+### AI help and sticker suggestions (upstream 0001c975 … 59e97176)
+
+- **Backend**: `ChatServices.ai` is a `ChatAiTextGenerator`; the app adapts `FeatureTranslation`'s `TranslationService.complete(key:prompt:model:)` (new, on the API, OpenCode and routing backends) as `TranslationChatAiTextGenerator` in `App/Sources/ChatWiring.swift`. Every run first goes through `ensureTranslatorReady` (the `OpenCodeLinkGate`), as translation does. The model is `ChatSettings.translationModel` (empty: the backend's own).
+- **✨ menu** (composer tool row, shown when `ChatServices.ai` is set): suggest replies, the four rewrites (only with something typed), "Summarize with AI" (opens `ChatSidePanel.assistant`; not in a reply thread) and the sticker-suggestions switch (`ChatServices.setStickerSuggestions` → `AppSettings.chatStickerSuggestions`; only in this menu, as upstream ec10ce97). The upstream intermediate "✨ asks for replies at once when nothing is typed" (205823da) was superseded by the one menu (ce61e72a) and is not ported.
+- **Tray**: AI replies and stickers share `ChatSuggestionTray` over the tools. All suggestion state lives in the composer (`ChatComposerAi`, `ChatStickerSuggester`); typing settles 200 ms before the stickers follow, and nothing of it reaches the message rows. Reply stickers follow the chat's newest message through one `watchMessages(limit: 1)`.
+- **Failures** show in the composer's error line (the Flutter app used a snack bar); "Summary copied" shows in place of the summary footer for 2 s.
+- **Summary**: kept per chat while the app runs (`ChatSummaryModel.of`); the language pick (`ChatAiPreferences`) for every chat while the app runs. The languages come from the host (`ChatServices.aiLanguages` = the translation languages), so chat does not import FeatureTranslation.
+- **Sticker tags**: bundled sets read `<pack>/stickers.json` (synced from `assets/stickers` by `Scripts/sync-assets.sh`); imported Telegram sets keep each sticker's emoji in `pack.json` (`StickerFile.emoji`).
+- Not ported: 272ec042's composer-controller split (`ChatComposerFormatting`) has no Swift counterpart — the Swift controller is already split (`ChatComposerController+Ai.swift`); upstream's widget tests (chat_ai_compose_button, suggestion bars) — the use cases are unit-tested instead.
+

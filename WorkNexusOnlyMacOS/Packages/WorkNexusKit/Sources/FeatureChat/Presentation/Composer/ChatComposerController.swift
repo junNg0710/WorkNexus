@@ -11,6 +11,9 @@ final class ChatComposerController {
     let state: ChatThreadState
     let model = ChatComposerModel()
     let mentions = MentionAutocomplete()
+    /// The ✨ AI help (reply ideas, rewrites) and the sticker strip: their state stays in the composer.
+    let ai: ChatComposerAi
+    let stickerSuggestions: ChatStickerSuggester
     /// The last failure to show above the input.
     var error: String?
     /// Member user ids of the open group (loaded lazily for the @mention list).
@@ -25,6 +28,8 @@ final class ChatComposerController {
 
     init(state: ChatThreadState, threadRootId: Int? = nil) {
         self.state = state; self.threadRootId = threadRootId
+        ai = ChatComposerAi(state: state)
+        stickerSuggestions = ChatStickerSuggester(inThread: threadRootId != nil)
         typing = ChatTypingSender(
             send: { [weak self] chat, on in self?.sendTyping(chat, on) },
             chat: { [weak self] in self?.state.chat },
@@ -33,7 +38,7 @@ final class ChatComposerController {
 
     var markdown: Bool { markdownOverride ?? settings.sendMarkdown }
 
-    private var sender: ChatMessageSender? {
+    var sender: ChatMessageSender? {
         guard let services else { return nil }
         var s = settings
         s.sendMarkdown = markdown
@@ -47,9 +52,11 @@ final class ChatComposerController {
         mentions.update(value: model.valueText, selection: model.selection)
         updateSuggestions()
         typing.changed(model.text)
+        stickerSuggestions.typed(model.plainText)
     }
 
-    func stopTyping() { typing.stop() }
+    /// The composer goes away: typing stops being announced, and what it asked the AI for is stopped.
+    func stopTyping() { typing.stop(); ai.stop(); stickerSuggestions.stop() }
 
     private func sendTyping(_ chat: ChatConversation, _ on: Bool) {
         guard let repo = services?.chat else { return }
@@ -104,7 +111,7 @@ final class ChatComposerController {
 
     // MARK: sending
 
-    private func report(_ result: Outcome<Void>) {
+    func report(_ result: Outcome<Void>) {
         if case .failure(let f) = result {
             error = appString("chatActionFailed", "Couldn't complete that: {reason}").replacingOccurrences(of: "{reason}", with: f.message)
         }
@@ -118,6 +125,7 @@ final class ChatComposerController {
         let text: (message: String, plain: String?)? = model.isBlank ? nil : (model.messageText, model.hasMentions ? nil : model.plainText)
         state.stagedFiles = []
         model.clear(); mentions.reset()
+        stickerSuggestions.cleared()
         typing.changed("")
         Task {
             if !files.isEmpty { report(await sender.files(files)) }

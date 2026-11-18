@@ -17,6 +17,7 @@ The views live in the app target (`App/Sources/TranslationViews.swift`, `Transla
 | API backend (OpenAI-compatible `POST {base}/chat/completions`, cancel, error mapping) | data/api_translation_service.dart | Data/Services/ApiTranslationService.swift |
 | OpenCode CLI backend (`opencode run`, timeout + kill tree, ANSI strip) | data/opencode_translation_service.dart | Data/Services/OpenCodeTranslationService.swift, Data/DataSources/PipeCapture.swift |
 | Router (API when usable, else OpenCode; cancel reaches the right backend) | data/routing_translation_service.dart | Data/Services/RoutingTranslationService.swift |
+| `complete(key:prompt:model:)`: a free-form prompt on the same backend (chat's AI help; adapted by the app as `TranslationChatAiTextGenerator`) | domain/adapters/translation_service.dart, data/{api,opencode,routing}_translation_service.dart (0001c975) | Domain/Adapters/TranslationService.swift, Data/Services/*TranslationService.swift |
 | Binary discovery through a login shell + PATH scan, kill tree | data/datasources/cli_runner.dart | Data/DataSources/CliRunner.swift |
 | `opencode auth list` / `models` queries | data/datasources/opencode_cli_runner.dart | Data/DataSources/OpenCodeCliRunner.swift |
 | `auth.json` (atomic write, 0600, XDG/`~/.local/share`) | data/datasources/opencode_auth_file.dart | Data/DataSources/OpenCodeAuthFile.swift |

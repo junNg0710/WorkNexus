@@ -68,11 +68,15 @@ public final class OpenCodeTranslationService: TranslationService, @unchecked Se
     }
 
     public func translateText(key: String, text: String, targetLang: String, model: String?) async -> Outcome<TextTranslation> {
+        let language = translationLanguage(for: targetLang)
+        return await complete(key: key, prompt: textPrompt(text, language.englishName), model: model)
+    }
+
+    public func complete(key: String, prompt: String, model: String?) async -> Outcome<TextTranslation> {
         guard let path = await runner.resolve("opencode", override: binaryOverride) else { return .failure(.agent("opencode not found on PATH")) }
         let chosen = firstNonEmpty(model, self.model)
-        let language = translationLanguage(for: targetLang)
-        let args = ["run"] + (chosen.map { ["-m", $0] } ?? []) + [textPrompt(text, language.englishName)]
-        guard let run = await run(key: key, path: path, args: args) else { return .failure(.agent("OpenCode translation failed: could not start")) }
+        let args = ["run"] + (chosen.map { ["-m", $0] } ?? []) + [prompt]
+        guard let run = await run(key: key, path: path, args: args) else { return .failure(.agent("OpenCode failed: could not start")) }
         if run.timedOut { return .failure(.agent("OpenCode did not answer within \(Int(timeout))s.")) }
         if run.exitCode != 0 { return .failure(.agent(exitMessage(run))) }
         let out = stripAnsi(run.stdout).trimmingCharacters(in: .whitespacesAndNewlines)

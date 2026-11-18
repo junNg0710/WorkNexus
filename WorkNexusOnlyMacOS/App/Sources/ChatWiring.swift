@@ -44,6 +44,11 @@ final class ChatWiring {
             bundledStickers: Bundle.main.url(forResource: "Stickers", withExtension: nil),
             translator: TranslationChatAdapter(service: translation.service),
             ensureTranslatorReady: { await OpenCodeLinkGate.shared.ensureLinked() },
+            // The ✨ AI help (summaries, reply ideas, rewrites) runs on the translation backend; its summaries can be written
+            // in any of the translation languages.
+            ai: TranslationChatAiTextGenerator(service: translation.service),
+            aiLanguages: translationLanguages.map { ChatAiLanguage(code: $0.code, englishName: $0.englishName, nativeName: $0.nativeName, flag: $0.flag) },
+            setStickerSuggestions: { on in Task { @MainActor in shell.updateSettings { $0.chatStickerSuggestions = on } } },
             ticketLookup: { url in
                 var it = tickets.watchTickets().makeAsyncIterator()
                 return await it.next()?.first { $0.url == url }
@@ -216,6 +221,17 @@ struct TranslationChatAdapter: ChatTextTranslator {
         case .failure(let f): .failure(f)
         }
     }
+}
+
+/// Lets the chat's AI features (summaries, reply ideas, rewrites) run on the translation backend the user set up, without chat
+/// depending on the translation feature: the composition root is the one place that knows both.
+/// Ported from: lib/app/di/translation_chat_ai_text_generator.dart
+struct TranslationChatAiTextGenerator: ChatAiTextGenerator {
+    let service: TranslationService
+    func generate(key: String, prompt: String, model: String?) async -> Outcome<ChatAiReply> {
+        await service.complete(key: key, prompt: prompt, model: model).map { ChatAiReply($0.text, model: $0.model) }
+    }
+    func cancel(_ key: String) async { await service.cancel(key) }
 }
 
 /// Chat -> OS notifications, and the pet. Whether a message deserves one (not the chat the user is looking at, unless
