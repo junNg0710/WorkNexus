@@ -15,15 +15,18 @@ struct AiModelChoiceFields: View {
     var body: some View {
         let setup = root.aiSetup.setup, choice = setup.choice(for: purpose)
         // A choice whose provider is gone runs on OpenCode, so that is what the dropdown shows.
-        let provider = choice.isOpenCode ? nil : setup.provider(choice.providerId)
+        let provider = choice.isOpenCode || choice.isClaudeCode ? nil : setup.provider(choice.providerId)
+        let selectedId = choice.isClaudeCode ? AiModelChoice.claudeCodeId : provider?.id ?? AiModelChoice.openCodeId
         VStack(alignment: .leading, spacing: theme.spacing.s12) {
             FieldBlock(label: appString("translationApiProvider", "Provider")) {
-                SearchableDropdownField(items: AiSettingsLogic.choiceIds(setup), value: provider?.id ?? AiModelChoice.openCodeId,
+                SearchableDropdownField(items: AiSettingsLogic.choiceIds(setup), value: selectedId,
                                         labelOf: { Self.name(of: $0, in: setup) },
                                         searchHint: appString("translationApiProvider", "Provider"), emptyLabel: appString("noMatches", "No matches")) { pick($0) }
             }
             FieldBlock(label: appString("translationApiModel", "Model")) {
-                if let provider {
+                if choice.isClaudeCode {
+                    ClaudeCodeModelField(root: root, purpose: purpose)
+                } else if let provider {
                     TranslationApiModelField(root: root, purpose: purpose, provider: provider).id(provider.id)
                 } else {
                     TranslationModelPicker(root: root, purpose: purpose)
@@ -34,6 +37,7 @@ struct AiModelChoiceFields: View {
 
     static func name(of id: String, in setup: AiSetup) -> String {
         if id == AiModelChoice.openCodeId { return appString("translationProviderOpenCode", "OpenCode (CLI)") }
+        if id == AiModelChoice.claudeCodeId { return appString("aiClaudeCode", "Claude Code (your Claude login)") }
         return setup.provider(id)?.name ?? id
     }
 

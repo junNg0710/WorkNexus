@@ -4,9 +4,11 @@ import Foundation
 public enum AiSettingsLogic {
     /// The name the UI gives a backend: the provider's name, with the model when it is short enough to read at a glance
     /// (`OpenAI (gpt-5-mini)`, `OpenCode (gpt-5-nano)`); a `provider/model` id shows only its model part.
-    public static func displayName(_ backend: AiBackend, openCodeName: String = "OpenCode", maxModelLength: Int = 20) -> String {
+    public static func displayName(_ backend: AiBackend, openCodeName: String = "OpenCode", claudeCodeName: String = "Claude Code",
+                                   maxModelLength: Int = 20) -> String {
         let (name, model): (String, String?) = switch backend {
         case .openCode(let m): (openCodeName, m)
+        case .claudeCode(let m): (claudeCodeName, m)
         case .api(let provider, let config): (provider.name, config.model)
         }
         let short = model.map { m in m.split(separator: "/").last.map(String.init) ?? m } ?? ""
@@ -51,7 +53,9 @@ public enum AiSettingsLogic {
     }
 
     /// The providers a purpose can pick from, by id: OpenCode first, then the saved ones in order.
-    public static func choiceIds(_ setup: AiSetup) -> [String] { [AiModelChoice.openCodeId] + setup.providers.map(\.id) }
+    public static func choiceIds(_ setup: AiSetup) -> [String] {
+        [AiModelChoice.openCodeId, AiModelChoice.claudeCodeId] + setup.providers.map(\.id)
+    }
 
     /// The choice after picking `providerId` in a purpose's provider dropdown: the same provider keeps its model, another
     /// starts from its default.

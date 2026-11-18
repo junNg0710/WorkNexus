@@ -48,20 +48,28 @@ public final class CliRunner: @unchecked Sendable {
         return nil
     }
 
+    /// Runs a short query (`zsh -lic "command -v …"`, `opencode models`) and returns its output once it exits. It does not
+    /// wait for the output pipe to close: a login shell can start background jobs (version managers, prompt helpers) that
+    /// inherit the pipe and keep it open long after the shell is gone, which used to hang the lookup forever. A query
+    /// that is still running after `queryTimeout` is stopped.
+    static let queryTimeout: TimeInterval = 20
+
     private static let defaultRun: RunProcess = { executable, args in
-        await withCheckedContinuation { cont in
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: executable)
-            p.arguments = args
-            let out = Pipe()
-            p.standardOutput = out; p.standardError = FileHandle.nullDevice; p.standardInput = FileHandle.nullDevice
-            do { try p.run() } catch { cont.resume(returning: nil); return }
-            DispatchQueue.global().async {
-                let data = out.fileHandleForReading.readDataToEndOfFile()
-                p.waitUntilExit()
-                cont.resume(returning: String(decoding: data, as: UTF8.self))
-            }
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: executable)
+        p.arguments = args
+        let out = Pipe()
+        p.standardOutput = out; p.standardError = FileHandle.nullDevice; p.standardInput = FileHandle.nullDevice
+        let capture = PipeCapture(out)
+        let started: Bool = await withCheckedContinuation { cont in
+            p.terminationHandler = { _ in cont.resume(returning: true) }
+            do { try p.run() } catch { p.terminationHandler = nil; cont.resume(returning: false); return }
+            // The child owns the write end now; ours would keep the pipe from reaching EOF.
+            try? out.fileHandleForWriting.close()
+            DispatchQueue.global().asyncAfter(deadline: .now() + queryTimeout) { if p.isRunning { p.terminate() } }
         }
+        guard started else { return nil }
+        return await capture.text(within: 1)
     }
 
     /// Stops `process` and everything it started. `Process.terminate` ends only the process itself: the shell script

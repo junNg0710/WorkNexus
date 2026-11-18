@@ -34024,13 +34024,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "OpenCode uses the CLI and its login; the others use your own API key, kept in the Keychain. Save as many as you like."
+            "value": "OpenCode and Claude Code use their own CLI login, no key needed; the others use your own API key, kept in the Keychain. Save as many as you like."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "OpenCode dùng CLI và đăng nhập của nó; các nhà cung cấp khác dùng API key của bạn, lưu trong Keychain. Lưu bao nhiêu tuỳ ý."
+            "value": "OpenCode và Claude Code dùng đăng nhập sẵn có của CLI, không cần khoá; các nhà cung cấp khác dùng API key của bạn, lưu trong Keychain. Lưu bao nhiêu tuỳ ý."
           }
         }
       }
@@ -34116,6 +34116,227 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chạy %1$@ để tạo bản dịch %2$@."
+          }
+        }
+      }
+    },
+    "aiClaudeCode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code (your Claude login)"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code (tài khoản Claude của bạn)"
+          }
+        }
+      }
+    },
+    "aiClaudeCodeChecking": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking the claude command…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang kiểm tra lệnh claude…"
+          }
+        }
+      }
+    },
+    "aiClaudeCodeDefaultModel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code's default"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mặc định của Claude Code"
+          }
+        }
+      }
+    },
+    "aiClaudeCodeHaiku": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haiku — fastest"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haiku — nhanh nhất"
+          }
+        }
+      }
+    },
+    "aiClaudeCodeLoggedOut": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed out — run `claude auth login` in a terminal"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa đăng nhập — chạy `claude auth login` trong Terminal"
+          }
+        }
+      }
+    },
+    "aiClaudeCodeMissing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not installed — install Claude Code to use your Claude login"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa cài — cài Claude Code để dùng tài khoản Claude của bạn"
+          }
+        }
+      }
+    },
+    "aiClaudeCodeOpus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opus — most capable"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opus — mạnh nhất"
+          }
+        }
+      }
+    },
+    "aiClaudeCodeReady": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Built in: the claude CLI with your Claude login — no API key"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Có sẵn: lệnh claude với tài khoản Claude của bạn — không cần khoá API"
+          }
+        }
+      }
+    },
+    "aiClaudeCodeSonnet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonnet — balanced"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonnet — cân bằng"
+          }
+        }
+      }
+    },
+    "claudeCodeLoggedOutBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This runs on Claude Code, which is not signed in. Run the command below in a terminal and sign in with your Claude account, or pick another provider under Settings → Translation."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Việc này chạy bằng Claude Code nhưng chưa đăng nhập. Chạy lệnh bên dưới trong Terminal và đăng nhập tài khoản Claude, hoặc chọn nhà cung cấp khác trong Cài đặt → Dịch."
+          }
+        }
+      }
+    },
+    "claudeCodeLoggedOutTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code is signed out"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code chưa đăng nhập"
+          }
+        }
+      }
+    },
+    "claudeCodeNotInstalledBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This runs on Claude Code, but the claude command was not found. Install Claude Code and sign in, or pick another provider under Settings → Translation."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Việc này chạy bằng Claude Code nhưng không tìm thấy lệnh claude. Hãy cài Claude Code và đăng nhập, hoặc chọn nhà cung cấp khác trong Cài đặt → Dịch."
+          }
+        }
+      }
+    },
+    "claudeCodeNotInstalledTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code is not installed"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa cài Claude Code"
           }
         }
       }

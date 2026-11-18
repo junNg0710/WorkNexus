@@ -18,6 +18,7 @@ struct AiProvidersSection: View {
             AiProviderRow(icon: "terminal", name: appString("translationProviderOpenCode", "OpenCode (CLI)"),
                           detail: appString("aiOpenCodeBuiltIn", "Built in: the opencode CLI, with its own login and models")) { EmptyView() }
             TranslationOpenCodeKeyField(root: root, model: AiSettingsLogic.openCodeKeyModel(setup, legacyModel: root.shell.settings.translationModel))
+            ClaudeCodeProviderRow(root: root)
             ForEach(setup.providers) { p in
                 AiProviderRow(icon: "key", name: p.name, detail: Self.detail(of: p)) {
                     AppButton(appString("edit", "Edit"), kind: .ghost) { editing = AiProviderEdit(provider: p) }
@@ -60,7 +61,7 @@ struct AiProviderEdit: Identifiable {
 }
 
 /// One provider line: an icon, its name and a detail line, and trailing actions.
-private struct AiProviderRow<Actions: View>: View {
+struct AiProviderRow<Actions: View>: View {
     @Environment(\.appTheme) private var theme
     let icon: String
     let name: String

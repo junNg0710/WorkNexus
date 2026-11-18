@@ -39,6 +39,8 @@ public struct AiModelChoice: Sendable, Equatable, Hashable {
     /// The built-in OpenCode CLI (its own login and model list), not a saved provider.
     public static let openCodeId = "opencode"
     public static let openCodeDefault = AiModelChoice(providerId: openCodeId, model: "")
+    /// The built-in Claude Code CLI (`claude -p`): the user's own Claude login, no API key.
+    public static let claudeCodeId = "claudecode"
 
     /// `openCodeId` or an `AiProvider.id`.
     public var providerId: String
@@ -48,6 +50,7 @@ public struct AiModelChoice: Sendable, Equatable, Hashable {
     public init(providerId: String, model: String = "") { self.providerId = providerId; self.model = model }
 
     public var isOpenCode: Bool { providerId == Self.openCodeId }
+    public var isClaudeCode: Bool { providerId == Self.claudeCodeId }
 }
 
 /// Every saved provider and what each purpose runs on. Stored whole, key included, as one credential-store item.

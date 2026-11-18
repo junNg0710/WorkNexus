@@ -8,8 +8,11 @@ import CoreDomain
 public struct CheckTranslationReady: Sendable {
     private let setup: AiSetupRepository
     private let cli: OpenCodeCli
+    private let claude: ClaudeCodeCli?
 
-    public init(setup: AiSetupRepository, cli: OpenCodeCli) { self.setup = setup; self.cli = cli }
+    public init(setup: AiSetupRepository, cli: OpenCodeCli, claude: ClaudeCodeCli? = nil) {
+        self.setup = setup; self.cli = cli; self.claude = claude
+    }
 
     /// The backend `purpose` resolves to; OpenCode when the setup cannot be read.
     public func backend(_ purpose: AiPurpose) async -> AiBackend {
@@ -29,6 +32,12 @@ public struct CheckTranslationReady: Sendable {
             provider.isUsable && !config.model.isEmpty ? .ready : .providerNotUsable(name: provider.name)
         case .openCode:
             await cli.hasAuthenticatedProvider() ? .ready : .openCodeNotLinked
+        case .claudeCode:
+            switch await claude?.status() ?? .notInstalled {
+            case .loggedIn: .ready
+            case .loggedOut: .claudeCodeLoggedOut
+            case .notInstalled: .claudeCodeNotInstalled
+            }
         }
     }
 
@@ -42,4 +51,8 @@ public enum AiReadiness: Sendable, Equatable {
     case openCodeNotLinked
     /// The run would go to a saved provider that lacks its key, endpoint or model.
     case providerNotUsable(name: String)
+    /// The run would go to Claude Code, which is not installed (no `claude` on the PATH).
+    case claudeCodeNotInstalled
+    /// The run would go to Claude Code, which is installed but signed out.
+    case claudeCodeLoggedOut
 }

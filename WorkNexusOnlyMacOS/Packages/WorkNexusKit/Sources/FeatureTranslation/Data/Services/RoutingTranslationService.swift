@@ -9,13 +9,15 @@ import Foundation
 public final class RoutingTranslationService: TranslationService, @unchecked Sendable {
     private let api: ConfiguredTranslationBackend
     private let openCode: TranslationService
+    private let claudeCode: TranslationService
     private let setup: @Sendable () async -> AiSetup
     private let resolve = ResolveAiBackend()
     /// Which backend each in-flight run went to, so `cancel` reaches it even when the setting changed meanwhile.
     private let inFlight = Locked<[String: @Sendable (String) async -> Void]>([:])
 
-    public init(api: ConfiguredTranslationBackend, openCode: TranslationService, setup: @escaping @Sendable () async -> AiSetup) {
-        self.api = api; self.openCode = openCode; self.setup = setup
+    public init(api: ConfiguredTranslationBackend, openCode: TranslationService, claudeCode: TranslationService = ClaudeCodeTranslationService(),
+                setup: @escaping @Sendable () async -> AiSetup) {
+        self.api = api; self.openCode = openCode; self.claudeCode = claudeCode; self.setup = setup
     }
 
     private func backend(_ purpose: AiPurpose, _ model: String?) async -> AiBackend {
@@ -24,8 +26,12 @@ public final class RoutingTranslationService: TranslationService, @unchecked Sen
 
     /// Runs `body` with `key` registered against the backend that serves it, so a cancel meanwhile reaches that backend.
     private func tracked<T>(_ key: String, _ backend: AiBackend, _ body: () async -> T) async -> T {
-        let api = api, openCode = openCode
-        let cancel: @Sendable (String) async -> Void = if case .api = backend { { await api.cancel($0) } } else { { await openCode.cancel($0) } }
+        let api = api, openCode = openCode, claudeCode = claudeCode
+        let cancel: @Sendable (String) async -> Void = switch backend {
+        case .api: { await api.cancel($0) }
+        case .openCode: { await openCode.cancel($0) }
+        case .claudeCode: { await claudeCode.cancel($0) }
+        }
         inFlight.withLock { $0[key] = cancel }
         defer { inFlight.withLock { $0[key] = nil } }
         return await body()
@@ -42,6 +48,8 @@ public final class RoutingTranslationService: TranslationService, @unchecked Sen
                 await api.translate(ticketId: ticketId, source: source, sourceHash: sourceHash, targetLang: targetLang, config: config)
             case .openCode(let m):
                 await openCode.translate(ticketId: ticketId, source: source, sourceHash: sourceHash, targetLang: targetLang, model: m)
+            case .claudeCode(let m):
+                await claudeCode.translate(ticketId: ticketId, source: source, sourceHash: sourceHash, targetLang: targetLang, model: m)
             }
         }
     }
@@ -52,6 +60,7 @@ public final class RoutingTranslationService: TranslationService, @unchecked Sen
             switch b {
             case .api(_, let config): await api.translateText(key: key, text: text, targetLang: targetLang, config: config)
             case .openCode(let m): await openCode.translateText(key: key, text: text, targetLang: targetLang, model: m)
+            case .claudeCode(let m): await claudeCode.translateText(key: key, text: text, targetLang: targetLang, model: m)
             }
         }
     }
@@ -63,6 +72,7 @@ public final class RoutingTranslationService: TranslationService, @unchecked Sen
             switch b {
             case .api(_, let config): await api.complete(key: key, prompt: prompt, config: config)
             case .openCode(let m): await openCode.complete(key: key, prompt: prompt, model: m)
+            case .claudeCode(let m): await claudeCode.complete(key: key, prompt: prompt, model: m)
             }
         }
     }

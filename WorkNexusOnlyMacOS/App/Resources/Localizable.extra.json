@@ -1796,8 +1796,8 @@
     "vi": "Nhà cung cấp AI"
   },
   "aiProvidersSubtitle": {
-    "en": "OpenCode uses the CLI and its login; the others use your own API key, kept in the Keychain. Save as many as you like.",
-    "vi": "OpenCode dùng CLI và đăng nhập của nó; các nhà cung cấp khác dùng API key của bạn, lưu trong Keychain. Lưu bao nhiêu tuỳ ý."
+    "en": "OpenCode and Claude Code use their own CLI login, no key needed; the others use your own API key, kept in the Keychain. Save as many as you like.",
+    "vi": "OpenCode và Claude Code dùng đăng nhập sẵn có của CLI, không cần khoá; các nhà cung cấp khác dùng API key của bạn, lưu trong Keychain. Lưu bao nhiêu tuỳ ý."
   },
   "aiSetupLoadFailed": {
     "en": "Couldn't read the saved AI providers. Everything runs on OpenCode until you save them again.",
@@ -1818,5 +1818,57 @@
   "runBackendToTranslate": {
     "en": "Run %1$@ to generate a %2$@ version.",
     "vi": "Chạy %1$@ để tạo bản dịch %2$@."
+  },
+  "aiClaudeCode": {
+    "en": "Claude Code (your Claude login)",
+    "vi": "Claude Code (tài khoản Claude của bạn)"
+  },
+  "aiClaudeCodeChecking": {
+    "en": "Checking the claude command…",
+    "vi": "Đang kiểm tra lệnh claude…"
+  },
+  "aiClaudeCodeDefaultModel": {
+    "en": "Claude Code's default",
+    "vi": "Mặc định của Claude Code"
+  },
+  "aiClaudeCodeHaiku": {
+    "en": "Haiku — fastest",
+    "vi": "Haiku — nhanh nhất"
+  },
+  "aiClaudeCodeLoggedOut": {
+    "en": "Signed out — run `claude auth login` in a terminal",
+    "vi": "Chưa đăng nhập — chạy `claude auth login` trong Terminal"
+  },
+  "aiClaudeCodeMissing": {
+    "en": "Not installed — install Claude Code to use your Claude login",
+    "vi": "Chưa cài — cài Claude Code để dùng tài khoản Claude của bạn"
+  },
+  "aiClaudeCodeOpus": {
+    "en": "Opus — most capable",
+    "vi": "Opus — mạnh nhất"
+  },
+  "aiClaudeCodeReady": {
+    "en": "Built in: the claude CLI with your Claude login — no API key",
+    "vi": "Có sẵn: lệnh claude với tài khoản Claude của bạn — không cần khoá API"
+  },
+  "aiClaudeCodeSonnet": {
+    "en": "Sonnet — balanced",
+    "vi": "Sonnet — cân bằng"
+  },
+  "claudeCodeLoggedOutBody": {
+    "en": "This runs on Claude Code, which is not signed in. Run the command below in a terminal and sign in with your Claude account, or pick another provider under Settings → Translation.",
+    "vi": "Việc này chạy bằng Claude Code nhưng chưa đăng nhập. Chạy lệnh bên dưới trong Terminal và đăng nhập tài khoản Claude, hoặc chọn nhà cung cấp khác trong Cài đặt → Dịch."
+  },
+  "claudeCodeLoggedOutTitle": {
+    "en": "Claude Code is signed out",
+    "vi": "Claude Code chưa đăng nhập"
+  },
+  "claudeCodeNotInstalledBody": {
+    "en": "This runs on Claude Code, but the claude command was not found. Install Claude Code and sign in, or pick another provider under Settings → Translation.",
+    "vi": "Việc này chạy bằng Claude Code nhưng không tìm thấy lệnh claude. Hãy cài Claude Code và đăng nhập, hoặc chọn nhà cung cấp khác trong Cài đặt → Dịch."
+  },
+  "claudeCodeNotInstalledTitle": {
+    "en": "Claude Code is not installed",
+    "vi": "Chưa cài Claude Code"
   }
 }

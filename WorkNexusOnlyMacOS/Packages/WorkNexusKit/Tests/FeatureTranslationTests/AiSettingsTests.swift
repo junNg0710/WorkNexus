@@ -89,7 +89,7 @@ final class AiSettingsLogicTests: XCTestCase {
 
     func testProviderPickAndOpenCodeModels() {
         let setup = AiSetup(providers: [openai], translation: AiModelChoice(providerId: "openai", model: "gpt-5"))
-        XCTAssertEqual(AiSettingsLogic.choiceIds(setup), ["opencode", "openai"])
+        XCTAssertEqual(AiSettingsLogic.choiceIds(setup), ["opencode", "claudecode", "openai"])
         XCTAssertEqual(AiSettingsLogic.pick(providerId: "openai", current: setup.translation), setup.translation)
         XCTAssertEqual(AiSettingsLogic.pick(providerId: "opencode", current: setup.translation), .openCodeDefault)
         // Translation on OpenCode without a model of its own shows the legacy pin; chat's own OpenCode choice does not.

@@ -13,12 +13,14 @@ public struct TranslationFeature: Sendable {
     public let openCodeKeys: OpenCodeKeyRepository
     public let modelCatalog: TranslationApiModelCatalog
     public let openCodeCli: OpenCodeCli
+    public let claudeCodeCli: ClaudeCodeCli
     public let resolveState = ResolveTranslationState()
 
     public init(service: TranslationService, repository: TranslationRepository, aiSetup: AiSetupRepository,
-                openCodeKeys: OpenCodeKeyRepository, modelCatalog: TranslationApiModelCatalog, openCodeCli: OpenCodeCli) {
+                openCodeKeys: OpenCodeKeyRepository, modelCatalog: TranslationApiModelCatalog, openCodeCli: OpenCodeCli,
+                claudeCodeCli: ClaudeCodeCli = ClaudeCodeCliRunner()) {
         self.service = service; self.repository = repository; self.aiSetup = aiSetup; self.openCodeKeys = openCodeKeys
-        self.modelCatalog = modelCatalog; self.openCodeCli = openCodeCli
+        self.modelCatalog = modelCatalog; self.openCodeCli = openCodeCli; self.claudeCodeCli = claudeCodeCli
     }
 
     /// The production wiring: the API backend (keys from `credentials`) and the OpenCode CLI, routed per purpose by the
@@ -27,9 +29,9 @@ public struct TranslationFeature: Sendable {
                             cli: CliRunner = CliRunner()) -> TranslationFeature {
         let aiSetup = CredentialAiSetupRepository(store: credentials)
         let service = RoutingTranslationService(api: ApiTranslationService(http: http), openCode: OpenCodeTranslationService(runner: cli),
-                                                setup: { await aiSetup.load().value ?? .empty })
+                                                claudeCode: ClaudeCodeTranslationService(runner: cli), setup: { await aiSetup.load().value ?? .empty })
         return TranslationFeature(service: service, repository: GRDBTranslationRepository(database: database), aiSetup: aiSetup,
                                   openCodeKeys: OpenCodeAuthFileKeyRepository(), modelCatalog: OpenAIModelCatalogDataSource(http: http),
-                                  openCodeCli: OpenCodeCliRunner(runner: cli))
+                                  openCodeCli: OpenCodeCliRunner(runner: cli), claudeCodeCli: ClaudeCodeCliRunner(runner: cli))
     }
 }

@@ -4,6 +4,8 @@
 public enum AiBackend: Sendable, Equatable {
     /// The OpenCode CLI; `model` nil leaves OpenCode its configured default.
     case openCode(model: String?)
+    /// The Claude Code CLI with the user's own login; `model` nil leaves it Claude Code's default.
+    case claudeCode(model: String?)
     /// A saved provider's OpenAI-compatible endpoint, with the config to call it with.
     case api(provider: AiProvider, config: TranslationApiConfig)
 }
@@ -19,6 +21,7 @@ public struct ResolveAiBackend: Sendable {
         let choice = setup.choice(for: purpose)
         let inheritsTranslation = purpose == .translation || setup.chat == nil
         let ownModel = choice.model.trimmingCharacters(in: .whitespacesAndNewlines)
+        if choice.isClaudeCode { return .claudeCode(model: ownModel.isEmpty ? nil : ownModel) }
         // A choice whose provider was removed meanwhile falls back to OpenCode.
         guard !choice.isOpenCode, let provider = setup.provider(choice.providerId) else {
             if !ownModel.isEmpty { return .openCode(model: ownModel) }

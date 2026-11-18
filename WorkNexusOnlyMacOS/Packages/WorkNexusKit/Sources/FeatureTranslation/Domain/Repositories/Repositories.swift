@@ -43,6 +43,13 @@ public protocol OpenCodeKeyRepository: Sendable {
     func removeApiKey(providerId: String) async -> Outcome<Void>
 }
 
+/// Not in the Flutter app: whether the locally installed Claude Code CLI can answer, with the user's own login.
+public protocol ClaudeCodeCli: Sendable {
+    func status() async -> ClaudeCodeStatus
+}
+
+public enum ClaudeCodeStatus: Sendable, Equatable { case notInstalled, loggedOut, loggedIn }
+
 /// Ported from: lib/core/domain/adapters/opencode_cli.dart
 /// Read-only questions the app asks the locally-installed `opencode` CLI.
 public protocol OpenCodeCli: Sendable {

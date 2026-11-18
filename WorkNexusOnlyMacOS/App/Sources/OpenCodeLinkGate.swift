@@ -23,7 +23,7 @@ final class OpenCodeLinkGate {
     private init() {}
 
     func install(feature: TranslationFeature, openSettings: @escaping () -> Void) {
-        check = CheckTranslationReady(setup: feature.aiSetup, cli: feature.openCodeCli)
+        check = CheckTranslationReady(setup: feature.aiSetup, cli: feature.openCodeCli, claude: feature.claudeCodeCli)
         self.openSettings = openSettings
     }
 
@@ -52,8 +52,12 @@ struct OpenCodeNotLinkedDialog: View {
     let onOpenSettings: () -> Void
 
     private var title: String {
-        if case .providerNotUsable(let name) = problem.readiness { return appFormat("aiProviderNotReadyTitle", "%1$@ is not set up", name) }
-        return appString("openCodeNotLinkedTitle", "OpenCode not linked")
+        switch problem.readiness {
+        case .providerNotUsable(let name): return appFormat("aiProviderNotReadyTitle", "%1$@ is not set up", name)
+        case .claudeCodeNotInstalled: return appString("claudeCodeNotInstalledTitle", "Claude Code is not installed")
+        case .claudeCodeLoggedOut: return appString("claudeCodeLoggedOutTitle", "Claude Code is signed out")
+        default: return appString("openCodeNotLinkedTitle", "OpenCode not linked")
+        }
     }
 
     private var message: String {
@@ -62,6 +66,10 @@ struct OpenCodeNotLinkedDialog: View {
             appFormat("aiProviderNotReadyChatBody", "AI in chat runs on %1$@, which has no API key or model yet. Add them under Settings → Translation, or pick another provider for AI in chat.", name)
         case (.providerNotUsable(let name), _):
             appFormat("aiProviderNotReadyTranslationBody", "Translation runs on %1$@, which has no API key or model yet. Add them under Settings → Translation, or pick another translation provider.", name)
+        case (.claudeCodeNotInstalled, _):
+            appString("claudeCodeNotInstalledBody", "This runs on Claude Code, but the claude command was not found. Install Claude Code and sign in, or pick another provider under Settings → Translation.")
+        case (.claudeCodeLoggedOut, _):
+            appString("claudeCodeLoggedOutBody", "This runs on Claude Code, which is not signed in. Run the command below in a terminal and sign in with your Claude account, or pick another provider under Settings → Translation.")
         case (_, .chat):
             appString("openCodeNotLinkedChatBody", "AI in chat runs on OpenCode, and no authenticated OpenCode provider was found. Run the command below in a terminal, or pick an API provider for AI in chat under Settings → Translation.")
         default:
@@ -69,12 +77,21 @@ struct OpenCodeNotLinkedDialog: View {
         }
     }
 
+    /// The terminal command that fixes the problem, if one does.
+    static func command(for readiness: AiReadiness) -> String? {
+        switch readiness {
+        case .openCodeNotLinked: "opencode auth login"
+        case .claudeCodeLoggedOut: "claude auth login"
+        default: nil
+        }
+    }
+
     var body: some View {
         AppDialogFrame(title: title, maxWidth: theme.sizes.dialogSm, onClose: onClose) {
             VStack(alignment: .leading, spacing: theme.spacing.s12) {
                 Text(message).font(theme.typography.paragraph).foregroundStyle(theme.colors.tx2).fixedSize(horizontal: false, vertical: true)
-                if problem.readiness == .openCodeNotLinked {
-                    Text("opencode auth login").font(theme.typography.mono).foregroundStyle(theme.colors.tx).textSelection(.enabled)
+                if let command = Self.command(for: problem.readiness) {
+                    Text(command).font(theme.typography.mono).foregroundStyle(theme.colors.tx).textSelection(.enabled)
                         .padding(.horizontal, theme.spacing.s12).padding(.vertical, theme.spacing.s10).frame(maxWidth: .infinity, alignment: .leading)
                         .background(theme.colors.panel2, in: RoundedRectangle(cornerRadius: theme.radii.md))
                         .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(theme.colors.line, lineWidth: theme.borders.hairline))

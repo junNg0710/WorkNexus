@@ -39,7 +39,7 @@ struct TranslationSettingsPage: View {
                                 .padding(.horizontal, theme.spacing.s16).padding(.bottom, theme.spacing.s12)
                         }
                         TranslationSection(title: appString("aiProvidersSection", "AI providers"),
-                                           hint: appString("aiProvidersSubtitle", "OpenCode uses the CLI and its login; the others use your own API key, kept in the Keychain. Save as many as you like.")) {
+                                           hint: appString("aiProvidersSubtitle", "OpenCode and Claude Code use their own CLI login, no key needed; the others use your own API key, kept in the Keychain. Save as many as you like.")) {
                             AiProvidersSection(root: root)
                         }
                         TranslationSection(title: appString("translationProviderSection", "Translation provider"),
