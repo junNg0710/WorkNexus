@@ -8,6 +8,7 @@ import FeatureChat
 import FeatureConnections
 import FeatureMiniApps
 import FeatureNotifications
+import FeaturePets
 import FeatureTranslation
 import FeatureWorkspaceOverview
 import Foundation
@@ -37,6 +38,8 @@ final class CompositionRoot {
     let connections: ConnectionsFeature
     let miniApps: MiniAppsFeature
     let update: UpdateModel
+    let petLibrary: PetLibraryModel
+    let petGallery: PetGalleryModel
     let overview: OverviewHolder
     let profiles: ZenTaoProfileRepository
     let ticketLinks: TicketLinkHandler
@@ -134,6 +137,10 @@ final class CompositionRoot {
         if !DemoMode.isEnabled { miniApps.startSessionCookies() }
         autoUpdate = MarkerFileAutoUpdatePreference(file: PlatformPaths.applicationSupport().appendingPathComponent("auto_update.txt"))
         update = AppUpdateFeature.makeModel(config: Self.updateConfig, preference: autoUpdate, quit: { DispatchQueue.main.async { AppQuit.now() } })
+        // Pets from codex-pets.net live in Application Support; the demo build browses but keeps its own folder (`WN_SUPPORT_DIR`).
+        let pets = PetsFeature.makeServices(root: PlatformPaths.applicationSupport().appendingPathComponent("pets", isDirectory: true))
+        petLibrary = PetLibraryModel(services: pets)
+        petGallery = PetGalleryModel(services: pets)
         overview = OverviewHolder(services: services, nav: shell.nav, registry: registry, workspaceId: shell.workspace?.id)
         platform = PlatformServices(isDemo: DemoMode.isEnabled)
         let todoPrompt = ZentaoTodoPrompt(todos: wiring.todos)

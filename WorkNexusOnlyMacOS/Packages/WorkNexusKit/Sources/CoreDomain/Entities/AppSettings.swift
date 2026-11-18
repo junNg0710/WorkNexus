@@ -6,6 +6,8 @@ public enum SurfaceStyle: String, Codable, CaseIterable, Sendable { case flat, o
 public enum AppDensity: String, Codable, CaseIterable, Sendable { case comfortable, compact }
 public enum DetailLayout: String, Codable, CaseIterable, Sendable { case twoPane, tabbed }
 public enum BoardLayout: String, Codable, CaseIterable, Sendable { case board, table }
+/// Where the pet stands: in the main window over the content, or floating on the desktop above every app (macOS only).
+public enum PetDisplay: String, Codable, CaseIterable, Sendable { case inWindow, floating }
 public enum ChatAppearance: String, Codable, CaseIterable, Sendable { case worknexus, telegram, zalo, zentao, wechat, tbchat }
 
 public struct AppSettings: Codable, Equatable, Sendable {
@@ -49,6 +51,11 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var viewModes: [String: String] = [:]
     /// The TBChat character that stands in the window (macOS only).
     public var showPet = true
+    /// The pet shown (an installed pet's id); nil is the TBChat character that ships with the app (macOS only).
+    public var petId: String?
+    public var petDisplay: PetDisplay = .inWindow
+    /// Whether a pet that can look around turns toward the pointer while it idles (macOS only).
+    public var petFollowsCursor = true
 
     public init() {}
 
@@ -79,6 +86,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         s.sidebarWidth = v(.sidebarWidth, s.sidebarWidth); s.tableColumnWidths = v(.tableColumnWidths, s.tableColumnWidths)
         s.docsReaderBrightness = try? c.decodeIfPresent(String.self, forKey: .docsReaderBrightness)
         s.viewModes = v(.viewModes, s.viewModes); s.showPet = v(.showPet, s.showPet)
+        s.petId = try? c.decodeIfPresent(String.self, forKey: .petId)
+        s.petDisplay = v(.petDisplay, s.petDisplay); s.petFollowsCursor = v(.petFollowsCursor, s.petFollowsCursor)
         self = s
     }
 }

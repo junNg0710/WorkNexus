@@ -1,0 +1,120 @@
+{
+ "pets": [
+  {
+   "id": "yuki-caramel-monkey",
+   "displayName": "猴子",
+   "description": "A cheerful caramel monkey companion with a cream face, rosy cheeks, and a curly tail.",
+   "spritesheetPath": "spritesheet.webp",
+   "spriteVersionNumber": 2,
+   "kind": "animal",
+   "ownerId": "59d21273-9dd5-4ffd-ae33-0f995e1f795d",
+   "ownerHandle": "vickiyuki",
+   "ownerName": "vickiyuki",
+   "ownerAvatarUrl": null,
+   "uploadedAt": "2026-11-17T08:16:06.273Z",
+   "viewCount": 12,
+   "downloadCount": 0,
+   "likeCount": 1,
+   "commentCount": 0,
+   "likedByMe": false,
+   "ownerShadowbanned": false,
+   "tags": [
+    "cute"
+   ],
+   "spritesheetUrl": "https://codex-pets.net/assets/pets/v/1794903409205/yuki-caramel-monkey/spritesheet.webp",
+   "posterUrl": "https://codex-pets.net/assets/pets/v/1794903409205/yuki-caramel-monkey/poster.webp",
+   "previewUrl": "https://codex-pets.net/assets/pets/v/1794903409205/yuki-caramel-monkey/preview.webp",
+   "shareImageUrl": "https://codex-pets.net/assets/pets/v/1794903409205/yuki-caramel-monkey/share.png",
+   "downloadUrl": "/api/pets/yuki-caramel-monkey/download?v=1794903409205",
+   "validationReport": {
+    "manifestId": "yuki-caramel-monkey",
+    "atlasSize": "1536x2288",
+    "cellSize": "192x208",
+    "statesDetected": 11,
+    "manifestBytes": 269,
+    "spritesheetBytes": 2363022,
+    "spriteVersionNumber": 2
+   }
+  },
+  {
+   "id": "malou-office-worker-20261117",
+   "displayName": "马喽（打工人版）",
+   "description": "一只疲惫却善良努力的原创半写实猕猴，穿皱白衬衫和松领带，抱着电脑与保温杯陪你打工；包含九种动作与十六方向视线。",
+   "spritesheetPath": "spritesheet.webp",
+   "spriteVersionNumber": 2,
+   "kind": "animal",
+   "ownerId": "910e2c0d-73cf-464c-96a8-afadfd4856e2",
+   "ownerHandle": "aaron",
+   "ownerName": "aaron",
+   "ownerAvatarUrl": null,
+   "uploadedAt": "2026-11-17T04:27:34.596Z",
+   "viewCount": 40,
+   "downloadCount": 0,
+   "likeCount": 0,
+   "commentCount": 0,
+   "likedByMe": false,
+   "ownerShadowbanned": true,
+   "tags": [
+    "animated",
+    "mascot"
+   ],
+   "spritesheetUrl": "https://codex-pets.net/assets/pets/v/1794889654596/malou-office-worker-20261117/spritesheet.webp",
+   "posterUrl": "https://codex-pets.net/assets/pets/v/1794889654596/malou-office-worker-20261117/poster.webp",
+   "previewUrl": "https://codex-pets.net/assets/pets/v/1794889654596/malou-office-worker-20261117/preview.webp",
+   "shareImageUrl": "https://codex-pets.net/assets/pets/v/1794889654596/malou-office-worker-20261117/share.png",
+   "downloadUrl": "/api/pets/malou-office-worker-20261117/download?v=1794889654596",
+   "validationReport": {
+    "manifestId": "malou-office-worker-20261117",
+    "atlasSize": "1536x2288",
+    "cellSize": "192x208",
+    "statesDetected": 11,
+    "manifestBytes": 363,
+    "spritesheetBytes": 1509138,
+    "spriteVersionNumber": 2
+   }
+  },
+  {
+   "id": "hitch-snk-e0e8e1340f02",
+   "displayName": "Hitch SNK",
+   "description": "Portrait vidéo circulaire photoréaliste de Hitch SNK, malicieuse et expressive.",
+   "spritesheetPath": "spritesheet.webp",
+   "spriteVersionNumber": 2,
+   "kind": "person",
+   "ownerId": "c2556395-2ec9-4a28-b267-30d4642f5f76",
+   "ownerHandle": "astrom",
+   "ownerName": "Astrom",
+   "ownerAvatarUrl": null,
+   "uploadedAt": "2026-11-17T00:30:44.692Z",
+   "viewCount": 22,
+   "downloadCount": 0,
+   "likeCount": 0,
+   "commentCount": 0,
+   "likedByMe": false,
+   "ownerShadowbanned": false,
+   "tags": [
+    "chaotic",
+    "animated",
+    "cute",
+    "utility"
+   ],
+   "spritesheetUrl": "https://codex-pets.net/assets/pets/v/1794875444692/hitch-snk-e0e8e1340f02/spritesheet.webp",
+   "posterUrl": "https://codex-pets.net/assets/pets/v/1794875444692/hitch-snk-e0e8e1340f02/poster.webp",
+   "previewUrl": "https://codex-pets.net/assets/pets/v/1794875444692/hitch-snk-e0e8e1340f02/preview.webp",
+   "shareImageUrl": "https://codex-pets.net/assets/pets/v/1794875444692/hitch-snk-e0e8e1340f02/share.png",
+   "downloadUrl": "/api/pets/hitch-snk-e0e8e1340f02/download?v=1794875444692",
+   "validationReport": {
+    "manifestId": "hitch-snk-e0e8e1340f02",
+    "atlasSize": "1536x2288",
+    "cellSize": "192x208",
+    "statesDetected": 11,
+    "manifestBytes": 258,
+    "spritesheetBytes": 3217892,
+    "spriteVersionNumber": 2
+   }
+  }
+ ],
+ "page": 1,
+ "pageSize": 3,
+ "total": 3704,
+ "totalPages": 1235
+}

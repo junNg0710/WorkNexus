@@ -16,6 +16,7 @@ struct SettingsPages: View {
         case "appearance": SettingsPage(title: appString("appearance", "Appearance")) {
             SettingsCard(title: appString("appearance", "Appearance")) { AppearanceControls(shell: root.shell) }
         }
+        case "pet": PetSettingsPage(root: root)
         case "chat": ChatSettingsPage(shell: root.shell)
         case "translation": TranslationSettingsPage(root: root)
         case "cache": CacheSettingsPage(root: root)
@@ -49,9 +50,6 @@ struct GeneralSettingsPage: View {
                 }
                 SettingsToggleRow(label: appString("companyTint", "Company tint"), isOn: s.companyTint) { on in
                     shell.updateSettings { $0.companyTint = on }
-                }
-                SettingsToggleRow(label: appString("showPet", "Show the TBChat character"), isOn: s.showPet) { on in
-                    shell.updateSettings { $0.showPet = on }
                 }
                 LanguagePicker(shell: shell)
             }

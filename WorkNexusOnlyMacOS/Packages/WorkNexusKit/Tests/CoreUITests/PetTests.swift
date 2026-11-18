@@ -101,7 +101,8 @@ final class PetTests: XCTestCase {
     func testTheMoodSetsWhatItDoesWhenNothingElseGoesOn() {
         let d = director()
         d.mood = .busy;    XCTAssertEqual(d.animation, .running)
-        d.mood = .offline; XCTAssertEqual(d.animation, .waiting)
+        d.mood = .offline; XCTAssertEqual(d.animation, .idle)       // dimmed by the view, not animated
+        d.mood = .attention; XCTAssertEqual(d.animation, .waiting)
         d.mood = .calm;    XCTAssertEqual(d.animation, .idle)
         d.mood = .trouble; XCTAssertEqual(d.animation, .failed)
         tick(d) { d.animation != .failed }
@@ -178,6 +179,76 @@ final class PetTests: XCTestCase {
         XCTAssertEqual(sheet.unitRect(.waving, 4), sheet.unitRect(.waving, 0))   // frames wrap
         // A layer counts rows from the bottom.
         XCTAssertEqual(PetSpriteLayer.layerRect(first).minY, 8.0 / 9, accuracy: 1e-9)
+    }
+
+    func testANotificationWavesTwiceAndAFinishedJobIsLookedOver() {
+        let d = director()
+        d.notify()
+        XCTAssertEqual(d.animation, .waving)
+        for _ in 0..<PetAnimation.waving.frames { d.tick() }
+        XCTAssertEqual(d.animation, .waving)
+        for _ in 0..<PetAnimation.waving.frames { d.tick() }
+        XCTAssertEqual(d.animation, .idle)
+        d.done()
+        XCTAssertEqual(d.animation, .review)
+        d.notify(); d.done()                              // a finished job does not cut a wave short
+        XCTAssertEqual(d.animation, .waving)
+    }
+
+    func testItDoesNotWanderInARoomAsSmallAsItself() {
+        let d = director([0.0, 0.5, 0.1, 0.1])
+        d.canWander = false
+        tick(d, limit: 2000) { d.isWalking }
+        XCTAssertFalse(d.isWalking)
+    }
+
+    func testCodexTimingHoldsTheLastFrameLonger() {
+        XCTAssertEqual(PetTiming.codex.duration(.idle, frame: 0), 0.28, accuracy: 1e-9)
+        XCTAssertEqual(PetTiming.codex.duration(.idle, frame: 5), 0.32, accuracy: 1e-9)
+        XCTAssertEqual(PetTiming.codex.duration(.idle, frame: 6), 0.28, accuracy: 1e-9)   // wraps
+        for a in PetAnimation.allCases { XCTAssertEqual(PetTiming.codexMilliseconds(a).count, a.frames, "\(a)") }
+        XCTAssertEqual(PetTiming.steady.duration(.running, frame: 3), PetAnimation.running.frameDuration)
+        let d = director()
+        d.timing = .codex
+        XCTAssertEqual(d.frameDuration, 0.28, accuracy: 1e-9)
+        d.tick()
+        XCTAssertEqual(d.frameDuration, 0.11, accuracy: 1e-9)
+    }
+
+    private func atlas(rows: Int) -> CGImage {
+        CGContext(data: nil, width: 8 * 192, height: rows * 208, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(),
+                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!.makeImage()!
+    }
+
+    func testAV2SheetCanLookInSixteenDirections() throws {
+        let v1 = try XCTUnwrap(PetSpriteSheet(atlas: atlas(rows: 9)))
+        XCTAssertEqual(v1.version, .v1); XCTAssertFalse(v1.canLook)
+        XCTAssertNil(v1.lookUnitRect(0)); XCTAssertNil(v1.neutralLookUnitRect)
+        let v2 = try XCTUnwrap(PetSpriteSheet(atlas: atlas(rows: 11)))
+        XCTAssertEqual(v2.version, .v2); XCTAssertTrue(v2.canLook)
+        XCTAssertEqual(v2.unitRect(.idle, 0), CGRect(x: 0, y: 0, width: 1.0 / 8, height: 1.0 / 11))
+        let up = try XCTUnwrap(v2.lookUnitRect(0)), left = try XCTUnwrap(v2.lookUnitRect(12))
+        XCTAssertEqual(up.minY, 9.0 / 11, accuracy: 1e-9); XCTAssertEqual(up.minX, 0)
+        XCTAssertEqual(left.minY, 10.0 / 11, accuracy: 1e-9); XCTAssertEqual(left.minX, 4.0 / 8, accuracy: 1e-9)
+        XCTAssertEqual(v2.lookUnitRect(16), up)                                             // wraps
+        XCTAssertEqual(try XCTUnwrap(v2.neutralLookUnitRect).minX, 6.0 / 8, accuracy: 1e-9)
+    }
+
+    func testTheDirectionToThePointerCountsClockwiseFromUp() {
+        XCTAssertEqual(PetSpriteSheet.lookDirection(dx: 0, dy: -10), 0)     // up
+        XCTAssertEqual(PetSpriteSheet.lookDirection(dx: 10, dy: 0), 4)      // right
+        XCTAssertEqual(PetSpriteSheet.lookDirection(dx: 0, dy: 10), 8)      // down
+        XCTAssertEqual(PetSpriteSheet.lookDirection(dx: -10, dy: 0), 12)    // left
+        XCTAssertEqual(PetSpriteSheet.lookDirection(dx: 10, dy: -10), 2)    // up-right
+        // On screen y counts up: a pointer above the pet is "up"; too far or right on it, it looks nowhere.
+        XCTAssertEqual(PetGazeTracker.direction(from: .zero, to: NSPoint(x: 0, y: 100)), 0)
+        XCTAssertNil(PetGazeTracker.direction(from: .zero, to: NSPoint(x: 5, y: 5)))
+        XCTAssertNil(PetGazeTracker.direction(from: .zero, to: NSPoint(x: 5000, y: 0)))
+        let d = director()
+        d.gaze = 4
+        XCTAssertTrue(d.showsGaze)
+        d.poke()
+        XCTAssertFalse(d.showsGaze)                                         // a gesture plays its own frames
     }
 
     func testReducedMotionKeepsItStill() {

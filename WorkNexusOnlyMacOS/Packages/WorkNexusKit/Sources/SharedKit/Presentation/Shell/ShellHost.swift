@@ -1,5 +1,6 @@
 import CoreDomain
 import CoreTools
+import CoreUI
 import SwiftUI
 
 /// Slots the composition root (`App/`) fills with views of features / tools the shell must not import (rule 10.1):
@@ -42,6 +43,12 @@ public struct ShellHost {
     /// What the title bar's search looks through on `rail` when that place has a search of its own (the Chat page);
     /// nil: the workspace's tickets.
     public var placeSearch: (RailTarget) -> PlaceSearch? = { _ in nil }
+    /// The sprite sheet of the pet chosen in the settings; nil: the TBChat character that ships with the app.
+    public var petSheet: () -> PetSpriteSheet? = { nil }
+    /// Whether something waits for the user (unread ZenTao notifications): the pet waits with them.
+    public var petAttention: () -> Bool = { false }
+    /// Brings the app's window forward (a click on the floating pet).
+    public var revealApp: () -> Void = {}
     public init() {}
 }
 

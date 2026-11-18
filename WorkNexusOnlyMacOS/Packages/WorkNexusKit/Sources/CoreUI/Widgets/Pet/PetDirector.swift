@@ -9,8 +9,9 @@ import Observation
 /// function of time (`x(at:)`), read at the display's rate - so it glides instead of stepping once per sprite frame.
 @MainActor @Observable
 public final class PetDirector {
-    /// How the app is doing, which sets what the character does when nothing else is going on.
-    public enum Mood: Equatable, Sendable { case calm, busy, offline, trouble }
+    /// How the app is doing, which sets what the character does when nothing else is going on: `attention` is something
+    /// waiting for the user (a ticket for them, say); `offline` keeps it idling, the view dims it.
+    public enum Mood: Equatable, Sendable { case calm, busy, offline, trouble, attention }
 
     /// A walk under way: from where to where, and when.
     public struct Walk: Equatable, Sendable {
@@ -40,6 +41,13 @@ public final class PetDirector {
     /// How wide the room is, in points (the view says): a walk's time comes from its length on screen, so the character
     /// walks at one pace whatever the window's width.
     public var roomWidth: Double = 800
+    /// Whether it walks about on its own now and then (not in a room as small as itself, like the floating pet's panel).
+    public var canWander = true
+    /// The pace of the sheet it is drawn from (the view says).
+    public var timing: PetTiming = .steady
+    /// Which way it looks (0 = up, clockwise, of `PetSpriteSheet.lookDirections`), for a sheet that can look; nil looks
+    /// nowhere in particular. Only shown while it stands idling (`showsGaze`).
+    public var gaze: Int?
 
     /// Walking pace, in points per second.
     static let walkSpeed = 90.0
@@ -60,7 +68,9 @@ public final class PetDirector {
     /// Where the character is at `date`, walking or not.
     public func x(at date: Date) -> Double { walk?.x(at: date) ?? x }
 
-    public var frameDuration: TimeInterval { animation.frameDuration }
+    public var frameDuration: TimeInterval { timing.duration(animation, frame: frame) }
+    /// Whether it is looking somewhere rather than playing its idle frames.
+    public var showsGaze: Bool { gaze != nil && animation == .idle && walk == nil && !reduceMotion }
     public var isWalking: Bool { animation == .runningLeft || animation == .runningRight }
 
     // MARK: Things that happen to it
@@ -70,6 +80,12 @@ public final class PetDirector {
 
     /// Something to celebrate (a bug resolved): jumps for joy.
     public func celebrate() { guard !reduceMotion else { return }; gesture(.jumping, cycles: 2) }
+
+    /// Something new for the user (a chat message): waves at them, twice.
+    public func notify() { guard !reduceMotion else { return }; gesture(.waving, cycles: 2) }
+
+    /// A piece of work finished (a sync done): looks it over once.
+    public func done() { guard !reduceMotion, !animation.isGesture else { return }; gesture(.review, cycles: 1) }
 
     /// Dragged to a spot: stays there.
     public func place(x: Double, y: Double) {
@@ -83,7 +99,7 @@ public final class PetDirector {
     /// Moves on one frame; at the end of a cycle decides what comes next.
     public func tick() {
         guard !reduceMotion else { frame = 0; return }
-        let dt = animation.frameDuration
+        let dt = frameDuration
         frame += 1
         // The walk is over once its time is up: the character is at its target and goes back to what it was doing.
         if let w = walk, w.isOver(at: now()) { x = w.to; walk = nil; setBase(); return }
@@ -100,7 +116,7 @@ public final class PetDirector {
         guard animation == .idle, mood == .calm, idleFor >= nextFlourish else { return }
         idleFor = 0
         nextFlourish = Self.flourishAfter.lowerBound + random() * (Self.flourishAfter.upperBound - Self.flourishAfter.lowerBound)
-        if random() < 0.6 { wander() } else { gesture(random() < 0.5 ? .review : .waving, cycles: 1) }
+        if canWander, random() < 0.6 { wander() } else { gesture(random() < 0.5 ? .review : .waving, cycles: 1) }
     }
 
     /// Walks to somewhere else along the bottom.
@@ -133,9 +149,9 @@ public final class PetDirector {
     private func setBase() {
         stopWalking()
         switch mood {
-        case .calm, .trouble: start(.idle)
+        case .calm, .trouble, .offline: start(.idle)
         case .busy: start(.running)
-        case .offline: start(.waiting)
+        case .attention: start(.waiting)
         }
     }
 

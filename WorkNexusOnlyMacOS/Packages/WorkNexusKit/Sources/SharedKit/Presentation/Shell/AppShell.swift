@@ -35,7 +35,7 @@ public struct AppShell: View {
         .overlay { model.host.overlay(theme.sizes.rail) }
         .detailOverlay(model.detail, railInset: theme.sizes.rail + theme.spacing.s8)
         .overlay { CelebrationOverlay(controller: model.celebration).ignoresSafeArea() }
-        .overlay { TBChatPetLayer(model: model) }
+        .overlay { PetLayer(model: model) }
         .ignoresSafeArea(.container, edges: .top)
         .foregroundStyle(theme.colors.tx)
         .environment(\.celebrate) { model.celebrate() }

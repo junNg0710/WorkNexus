@@ -1060,8 +1060,8 @@
     "vi": "Bố cục"
   },
   "showPet": {
-    "en": "Show the TBChat character",
-    "vi": "Hiện nhân vật TBChat"
+    "en": "Show the pet",
+    "vi": "Hiện thú cưng"
   },
   "somethingWentWrong": {
     "en": "Something went wrong",
@@ -1228,8 +1228,8 @@
     "vi": "Kéo thả lên người khác để đổi vị trí; chuột phải để ghim"
   },
   "tipPet": {
-    "en": "TBChat: click to wave, drag to move it. Turn it off in Settings",
-    "vi": "TBChat: bấm để vẫy tay, kéo để đổi chỗ. Tắt trong Cài đặt"
+    "en": "Click to wave, drag to move it. Choose another pet or turn it off in Settings › Pet",
+    "vi": "Bấm để vẫy tay, kéo để đổi chỗ. Đổi thú cưng hoặc tắt trong Cài đặt › Thú cưng"
   },
   "tipPriority": {
     "en": "Priority %1$@ (1 is the most urgent)",
@@ -1514,5 +1514,113 @@
   "diagnosticsPerformanceOff": {
     "en": "Performance log off",
     "vi": "Đã tắt ghi log hiệu năng"
+  },
+  "petSettings": {
+    "en": "Pet",
+    "vi": "Thú cưng"
+  },
+  "petSettingsHint": {
+    "en": "A small companion that reacts to chats, syncs and tickets waiting for you.",
+    "vi": "Một người bạn nhỏ phản ứng với tin nhắn, đồng bộ và ticket đang chờ bạn."
+  },
+  "petDisplay": {
+    "en": "Where it stands",
+    "vi": "Vị trí hiển thị"
+  },
+  "petInWindow": {
+    "en": "In the window",
+    "vi": "Trong cửa sổ"
+  },
+  "petFloating": {
+    "en": "On the desktop",
+    "vi": "Nổi trên màn hình"
+  },
+  "petFollowsCursor": {
+    "en": "Looks toward the pointer (pets that can)",
+    "vi": "Nhìn theo con trỏ (với thú cưng hỗ trợ)"
+  },
+  "petChoose": {
+    "en": "Choose a pet",
+    "vi": "Chọn thú cưng"
+  },
+  "petInstalled": {
+    "en": "On this Mac",
+    "vi": "Trên máy này"
+  },
+  "petBrowse": {
+    "en": "More pets from codex-pets.net",
+    "vi": "Thêm thú cưng từ codex-pets.net"
+  },
+  "petCredit": {
+    "en": "Pets are made and shared by the codex-pets.net community; each card names its creator.",
+    "vi": "Thú cưng do cộng đồng codex-pets.net tạo và chia sẻ; mỗi thẻ ghi tên người tạo."
+  },
+  "petBuiltIn": {
+    "en": "Built in",
+    "vi": "Có sẵn"
+  },
+  "petRemove": {
+    "en": "Remove this pet",
+    "vi": "Gỡ thú cưng này"
+  },
+  "petInUse": {
+    "en": "In use",
+    "vi": "Đang dùng"
+  },
+  "petUse": {
+    "en": "Use",
+    "vi": "Dùng"
+  },
+  "petGet": {
+    "en": "Get",
+    "vi": "Tải"
+  },
+  "petSearch": {
+    "en": "Search pets",
+    "vi": "Tìm thú cưng"
+  },
+  "petKindAll": {
+    "en": "All",
+    "vi": "Tất cả"
+  },
+  "petKindPerson": {
+    "en": "People",
+    "vi": "Người"
+  },
+  "petKindAnimal": {
+    "en": "Animals",
+    "vi": "Động vật"
+  },
+  "petKindObject": {
+    "en": "Objects",
+    "vi": "Đồ vật"
+  },
+  "petKindCreature": {
+    "en": "Creatures",
+    "vi": "Sinh vật"
+  },
+  "petSortPopular": {
+    "en": "Popular",
+    "vi": "Phổ biến"
+  },
+  "petSortNew": {
+    "en": "New",
+    "vi": "Mới"
+  },
+  "petSortRandom": {
+    "en": "Surprise me",
+    "vi": "Ngẫu nhiên"
+  },
+  "petNoResults": {
+    "en": "No pets match this search.",
+    "vi": "Không có thú cưng nào khớp."
+  },
+  "petShowInWindow": {
+    "en": "Put the pet back in the window",
+    "vi": "Đưa thú cưng về cửa sổ"
+  },
+  "petHide": {
+    "en": "Hide the pet",
+    "vi": "Ẩn thú cưng"
   }
 }

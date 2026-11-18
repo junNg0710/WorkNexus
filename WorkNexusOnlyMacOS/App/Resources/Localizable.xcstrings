@@ -28856,13 +28856,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show the TBChat character"
+            "value": "Show the pet"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hiện nhân vật TBChat"
+            "value": "Hiện thú cưng"
           }
         }
       }
@@ -29570,13 +29570,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "TBChat: click to wave, drag to move it. Turn it off in Settings"
+            "value": "Click to wave, drag to move it. Choose another pet or turn it off in Settings › Pet"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "TBChat: bấm để vẫy tay, kéo để đổi chỗ. Tắt trong Cài đặt"
+            "value": "Bấm để vẫy tay, kéo để đổi chỗ. Đổi thú cưng hoặc tắt trong Cài đặt › Thú cưng"
           }
         }
       }
@@ -30784,6 +30784,465 @@
           "stringUnit": {
             "state": "translated",
             "value": "Đã tắt ghi log hiệu năng"
+          }
+        }
+      }
+    },
+    "petSettings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pet"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thú cưng"
+          }
+        }
+      }
+    },
+    "petSettingsHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A small companion that reacts to chats, syncs and tickets waiting for you."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Một người bạn nhỏ phản ứng với tin nhắn, đồng bộ và ticket đang chờ bạn."
+          }
+        }
+      }
+    },
+    "petDisplay": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where it stands"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vị trí hiển thị"
+          }
+        }
+      }
+    },
+    "petInWindow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the window"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trong cửa sổ"
+          }
+        }
+      }
+    },
+    "petFloating": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the desktop"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nổi trên màn hình"
+          }
+        }
+      }
+    },
+    "petFollowsCursor": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looks toward the pointer (pets that can)"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhìn theo con trỏ (với thú cưng hỗ trợ)"
+          }
+        }
+      }
+    },
+    "petChoose": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a pet"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chọn thú cưng"
+          }
+        }
+      }
+    },
+    "petInstalled": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On this Mac"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trên máy này"
+          }
+        }
+      }
+    },
+    "petBrowse": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More pets from codex-pets.net"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm thú cưng từ codex-pets.net"
+          }
+        }
+      }
+    },
+    "petCredit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pets are made and shared by the codex-pets.net community; each card names its creator."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thú cưng do cộng đồng codex-pets.net tạo và chia sẻ; mỗi thẻ ghi tên người tạo."
+          }
+        }
+      }
+    },
+    "petBuiltIn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Built in"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Có sẵn"
+          }
+        }
+      }
+    },
+    "petRemove": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this pet"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gỡ thú cưng này"
+          }
+        }
+      }
+    },
+    "petInUse": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In use"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang dùng"
+          }
+        }
+      }
+    },
+    "petUse": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dùng"
+          }
+        }
+      }
+    },
+    "petGet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tải"
+          }
+        }
+      }
+    },
+    "petSearch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search pets"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tìm thú cưng"
+          }
+        }
+      }
+    },
+    "petKindAll": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tất cả"
+          }
+        }
+      }
+    },
+    "petKindPerson": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Người"
+          }
+        }
+      }
+    },
+    "petKindAnimal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Animals"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Động vật"
+          }
+        }
+      }
+    },
+    "petKindObject": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objects"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đồ vật"
+          }
+        }
+      }
+    },
+    "petKindCreature": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creatures"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sinh vật"
+          }
+        }
+      }
+    },
+    "petSortPopular": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Popular"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phổ biến"
+          }
+        }
+      }
+    },
+    "petSortNew": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mới"
+          }
+        }
+      }
+    },
+    "petSortRandom": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Surprise me"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ngẫu nhiên"
+          }
+        }
+      }
+    },
+    "petNoResults": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pets match this search."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có thú cưng nào khớp."
+          }
+        }
+      }
+    },
+    "petShowInWindow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put the pet back in the window"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đưa thú cưng về cửa sổ"
+          }
+        }
+      }
+    },
+    "petHide": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide the pet"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ẩn thú cưng"
           }
         }
       }

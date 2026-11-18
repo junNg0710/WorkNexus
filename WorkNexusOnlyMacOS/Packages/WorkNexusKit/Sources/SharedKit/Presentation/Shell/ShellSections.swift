@@ -13,6 +13,7 @@ enum ShellSections {
     static let settings: [Row] = [
         Row(id: "general", key: "general", fallback: "General", icon: "slider.horizontal.3"),
         Row(id: "appearance", key: "appearance", fallback: "Appearance", icon: "paintpalette"),
+        Row(id: "pet", key: "petSettings", fallback: "Pet", icon: "pawprint"),
         Row(id: "chat", key: "chat", fallback: "Chat", icon: "bubble.left.and.bubble.right"),
         Row(id: "translation", key: "translation", fallback: "Translation", icon: "character.bubble"),
         Row(id: "cache", key: "localCache", fallback: "Local data", icon: "internaldrive"),
