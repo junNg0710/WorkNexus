@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_entrance.dart';
 
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
@@ -48,41 +49,50 @@ List<Object> chatListItems(List<ChatMessage> messages, Duration? markerGap) {
 /// Consecutive messages from one sender within a few minutes form a run:
 /// one name, one avatar, one timestamp, tighter spacing. A server notice
 /// stands apart, so the sender's next message still shows who sent it.
-bool _sameRun(Object? other, ChatMessage message) =>
+bool chatSameRun(Object? other, ChatMessage message) =>
     other is ChatMessage &&
     !other.isNotice &&
     !message.isNotice &&
     other.senderId == message.senderId &&
     other.sentAt.difference(message.sentAt).abs() <= const Duration(minutes: 5);
 
-/// Row [index] of [items]: a day divider, a time marker or a message.
+/// One row of the list built by [chatListItems]: a day divider, a time
+/// marker or a message. Takes only what the row shows — not the whole list —
+/// so an unchanged row can keep its widget (see `ListRowWidgetCache`).
 class MessageListItem extends ConsumerWidget {
   const MessageListItem({
     super.key,
     required this.thread,
-    required this.items,
-    required this.index,
+    required this.item,
     required this.style,
     required this.users,
-    required this.summaries,
     required this.showSenders,
-    this.anchor,
+    this.firstOfRun = true,
+    this.lastOfRun = true,
+    this.summary,
+    this.arriving = false,
   });
 
   final ChatThreadKey thread;
-  final List<Object> items;
-  final int index;
+  final Object item;
   final ChatStyle style;
   final Map<int, ChatUser> users;
-  final Map<int, ThreadSummary> summaries;
   final bool showSenders;
 
-  /// Set on the row a jump is scrolling to, so it can be found once built.
-  final GlobalKey? anchor;
+  /// Whether the message starts / ends a run (see [chatSameRun]).
+  final bool firstOfRun;
+  final bool lastOfRun;
+
+  /// Set when the message is the root of a reply thread.
+  final ThreadSummary? summary;
+
+  /// The message just arrived: its row opens and fades in (see
+  /// [AppEntrance]); read only when the row is first built.
+  final bool arriving;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final item = items[index];
+    final item = this.item;
     final side = EdgeInsets.symmetric(horizontal: context.spacing.xl5);
     if (item is DateTime || item is ChatTimeMarker) {
       return Padding(
@@ -97,25 +107,18 @@ class MessageListItem extends ConsumerWidget {
     }
     final message = item as ChatMessage;
     if (message.isNotice) {
-      return KeyedSubtree(
-        key: anchor,
-        child: _Highlight(
-          thread: thread,
-          serverId: message.serverId,
-          gapAbove: style.groupGap,
-          gapBelow: style.groupGap,
-          child: Padding(
-            padding: side,
-            child: ChatNotice(style: style, message: message),
-          ),
+      return _Highlight(
+        thread: thread,
+        serverId: message.serverId,
+        gapAbove: style.groupGap,
+        gapBelow: style.groupGap,
+        child: Padding(
+          padding: side,
+          child: ChatNotice(style: style, message: message),
         ),
       );
     }
-    final older = index + 1 < items.length ? items[index + 1] : null;
-    final newer = index > 0 ? items[index - 1] : null;
     final t = thread;
-    final firstOfRun = !_sameRun(older, message);
-    final lastOfRun = !_sameRun(newer, message);
     final bubble = MessageBubble(
       chat: t,
       message: message,
@@ -123,7 +126,7 @@ class MessageListItem extends ConsumerWidget {
       firstOfRun: firstOfRun,
       lastOfRun: lastOfRun,
       showSender: showSenders,
-      thread: summaries[message.serverId],
+      thread: summary,
       onOpenThread: (id) => openReplyThread(ref, t, id),
       onReply: (m) =>
           ref
@@ -133,14 +136,15 @@ class MessageListItem extends ConsumerWidget {
                   .state =
               m,
     );
-    return KeyedSubtree(
-      key: anchor,
-      child: _Highlight(
-        thread: t,
-        serverId: message.serverId,
-        // The bubble's own space above it, and the next one's below it.
-        gapAbove: firstOfRun ? style.groupGap : style.runGap,
-        gapBelow: lastOfRun ? style.groupGap : style.runGap,
+    return _Highlight(
+      thread: t,
+      serverId: message.serverId,
+      // The bubble's own space above it, and the next one's below it.
+      gapAbove: firstOfRun ? style.groupGap : style.runGap,
+      gapBelow: lastOfRun ? style.groupGap : style.runGap,
+      child: AppEntrance(
+        animate: arriving,
+        grow: true,
         child: Padding(padding: side, child: bubble),
       ),
     );

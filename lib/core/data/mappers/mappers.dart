@@ -17,6 +17,7 @@ import '../../domain/value_objects/provider_type.dart';
 import '../../domain/value_objects/unified_status.dart';
 import '../../settings/app_settings.dart';
 import '../../settings/chat_appearance.dart';
+import '../../settings/chat_privacy.dart';
 import '../../settings/pinned_execution.dart';
 import '../../theme/app_palette.dart';
 
@@ -252,7 +253,15 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   chatNotifications: r.chatNotifications,
   chatNotifyWhileViewing: r.chatNotifyWhileViewing,
   chatSendTypingStatus: r.chatSendTypingStatus,
+  chatPrivacy: ChatPrivacy(
+    enabled: r.chatPrivacyMode,
+    hidePreviews: r.chatBlurPreviews,
+    hideIdentities: r.chatBlurIdentities,
+    hideMessages: r.chatBlurMessages,
+  ),
+  chatLocalApi: r.chatLocalApi,
   chatReactions: r.chatReactions,
+  chatStickerSuggestions: r.chatStickerSuggestions,
   chatCacheLimitMb: r.chatCacheLimitMb,
   chatAutoDownloadVideos: r.chatAutoDownloadVideos,
   chatAutoDownloadVideoMb: r.chatAutoDownloadVideoMb,
@@ -291,7 +300,13 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   chatNotifications: Value(s.chatNotifications),
   chatNotifyWhileViewing: Value(s.chatNotifyWhileViewing),
   chatSendTypingStatus: Value(s.chatSendTypingStatus),
+  chatPrivacyMode: Value(s.chatPrivacy.enabled),
+  chatBlurPreviews: Value(s.chatPrivacy.hidePreviews),
+  chatBlurIdentities: Value(s.chatPrivacy.hideIdentities),
+  chatBlurMessages: Value(s.chatPrivacy.hideMessages),
+  chatLocalApi: Value(s.chatLocalApi),
   chatReactions: Value(s.chatReactions),
+  chatStickerSuggestions: Value(s.chatStickerSuggestions),
   chatCacheLimitMb: Value(s.chatCacheLimitMb),
   chatAutoDownloadVideos: Value(s.chatAutoDownloadVideos),
   chatAutoDownloadVideoMb: Value(s.chatAutoDownloadVideoMb),

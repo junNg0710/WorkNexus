@@ -2,12 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/widgets/app_entrance.dart';
 import '../../../../core/widgets/file_drop_target.dart';
+import '../../../../core/widgets/privacy_mask.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
+import '../../domain/value_objects/chat_privacy_part.dart';
+import '../providers/chat_ai_providers.dart';
+import '../providers/chat_privacy_providers.dart';
 import '../providers/chat_providers.dart';
 import '../providers/chat_search_providers.dart';
+import 'chat_ai_catch_up_banner.dart';
+import 'chat_assistant_panel.dart';
 import 'chat_composer.dart';
 import 'chat_emoji_side_panel.dart';
 import 'chat_file_send.dart';
@@ -50,6 +57,17 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
   Future<void> _open() async {
     final controller = ref.read(chatControllerProvider);
     final t = widget.thread;
+    // What was unread before opening marks it read, for the AI catch-up.
+    final unread = ref
+        .read(chatConversationsProvider(t.accountId))
+        .asData
+        ?.value
+        .where((c) => c.gid == t.chatGid)
+        .firstOrNull
+        ?.unreadCount;
+    if (unread != null) {
+      ref.read(chatUnreadOnOpenProvider(t).notifier).state = unread;
+    }
     // Membership may have changed since the count was kept.
     ref.invalidate(chatMemberCountProvider(t));
     final refreshed = await controller.refresh(t.accountId, t.chatGid);
@@ -87,39 +105,62 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
     // desktop_drop hands a drop to every target under the pointer.
     final canSend = ref.watch(chatCanSendProvider(t));
     // Both drop areas show their hints while files hover over either.
+    // Pointing anywhere on the chat above the input shows all of it while
+    // it is hidden. Not the input: the user types there, and focus shows
+    // nothing either (the search field keeps it while typing).
     final messages = FileDropZones(
       child: Column(
         children: [
-          ChatThreadHeader(thread: t, chat: chat, users: users),
-          if (searching) ChatThreadSearchBar(thread: t),
-          // Searching, the pinned bar would only push the matches down.
-          if (pinned.isNotEmpty && !searching)
-            PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
           Expanded(
-            // Sits over the persistent background while messages load
-            // and scroll.
-            child: FileDropTarget(
-              enabled: canSend,
-              hint: AppL10n.of(context).dropFilesToSend,
-              onDrop: (files) => sendChatFiles(
-                context,
-                ref,
-                draftKey: (chat: t, inThread: false),
-                files: files,
-              ),
-              child: Stack(
+            child: PrivacyRevealRegion(
+              revealOnFocus: false,
+              child: Column(
                 children: [
-                  ChatTextScale(
-                    child: MessageList(
-                      // The background is reused across chats; the list is
-                      // not.
-                      key: ValueKey(t),
+                  ChatThreadHeader(thread: t, chat: chat, users: users),
+                  if (searching) ChatThreadSearchBar(thread: t),
+                  // Searching, the pinned bar would only push the matches down.
+                  if (pinned.isNotEmpty && !searching)
+                    PinnedMessageBar(
                       thread: t,
-                      showSenders: chat?.type != ChatType.one2one,
+                      pinnedIds: pinned,
+                      users: users,
+                    ),
+                  ChatAiCatchUpBanner(thread: t),
+                  Expanded(
+                    // Sits over the persistent background while messages load
+                    // and scroll.
+                    child: FileDropTarget(
+                      enabled: canSend,
+                      hint: AppL10n.of(context).dropFilesToSend,
+                      onDrop: (files) => sendChatFiles(
+                        context,
+                        ref,
+                        draftKey: (chat: t, inThread: false),
+                        files: files,
+                      ),
+                      child: Stack(
+                        children: [
+                          // Only the messages fade in as a chat opens: the
+                          // header, input and side panel look alike from chat
+                          // to chat, and fading them reads as a flicker.
+                          AppEntrance(
+                            key: ValueKey(t),
+                            child: ChatTextScale(
+                              child: MessageList(
+                                // The background is reused across chats; the
+                                // list is not.
+                                key: ValueKey(t),
+                                thread: t,
+                                showSenders: chat?.type != ChatType.one2one,
+                              ),
+                            ),
+                          ),
+                          // A video scrolled out of view plays on over the list.
+                          Positioned.fill(child: ChatFloatingVideo(thread: t)),
+                        ],
+                      ),
                     ),
                   ),
-                  // A video scrolled out of view plays on over the list.
-                  Positioned.fill(child: ChatFloatingVideo(thread: t)),
                 ],
               ),
             ),
@@ -130,9 +171,16 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
                 thread: t,
                 hint: chat == null
                     ? null
-                    : AppL10n.of(
-                        context,
-                      ).chatMessageTo(chatTitle(context, chat, users)),
+                    : AppL10n.of(context).chatMessageTo(
+                        // No reveal on hover here: it is only a hint.
+                        ref.watch(
+                              chatPrivacyHiddenProvider(
+                                ChatPrivacyPart.identity,
+                              ),
+                            )
+                            ? kPrivacyMaskText
+                            : chatTitle(context, chat, users),
+                      ),
               ),
             )
           else
@@ -166,6 +214,7 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
               users: users,
             ),
             ChatSidePanel.emoji => ChatEmojiSidePanel(thread: t),
+            ChatSidePanel.assistant => ChatAssistantPanel(thread: t),
             null => null,
           };
     return ChatSidePanelHost(

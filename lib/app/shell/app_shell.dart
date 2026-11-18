@@ -10,9 +10,11 @@ import '../../core/widgets/quick_settings_side_panel.dart';
 import '../../features/chat/presentation/widgets/chat_app_badge.dart';
 import '../../features/chat/presentation/widgets/chat_appearance_settings.dart';
 import '../../features/chat/presentation/widgets/chat_auto_download_settings.dart';
+import '../../features/chat/presentation/widgets/chat_local_api_settings.dart';
 import '../../features/chat/presentation/widgets/chat_notification_listener.dart';
 import '../../features/chat/presentation/widgets/chat_notification_settings.dart';
 import '../../features/chat/presentation/widgets/chat_privacy_settings.dart';
+import '../../features/chat/presentation/widgets/chat_privacy_shortcut.dart';
 import '../../features/chat/presentation/widgets/sticker_import_listener.dart';
 import '../../features/chat/presentation/widgets/ticket_link_handler.dart';
 import '../../features/connections/presentation/widgets/local_cache_quick_settings.dart';
@@ -97,6 +99,7 @@ class AppShell extends ConsumerWidget {
                               child: Stack(
                                 children: [
                                   const ZenTaoProfileStartup(),
+                                  const ChatPrivacyShortcut(),
                                   Row(
                                     children: [
                                       const AppNavRail(),
@@ -124,6 +127,7 @@ class AppShell extends ConsumerWidget {
                                       ChatAutoDownloadSettings(),
                                       ChatNotificationSettings(),
                                       ChatPrivacySettings(),
+                                      ChatLocalApiSettings(),
                                     ],
                                   ),
                                   const TalkerDebugOverlay(),

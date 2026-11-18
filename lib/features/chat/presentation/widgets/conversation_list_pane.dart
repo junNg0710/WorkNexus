@@ -12,6 +12,7 @@ import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
+import '../providers/chat_category_providers.dart';
 import '../providers/chat_providers.dart';
 import 'chat_account_picker.dart';
 import 'chat_labels.dart';
@@ -20,7 +21,7 @@ import 'chat_panels.dart';
 import 'chat_search_field.dart';
 import 'chat_self_avatar_button.dart';
 import 'chat_text_scale.dart';
-import 'conversation_row.dart';
+import 'conversation_list_view.dart';
 import 'new_chat_dialog.dart';
 
 /// Left pane of the chat view: account picker, search and the chat list.
@@ -47,15 +48,13 @@ class ConversationListPane extends ConsumerWidget {
         ref.watch(chatUsersProvider(accountId)).asData?.value ??
         const <int, ChatUser>{};
     final query = ref.watch(chatSearchProvider).trim().toLowerCase();
-    final selected = ref.watch(selectedChatGidProvider(accountId));
-    final tab = ref.watch(chatListTabProvider);
-    final highlighted = ref.watch(chatSearchHighlightProvider);
+    final filter = ref.watch(chatListFilterProvider);
 
     final visible =
         [
               // `value`: a failed refresh keeps the chats already listed.
               for (final chat in chatsAsync.value ?? const <ChatConversation>[])
-                if (!chat.hidden && !chat.archived && tab.matches(chat))
+                if (filter.matches(chat))
                   (chat: chat, title: chatTitle(context, chat, users)),
             ]
             .where(
@@ -147,22 +146,11 @@ class ConversationListPane extends ConsumerWidget {
               // Rows run edge to edge: the selection fills the whole row.
               // The rows follow the chat text size, like the messages.
               _ => ChatTextScale(
-                child: ListView.builder(
-                  itemCount: visible.length,
-                  itemBuilder: (context, i) {
-                    final e = visible[i];
-                    return ConversationRow(
-                      key: ValueKey(e.chat.gid),
-                      accountId: accountId,
-                      chat: e.chat,
-                      title: e.title,
-                      users: users,
-                      selected: e.chat.gid == selected,
-                      highlighted:
-                          query.isNotEmpty && e.chat.gid == highlighted,
-                      compact: compact,
-                    );
-                  },
+                child: ConversationListView(
+                  accountId: accountId,
+                  chats: visible,
+                  users: users,
+                  compact: compact,
                 ),
               ),
             },
@@ -173,11 +161,9 @@ class ConversationListPane extends ConsumerWidget {
   }
 }
 
-typedef _Listed = ({ChatConversation chat, String title});
-
 /// Steps the search highlight by [step] through [visible], from the top (↓)
 /// or the bottom (↑) when nothing listed is highlighted yet.
-void _moveHighlight(WidgetRef ref, List<_Listed> visible, int step) {
+void _moveHighlight(WidgetRef ref, List<ListedChat> visible, int step) {
   if (visible.isEmpty) return;
   // Read now, not from the last build: keys can repeat faster than frames.
   final highlighted = ref.read(chatSearchHighlightProvider);
@@ -190,7 +176,11 @@ void _moveHighlight(WidgetRef ref, List<_Listed> visible, int step) {
 
 /// Opens the highlighted chat — the first listed when none is — as a tap on
 /// its row would.
-void _openHighlighted(WidgetRef ref, String accountId, List<_Listed> visible) {
+void _openHighlighted(
+  WidgetRef ref,
+  String accountId,
+  List<ListedChat> visible,
+) {
   if (visible.isEmpty) return;
   final highlighted = ref.read(chatSearchHighlightProvider);
   final pick =

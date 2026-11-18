@@ -59,6 +59,20 @@
   "project": "Project",
   "parentTask": "Parent task",
   "subtasks": "Subtasks",
+  "subtaskCountNested": "{direct} · {total} total",
+  "@subtaskCountNested": {
+    "description": "Subtask header count when subtasks have their own: direct subtasks, then all levels.",
+    "placeholders": {
+      "direct": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "subtaskExpand": "Show subtasks",
+  "subtaskCollapse": "Hide subtasks",
   "relatedBugs": "Related bugs",
   "relatedBugsLoadFailed": "Couldn't load the related bugs from ZenTao.",
   "insertImage": "Insert image",
@@ -149,6 +163,11 @@
   "cardKindTask": "Task",
   "summary": "Summary",
   "updated": "Updated",
+  "boardSort": "Sort cards",
+  "boardSortCreated": "Created",
+  "@boardSortCreated": {
+    "description": "Board sort option: by ticket id, i.e. creation order."
+  },
   "priorityUrgent": "Urgent",
   "priorityHigh": "High",
   "priorityMedium": "Medium",
@@ -157,15 +176,18 @@
   "vietnamese": "Vietnamese",
   "description": "Description",
   "comments": "Comments",
-  "translate": "Translate with OpenCode",
-  "retranslate": "Re-translate with OpenCode",
-  "translating": "Translating with OpenCode…",
+  "translate": "Translate with {provider}",
+  "retranslate": "Re-translate with {provider}",
+  "translating": "Translating with {provider}…",
   "notTranslated": "Not translated",
   "translated": "Translated",
   "translationLanguage": "Translation language",
-  "runOpenCodeToTranslate": "Run OpenCode to generate a {language} version.",
-  "@runOpenCodeToTranslate": {
+  "runAiToTranslate": "Translate with {provider} to get a {language} version.",
+  "@runAiToTranslate": {
     "placeholders": {
+      "provider": {
+        "type": "String"
+      },
       "language": {
         "type": "String"
       }
@@ -1033,6 +1055,56 @@
   "chatInMeeting": "In meeting",
   "chatOffline": "Offline",
   "chatChangeGroupAvatar": "Change group picture",
+  "chatRenameGroup": "Rename group",
+  "chatDismissGroup": "Dismiss group",
+  "chatDismissGroupConfirm": "Dismiss “{name}” for every member? It leaves everyone's chat list and can't be undone.",
+  "@chatDismissGroupConfirm": {"placeholders": {"name": {"type": "String"}}},
+  "chatGroupDismissed": "Group dismissed",
+  "chatSetCategory": "Category…",
+  "chatCategorize": "Categorize",
+  "chatFilterByStatus": "By status",
+  "chatFilterAll": "All",
+  "chatFilterUnread": "Unread",
+  "chatFilterByCategory": "By category tag",
+  "chatNoCategories": "No tags yet. Right-click a chat and pick “Category…” to tag it.",
+  "chatManageCategories": "Manage category tags",
+  "chatManageCategoriesHint": "Renaming or deleting a tag changes it on every chat it is on.",
+  "chatCategorizeTitle": "Categorize chat",
+  "chatCategoryName": "Category name, e.g. Projects",
+  "chatRemoveCategory": "Remove from category",
+  "chatRenameCategory": "Rename category",
+  "chatDeleteCategory": "Delete category",
+  "chatDeleteCategoryConfirm": "Delete the “{name}” category? Its chats stay, just uncategorised.",
+  "@chatDeleteCategoryConfirm": {"placeholders": {"name": {"type": "String"}}},
+  "chatGroupSettings": "Group settings",
+  "chatPublicGroup": "Public group",
+  "chatPublicGroupHint": "Anyone can find this group and join it",
+  "chatAdminInvite": "Only the owner and admins add members",
+  "chatAdminInviteHint": "Off: anyone who can post may add people",
+  "chatWhoCanPost": "Who can send messages",
+  "chatPostEveryone": "Everyone",
+  "chatPostAdmins": "Admins only",
+  "chatPostSelected": "Chosen members",
+  "chatPostSelectedHint": "The owner can always post. Tick who else can:",
+  "chatAdminBadge": "Admin",
+  "chatMakeAdmin": "Make admin",
+  "chatRemoveAdmin": "Remove as admin",
+  "chatTransferOwner": "Make group owner",
+  "chatTransferOwnerConfirm": "Make {name} the owner of “{group}”? You become a regular member and can no longer undo this yourself.",
+  "@chatTransferOwnerConfirm": {"placeholders": {"name": {"type": "String"}, "group": {"type": "String"}}},
+  "chatOwnerTransferred": "Group owner changed",
+  "chatMemberActions": "Member actions",
+  "chatLeaveGroup": "Leave group",
+  "chatLeaveGroupConfirm": "Leave “{name}”? You stop getting its messages until someone adds you back.",
+  "@chatLeaveGroupConfirm": {"placeholders": {"name": {"type": "String"}}},
+  "chatLeftGroup": "You left the group",
+  "chatAddMembers": "Add members",
+  "chatAdd": "Add",
+  "chatMembersAdded": "Members added",
+  "chatRemoveMember": "Remove from group",
+  "chatRemoveMemberConfirm": "Remove {name} from “{group}”? They stop seeing new messages.",
+  "@chatRemoveMemberConfirm": {"placeholders": {"name": {"type": "String"}, "group": {"type": "String"}}},
+  "chatMemberRemoved": "Removed from the group",
   "chatMyProfile": "Your profile",
   "chatMyCloud": "My Cloud",
   "chatMyCloudHint": "Notes, links and files you keep for yourself",
@@ -2262,8 +2334,76 @@
     }
   },
   "chatPrivacy": "Privacy",
+  "chatPrivacyMode": "Privacy mode",
+  "chatPrivacyModeHint": "Hides chats on screen until you point at them, for a shared screen or a look over your shoulder: names and previews turn into dots, avatars into a placeholder, messages fade out. Nothing stored or sent changes. Shortcut: {shortcut}.",
+  "@chatPrivacyModeHint": {
+    "placeholders": {
+      "shortcut": {
+        "type": "String"
+      }
+    }
+  },
+  "chatHidePreviews": "Hide message previews",
+  "chatHidePreviewsHint": "The last message under each chat in the list shows as dots.",
+  "chatHideIdentities": "Hide chat names and avatars",
+  "chatHideIdentitiesHint": "In the chat list, at the top of the open chat and in its message box.",
+  "chatHideMessages": "Fade out messages",
+  "chatHideMessagesHint": "Every message in the open chat, its threads and pins.",
   "chatSendTypingStatus": "Show when I'm typing",
   "chatSendTypingStatusHint": "People in one-to-one and group chats see when you are typing a message.",
+  "chatLocalApiSection": "AI tools",
+  "chatLocalApi": "Let local AI tools use chat",
+  "chatLocalApiHint": "Programs on this computer, such as an AI assistant's MCP server, can send chat messages as you, load older history and download files and images through this app, without your password. Only turn this on for tools you trust.",
+  "mcpSetupOpen": "Connect an AI tool (MCP)",
+  "mcpSetupTitle": "Connect an AI tool",
+  "mcpSetupIntro": "WorkNexus comes with an MCP server: add it to Claude or another MCP-capable assistant, and it can list, read and search your ZenTao chats (and TBChat, when installed), send messages, load older history and open files and images.",
+  "mcpSetupNodeFound": "Node.js {version} at {path}",
+  "@mcpSetupNodeFound": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpSetupNodeOld": "Node.js {version} is too old: the MCP server needs {min} or newer.",
+  "@mcpSetupNodeOld": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpSetupNodeMissing": "Node.js was not found. Install Node.js {min} or newer, then open this guide again.",
+  "@mcpSetupNodeMissing": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpSetupNodeVersionManager": "This Node.js belongs to one version of a version manager (nvm, fnm, asdf, …). If you switch away from or remove that version, the AI tool can no longer start the server: open this guide again and register it with the new path.",
+  "mcpSetupGetNode": "Get Node.js",
+  "mcpSetupFailed": "Could not prepare the MCP server",
+  "mcpSetupClaudeCode": "Claude Code",
+  "mcpSetupClaudeCodeHint": "Run in a terminal, then start a new Claude Code session.",
+  "mcpSetupClaudeDesktop": "Claude Desktop",
+  "mcpSetupClaudeDesktopHint": "Add to {file} (merge into its \"mcpServers\" if it has one), then restart Claude Desktop.",
+  "@mcpSetupClaudeDesktopHint": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpSetupOtherClient": "Other MCP clients",
+  "mcpSetupOtherClientHint": "Cursor, Windsurf and others take the same entry in their MCP settings.",
+  "mcpSetupSendNote": "Reading what WorkNexus already stored works right away. To let the assistant send messages, load older history and open files and images, also turn on \"Let local AI tools use chat\" below. WorkNexus must be running for that.",
   "chatReactions": "Reactions",
   "chatReactionsHint": "Show a reply that is just an emoji as a reaction under the message it answers, and react to messages. ZenTao's own client shows a reaction as an emoji reply.",
   "chatTyping": "typing…",
@@ -2550,7 +2690,6 @@
   "viewCalendar": "Calendar",
   "viewGantt": "Gantt",
   "sprints": "Executions",
-  "docs": "Docs",
   "roleProjectManagement": "Project management",
   "roleCodeHosting": "Code hosting",
   "roleCodeHostingCi": "Code hosting & CI",
@@ -2704,10 +2843,25 @@
   "zentaoNoModules": "This product has no modules.",
   "zentaoModulesUnavailable": "Couldn't load the modules",
   "boardShownOfTotal": "{shown} of {total} shown",
-  "@boardShownOfTotal": {"placeholders": {"shown": {"type": "int"}, "total": {"type": "int"}}},
+  "@boardShownOfTotal": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "boardFoldColumn": "Fold column",
   "boardOpenColumn": "Open {column}",
-  "@boardOpenColumn": {"placeholders": {"column": {"type": "String"}}},
+  "@boardOpenColumn": {
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
   "removeFilter": "Remove filter",
   "zentaoOtherExecutions": "Other executions…",
   "zentaoOtherProducts": "Other products…",
@@ -2830,6 +2984,14 @@
       }
     }
   },
+  "miniAppCookiesKeychainTimeout": "macOS got no answer to the prompt for {browser}'s cookie key. It may be behind this window, or on another desktop while the app is full screen. Try again and choose Allow.",
+  "@miniAppCookiesKeychainTimeout": {
+    "placeholders": {
+      "browser": {
+        "type": "String"
+      }
+    }
+  },
   "miniAppCookiesSafariAccess": "Reading Safari's cookies needs Full Disk Access: turn it on for WorkNexus, then try again.",
   "miniAppCookiesOpenPrivacy": "Open Privacy settings",
   "miniAppCookiesReadFailed": "Could not read this browser's cookies.",
@@ -2841,5 +3003,113 @@
         "type": "String"
       }
     }
-  }
+  },
+  "@translate": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "@retranslate": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "@translating": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "translatedVia": "Translated · via {model}",
+  "@translatedVia": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "translatedViaDefault": "Translated · via OpenCode's default model",
+  "chatTranslatedByDefault": "Translated by OpenCode's default model",
+  "chatAiAssistant": "AI assistant",
+  "chatAiOpenAssistant": "Summarize with AI",
+  "chatAiCatchUp": "{count} new messages since you last looked",
+  "@chatAiCatchUp": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatAiCatchUpAction": "Summarize",
+  "chatAiDismiss": "Dismiss",
+  "chatAiScopeUnread": "Unread",
+  "chatAiSummaryIntro": "Get the gist of the conversation: key points, decisions, who does what and what is still open.",
+  "chatAiSummarize": "Summarize",
+  "chatAiSummarizing": "Summarizing…",
+  "chatAiOverview": "Overview",
+  "chatAiKeyPoints": "Key points",
+  "chatAiDecisions": "Decisions",
+  "chatAiActionItems": "Action items",
+  "chatAiOpenQuestions": "Open questions",
+  "chatAiDue": "Due {due}",
+  "@chatAiDue": {
+    "placeholders": {
+      "due": {
+        "type": "String"
+      }
+    }
+  },
+  "chatAiSummaryFooter": "{count} messages · {model}",
+  "@chatAiSummaryFooter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "chatAiSummaryFooterNoModel": "{count} messages summarized",
+  "@chatAiSummaryFooterNoModel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatAiRegenerate": "Summarize again",
+  "chatAiCopySummary": "Copy summary",
+  "chatAiSummaryCopied": "Summary copied",
+  "chatAiFailed": "The AI couldn't answer: {error}",
+  "@chatAiFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chatAiNote": "Written by AI from the messages · check before relying on it",
+  "chatAiTools": "AI tools",
+  "chatAiSuggestReplies": "Suggest replies",
+  "chatAiSuggesting": "Thinking of replies…",
+  "chatAiSuggestionHint": "Pick one to edit it before sending",
+  "chatAiRewriteClearer": "Make it clearer",
+  "chatAiRewriteFormal": "More formal",
+  "chatAiRewriteFriendly": "Friendlier",
+  "chatAiRewriteShorter": "Shorter",
+  "chatAiRewriteNeedsDraft": "Type a message for the AI to rewrite",
+  "chatAiRewriteNoMentions": "Rewriting would drop the @mentions in this message",
+  "chatAiRewriting": "Rewriting…",
+  "chatAiScopeLabel": "Messages to summarize",
+  "chatStickerSuggestions": "Send as a sticker",
+  "chatStickerReplies": "Reply with a sticker",
+  "chatStickerSuggestionsClose": "Hide sticker suggestions",
+  "chatStickerSuggestionsSetting": "Sticker suggestions",
+  "chatAiSummaryLanguage": "Summary language"
 }

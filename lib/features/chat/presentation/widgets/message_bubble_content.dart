@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/chat_message.dart';
+import 'chat_privacy_mask.dart';
 import 'message_body.dart';
+import 'message_fit_cards.dart';
 import 'message_link_previews.dart';
 import 'message_translation_view.dart';
 
@@ -36,34 +38,50 @@ class MessageBubbleContent extends StatelessWidget {
     final s = context.spacing;
     final footer = this.footer;
     final pinned = timeAtEnd && footer != null;
-    final column = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (name case final name?)
+    // The bubble stays solid under the faded words, so they leave no hole to
+    // the wallpaper. A picture is not faded: its grey cover must show, so
+    // only the words around it are.
+    final picture = isChatPicture(message.content);
+    Widget words(Widget child) =>
+        picture ? ChatPrivacyFade(child: child) : child;
+    final content = [
+      if (name case final name?)
+        words(
           Padding(
             padding: EdgeInsets.only(bottom: s.xxs),
             child: name,
           ),
-        ?quote,
-        MessageBody(accountId: accountId, message: message),
-        MessageTranslationView(accountId: accountId, gid: message.gid),
-        // Compact previews of the links, under the text.
-        MessageLinkPreviews(message: message),
-        if (footer != null)
-          Padding(
-            padding: EdgeInsets.only(top: s.xs),
-            child: pinned ? _Ghost(footer) : footer,
-          ),
-      ],
-    );
-    // The cards under the text are as wide as the bubble: it is sized to its
-    // widest content, and they then take that width.
+        ),
+      if (quote case final quote?) words(quote),
+      MessageBody(accountId: accountId, message: message),
+      words(MessageTranslationView(accountId: accountId, gid: message.gid)),
+    ];
+    final footerRow = footer == null
+        ? null
+        : words(
+            Padding(
+              padding: EdgeInsets.only(top: s.xs),
+              child: pinned ? _Ghost(footer) : footer,
+            ),
+          );
+    // Compact previews of the links, under the text, as wide as the bubble:
+    // it is sized to its widest content, and they then take that width.
     final sized = messageHasLinkPreviews(message)
-        ? IntrinsicWidth(child: column)
-        : column;
-    return pinned ? _Pinned(footer: footer, child: sized) : sized;
+        ? MessageFitCards(
+            content: _column(content),
+            cards: MessageLinkPreviews(message: message),
+            footer: footerRow,
+          )
+        : _column([...content, ?footerRow]);
+    final whole = pinned ? _Pinned(footer: words(footer), child: sized) : sized;
+    return picture ? whole : ChatPrivacyFade(child: whole);
   }
+
+  static Widget _column(List<Widget> children) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: children,
+  );
 }
 
 /// [child] with [footer] pinned to its bottom-end corner.

@@ -17,6 +17,7 @@ import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
 import 'chat_layout.dart';
 import 'chat_panels.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_side_panel_frame.dart';
 import 'chat_snack.dart';
 
@@ -100,12 +101,14 @@ class _PinnedMessageBarState extends ConsumerState<PinnedMessageBar> {
                         color: c.textPrimary,
                       ),
                     ),
-                    Text(
-                      preview ?? '…',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.typography.bodySm.copyWith(
-                        color: c.textSecondary,
+                    ChatPrivacyFade(
+                      child: Text(
+                        preview ?? '…',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.typography.bodySm.copyWith(
+                          color: c.textSecondary,
+                        ),
                       ),
                     ),
                   ],

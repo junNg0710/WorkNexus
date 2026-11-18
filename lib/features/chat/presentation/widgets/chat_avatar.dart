@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -36,7 +37,12 @@ class ChatAvatar extends StatelessWidget {
     this.background,
     this.icon,
     this.verified,
+    this.masked = false,
   });
+
+  /// Draws a plain placeholder ([icon], else a person) instead of the
+  /// picture or initials: the privacy mode hiding who a chat is with.
+  final bool masked;
 
   /// Draws a "verified" check (a leading role, see [chatVerifiedBadge]) at
   /// the top right; hovering it explains it.
@@ -87,7 +93,9 @@ class ChatAvatar extends StatelessWidget {
         borderRadius: BorderRadius.circular(
           shape == ChatAvatarShape.circle ? diameter / 2 : diameter * 0.12,
         ),
-        child: url == null || url.isEmpty
+        child: masked
+            ? _Placeholder(icon: icon, diameter: diameter)
+            : url == null || url.isEmpty
             ? initials
             : CachedNetworkImage(
                 imageUrl: url,
@@ -168,15 +176,35 @@ class ChatAvatar extends StatelessWidget {
 /// How strongly an initials avatar is tinted with its hue.
 const double _kInitialsTint = 0.22;
 
-/// The avatar hue for [name]: one of the theme's semantic colours, picked by
-/// a stable hash of the name (String.hashCode can differ between runs).
-Color _avatarHue(AppColors c, String name) {
+/// The hue for [name] (an avatar's, a category tag's): one of the theme's
+/// semantic colours, picked by a stable hash of the name (String.hashCode can differ between runs).
+Color chatNameHue(AppColors c, String name) {
   final hues = [c.accent, c.success, c.warning, c.info, c.caution, c.error];
   var hash = 0;
   for (final unit in name.codeUnits) {
     hash = (hash * 31 + unit) & 0x7fffffff;
   }
   return hues[hash % hues.length];
+}
+
+/// A neutral avatar that says nothing about whose it is.
+class _Placeholder extends StatelessWidget {
+  const _Placeholder({required this.icon, required this.diameter});
+
+  final IconData? icon;
+  final double diameter;
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: context.colors.surfaceSubtle,
+    child: Center(
+      child: Icon(
+        icon ?? LucideIcons.user300,
+        size: diameter * 0.5,
+        color: context.colors.textTertiary,
+      ),
+    ),
+  );
 }
 
 class _Initials extends StatelessWidget {
@@ -210,7 +238,7 @@ class _Initials extends StatelessWidget {
     // A hue of its own per name (stable across launches), so an avatar is
     // told apart from its neighbours and from the selected row's tint.
     // Opaque: a tinted fill would let the chat wallpaper show through.
-    final hue = _avatarHue(c, name);
+    final hue = chatNameHue(c, name);
     final fill =
         background ??
         Color.alphaBlend(hue.withValues(alpha: _kInitialsTint), c.surface);

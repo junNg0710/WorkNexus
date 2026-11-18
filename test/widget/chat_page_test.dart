@@ -15,6 +15,7 @@ import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/theme/app_motion.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/core/widgets/app_entrance.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_cache_usage.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
@@ -29,14 +30,19 @@ import 'package:work_nexus/features/chat/domain/value_objects/chat_typing_signal
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/pages/chat_page.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
+import 'package:work_nexus/features/chat/presentation/providers/chat_staged_files_provider.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_trust_preview.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_typing_providers.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/attachment_preview_dialog.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_composer.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_composer_controller.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_composer_field.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_files_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_info_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_list_tabs.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_members_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_search_field.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_staged_files.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_header.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_search_bar.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_bubble.dart';
@@ -116,6 +122,29 @@ class _FakeChatRepository implements ChatRepository {
   }) async => const Ok(null);
 
   @override
+  Future<Result<void>> renameGroupChat(String a, String c, String n) async =>
+      const Ok(null);
+
+  @override
+  Future<Result<void>> dismissGroupChat(String a, String c) async =>
+      const Ok(null);
+
+  @override
+  Future<Result<void>> leaveGroupChat(String a, String c) async =>
+      const Ok(null);
+
+  @override
+  Future<Result<void>> addGroupMembers(String a, String c, List<int> u) async =>
+      const Ok(null);
+
+  @override
+  Future<Result<void>> removeGroupMembers(
+    String a,
+    String c,
+    List<int> u,
+  ) async => const Ok(null);
+
+  @override
   Future<Result<void>> setMyAvatar(
     String a,
     Uint8List image, {
@@ -130,7 +159,39 @@ class _FakeChatRepository implements ChatRepository {
     String a, {
     required String name,
     required List<int> memberIds,
+    bool isPublic = false,
   }) async => const Ok('new');
+
+  @override
+  Future<Result<void>> setChatCategory(
+    String a,
+    List<String> g,
+    String c,
+  ) async => const Ok(null);
+
+  @override
+  Future<Result<void>> setGroupSettings(
+    String a,
+    String c, {
+    required bool isPublic,
+    required bool adminInvite,
+    required String committers,
+  }) async => const Ok(null);
+
+  @override
+  Future<Result<void>> setGroupAdmins(
+    String a,
+    String c,
+    List<int> u, {
+    required bool admin,
+  }) async => const Ok(null);
+
+  @override
+  Future<Result<void>> transferGroupOwnership(
+    String a,
+    String c,
+    int u,
+  ) async => const Ok(null);
 
   @override
   Future<Result<Duration>> videoDuration(String a, MessageContent v) async =>
@@ -508,7 +569,13 @@ class _FakeChatRepository implements ChatRepository {
 void main() {
   late _FakeChatRepository repo;
 
-  setUp(() => repo = _FakeChatRepository());
+  /// What a paste finds on the clipboard: only text, unless a test says.
+  late Future<List<ClipboardFile>?> Function() clipboard;
+
+  setUp(() {
+    repo = _FakeChatRepository();
+    clipboard = () async => null;
+  });
 
   Future<void> pumpChat(
     WidgetTester tester, {
@@ -531,6 +598,7 @@ void main() {
             ),
           chatRepositoryProvider.overrideWithValue(repo),
           chatTypingClockProvider.overrideWithValue(tester.binding.clock.now),
+          chatClipboardFilesProvider.overrideWithValue(() => clipboard()),
           chatAccountsProvider.overrideWithValue(const [
             Account(
               id: 'acc',
@@ -711,6 +779,25 @@ void main() {
       reason: 'not built and painted again on every switch',
     );
     expect(tester.state(find.byType(MessageList)), isNot(same(list)));
+  });
+
+  testWidgets('switching chats fades the messages in, not the header or '
+      'the input', (tester) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+    await tester.tap(find.text('Dyno').first);
+    // Mid-way through the switch.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    bool fading(Finder f) => find
+        .ancestor(of: f, matching: find.byType(AppEntrance))
+        .evaluate()
+        .isNotEmpty;
+    expect(fading(find.byType(MessageList)), isTrue);
+    expect(fading(find.byType(ChatThreadHeader)), isFalse);
+    expect(fading(find.byType(ChatComposer)), isFalse);
+    await tester.pumpAndSettle();
   });
 
   testWidgets('the header bell mutes this chat, not every notification', (
@@ -919,6 +1006,93 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     expect(repo.calls, contains('send g1 first line'));
+  });
+
+  testWidgets('each chat keeps its unsent text and files until sent', (
+    tester,
+  ) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+    ChatComposerController field() => tester
+        .widget<ChatComposerField>(find.byType(ChatComposerField).last)
+        .controller;
+    field().insertText('draft for the team');
+    await tester.pump();
+    // A pasted or dropped image waits in the input (which then hides the
+    // text) until sent.
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ChatPage)),
+    );
+    const team = (chat: (accountId: 'acc', chatGid: 'g1'), inThread: false);
+    final image = (name: 'pasted-1.png', bytes: Uint8List.fromList([1, 2]));
+    container.read(chatStagedFilesProvider(team).notifier).state = [image];
+    await tester.pumpAndSettle();
+    expect(find.byType(ChatStagedFiles), findsOneWidget);
+
+    await tester.tap(find.text('Dyno').first);
+    await tester.pumpAndSettle();
+    expect(find.byType(ChatStagedFiles), findsNothing);
+    expect(field().isBlank, isTrue, reason: 'the other chat has its own');
+
+    await openTeamChat(tester);
+    expect(find.byType(ChatStagedFiles), findsOneWidget);
+    expect(container.read(chatStagedFilesProvider(team)), [image]);
+    container.read(chatStagedFilesProvider(team).notifier).state = const [];
+    await tester.pumpAndSettle();
+    expect(field().plainText, 'draft for the team');
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(ChatComposerField).last,
+        matching: find.byType(TextField),
+      ),
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(repo.calls, contains('send g1 draft for the team'));
+    await tester.tap(find.text('Dyno').first);
+    await tester.pumpAndSettle();
+    await openTeamChat(tester);
+    expect(field().isBlank, isTrue, reason: 'sending empties the draft');
+  });
+
+  testWidgets('a pasted image waits in the input, not in a preview, and '
+      'stays with its chat', (tester) async {
+    final image = Uint8List.fromList([1, 2, 3]);
+    clipboard = () async => [(name: 'pasted-1.png', bytes: image)];
+    await pumpChat(tester);
+    await openTeamChat(tester);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(ChatComposerField).last,
+        matching: find.byType(TextField),
+      ),
+    );
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyV);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AttachmentPreviewDialog), findsNothing);
+    expect(find.byType(ChatStagedFiles), findsOneWidget);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ChatPage)),
+    );
+    const team = (chat: (accountId: 'acc', chatGid: 'g1'), inThread: false);
+    final held = container.read(chatStagedFilesProvider(team));
+    expect(held.single.name, startsWith('pasted-'));
+    expect(held.single.bytes, image);
+
+    await tester.tap(find.text('Dyno').first);
+    await tester.pumpAndSettle();
+    expect(find.byType(ChatStagedFiles), findsNothing);
+    await openTeamChat(tester);
+    expect(find.byType(ChatStagedFiles), findsOneWidget);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(container.read(chatStagedFilesProvider(team)), isEmpty);
+    expect(repo.calls.where((c) => c.startsWith('send')), isEmpty);
   });
 
   testWidgets('typing is announced, and sending ends it', (tester) async {

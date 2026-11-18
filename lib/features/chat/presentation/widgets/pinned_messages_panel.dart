@@ -8,6 +8,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/inline_status.dart';
+import '../../../../core/widgets/privacy_mask.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
@@ -104,39 +105,42 @@ class _PinnedMessagesPanelState extends ConsumerState<PinnedMessagesPanel> {
             )
           : messages.isEmpty && _failed
           ? AppStateView.error(compact: true, onRetry: () => _retry(missing))
-          : ListView(
-              padding: EdgeInsets.all(context.spacing.xl3),
-              children: [
-                for (final m in messages)
-                  _PinnedCard(
-                    key: ValueKey(m.gid),
-                    thread: t,
-                    message: m,
-                    users: widget.users,
-                  ),
-                if (_failed)
-                  Padding(
-                    padding: EdgeInsets.only(top: context.spacing.md),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: AppInlineNote(
-                            text: l.stateLoadFailedTitle,
-                            isError: true,
-                          ),
-                        ),
-                        AppButton.textNeutral(
-                          size: AppButtonSize.extraSmall,
-                          icon: LucideIcons.refreshCw300,
-                          onPressed: () => _retry(missing),
-                          child: Text(l.retry),
-                        ),
-                      ],
+          // Pointing anywhere on the pins shows all of them.
+          : PrivacyRevealRegion(
+              child: ListView(
+                padding: EdgeInsets.all(context.spacing.xl3),
+                children: [
+                  for (final m in messages)
+                    _PinnedCard(
+                      key: ValueKey(m.gid),
+                      thread: t,
+                      message: m,
+                      users: widget.users,
                     ),
-                  )
-                else if (waiting)
-                  const AppInlineSpinner(),
-              ],
+                  if (_failed)
+                    Padding(
+                      padding: EdgeInsets.only(top: context.spacing.md),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: AppInlineNote(
+                              text: l.stateLoadFailedTitle,
+                              isError: true,
+                            ),
+                          ),
+                          AppButton.textNeutral(
+                            size: AppButtonSize.extraSmall,
+                            icon: LucideIcons.refreshCw300,
+                            onPressed: () => _retry(missing),
+                            child: Text(l.retry),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (waiting)
+                    const AppInlineSpinner(),
+                ],
+              ),
             ),
     );
   }

@@ -10,7 +10,9 @@ import '../providers/chat_providers.dart';
 import 'chat_style.dart';
 import 'chat_typing_bubble.dart';
 import 'list_extent_estimate.dart';
+import 'list_row_widget_cache.dart';
 import 'message_jump.dart';
+import 'message_jump_sliver.dart';
 import 'message_list_item.dart';
 import 'steady_extent_child_delegate.dart';
 
@@ -36,6 +38,8 @@ class MessageListView extends StatelessWidget {
     required this.typingActive,
     required this.extent,
     required this.jump,
+    required this.rowCache,
+    required this.arrivals,
     required this.header,
     required this.onMetrics,
     required this.onMouseDown,
@@ -54,6 +58,11 @@ class MessageListView extends StatelessWidget {
   final bool typingActive;
   final ListExtentEstimate extent;
   final MessageJump jump;
+  final ListRowWidgetCache rowCache;
+
+  /// Gids of messages that just arrived; a row built for one eases in, once
+  /// (the gid is taken out as its row is built).
+  final Set<String> arrivals;
   final Widget header;
   final bool Function(ScrollMetrics metrics) onMetrics;
   final VoidCallback onMouseDown;
@@ -69,6 +78,64 @@ class MessageListView extends StatelessWidget {
         else if (item is ChatTypingItem)
           _kTypingKey: i,
     };
+    rowCache.retain(rows.keys.toSet());
+    Widget row(BuildContext context, int i) {
+      if (i == items.length) return header;
+      final item = items[i];
+      if (item is ChatTypingItem) {
+        return ChatTypingBubble(
+          key: const ValueKey(_kTypingKey),
+          thread: thread,
+          style: style,
+          users: users,
+          showSenders: showSenders,
+          active: typingActive,
+        );
+      }
+      if (item is! ChatMessage) {
+        return MessageListItem(
+          thread: thread,
+          item: item,
+          style: style,
+          users: users,
+          showSenders: showSenders,
+        );
+      }
+      final first = !chatSameRun(
+        i + 1 < items.length ? items[i + 1] : null,
+        item,
+      );
+      final last = !chatSameRun(i > 0 ? items[i - 1] : null, item);
+      final summary = summaries[item.serverId];
+      final arriving = arrivals.remove(item.gid);
+      return rowCache.row(
+        item.gid,
+        [
+          item,
+          first,
+          last,
+          summary,
+          arriving,
+          style,
+          users,
+          showSenders,
+          thread,
+        ],
+        () => MessageListItem(
+          key: ValueKey(item.gid),
+          thread: thread,
+          item: item,
+          style: style,
+          users: users,
+          showSenders: showSenders,
+          firstOfRun: first,
+          lastOfRun: last,
+          summary: summary,
+          arriving: arriving,
+        ),
+      );
+    }
+
     return Listener(
       onPointerDown: (e) {
         // The user takes over: a jumped-to row stops being held centred.
@@ -83,48 +150,30 @@ class MessageListView extends StatelessWidget {
         onNotification: (n) => n.depth == 0 && onMetrics(n.metrics),
         child: NotificationListener<ScrollUpdateNotification>(
           onNotification: (n) => n.depth == 0 && onMetrics(n.metrics),
-          child: ListView.custom(
+          child: CustomScrollView(
             scrollCacheExtent: const ScrollCacheExtent.pixels(_kCacheExtent),
             controller: scroll,
             reverse: true,
-            // Rows add their own side margins, so a highlighted row's tint
-            // spans the full width.
-            padding: EdgeInsets.symmetric(vertical: context.spacing.xl3),
-            childrenDelegate: SteadyExtentChildDelegate(
-              (context, i) => i == items.length
-                  ? header
-                  : items[i] is ChatTypingItem
-                  ? ChatTypingBubble(
-                      key: const ValueKey(_kTypingKey),
-                      thread: thread,
-                      style: style,
-                      users: users,
-                      showSenders: showSenders,
-                      active: typingActive,
-                    )
-                  : MessageListItem(
-                      key: switch (items[i]) {
-                        final ChatMessage m => ValueKey(m.gid),
-                        _ => null,
-                      },
-                      anchor: switch (items[i]) {
-                        final ChatMessage m when m.gid == jump.targetGid =>
-                          jump.anchor,
-                        _ => null,
-                      },
-                      thread: thread,
-                      items: items,
-                      index: i,
-                      style: style,
-                      users: users,
-                      summaries: summaries,
-                      showSenders: showSenders,
+            slivers: [
+              SliverPadding(
+                // Rows add their own side margins, so a highlighted row's
+                // tint spans the full width.
+                padding: EdgeInsets.symmetric(vertical: context.spacing.xl3),
+                sliver: MessageJumpSliver(
+                  jump: jump,
+                  rows: items,
+                  sliver: SliverList(
+                    delegate: SteadyExtentChildDelegate(
+                      row,
+                      estimate: extent,
+                      childCount: items.length + 1,
+                      findChildIndexCallback: (key) =>
+                          key is ValueKey<String> ? rows[key.value] : null,
                     ),
-              estimate: extent,
-              childCount: items.length + 1,
-              findChildIndexCallback: (key) =>
-                  key is ValueKey<String> ? rows[key.value] : null,
-            ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

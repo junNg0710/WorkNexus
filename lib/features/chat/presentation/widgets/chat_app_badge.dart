@@ -4,7 +4,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../providers/chat_local_api_providers.dart';
 import '../providers/chat_providers.dart';
+import '../providers/mcp_setup_providers.dart';
 
 /// Keeps the unread count of followed chats on the app's icon (Dock,
 /// taskbar, launcher). Wraps the app shell so it runs whichever view is open.
@@ -24,6 +26,10 @@ class _ChatAppBadgeState extends ConsumerState<ChatAppBadge> {
     // Logs every ZenTao account into chat from launch, so the count is live
     // before the chat view is opened.
     ref.listenManual(chatAutoConnectProvider, (_, _) {});
+    // Serves local AI tools while the user has that setting on.
+    ref.listenManual(chatLocalApiRunnerProvider, (_, _) {});
+    // Keeps the MCP server those tools run in step with this build.
+    ref.listenManual(mcpScriptRefreshProvider, (_, _) {});
     ref.listenManual(chatBadgeUnreadProvider, (_, count) => _show(count));
     // The count already there (chats loaded before this appeared) too, or
     // the icon only shows it once it next changes. After this frame: the

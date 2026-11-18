@@ -14,6 +14,7 @@ import 'chat_file_body.dart';
 import 'chat_image_body.dart';
 import 'chat_labels.dart';
 import 'chat_links.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_user_profile_dialog.dart';
 import 'mention_text.dart';
 import 'notification_body.dart';
@@ -70,7 +71,7 @@ class MessageBody extends StatelessWidget {
         ),
       );
     }
-    return switch (message.content) {
+    final body = switch (message.content) {
       final TextContent content => ChatTextBody(
         accountId: accountId,
         text: content.text,
@@ -126,8 +127,21 @@ class MessageBody extends StatelessWidget {
         ),
       ),
     };
+    // A picture is covered whole while the privacy mode hides messages; the
+    // rest fades with the bubble's insides (see MessageBubbleContent).
+    return isChatPicture(message.content)
+        ? ChatPrivacyCover(child: body)
+        : body;
   }
 }
+
+/// Whether [content] draws as a picture (an image, a video, a big emoji):
+/// the privacy mode covers it in grey rather than fading it.
+bool isChatPicture(MessageContent content) => switch (content) {
+  ImageContent() || EmojiContent() => true,
+  final FileContent file => isVideoFile(file),
+  _ => false,
+};
 
 /// Message text — Markdown or plain with mentions and links. Link previews
 /// show under the bubble (`MessageLinkPreviews`).

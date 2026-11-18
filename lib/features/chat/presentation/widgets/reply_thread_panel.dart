@@ -7,6 +7,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/inline_status.dart';
+import '../../../../core/widgets/privacy_mask.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
@@ -78,53 +79,62 @@ class ReplyThreadPanel extends ConsumerWidget {
       child: Column(
         children: [
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.all(context.spacing.xl3),
-              children: [
-                if (root == null && rootAsync.isLoading)
-                  const AppInlineSpinner()
-                else if (root == null && rootAsync.hasError)
-                  AppInlineNote(text: l.stateLoadFailedTitle, isError: true)
-                else if (root == null)
-                  AppInlineNote(text: l.chatReplyMissing)
-                else
-                  ChatMessageCard(
-                    message: root,
-                    users: users,
-                    label: l.chatThread,
-                    labelIcon: LucideIcons.messagesSquare300,
-                    body: MessageBody(accountId: chat.accountId, message: root),
-                    onViewOriginal: () => jumpToChatMessage(ref, chat, rootId),
-                    trailing: AppIconButton(
-                      icon: LucideIcons.reply300,
-                      tooltip: l.chatReply,
-                      size: AppIconButtonSize.small,
-                      onPressed: () => reply(root),
-                    ),
-                  ),
-                if (replies.isNotEmpty) ...[
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: context.spacing.lg),
-                    child: Text(
-                      l.chatReplies(replies.length),
-                      style: context.typography.captionStrong.copyWith(
-                        color: c.textSecondary,
+            // Pointing anywhere on the thread shows all of it.
+            child: PrivacyRevealRegion(
+              child: ListView(
+                padding: EdgeInsets.all(context.spacing.xl3),
+                children: [
+                  if (root == null && rootAsync.isLoading)
+                    const AppInlineSpinner()
+                  else if (root == null && rootAsync.hasError)
+                    AppInlineNote(text: l.stateLoadFailedTitle, isError: true)
+                  else if (root == null)
+                    AppInlineNote(text: l.chatReplyMissing)
+                  else
+                    ChatMessageCard(
+                      message: root,
+                      users: users,
+                      label: l.chatThread,
+                      labelIcon: LucideIcons.messagesSquare300,
+                      body: MessageBody(
+                        accountId: chat.accountId,
+                        message: root,
+                      ),
+                      onViewOriginal: () =>
+                          jumpToChatMessage(ref, chat, rootId),
+                      trailing: AppIconButton(
+                        icon: LucideIcons.reply300,
+                        tooltip: l.chatReply,
+                        size: AppIconButtonSize.small,
+                        onPressed: () => reply(root),
                       ),
                     ),
-                  ),
-                  // Replies to replies keep their quote so the chain is clear.
-                  for (final r in replies)
-                    MessageBubble(
-                      key: ValueKey(r.gid),
-                      chat: chat,
-                      message: r,
-                      users: users,
-                      showQuote: r.replyToId != rootId,
-                      onOpenThread: (_) {},
-                      onReply: reply,
+                  if (replies.isNotEmpty) ...[
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: context.spacing.lg,
+                      ),
+                      child: Text(
+                        l.chatReplies(replies.length),
+                        style: context.typography.captionStrong.copyWith(
+                          color: c.textSecondary,
+                        ),
+                      ),
                     ),
+                    // Replies to replies keep their quote so the chain is clear.
+                    for (final r in replies)
+                      MessageBubble(
+                        key: ValueKey(r.gid),
+                        chat: chat,
+                        message: r,
+                        users: users,
+                        showQuote: r.replyToId != rootId,
+                        onOpenThread: (_) {},
+                        onReply: reply,
+                      ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ],

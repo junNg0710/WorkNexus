@@ -7,9 +7,12 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 
 import '../../domain/usecases/build_message_text.dart';
-import '../../domain/value_objects/markdown_format.dart';
+import '../providers/chat_composer_draft_provider.dart';
 import 'chat_mention_embed.dart';
 import 'chat_mention_text_controller.dart';
+
+// The Markdown toolbar's formats, as methods of the controller.
+export 'chat_composer_formatting.dart';
 
 /// What is being typed in the composer, written out as the message's text
 /// when it is sent (see [BuildMessageText]). With Markdown on it is rich text
@@ -17,7 +20,13 @@ import 'chat_mention_text_controller.dart';
 /// off, it is [plain] text in a platform text field. Switching carries the
 /// text and its mentions across.
 class ChatComposerController implements Listenable {
-  ChatComposerController({this._markdown = false});
+  /// Starts with [draft] when one is given, carried into [markdown]'s mode.
+  ChatComposerController({bool markdown = false, ChatComposerDraft? draft})
+    : _markdown = markdown {
+    if (draft == null) return;
+    restore(draft);
+    this.markdown = markdown;
+  }
 
   /// Pasting brings text only: what the toolbar can make is what is sent.
   final quill = QuillController(
@@ -169,63 +178,46 @@ class ChatComposerController implements Listenable {
     );
   }
 
-  /// Whether the selection has [format] (indent and clear never "are on").
-  bool isOn(MarkdownFormat format) {
-    final attribute = _attribute(format);
-    if (attribute == null) return false;
-    final current = quill.getSelectionStyle().attributes[attribute.key];
-    return current?.value == attribute.value;
-  }
-
-  /// Applies [format] to the selection, or takes it off when it is on.
-  void apply(MarkdownFormat format) {
-    switch (format) {
-      case MarkdownFormat.indent:
-        quill.indentSelection(true);
-      case MarkdownFormat.outdent:
-        quill.indentSelection(false);
-      case MarkdownFormat.clear:
-        final keys = {
-          for (final style in quill.getAllSelectionStyles())
-            ...style.attributes.keys,
-        };
-        for (final key in keys) {
-          if (Attribute.fromKeyValue(key, null) case final attribute?) {
-            quill.formatSelection(attribute);
-          }
-        }
-      default:
-        final attribute = _attribute(format)!;
-        quill.formatSelection(
-          isOn(format) ? Attribute.clone(attribute, null) : attribute,
-        );
-    }
-  }
-
-  static Attribute<Object?>? _attribute(MarkdownFormat format) =>
-      switch (format) {
-        MarkdownFormat.bold => Attribute.bold,
-        MarkdownFormat.italic => Attribute.italic,
-        MarkdownFormat.underline => Attribute.underline,
-        MarkdownFormat.strikethrough => Attribute.strikeThrough,
-        MarkdownFormat.code => Attribute.inlineCode,
-        MarkdownFormat.heading => Attribute.h1,
-        MarkdownFormat.quote => Attribute.blockQuote,
-        MarkdownFormat.bulletList => Attribute.ul,
-        MarkdownFormat.numberedList => Attribute.ol,
-        MarkdownFormat.indent ||
-        MarkdownFormat.outdent ||
-        MarkdownFormat.clear => null,
-      };
-
-  /// Moves [plain]'s text and mentions into [quill], the caret at the end.
-  void _toQuill() {
+  /// [plain] as a document: its operations and the closing line break.
+  Delta get _plainDelta {
     final delta = Delta();
     for (final op in _plainOps) {
       delta.insert(op['insert']);
     }
-    delta.insert('\n');
-    quill.document = Document.fromDelta(delta);
+    return delta..insert('\n');
+  }
+
+  /// What is typed, to put back later with [restore]; null when blank.
+  ChatComposerDraft? get draft => isBlank
+      ? null
+      : (
+          markdown: _markdown,
+          ops: (_markdown ? quill.document.toDelta() : _plainDelta).toJson(),
+          selection: selection,
+        );
+
+  /// Puts back [draft] in the mode it was typed in; set [markdown] after it
+  /// to carry it into the current one.
+  void restore(ChatComposerDraft draft) {
+    _markdown = draft.markdown;
+    final delta = Delta.fromJson(draft.ops);
+    if (_markdown) {
+      quill.document = Document.fromDelta(delta);
+      final end = quill.document.length - 1;
+      if (draft.selection.isValid && draft.selection.end <= end) {
+        quill.updateSelection(draft.selection, ChangeSource.local);
+      }
+    } else {
+      _setPlain(delta);
+      if (draft.selection.isValid && draft.selection.end <= plain.text.length) {
+        plain.selection = draft.selection;
+      }
+    }
+  }
+
+  /// Moves [plain]'s text and mentions into [quill], the caret at the end.
+  void _toQuill() {
+    quill.document = Document.fromDelta(_plainDelta);
     quill.updateSelection(
       TextSelection.collapsed(offset: quill.document.length - 1),
       ChangeSource.local,
@@ -235,9 +227,17 @@ class ChatComposerController implements Listenable {
 
   /// Moves [quill]'s text and mentions into [plain], without formatting.
   void _toPlain() {
+    final delta = quill.document.toDelta();
+    _clearQuill();
+    _setPlain(delta);
+  }
+
+  /// Puts document [delta]'s text and mentions in [plain], without
+  /// formatting.
+  void _setPlain(Delta delta) {
     final out = StringBuffer();
     final mentions = <ChatTextMention>[];
-    for (final op in quill.document.toDelta().toList()) {
+    for (final op in delta.toList()) {
       switch (op.data) {
         case final String text:
           out.write(text);
@@ -253,7 +253,6 @@ class ChatComposerController implements Listenable {
       }
     }
     final text = out.toString();
-    _clearQuill();
     plain.setContent(
       text.endsWith('\n') ? text.substring(0, text.length - 1) : text,
       mentions,

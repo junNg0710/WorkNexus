@@ -6,6 +6,7 @@ import '../theme/app_radii.dart';
 import '../theme/fonts.dart';
 import '../util/translation_languages.dart';
 import 'chat_appearance.dart';
+import 'chat_privacy.dart';
 import 'pinned_execution.dart';
 
 /// How the ticket detail panel arranges its body.
@@ -67,7 +68,10 @@ class AppSettings {
     this.chatNotifications = true,
     this.chatNotifyWhileViewing = true,
     this.chatSendTypingStatus = true,
+    this.chatPrivacy = const ChatPrivacy(),
+    this.chatLocalApi = false,
     this.chatReactions = false,
+    this.chatStickerSuggestions = true,
     this.chatCacheLimitMb = 2048,
     this.chatAutoDownloadVideos = true,
     this.chatAutoDownloadVideoMb = 20,
@@ -158,10 +162,21 @@ class AppSettings {
   /// Tell chat peers while the user is typing to them.
   final bool chatSendTypingStatus;
 
+  /// Blurring chats on screen; see [ChatPrivacy].
+  final ChatPrivacy chatPrivacy;
+
+  /// Let local tools (an AI assistant's MCP server) send chat messages
+  /// through this app's session, over a localhost endpoint.
+  final bool chatLocalApi;
+
   /// Read a reply that is just an emoji as a reaction: a chip under the
   /// message it answers, with a React action to add one. Off, such a reply
   /// is a message like any other, as the official client shows it.
   final bool chatReactions;
+
+  /// Suggest stickers over the composer: for what is being typed, and to
+  /// answer someone else's newest message while nothing is typed.
+  final bool chatStickerSuggestions;
 
   /// Most disk space downloaded chat attachments may use, in MB.
   final int chatCacheLimitMb;
@@ -211,7 +226,10 @@ class AppSettings {
     bool? chatNotifications,
     bool? chatNotifyWhileViewing,
     bool? chatSendTypingStatus,
+    ChatPrivacy? chatPrivacy,
+    bool? chatLocalApi,
     bool? chatReactions,
+    bool? chatStickerSuggestions,
     int? chatCacheLimitMb,
     bool? chatAutoDownloadVideos,
     int? chatAutoDownloadVideoMb,
@@ -251,7 +269,11 @@ class AppSettings {
       chatNotifyWhileViewing:
           chatNotifyWhileViewing ?? this.chatNotifyWhileViewing,
       chatSendTypingStatus: chatSendTypingStatus ?? this.chatSendTypingStatus,
+      chatPrivacy: chatPrivacy ?? this.chatPrivacy,
+      chatLocalApi: chatLocalApi ?? this.chatLocalApi,
       chatReactions: chatReactions ?? this.chatReactions,
+      chatStickerSuggestions:
+          chatStickerSuggestions ?? this.chatStickerSuggestions,
       chatCacheLimitMb: chatCacheLimitMb ?? this.chatCacheLimitMb,
       chatAutoDownloadVideos:
           chatAutoDownloadVideos ?? this.chatAutoDownloadVideos,
@@ -353,7 +375,11 @@ class AppSettingsController extends Notifier<AppSettings> {
       _set(state.copyWith(chatNotifyWhileViewing: on));
   void setChatSendTypingStatus(bool on) =>
       _set(state.copyWith(chatSendTypingStatus: on));
+  void setChatPrivacy(ChatPrivacy p) => _set(state.copyWith(chatPrivacy: p));
+  void setChatLocalApi(bool on) => _set(state.copyWith(chatLocalApi: on));
   void setChatReactions(bool on) => _set(state.copyWith(chatReactions: on));
+  void setChatStickerSuggestions(bool on) =>
+      _set(state.copyWith(chatStickerSuggestions: on));
   void setChatCacheLimitMb(int mb) =>
       _set(state.copyWith(chatCacheLimitMb: mb));
   void setChatAutoDownloadVideos(bool on) =>

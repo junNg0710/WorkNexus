@@ -14,12 +14,14 @@ import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
+import '../../domain/value_objects/chat_privacy_part.dart';
 import '../providers/chat_providers.dart';
 import '../providers/chat_search_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_info_dialog.dart';
 import 'chat_labels.dart';
 import 'chat_mute_toggle.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_side_panel_frame.dart';
 
 /// Top of an open chat: avatar, title and, for groups, the member count (for
@@ -82,17 +84,27 @@ class ChatThreadHeader extends ConsumerWidget {
                     ),
               child: Row(
                 children: [
-                  ChatAvatar(
-                    name: title,
-                    imageUrl: avatar?.imageUrl,
-                    label: avatar?.label,
-                    background: avatar?.background,
-                    icon: avatar?.icon,
-                    presence: presence,
-                    verified: withPeer
-                        ? chatVerifiedBadge(context, users, chat?.peerUserId)
-                        : null,
-                    size: ChatAvatarSize.large,
+                  ChatPrivacyMask(
+                    part: ChatPrivacyPart.identity,
+                    mask: ChatAvatar(
+                      name: '',
+                      masked: true,
+                      icon: oneToOne ? null : LucideIcons.users300,
+                      presence: presence,
+                      size: ChatAvatarSize.large,
+                    ),
+                    child: ChatAvatar(
+                      name: title,
+                      imageUrl: avatar?.imageUrl,
+                      label: avatar?.label,
+                      background: avatar?.background,
+                      icon: avatar?.icon,
+                      presence: presence,
+                      verified: withPeer
+                          ? chatVerifiedBadge(context, users, chat?.peerUserId)
+                          : null,
+                      size: ChatAvatarSize.large,
+                    ),
                   ),
                   SizedBox(width: context.spacing.xl),
                   Expanded(
@@ -100,10 +112,9 @@ class ChatThreadHeader extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        ChatPrivacyText(
                           title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          part: ChatPrivacyPart.identity,
                           style: context.typography.titleLg.copyWith(
                             color: c.textPrimary,
                             fontWeight: FontWeight.w600,
@@ -135,10 +146,13 @@ class ChatThreadHeader extends ConsumerWidget {
                                 ),
                               SizedBox(width: context.spacing.xs),
                               Flexible(
-                                child: Text(
+                                // The peer's account names them as much as
+                                // the title does; a count or status does not.
+                                child: ChatPrivacyText(
                                   subtitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  part: subtitle == peer?.account
+                                      ? ChatPrivacyPart.identity
+                                      : null,
                                   style: context.typography.secondary.copyWith(
                                     color: c.textSecondary,
                                   ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/privacy_mask.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
@@ -13,8 +14,9 @@ import 'conversation_menu.dart';
 import 'conversation_tile.dart';
 
 /// One chat in the list: its tile with the right-click menu, selecting it on
-/// tap. Watches who is typing in this chat itself, so a typing signal in any
-/// chat redraws only the rows it concerns, not the whole list.
+/// tap. Watches who is typing in this chat, and whether it is the open or
+/// the search-picked one, itself: a typing signal or opening a chat redraws
+/// only the rows it concerns, not the whole list.
 class ConversationRow extends ConsumerWidget {
   const ConversationRow({
     super.key,
@@ -22,8 +24,6 @@ class ConversationRow extends ConsumerWidget {
     required this.chat,
     required this.title,
     required this.users,
-    required this.selected,
-    this.highlighted = false,
     required this.compact,
   });
 
@@ -31,10 +31,6 @@ class ConversationRow extends ConsumerWidget {
   final ChatConversation chat;
   final String title;
   final Map<int, ChatUser> users;
-  final bool selected;
-
-  /// Picked with ↑ / ↓ from the search box; scrolled into view.
-  final bool highlighted;
   final bool compact;
 
   @override
@@ -42,6 +38,14 @@ class ConversationRow extends ConsumerWidget {
     final typing = ref.watch(
       chatTypingUsersProvider((accountId: accountId, chatGid: chat.gid)),
     );
+    final selected = ref.watch(
+      selectedChatGidProvider(accountId).select((gid) => gid == chat.gid),
+    );
+    // Picked with ↑ / ↓ from the search box (only over search results);
+    // scrolled into view.
+    final highlighted =
+        ref.watch(chatSearchProvider.select((q) => q.trim().isNotEmpty)) &&
+        ref.watch(chatSearchHighlightProvider.select((g) => g == chat.gid));
     final withPeer = _withPeer(chat);
     final row = GestureDetector(
       onSecondaryTapUp: (d) =>
@@ -64,7 +68,11 @@ class ConversationRow extends ConsumerWidget {
                 chat.gid,
       ),
     );
-    return _RevealWhenHighlighted(highlighted: highlighted, child: row);
+    // Pointing anywhere on the row shows all of it while it is blurred.
+    return _RevealWhenHighlighted(
+      highlighted: highlighted,
+      child: PrivacyRevealRegion(child: row),
+    );
   }
 }
 

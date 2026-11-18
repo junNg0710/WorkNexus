@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/privacy_mask.dart';
 import '../../../../core/widgets/unread_badge.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/value_objects/chat_presence.dart';
+import '../../domain/value_objects/chat_privacy_part.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
+import 'chat_privacy_mask.dart';
 import 'conversation_preview_line.dart';
 
 /// One row of the chat list: avatar, title, last message, time and unread.
@@ -80,7 +84,19 @@ class ConversationTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            avatarWidget,
+            ChatPrivacyMask(
+              part: ChatPrivacyPart.identity,
+              mask: ChatAvatar(
+                name: '',
+                masked: true,
+                icon: chat.type == ChatType.one2one
+                    ? null
+                    : LucideIcons.users300,
+                presence: presence,
+                verified: verified,
+              ),
+              child: avatarWidget,
+            ),
             SizedBox(width: context.spacing.lg),
             Expanded(
               child: Column(
@@ -89,10 +105,9 @@ class ConversationTile extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
+                        child: ChatPrivacyText(
                           title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          part: ChatPrivacyPart.identity,
                           style: context.typography.body.copyWith(
                             color: c.textPrimary,
                             fontWeight: unread
@@ -114,10 +129,20 @@ class ConversationTile extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: ConversationPreviewLine(
-                          chat: chat,
-                          lastSender: lastSender,
-                          typing: typing,
+                        child: ChatPrivacyMask(
+                          part: ChatPrivacyPart.preview,
+                          mask: Text(
+                            kPrivacyMaskText,
+                            maxLines: 1,
+                            style: context.typography.bodySm.copyWith(
+                              color: c.textSecondary,
+                            ),
+                          ),
+                          child: ConversationPreviewLine(
+                            chat: chat,
+                            lastSender: lastSender,
+                            typing: typing,
+                          ),
                         ),
                       ),
                       if (chat.muted) ...[
@@ -154,7 +179,8 @@ class ConversationTile extends StatelessWidget {
 
 /// The row's own ink layer. The list pane paints an opaque surface between
 /// the tile and the app's Material, which would hide the InkWell's hover and
-/// splash; a local Material carries them (and the selection fill) instead.
+/// splash; a local Material carries them instead, over the selection fill,
+/// which eases between rows as the open chat changes.
 class _TileInk extends StatelessWidget {
   const _TileInk({
     required this.selected,
@@ -169,16 +195,21 @@ class _TileInk extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => Material(
+  Widget build(BuildContext context) => AnimatedContainer(
+    duration: AppMotion.of(context, AppMotion.fast),
+    curve: AppMotion.enter,
     color: selected
         ? context.colors.selectionFill
         : highlighted
         ? context.colors.hoverFill
         : Colors.transparent,
-    child: InkWell(
-      mouseCursor: WidgetStateMouseCursor.clickable,
-      onTap: onTap,
-      child: child,
+    child: Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
+        onTap: onTap,
+        child: child,
+      ),
     ),
   );
 }

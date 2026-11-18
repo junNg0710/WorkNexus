@@ -151,10 +151,29 @@ class Settings extends Table {
   BoolColumn get chatSendTypingStatus =>
       boolean().withDefault(const Constant(true))();
 
+  /// The chat privacy mode (hiding chats on screen) and the parts it hides
+  /// (`ChatPrivacy`). The `blur` names are from its first take, which blurred.
+  BoolColumn get chatPrivacyMode =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get chatBlurPreviews =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get chatBlurIdentities =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get chatBlurMessages =>
+      boolean().withDefault(const Constant(true))();
+
+  /// Whether local tools (an AI assistant's MCP server) may send chat
+  /// messages through this app's session. Off by default.
+  BoolColumn get chatLocalApi => boolean().withDefault(const Constant(false))();
+
   /// Whether a reply that is just an emoji reads as a reaction (a chip under
   /// the message it answers) rather than as a message of its own.
   BoolColumn get chatReactions =>
       boolean().withDefault(const Constant(false))();
+
+  /// Whether stickers are suggested over the chat composer.
+  BoolColumn get chatStickerSuggestions =>
+      boolean().withDefault(const Constant(true))();
 
   /// Most disk space chat attachments may use, in MB.
   IntColumn get chatCacheLimitMb =>
@@ -302,6 +321,15 @@ class ChatConversations extends Table {
   TextColumn get committers => text().withDefault(const Constant(''))();
 
   /// Account of the group's owner, and when the chat was created.
+  /// The user's own category for the chat ('' for none).
+  TextColumn get category => text().withDefault(const Constant(''))();
+
+  /// xxd `adminInvite`: only the owner and admins may add people.
+  BoolColumn get adminInvite => boolean().withDefault(const Constant(false))();
+
+  /// xxd `public`: anyone may find and join the group.
+  BoolColumn get isPublic => boolean().withDefault(const Constant(false))();
+
   TextColumn get ownedBy => text().nullable()();
   DateTimeColumn get createdAt => dateTime().nullable()();
 
@@ -602,7 +630,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 60;
+  int get schemaVersion => 65;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -929,6 +957,38 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 60 && !await _hasColumn('settings', 'view_modes_json')) {
         await m.addColumn(settings, settings.viewModesJson);
+      }
+      if (from < 61 && !await _hasColumn('settings', 'chat_local_api')) {
+        await m.addColumn(settings, settings.chatLocalApi);
+      }
+      if (from < 62) {
+        for (final (name, column) in [
+          ('chat_privacy_mode', settings.chatPrivacyMode),
+          ('chat_blur_previews', settings.chatBlurPreviews),
+          ('chat_blur_identities', settings.chatBlurIdentities),
+          ('chat_blur_messages', settings.chatBlurMessages),
+        ]) {
+          if (!await _hasColumn('settings', name)) {
+            await m.addColumn(settings, column);
+          }
+        }
+      }
+      if (from < 63 &&
+          !await _hasColumn('settings', 'chat_sticker_suggestions')) {
+        await m.addColumn(settings, settings.chatStickerSuggestions);
+      }
+      if (from < 64) {
+        for (final (name, column) in [
+          ('admin_invite', chatConversations.adminInvite),
+          ('is_public', chatConversations.isPublic),
+        ]) {
+          if (!await _hasColumn('chat_conversations', name)) {
+            await m.addColumn(chatConversations, column);
+          }
+        }
+      }
+      if (from < 65 && !await _hasColumn('chat_conversations', 'category')) {
+        await m.addColumn(chatConversations, chatConversations.category);
       }
     },
   );
