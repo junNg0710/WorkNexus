@@ -37,6 +37,8 @@ struct MessageListScroll: View {
     /// Where the list is scrolled. Like `visible`, read only by the load checks, never drawn: as state it redrew the list
     /// whenever the content height changed, which it does as rows scroll in and get measured.
     @State private var scrolled = ScrollMemo()
+    /// Whether the list is scrolling, for the rows to read when the pointer comes over them (never drawn).
+    @State private var activity = ChatScrollActivity()
     /// The rows (at least partly) on screen. Kept outside SwiftUI's state: it changes as every row scrolls in or out, and as
     /// state it re-ran this view - and every row of the list - on each change, which made scrolling stutter.
     @State private var visible = VisibleRows()
@@ -72,6 +74,8 @@ struct MessageListScroll: View {
                 .frame(maxWidth: .infinity)
             }
             .defaultScrollAnchor(.bottom)
+            .onScrollPhaseChange { _, phase in activity.isScrolling = phase.isScrolling }
+            .environment(\.chatScrollActivity, activity)
             .onScrollTargetVisibilityChange(idType: String.self, threshold: 0.1) { ids in
                 visible.ids = Set(ids)
                 if PerformanceLog.isEnabled { PerformanceLog.setContext("chat", ChatRowsOnScreen.describe(model.rows, visible: visible.ids)) }
@@ -181,6 +185,18 @@ enum ChatRowsOnScreen {
         let kinds = [("pictures", pictures), ("stickers", stickers), ("videos", videos), ("files", files), ("links", links),
                      ("long texts", long), ("code", code)].filter { $0.1 > 0 }.map { "\($0.1) \($0.0)" }
         return "\(count) chat rows on screen" + (kinds.isEmpty ? "" : " (" + kinds.joined(separator: ", ") + ")")
+    }
+}
+
+/// Whether the message list is scrolling, in a plain reference: rows read it in their hover handler, so a scroll starting
+/// or stopping redraws nothing.
+final class ChatScrollActivity { var isScrolling = false }
+
+private struct ChatScrollActivityKey: EnvironmentKey { static let defaultValue: ChatScrollActivity? = nil }
+extension EnvironmentValues {
+    var chatScrollActivity: ChatScrollActivity? {
+        get { self[ChatScrollActivityKey.self] }
+        set { self[ChatScrollActivityKey.self] = newValue }
     }
 }
 

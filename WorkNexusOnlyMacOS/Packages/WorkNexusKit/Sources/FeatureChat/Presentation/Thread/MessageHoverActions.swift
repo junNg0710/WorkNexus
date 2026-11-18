@@ -17,6 +17,7 @@ struct MessageHoverActions<Content: View>: View {
     /// Reply, and "open thread" for a message in one, as own buttons.
     let inThread: Bool
     @ViewBuilder let content: Content
+    @Environment(\.chatScrollActivity) private var scrolling
     @State private var hovering = false
     @State private var picking = false
     /// The "…" menu is open: the buttons stay while it is.
@@ -32,13 +33,21 @@ struct MessageHoverActions<Content: View>: View {
             // The menu's rows are worked out when it opens, not for every row of the list on every redraw.
             content.contextMenu { MessageContextMenu(ctx: ctx, message: message, inThread: inThread, picking: $picking) }
                 // On the text itself a right-click would open the text system's menu (Font, Spelling, Services…): a short
-                // chat menu answers it instead.
-                .background(MessageTextRightClick(active: hovering && !ctx.state.isSelecting) { selection in
-                    ctx.textMenu(for: message, settings: settings, selection: selection)
-                })
+                // chat menu answers it instead. Only the row under the pointer carries the catcher (an AppKit view): one on
+                // every row made the whole list heavier to lay out, hit-test and walk for focus.
+                .background {
+                    if hovering && !ctx.state.isSelecting {
+                        MessageTextRightClick(active: true) { selection in ctx.textMenu(for: message, settings: settings, selection: selection) }
+                    }
+                }
             if !alignEnd { buttons }
         }
-        .onHover { hovering = $0 }
+        // While the list scrolls, rows pass under a still pointer: lighting each up (and back) as it goes by redrew them for
+        // nothing. A row lights up when the pointer moves onto it; leaving always counts.
+        .onHover { inside in
+            if inside, scrolling?.isScrolling == true { return }
+            hovering = inside
+        }
     }
 }
 
