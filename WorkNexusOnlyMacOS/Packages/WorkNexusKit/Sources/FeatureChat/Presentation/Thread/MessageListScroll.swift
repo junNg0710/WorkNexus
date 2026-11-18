@@ -34,6 +34,8 @@ struct MessageListScroll: View {
     @Environment(\.appTheme) private var theme
     let ctx: ThreadContext
     let showSenders: Bool
+    /// While the chat opens, only the newest rows are built at first (see `ChatOpeningStage`).
+    var stage = ChatOpeningStage.all
     /// Where the list is scrolled. Like `visible`, read only by the load checks, never drawn: as state it redrew the list
     /// whenever the content height changed, which it does as rows scroll in and get measured.
     @State private var scrolled = ScrollMemo()
@@ -59,10 +61,12 @@ struct MessageListScroll: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    MessageListHeaderView(reachedStart: model.reachedStart, isEmpty: model.rows.isEmpty, failed: model.loadFailed) {
-                        requestOlder()
+                    if stage == .all {
+                        MessageListHeaderView(reachedStart: model.reachedStart, isEmpty: model.rows.isEmpty, failed: model.loadFailed) {
+                            requestOlder()
+                        }
                     }
-                    ForEach(model.rows) { row in
+                    ForEach(stage.shown(model.rows)) { row in
                         ThreadRowView(ctx: ctx, row: row, showSenders: showSenders).equatable().id(row.id)
                     }
                     Color.clear.frame(height: 1).id(Self.bottomId)
@@ -114,7 +118,8 @@ struct MessageListScroll: View {
                 }
             }
             .onDisappear { PerformanceLog.setContext("chat", nil) }
-            .onChange(of: model.scrollRequest) { _, request in
+            // `initial`: a request made before the rows came in (a jump while the chat was opening) is taken when they do.
+            .onChange(of: model.scrollRequest, initial: true) { _, request in
                 guard let request else { return }
                 scroll(request, proxy)
             }

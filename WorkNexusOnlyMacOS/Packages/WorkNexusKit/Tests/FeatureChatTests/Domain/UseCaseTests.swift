@@ -132,6 +132,22 @@ final class UseCaseTests: XCTestCase {
         _ = t.rootOf(20, replies)   // a cycle terminates
     }
 
+    /// A long chain (each reply answering the one before) and many replies to one message resolve to their roots; the
+    /// parent map is read once per call, not once per reply.
+    func testReplyThreadsLongChainsAndBusyRoots() {
+        let n = 3000
+        let chain = (1...n).map { Make.message("c\($0)", at: Make.t0.addingTimeInterval(Double($0)), serverId: 1000 + $0, replyTo: 1000 + $0 - 1) }
+        let fan = (1...n).map { Make.message("f\($0)", sender: $0 % 3, at: Make.t0.addingTimeInterval(Double($0)), serverId: 10_000 + $0, replyTo: 5) }
+        let t = BuildReplyThread()
+        let summaries = t.summariesByRoot(chain + fan)
+        XCTAssertEqual(summaries[1000]?.count, n)
+        XCTAssertEqual(summaries[5]?.count, n)
+        XCTAssertEqual(summaries[5]?.replierIds, [0, 2, 1])
+        XCTAssertEqual(t.countsByRoot(chain), [1000: n])
+        XCTAssertEqual(t(1000 + n, chain).replies.count, n)
+        XCTAssertEqual(t.rootOf(1000 + n, chain), 1000)
+    }
+
     func testTypingRoster() {
         let t0 = Make.t0
         func sig(_ u: Int, _ typing: Bool = true, _ gid: String = "g") -> ChatTypingSignal { .init(chatGid: gid, userId: u, typing: typing) }

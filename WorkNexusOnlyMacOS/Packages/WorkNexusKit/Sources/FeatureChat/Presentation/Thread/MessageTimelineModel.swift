@@ -131,7 +131,11 @@ final class MessageTimelineModel {
         }
     }
 
-    func rebuildSummaries() { summaries = BuildReplyThread().summariesByRoot(replies, reactions: reactionsOn) }
+    /// Every message row reads the summaries: set only when they changed.
+    func rebuildSummaries() {
+        let next = BuildReplyThread().summariesByRoot(replies, reactions: reactionsOn)
+        if next != summaries { summaries = next }
+    }
 
     /// Reactions and reply summaries follow the user's setting; the message streams re-read with the new filter.
     private func reactionsSettingChanged() {
@@ -140,7 +144,7 @@ final class MessageTimelineModel {
         guard reactionsOn else { reactions = [:]; restartMessages(); return }
         let chat = services.chat, account = accountId, gid = chatGid
         reactionsTask = Task { [weak self] in
-            for await map in chat.watchReactions(accountId: account, chatGid: gid) { self?.reactions = map }
+            for await map in chat.watchReactions(accountId: account, chatGid: gid) where self?.reactions != map { self?.reactions = map }
         }
         restartMessages()
     }
@@ -153,9 +157,13 @@ final class MessageTimelineModel {
     private func apply(_ list: [ChatMessage], window w: ChatMessageWindow) {
         guard w == window else { return }
         let before = messages
-        messages = list
-        loaded = true
-        rebuildRows()
+        // Opening a chat reads its window more than once (the reactions setting restarts the stream): the same messages
+        // again change nothing on screen, and re-setting them re-ran the list for nothing.
+        if !loaded || list != before {
+            messages = list
+            if !loaded { loaded = true }
+            rebuildRows()
+        }
         notePrepended(before, list)
         if awaitingGrowth { awaitingGrowth = false; loadingOlder = false; loadingNewer = false }
         // Back from a jump window to the latest messages.
@@ -173,7 +181,9 @@ final class MessageTimelineModel {
 
     func rebuildRows() {
         let typingRow = !window.isAround && !away && !typing.isEmpty, messages = messages, gap = markerGap
-        rows = PerformanceLog.measureSync("chat: build \(messages.count) rows") { ChatListRows.rows(messages, markerGap: gap, typing: typingRow) }
+        let next = PerformanceLog.measureSync("chat: build \(messages.count) rows") { ChatListRows.rows(messages, markerGap: gap, typing: typingRow) }
+        // The list redraws when `rows` is set, also to the same rows (scrolling away and back, the style re-applied).
+        if next != rows { rows = next }
     }
 
     private func awayChanged() {

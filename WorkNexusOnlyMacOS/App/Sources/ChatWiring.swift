@@ -158,7 +158,7 @@ final class ChatWiring {
 
     /// Shows a chat from a person chip: a detail open over the chat would stay on top of the chat it opens, so it closes;
     /// one on another place waits there (lib/features/chat/presentation/widgets/chat_person_chip.dart `openDirectChatWith`).
-    private func show(accountId: String, chatGid: String) {
+    func show(accountId: String, chatGid: String) {
         if shell.nav.state.rail == .chat { shell.nav.closeTicket() }
         shell.chatAccountId = accountId
         shell.nav.select(.chat)

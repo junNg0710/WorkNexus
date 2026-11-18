@@ -215,4 +215,23 @@ final class MessageTimelineModelTests: XCTestCase {
         model.reactionsOn = false
         XCTAssertTrue(model.reactions.isEmpty)
     }
+
+    /// Opening a chat reads its window again when the reactions setting arrives: the same messages must not set the
+    /// rows again (every row of the list redrew for nothing), while new ones still do.
+    func testReReadingTheSameMessagesLeavesTheRowsAlone() async {
+        let repo = TimelineRepo(count: 60)
+        let (model, task) = make(repo)
+        defer { task.cancel() }
+        await eventually("first page") { model.loaded }
+        var rowsSet = false
+        withObservationTracking { _ = model.rows } onChange: { rowsSet = true }
+        let reads = repo.liveLimits.count
+        model.reactionsOn = true
+        await eventually("re-read") { repo.liveLimits.count > reads }
+        try? await Task.sleep(for: .milliseconds(50))
+        XCTAssertFalse(rowsSet)
+        model.window = .live(limit: 60)
+        await eventually("grown") { model.messages.count == 60 }
+        XCTAssertTrue(rowsSet)
+    }
 }

@@ -174,6 +174,7 @@ final class CompositionRoot {
         if isDemo {
             await DemoSeed.insert(services: services)
             DemoSeed.applyEnvironment(shell: shell)
+            ChatSwitchBench.start(chat: chat)
             return
         }
         await coordinator.purgeAttachmentCache()

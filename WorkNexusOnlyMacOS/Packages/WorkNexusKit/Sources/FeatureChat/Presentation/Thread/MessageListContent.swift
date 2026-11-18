@@ -11,6 +11,8 @@ struct MessageListContent: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.toasts) private var toasts
     @State private var model: MessageTimelineModel
+    /// The list comes in a frame or two after the rest of the chat (see `ChatOpeningStage`).
+    @State private var stage = ChatOpeningStage.chrome
     let actions: ChatThreadActions
 
     init(state: ChatThreadState, services: ChatServices, actions: ChatThreadActions) {
@@ -23,8 +25,8 @@ struct MessageListContent: View {
         // Group chats show sender names; one-to-one chats do not.
         let showSenders = state.chat.type != .one2one
         ZStack(alignment: .bottomTrailing) {
-            MessageListScroll(ctx: ThreadContext(model: model, actions: actions), showSenders: showSenders)
-            if model.rows.isEmpty && !model.loadFailed {
+            if stage.showsList { MessageListScroll(ctx: ThreadContext(model: model, actions: actions), showSenders: showSenders, stage: stage) }
+            if stage.showsList && model.rows.isEmpty && !model.loadFailed {
                 (model.loaded && !model.loadingOlder ? AppStateView(.empty(L.noMessages)) : AppStateView(.loading))
                     .allowsHitTesting(false)
             }
@@ -40,6 +42,7 @@ struct MessageListContent: View {
             model.notify = { toasts?.show($0, kind: .success) }
             await model.run()
         }
+        .task { await open() }
         .onChange(of: settings.reactions, initial: true) { _, on in model.reactionsOn = on }
         .onChange(of: settings.appearance, initial: true) { _, a in
             model.markerGap = ChatStyle.resolve(a, theme: theme).separatorGap
@@ -51,4 +54,18 @@ struct MessageListContent: View {
             Task { await model.jump(to: request.serverId) }
         }
     }
+
+    /// Shows the list in stages, each a display frame after the one before (the frame has reached the screen by then).
+    /// The newest-rows stage waits for the first page from storage, briefly, so it is not spent on an empty list.
+    private func open() async {
+        await NextDisplayFrame.wait()
+        for _ in 0..<Self.loadWaitFrames where !model.loaded { await NextDisplayFrame.wait() }
+        while stage != .all, !Task.isCancelled {
+            stage = stage.next
+            await NextDisplayFrame.wait()
+        }
+    }
+
+    /// At most this many frames are spent waiting for the first page before the list shows anyway.
+    private static let loadWaitFrames = 15
 }
