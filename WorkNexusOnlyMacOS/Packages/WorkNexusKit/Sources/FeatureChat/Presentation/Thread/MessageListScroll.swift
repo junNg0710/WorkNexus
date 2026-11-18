@@ -156,7 +156,7 @@ struct MessageListScroll: View {
                 case .message(let gid): proxy.scrollTo(gid, anchor: .center)
                 }
             }
-            if request.animated { withAnimation(.easeOut(duration: theme.motion.slow), go) } else { go() }
+            if request.animates(onScreen: visible.ids) { withAnimation(.easeOut(duration: theme.motion.slow), go) } else { go() }
             // Rows around a jumped-to message are still being measured (names, images, cards that load): put it back.
             if case .message = request.target {
                 try? await Task.sleep(for: .milliseconds(250))

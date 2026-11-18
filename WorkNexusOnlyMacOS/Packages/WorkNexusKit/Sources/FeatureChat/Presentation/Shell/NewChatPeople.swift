@@ -12,11 +12,13 @@ struct NewChatPeople: View {
     let loading: Bool
     let failed: Bool
     let onRetry: () -> Void
+    /// People not offered (already in the group being added to).
+    var excluded: Set<Int> = []
     @State private var role: String?
 
     var body: some View {
         let users = model.users
-        let everyone = ChatPeople.everyone(users, selfId: model.selfUserId)
+        let everyone = ChatPeople.everyone(users, selfId: model.selfUserId, excluded: excluded)
         let people = ChatPeople.filtered(everyone, role: role, query: search)
         VStack(alignment: .leading, spacing: theme.spacing.s8) {
             AppSearchField(text: $search, hint: shellString("chatSearchPeople", "Search people"), autofocus: true)

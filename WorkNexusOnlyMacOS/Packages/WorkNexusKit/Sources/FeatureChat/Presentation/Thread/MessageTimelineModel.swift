@@ -11,6 +11,16 @@ struct ChatScrollRequest: Equatable {
     var target: Target
     var animated = true
     var token = UUID()
+
+    /// Whether the list glides there. A jumped-to message already on screen glides; one off screen (far up, or in a window
+    /// just loaded around it) appears centred at once — an animated trip through rows not laid out yet showed the rows in
+    /// between, then a correction once they were measured.
+    /// Ported from: lib/features/chat/presentation/widgets/message_jump.dart (a row already laid out glides, others appear)
+    func animates(onScreen: Set<String>) -> Bool {
+        guard animated else { return false }
+        if case .message(let gid) = target { return onScreen.contains(gid) }
+        return true
+    }
 }
 
 /// The windowed timeline one open conversation shows: the messages in the current window (newest page, or a stretch

@@ -2,7 +2,8 @@ import CoreDomain
 import CoreUI
 import SwiftUI
 
-/// Beside the chat, opened from its info: the group's members (owner first), with role tabs above the list.
+/// Beside the chat, opened from its info: the group's members (owner first), with role tabs above the list; for those who may,
+/// "Add members" above them and, for the owner, each member's actions.
 /// Ported from: lib/features/chat/presentation/widgets/chat_members_panel.dart + chat_member_list.dart
 struct ChatMembersPanel: View {
     @Environment(\.appTheme) private var theme
@@ -16,14 +17,24 @@ struct ChatMembersPanel: View {
                            onBack: { session.state.backToInfo(infoRoom: layout.infoRoom) },
                            onClose: { session.state.closePanel() }) {
             if let ids = session.memberIds {
-                let users = model.users
-                let ordered = Self.ownerFirst(ids, users: users, owner: session.state.chat.ownerAccount)
+                let users = model.users, chat = session.state.chat
+                let rights = model.groupRights(chat)
+                let ordered = Self.ownerFirst(ids, users: users, owner: chat.ownerAccount)
                 VStack(spacing: 0) {
+                    if rights.addMembers {
+                        AppButton(shellString("chatAddMembers", "Add members"), systemImage: "person.badge.plus") {
+                            model.groupDialog = .addMembers(chat, members: Set(ids))
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, theme.spacing.s12).padding(.top, theme.spacing.s8)
+                    }
                     ChatRoleTabs(roles: ids.map { users[$0]?.role }, serverNames: model.roleNames, selected: $role)
                     ScrollView {
                         LazyVStack(spacing: 0) {
                             ForEach(ordered.filter { ChatShellLabels.roleMatches(role, users[$0]?.role) }, id: \.self) { id in
-                                MemberRow(model: model, id: id, owner: Self.isOwner(id, users, session.state.chat.ownerAccount))
+                                let owner = Self.isOwner(id, users, chat.ownerAccount)
+                                MemberRow(model: model, id: id, owner: owner, admin: chat.adminIds.contains(id),
+                                          menu: !owner && id != model.selfUserId && rights.managesMembers ? (chat, rights) : nil)
                             }
                         }
                         .padding(theme.spacing.s12)
@@ -46,12 +57,15 @@ struct ChatMembersPanel: View {
     }
 }
 
-/// A member: avatar, name, account and role; a tap opens their profile.
+/// A member: avatar, name, account and role, an owner / admin pill and the owner's "…" menu; a tap opens their profile.
 private struct MemberRow: View {
     @Environment(\.appTheme) private var theme
     let model: ChatShellModel
     let id: Int
     let owner: Bool
+    let admin: Bool
+    /// The group and the owner's rights, when the row offers the member's actions.
+    let menu: (chat: ChatConversation, rights: ChatGroupRights)?
 
     /// "@account · Role".
     private var subtitle: String? {
@@ -73,6 +87,8 @@ private struct MemberRow: View {
                 }
                 Spacer(minLength: 0)
                 if owner { TintedPill(shellString("chatOwner", "Owner"), tint: theme.colors.accent) }
+                else if admin { TintedPill(shellString("chatAdminBadge", "Admin"), tint: theme.colors.violet) }
+                if let menu { ChatMemberMenuButton(model: model, chat: menu.chat, userId: id, rights: menu.rights) }
             }
             .padding(.vertical, theme.spacing.s6).padding(.horizontal, theme.spacing.s4)
         }

@@ -148,15 +148,6 @@ extension XxdChatRepository {
         switch await requestAndStore(accountId, session, XxdRequest("chatCreate", params: params)) { case .success: return .success(gid); case .failure(let f): return .failure(f) }
     }
 
-    public func createGroupChat(accountId: String, name: String, memberIds: [Int]) async -> Outcome<String> {
-        guard let session = session(accountId), let me = session.selfUserId else { return .failure(.network("Chat is offline")) }
-        let gid = UUID().uuidString.lowercased()
-        var seen = Set<Int>(), members: [JSONValue] = []
-        for id in [me] + memberIds where seen.insert(id).inserted { members.append(.int(id)) }
-        let params: [JSONValue] = [.string(gid), .string(name), "group", .array(members), 0, false]
-        switch await requestAndStore(accountId, session, XxdRequest("chatCreate", params: params)) { case .success: return .success(gid); case .failure(let f): return .failure(f) }
-    }
-
     public func refreshUsers(accountId: String) async -> Outcome<Void> {
         guard let session = session(accountId) else { return .failure(.network("Chat is offline")) }
         // An empty id list asks xxd for every user.

@@ -38,6 +38,36 @@ final class ChatLocalDatasourceTests: XCTestCase {
         XCTAssertEqual(ChatMigrations.migrationId, "chat_v1")
     }
 
+    /// `chat_v2_groups` adds the group flags and the category to chats stored before it (Dart schema 64–65).
+    func testGroupsMigrationAddsColumnsWithDefaultsToExistingChats() throws {
+        let queue = try DatabaseQueue()
+        var migrator = DatabaseMigrator()
+        ChatMigrations.registrar(&migrator)
+        try migrator.migrate(queue, upTo: ChatMigrations.migrationId)
+        try queue.write { try $0.execute(sql: "INSERT INTO chatConversations (accountId, gid, type, name) VALUES ('acc', 'old', 'group', 'Old')") }
+        try migrator.migrate(queue)
+        let row = try queue.read { try Row.fetchOne($0, sql: "SELECT * FROM chatConversations WHERE gid='old'") }
+        let chat = ChatConversationRow(row: try XCTUnwrap(row))
+        XCTAssertEqual(chat.category, ""); XCTAssertFalse(chat.adminInvite); XCTAssertFalse(chat.isPublic)
+        XCTAssertEqual(try queue.read { try migrator.appliedIdentifiers($0) }, [ChatMigrations.migrationId, ChatMigrations.groupsMigrationId])
+    }
+
+    func testGroupSettingsAndCategoryWrites() async throws {
+        try await local.upsertConversations([conv(lastId: 1, lastIndex: 1, lastRead: 1, gid: "g2")])
+        try await local.setGroupSettings("acc", "g1", isPublic: true)
+        try await local.setGroupSettings("acc", "g1", committers: "$ADMINS", adminInvite: true)
+        try await local.setCategory("acc", ["g1", "g2"], "Work")
+        var row = try await chat()
+        XCTAssertTrue(row.isPublic); XCTAssertTrue(row.adminInvite); XCTAssertEqual(row.committers, "$ADMINS"); XCTAssertEqual(row.category, "Work")
+        let other = try await local.conversation("acc", "g2")
+        XCTAssertEqual(other?.category, "Work")
+        try await local.setChatName("acc", "g1", "Renamed")
+        try await local.setArchived("acc", "g1", archived: true)
+        try await local.setAdmins("acc", "g1", json: "[41]")
+        row = try await chat()
+        XCTAssertEqual(row.name, "Renamed"); XCTAssertTrue(row.archived); XCTAssertEqual(row.adminsJson, "[41]")
+    }
+
     func testPageMovesChatToNewestMessage() async throws {
         try await local.recordMessages("acc", "g1", [rec(4), rec(5), rec(6)])
         let row = try await chat()
@@ -109,7 +139,7 @@ final class ChatLocalDatasourceTests: XCTestCase {
         func row(lastIndex: Int, lastRead: Int, gid: String = "g1", type: String = "group") -> ChatConversationRow {
             let r = Row(["accountId": "a", "gid": gid, "type": type, "name": "n", "lastActiveAt": nil, "lastMessageId": 9, "lastMessageIndex": lastIndex,
                          "lastReadIndex": lastRead, "hidden": false, "archived": false, "pinnedJson": "[]", "avatarJson": nil, "starred": false, "muted": false,
-                         "adminsJson": "[]", "committers": "", "ownedBy": nil, "createdAt": nil] as [String: DatabaseValueConvertible?])
+                         "adminsJson": "[]", "committers": "", "category": "", "adminInvite": false, "isPublic": false, "ownedBy": nil, "createdAt": nil] as [String: DatabaseValueConvertible?])
             return ChatConversationRow(row: r)
         }
         func msg(sender: Int) -> ChatMessageRow {

@@ -24,6 +24,9 @@ enum ChatMappers {
         if chat.contains("pinnedMessages") { v.set("pinnedJson", pinnedJson(chat["pinnedMessages"])) }
         if chat.contains("admins") { v.set("adminsJson", pinnedJson(chat["admins"])) }
         if chat.contains("committers") { v.set("committers", text(chat["committers"])) }
+        if chat.contains("category") { v.set("category", text(chat["category"])) }
+        if chat.contains("adminInvite") { v.set("adminInvite", flag(chat["adminInvite"])) }
+        if chat.contains("public") { v.set("isPublic", flag(chat["public"])) }
         v.set("ownedBy", trimmed(chat["ownedBy"]))
         if let star = chat["star"] { v.set("starred", star == .bool(true) || star == .int(1) || star == .string("1")) }
         if case .object? = chat["avatar"] { v.set("avatarJson", chat["avatar"]!.serialized()) }
@@ -144,7 +147,8 @@ enum ChatMappers {
             lastActiveAt: row.lastActiveAt, lastMessage: last.map { message($0, selfUserId: selfUserId) }, peerUserId: peer,
             isMyCloud: peer != nil && peer == selfUserId, hidden: row.hidden, archived: row.archived, starred: row.starred,
             muted: row.muted, pinnedMessageIds: ids(fromJson: row.pinnedJson), adminIds: ids(fromJson: row.adminsJson),
-            committers: row.committers, ownerAccount: row.ownedBy, avatarJson: row.avatarJson, createdAt: row.createdAt)
+            committers: row.committers, category: row.category, adminInvite: row.adminInvite, isPublic: row.isPublic,
+            ownerAccount: row.ownedBy, avatarJson: row.avatarJson, createdAt: row.createdAt)
     }
 
     private static let parse = ParseMessageContent()
@@ -169,6 +173,9 @@ enum ChatMappers {
     static func int(_ v: JSONValue?) -> Int? {
         switch v { case .int(let i)?: i; case .double(let d)?: d.isFinite ? Int(d) : nil; case .string(let s)?: Int(s); default: nil }
     }
+
+    /// xxd sends flags as `true`, `1`, `"1"` (ZenTao's enum('0','1')) or their opposites.
+    static func flag(_ v: JSONValue?) -> Bool { v == .bool(true) || v == .int(1) || v == .string("1") || v == .double(1) }
 
     /// `'${v ?? ''}'`
     static func text(_ v: JSONValue?) -> String { v.flatMap { $0.isNull ? nil : JS.toString($0) } ?? "" }

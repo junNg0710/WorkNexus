@@ -4,9 +4,11 @@ import GRDB
 /// The chat tables (`ChatAccounts`, `ChatConversations`, `ChatMessages` (+3 indexes), `ChatMessageTranslations`,
 /// `ChatUsers`, `ChatLinkPreviews`, `ChatSavedFiles`). The module owns its schema: the composition root passes
 /// `ChatMigrations.registrar` to `AppDatabase.open(registrars:)`.
-/// Ported from: lib/core/database/database.dart (chat tables)
+/// Ported from: lib/core/database/database.dart (chat tables; schema 64–65 as `chat_v2_groups`)
 public enum ChatMigrations {
     public static let migrationId = "chat_v1"
+    /// Group settings and categories: `chatConversations` gains `category`, `adminInvite` and `isPublic` (Dart schema 64–65).
+    public static let groupsMigrationId = "chat_v2_groups"
 
     public static let registrar: MigrationRegistrar = { migrator in
         migrator.registerMigration(migrationId) { db in
@@ -105,6 +107,16 @@ public enum ChatMigrations {
                 t.column("path", .text).notNull()
                 t.column("savedAt", .datetime).notNull()
                 t.primaryKey(["accountId", "fileId"])
+            }
+        }
+        migrator.registerMigration(groupsMigrationId) { db in
+            try db.alter(table: "chatConversations") { t in
+                // The user's own category for the chat ("" for none).
+                t.add(column: "category", .text).notNull().defaults(to: "")
+                // xxd `adminInvite`: only the owner and admins may add people.
+                t.add(column: "adminInvite", .boolean).notNull().defaults(to: false)
+                // xxd `public`: anyone may find and join the group.
+                t.add(column: "isPublic", .boolean).notNull().defaults(to: false)
             }
         }
     }

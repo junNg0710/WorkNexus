@@ -12,6 +12,8 @@ struct ChatConversationRow: Equatable, Sendable {
     var avatarJson: String?
     var starred: Bool, muted: Bool
     var adminsJson: String, committers: String
+    var category: String
+    var adminInvite: Bool, isPublic: Bool
     var ownedBy: String?
     var createdAt: Date?
 
@@ -22,6 +24,7 @@ struct ChatConversationRow: Equatable, Sendable {
         hidden = r[prefix + "hidden"]; archived = r[prefix + "archived"]; pinnedJson = r[prefix + "pinnedJson"]
         avatarJson = r[prefix + "avatarJson"]; starred = r[prefix + "starred"]; muted = r[prefix + "muted"]
         adminsJson = r[prefix + "adminsJson"]; committers = r[prefix + "committers"]
+        category = r[prefix + "category"]; adminInvite = r[prefix + "adminInvite"]; isPublic = r[prefix + "isPublic"]
         ownedBy = r[prefix + "ownedBy"]; createdAt = r[prefix + "createdAt"]
     }
 }
