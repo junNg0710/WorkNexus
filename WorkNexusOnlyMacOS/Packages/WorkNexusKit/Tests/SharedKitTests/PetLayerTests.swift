@@ -49,24 +49,21 @@ final class PetLayerTests: XCTestCase {
                        "Syncing your work…\n1 unread chat message")
     }
 
-    func testTheFloatingPanelGrowsUpwardForABubble() {
-        let pet = CGSize(width: 96, height: 104)
-        XCTAssertEqual(FloatingPetPanel.size(pet: pet, bubble: false), pet)
-        let grown = FloatingPetPanel.size(pet: pet, bubble: true)
-        XCTAssertEqual(grown.height, 104 + PetSpeechBubble.areaHeight)
-        XCTAssertGreaterThanOrEqual(grown.width, PetSpeechBubble.maxWidth)
+    func testTheBubblePanelHasRoomForTheWidestBubble() {
+        XCTAssertEqual(FloatingPetPanel.bubbleSize.height, PetSpeechBubble.areaHeight)
+        XCTAssertGreaterThanOrEqual(FloatingPetPanel.bubbleSize.width, PetSpeechBubble.maxWidth)
     }
 
-    func testAGrownPanelStaysOnTheScreenAndThePetStaysPut() {
+    func testTheBubbleStaysOnTheScreenAndItsTailPointsAtThePet() {
         let screen = CGRect(x: 0, y: 0, width: 1512, height: 950)
-        let grown = FloatingPetPanel.size(pet: CGSize(width: 96, height: 104), bubble: true)
-        // In the middle: centred on the pet.
-        let mid = FloatingPetPanel.frame(anchor: NSPoint(x: 700, y: 100), size: grown, screen: screen)
-        XCTAssertEqual(mid.frame.midX, 700); XCTAssertEqual(mid.petShift, 0); XCTAssertEqual(mid.frame.minY, 100)
-        // In the bottom-right corner: the panel stops at the edge, the pet is drawn right of its middle, where it stood.
-        let corner = FloatingPetPanel.frame(anchor: NSPoint(x: 1440, y: 24), size: grown, screen: screen)
+        let size = FloatingPetPanel.bubbleSize
+        // In the middle: centred over the pet, right above its head.
+        let mid = FloatingPetPanel.frame(anchor: NSPoint(x: 700, y: 204), size: size, screen: screen)
+        XCTAssertEqual(mid.frame.midX, 700); XCTAssertEqual(mid.tailShift, 0); XCTAssertEqual(mid.frame.minY, 204)
+        // In the bottom-right corner: the bubble stops at the edge, its tail is drawn right of its middle, over the pet.
+        let corner = FloatingPetPanel.frame(anchor: NSPoint(x: 1440, y: 128), size: size, screen: screen)
         XCTAssertEqual(corner.frame.maxX, 1512)
-        XCTAssertEqual(corner.frame.midX + corner.petShift, 1440)
+        XCTAssertEqual(corner.frame.midX + corner.tailShift, 1440)
     }
 
     func testTheFloatingPetStaysOnAScreen() {

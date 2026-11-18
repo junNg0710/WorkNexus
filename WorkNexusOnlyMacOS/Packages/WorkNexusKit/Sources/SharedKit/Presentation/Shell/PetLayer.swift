@@ -103,6 +103,9 @@ struct PetLayer: View {
                                          onOpen: model.host.revealApp,
                                          onDock: { model.updateSettings { $0.petDisplay = .inWindow } },
                                          onHide: { model.updateSettings { $0.showPet = false } })
-        FloatingPetPanel.shared.show(AnyView(content.environment(\.appTheme, theme)), petSize: CGSize(width: width, height: height))
+        let theme = theme
+        FloatingPetPanel.shared.show(AnyView(content.environment(\.appTheme, theme)), petSize: CGSize(width: width, height: height)) { text, tail in
+            AnyView(FloatingPetBubble(text: text, tailShift: tail).environment(\.appTheme, theme))
+        }
     }
 }
