@@ -11,4 +11,6 @@ rsync -a --delete "$ROOT/assets/brands/" "$DST/Brands/"
 # the WorkNexus stickers first drawn for macOS (Scripts/make-sticker.py) are upstream now, tagged there too.
 rsync -a --delete --exclude 'HyperRabbit' --exclude 'Cute' "$ROOT/assets/stickers/" "$DST/Stickers/"
 rsync -a --delete --exclude '*.ico' "$ROOT/assets/tray/" "$DST/Tray/"
+# The bundled MCP server (built from mcp/ by `npm run build`); Settings › Chat › AI tools copies it to Application Support.
+rsync -a --delete "$ROOT/assets/mcp/" "$DST/Mcp/"
 echo "assets synced -> $DST"

@@ -17,7 +17,7 @@ struct SettingsPages: View {
             SettingsCard(title: appString("appearance", "Appearance")) { AppearanceControls(shell: root.shell) }
         }
         case "pet": PetSettingsPage(root: root)
-        case "chat": ChatSettingsPage(shell: root.shell)
+        case "chat": ChatSettingsPage(shell: root.shell, mcp: root.aiTools.mcpModel)
         case "translation": TranslationSettingsPage(root: root)
         case "cache": CacheSettingsPage(root: root)
         default: GeneralSettingsPage(root: root)

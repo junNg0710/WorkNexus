@@ -119,5 +119,7 @@ public enum ChatMigrations {
                 t.add(column: "isPublic", .boolean).notNull().defaults(to: false)
             }
         }
+        // Read-only views under the Flutter app's table names, for the bundled MCP server.
+        McpCompatMigration.register(&migrator)
     }
 }

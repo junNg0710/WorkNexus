@@ -28,6 +28,7 @@ Architecture rules and how to port: [PORTING.md](PORTING.md).
 | Mac app shortcuts (new, no Dart counterpart: rail buttons that open / focus an installed Mac app, running dot, Add menu + picker dialog, settings list) | wired; unit + render tested, never launched an app from the real rail |
 | Notifications (bell, panel, poller, Dock badge), app update (banner, rail button, settings) | wired; need ZenTao / GitHub to produce data |
 | Settings: general, appearance, chat, translation, local data; quick settings popover | wired; appearance + quick settings seen |
+| Settings › Chat › AI tools: MCP setup guide (bundled `worknexus-mcp.mjs`, Node.js probe, Claude Code / Claude Desktop / generic config with `WORKNEXUS_DB`) + "Let local AI tools use chat" (loopback chat API, token in a 0600 file beside the database) | wired; unit + local API tests, the shipped server smoke-tested over stdio against a test database; not tried with a real AI client |
 | Platform: tray + close-to-tray, window placement, app icon / name, resume counter | wired (off in demo mode) |
 | Not ported / simplified | mini-app edit / icon picker / cookie-import dialogs, update release-notes dialog, workspace colour/icon editor on the workspace settings page, global search (⌘K field is inert), workspace switcher |
 

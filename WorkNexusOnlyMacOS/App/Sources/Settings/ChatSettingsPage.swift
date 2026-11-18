@@ -6,9 +6,10 @@ import SwiftUI
 
 /// Ported from: lib/features/chat/presentation/widgets/chat_appearance_settings.dart + the chat cards of Quick Settings:
 /// the chat's look (style, accent bubbles, the wallpaper picker, text size), messaging, privacy (the privacy mode, typing),
-/// notifications and the downloaded files' limit and auto-download.
+/// notifications, the downloaded files' limit and auto-download, and AI tools (the MCP setup guide and the local chat API).
 struct ChatSettingsPage: View {
     let shell: ShellModel
+    let mcp: McpSetupModel
 
     var body: some View {
         let s = shell.settings
@@ -50,6 +51,7 @@ struct ChatSettingsPage: View {
                 }
                 // What is stored per chat, and "clear all", is under Local data.
             }
+            ChatAiToolsCard(shell: shell, mcp: mcp)
         }
     }
 }

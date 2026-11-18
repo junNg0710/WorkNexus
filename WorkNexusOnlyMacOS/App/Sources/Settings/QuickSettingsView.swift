@@ -78,6 +78,7 @@ struct QuickSettingsGroup<Content: View>: View {
 
 /// The Chat tab: how the chat looks, what it notifies about, what it downloads, and its privacy (the privacy mode, typing).
 struct QuickSettingsChatTab: View {
+    @Environment(\.dismiss) private var dismiss
     let shell: ShellModel
 
     var body: some View {
@@ -103,5 +104,12 @@ struct QuickSettingsChatTab: View {
             SettingsToggleRow(label: appString("chatAutoDownloadVideos", "Download videos automatically"), isOn: s.chatAutoDownloadVideos) { on in shell.updateSettings { $0.chatAutoDownloadVideos = on } }
         }
         QuickSettingsGroup(title: appString("chatPrivacy", "Privacy")) { ChatPrivacySettingsRows(shell: shell) }
+        QuickSettingsGroup(title: appString("chatLocalApiSection", "AI tools")) {
+            // The setup guide is a dialog of its own: it opens from Settings › Chat.
+            AppButton(appString("mcpSetupOpen", "Connect an AI tool (MCP)"), systemImage: "powerplug", kind: .ghost) {
+                shell.nav.select(.settings); shell.nav.setSettingsSection("chat"); dismiss()
+            }
+            ChatLocalApiToggle(shell: shell)
+        }
     }
 }

@@ -24,6 +24,10 @@ import GRDB
 ///    `ensureTranslatorReady` (the "OpenCode not linked" gate before a message is translated or the AI is asked), `ai` +
 ///    `aiLanguages` (the ✨ AI help: summaries, reply ideas, rewrites) and `setStickerSuggestions` (saves the ✨ menu's switch).
 ///
+/// 9. **AI tools (MCP)** — `makeLocalApi(directory:)` (the loopback chat API, started with `ChatLocalApiHandlers.using(repository)`
+///    while `AppSettings.chatLocalApi` is on) and `makeMcpSetup(...)` (the bundled MCP server's installer + Node.js probe, for
+///    `McpSetupModel` / `McpSetupDialog`). The `chat_v1` registrar also adds the views the MCP server reads.
+///
 /// Settings read from `AppSettings` (via `ChatSettings`): chatAppearance, chatPrimaryBubbles, chatWallpaper, chatWallpaperDim,
 /// chatSendMarkdown, chatNotifications, chatNotifyWhileViewing, chatSendTypingStatus, chatReactions, chatCacheLimitMb,
 /// chatAutoDownloadVideos, chatAutoDownloadVideoMb, chatTextScale, chatPrivacy, chatStickerSuggestions, translationLang, translationModel.
@@ -71,6 +75,17 @@ public enum ChatFeature {
     }
 
     public static func unreadCounter(repository: ChatRepository) -> ChatUnreadCounter { ChatUnreadCounter(repository: repository) }
+
+    /// The local chat API AI tools use; its discovery file goes to `directory` (the database's folder, where the MCP server
+    /// looks for it).
+    public static func makeLocalApi(directory: URL) -> ChatLocalApiServer { ChatLocalApiServer(directory: directory) }
+
+    /// The bundled MCP server's setup: `bundledScript` (nil when this build has none) is copied to `directory`
+    /// (`<app support>/mcp`), and every config entry points the server at `databasePath`.
+    public static func makeMcpSetup(bundledScript: URL?, directory: URL, databasePath: String) -> McpSetupRepository {
+        LocalMcpSetupRepository(installer: McpScriptInstaller(source: bundledScript, directory: directory), probe: NodeRuntimeProbe(),
+                                databasePath: databasePath)
+    }
 
     public static func notificationBridge(repository: ChatRepository, sink: ChatNotificationSink, texts: ChatNotificationTexts = ChatNotificationTexts(),
                                           preferences: @escaping @Sendable () -> ChatNotificationPreferences,
