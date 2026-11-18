@@ -24,6 +24,9 @@ public struct DetailExtensions {
     public var openAttachment: ((Ticket, TicketAttachment) -> Void)?
     /// Opens a link from the ticket (default: `openLinkExternally`).
     public var openLink: ((String) -> Void)?
+    /// The "Share in chat" dialog for a ticket (closed with the given action), or nil where no chat can take it. The header
+    /// shows its button only while this is set.
+    public var shareToChat: ((Ticket, _ onClose: @escaping () -> Void) -> AnyView?)?
 
     public init() {}
 

@@ -1474,5 +1474,29 @@
   "chatCopySelection": {
     "en": "Copy selection",
     "vi": "Sao chép đoạn đã chọn"
+  },
+  "shareInChat": {
+    "en": "Share in chat",
+    "vi": "Chia sẻ qua chat"
+  },
+  "chatShareTitle": {
+    "en": "Share in chat",
+    "vi": "Chia sẻ qua chat"
+  },
+  "chatShareTo": {
+    "en": "Send to {count} chats",
+    "vi": "Gửi tới {count} cuộc chat"
+  },
+  "chatShareSend": {
+    "en": "Send",
+    "vi": "Gửi"
+  },
+  "chatShared": {
+    "en": "Sent to {count} chats",
+    "vi": "Đã gửi tới {count} cuộc chat"
+  },
+  "chatSharedOne": {
+    "en": "Sent",
+    "vi": "Đã gửi"
   }
 }

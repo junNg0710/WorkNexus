@@ -38,6 +38,7 @@ public struct DetailHeader: View {
 struct DetailHeaderTopBar: View {
     @Environment(\.appTheme) private var theme
     let controller: DetailController; let ticket: Ticket; let wsColor: Color; let model: TicketDetailModel; let onClose: () -> Void
+    @State private var sharing = false
 
     var body: some View {
         let c = theme.colors
@@ -58,6 +59,11 @@ struct DetailHeaderTopBar: View {
             if !url.isEmpty {
                 // Its own button, as on a merge request's header: the link is what gets pasted into chat all day.
                 CopyLinkButton(url: url)
+                if let share = controller.extensions.shareToChat {
+                    // Pass the ticket on in chat without leaving it: pick the chats, it sends "#12 Title" and the link.
+                    AppIconButton("paperplane", help: appString("shareInChat", "Share in chat"), outlined: true) { sharing = true }
+                        .appDialog(isPresented: $sharing) { share(ticket) { sharing = false } }
+                }
                 AppIconButton("arrow.up.right.square", help: appString("openInBrowser", "Open in browser"), outlined: true) {
                     if let open = controller.extensions.openLink { open(url) } else { openLinkExternally(url, inApp: false) }
                 }
@@ -78,16 +84,17 @@ struct DetailHeaderMoreButton: View {
         toasts?.show(done)
     }
 
+    /// A button like its neighbours (the whole square takes the click; a SwiftUI menu took it only on the dots), opening a
+    /// native menu under the pointer.
     var body: some View {
-        Menu {
-            Button { model.refresh(ticket) } label: { Label(appString("refresh", "Refresh"), systemImage: "arrow.triangle.2.circlepath") }
-            Button { copy(ticketTitleWithRef(ticket), appString("titleCopied", "Title copied")) } label: { Label(appString("copyTitle", "Copy title"), systemImage: "doc.on.doc") }
-        } label: {
-            Image(systemName: "ellipsis").font(.system(size: theme.sizes.icon16)).foregroundStyle(theme.colors.tx2)
-                .frame(width: theme.sizes.control32, height: theme.sizes.control32)
-                .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
+        AppIconButton("ellipsis", help: appString("more", "More"), outlined: true) {
+            AppNativeMenu.popUp([
+                AppNativeMenu.Item(appString("refresh", "Refresh"), icon: "arrow.triangle.2.circlepath") { model.refresh(ticket) },
+                AppNativeMenu.Item(appString("copyTitle", "Copy title"), icon: "doc.on.doc") {
+                    copy(ticketTitleWithRef(ticket), appString("titleCopied", "Title copied"))
+                },
+            ])
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize().help(appString("more", "More"))
     }
 }
 

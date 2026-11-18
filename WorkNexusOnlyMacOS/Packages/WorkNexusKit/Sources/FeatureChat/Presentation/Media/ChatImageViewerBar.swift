@@ -75,7 +75,7 @@ private struct ViewerMoreMenu: View {
             Button(action: actions.onOpen) { Label(appString("chatOpenWith", "Open in default app"), systemImage: "arrow.up.forward.app") }
         } label: {
             Image(systemName: "ellipsis").font(.system(size: theme.sizes.icon16)).foregroundStyle(theme.colors.tx2)
-                .frame(width: theme.sizes.control32, height: theme.sizes.control32)
+                .frame(width: theme.sizes.control32, height: theme.sizes.control32).contentShape(Rectangle())
         }
         .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize().help(appString("more", "More"))
     }

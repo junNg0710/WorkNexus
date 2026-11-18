@@ -39,7 +39,7 @@ struct GitlabMrMoreButton: View {
             }
         } label: {
             Image(systemName: "ellipsis").font(.system(size: theme.sizes.icon16)).foregroundStyle(theme.colors.tx2)
-                .frame(width: theme.sizes.control32, height: theme.sizes.control32)
+                .frame(width: theme.sizes.control32, height: theme.sizes.control32).contentShape(Rectangle())
         }
         .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize().disabled(busy).help(appString("more", "More"))
     }

@@ -109,6 +109,14 @@ struct HostWiring {
                 await editor.uploadImage(accountId: ticket.accountId, uid: uid, bytes: data, fileName: name).value
             }
         }
+        // "Share in chat": a ZenTao ticket goes to its own account's chat, anything else to the chat account in use.
+        let chatServices = r.chat.services
+        ext.shareToChat = { ticket, close in
+            guard let url = ticket.url, !url.isEmpty else { return nil }
+            let account = ticket.providerType == .zentao ? ticket.accountId : shell.chatAccount?.id
+            guard let account else { return nil }
+            return AnyView(ChatShareDialog(accountId: account, services: chatServices, text: "\(ticketTitleWithRef(ticket))\n\(url)", onClose: close))
+        }
         shell.detail.extensions = ext
     }
 }

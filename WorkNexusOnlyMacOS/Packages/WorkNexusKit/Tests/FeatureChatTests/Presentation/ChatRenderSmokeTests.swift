@@ -67,6 +67,12 @@ final class ChatRenderSmokeTests: XCTestCase {
         try await render(ForwardMessageDialog(model: m, request: ChatForwardRequest(messages: [message, message, message])), "forward-dialog-many", width: 460, height: 720)
     }
 
+    /// "Share in chat" from a ticket: the ticket's title and link over the chats to pick.
+    func testShareDialog() async throws {
+        let text = "#7463 [TBChat Web] Contact Support: Extra blank space at the top and bottom\nhttps://zentao.example.com/bug-view-7463.html"
+        try await render(ChatShareDialog(accountId: "a", services: ChatServices(chat: Repo()), text: text, onClose: {}), "share-dialog", width: 460, height: 720)
+    }
+
     /// "Multiple select": ticks before the rows (two picked), and the bar that stands in the composer's place.
     func testMultipleSelectRowsAndBar() async throws {
         let m = model(Repo())
