@@ -18,6 +18,8 @@ public enum ChatSidePanel: Hashable, Sendable {
     case info, members, pinned, files, search
     case thread(rootServerId: Int)
     case emoji, stickers
+    /// The AI summary of the chat.
+    case assistant
 }
 
 /// A request for the message list to scroll to (and flash) a message; `token` makes repeated jumps to the same id fire again.

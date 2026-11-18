@@ -18,6 +18,7 @@ struct ChatThreadPane: View {
             VStack(spacing: 0) {
                 ChatThreadHeader(model: model, session: session)
                 if session.search.isOpen { ChatThreadSearchBar(model: model, session: session) }
+                ChatAiCatchUpBanner(session: session)
                 VStack(spacing: 0) {
                     // Dropped on the messages, files go out at once; dropped on the input, they wait there (as in Flutter).
                     MessageListView(state: state)
@@ -84,6 +85,7 @@ struct ChatSidePanelContent: View {
             ChatSidePanelFrame(title: shellString("chatEmojiPanelTitle", "Stickers & emoji"), onClose: { session.state.closePanel() }) {
                 ChatEmojiSidePanel(state: session.state)
             }
+        case .assistant: ChatAssistantPanel(session: session)
         case .search: EmptyView()
         }
     }

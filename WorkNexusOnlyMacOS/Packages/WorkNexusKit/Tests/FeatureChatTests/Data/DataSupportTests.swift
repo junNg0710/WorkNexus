@@ -159,9 +159,11 @@ final class DataSupportTests: RepositoryTestCase {
         XCTAssertEqual(h3.value?.map(\.pack), ["cats"])
         let added = await repo.add(bytes: pngData(300, 300), name: "My Pic.jpeg")
         XCTAssertEqual(added.value?.name, "My_Pic.png"); XCTAssertTrue(added.value?.custom ?? false)
-        let packed = await repo.addPack("tg:Set", title: "Nice Set", stickers: [(name: "001.png", bytes: pngData()), (name: "002.png", bytes: pngData())])
+        let packed = await repo.addPack("tg:Set", title: "Nice Set", stickers: [(name: "001.png", bytes: pngData(), emoji: "😂"), (name: "002.png", bytes: pngData(), emoji: "")])
         XCTAssertNotNil(packed.value)
         let all = (await repo.stickers()).value ?? []
+        // Each sticker keeps the emoji Telegram gave it.
+        XCTAssertEqual(all.filter { $0.pack == "tg:Set" }.map(\.emoji), ["😂", ""])
         XCTAssertEqual(all.filter { $0.pack == "tg:Set" }.map(\.name), ["001.png", "002.png"]); XCTAssertEqual(all.first { $0.pack == "tg:Set" }?.packTitle, "Nice Set")
         _ = await repo.rememberPack("tg:Set")
         let h4 = await repo.lastPack()

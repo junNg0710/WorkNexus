@@ -8,13 +8,16 @@ private let imageExtensions: Set<String> = ["png", "gif", "webp", "jpg", "jpeg",
 private func isImagePath(_ p: String) -> Bool { imageExtensions.contains((p as NSString).pathExtension.lowercased()) }
 private func safeName(_ n: String) -> String { String(n.unicodeScalars.map { $0.properties.isAlphabetic || ("0123456789_.-".unicodeScalars.contains($0)) ? Character($0) : "_" }) }
 
-/// Stickers: bundled sets (`<bundleRoot>/<pack>/<file>`), imported packs (`<dir>/packs/<pack>/` + `pack.json`) and the user's own files.
+/// Stickers: bundled sets (`<bundleRoot>/<pack>/<file>`, each tagged by its `stickers.json`), imported packs
+/// (`<dir>/packs/<pack>/` + `pack.json` with its id, title and each sticker's emoji) and the user's own files.
 /// Ported from: lib/features/chat/data/repositories/local_sticker_repository.dart
 final class LocalStickerRepository: StickerRepository, @unchecked Sendable {
     private let bundleRoot: URL?
     private let directory: URL
     private let converter: StickerConverter?
     private static let packMeta = "pack.json", lastPackName = "last_pack", recentName = "recent_stickers.json"
+    /// A bundled set's tags, beside its images.
+    private static let tagsFile = "stickers.json"
     private var fm: FileManager { .default }
 
     init(bundleRoot: URL?, directory: URL, converter: StickerConverter? = nil) {
@@ -31,9 +34,25 @@ final class LocalStickerRepository: StickerRepository, @unchecked Sendable {
         guard let root = bundleRoot else { return [] }
         var out: [ChatSticker] = []
         for folder in list(root).filter({ $0.hasDirectoryPath }).sorted(by: { $0.path < $1.path }) {
+            let tags = Self.tags(of: folder.appendingPathComponent(Self.tagsFile))
             for f in list(folder).filter({ isImagePath($0.path) }).sorted(by: { $0.path < $1.path }) {
-                out.append(ChatSticker(id: f.path, pack: folder.lastPathComponent, name: f.lastPathComponent, location: f.path))
+                let tag = tags[f.lastPathComponent]
+                out.append(ChatSticker(id: f.path, pack: folder.lastPathComponent, name: f.lastPathComponent, location: f.path,
+                                       emoji: tag?.emoji ?? "", keywords: tag?.keywords ?? []))
             }
+        }
+        return out
+    }
+
+    /// A set's tags by file name. Each is the emoji a sticker stands for (`"001.webp": "😂🤣"`) or, with words to suggest it
+    /// for too, `{"emoji": "🙏", "keywords": ["cam on", "thanks"]}`. A missing or unreadable file tags nothing.
+    static func tags(of file: URL) -> [String: (emoji: String, keywords: [String])] {
+        guard let data = try? Data(contentsOf: file), let json = try? JSONValue.parse(data: data), case .object(let entries) = json else { return [:] }
+        var out: [String: (emoji: String, keywords: [String])] = [:]
+        for (name, value) in entries.pairs {
+            if let emoji = value.string { out[name] = (emoji, []); continue }
+            guard let emoji = value["emoji"]?.string else { continue }
+            out[name] = (emoji, value["keywords"]?.array?.compactMap(\.string) ?? [])
         }
         return out
     }
@@ -43,8 +62,10 @@ final class LocalStickerRepository: StickerRepository, @unchecked Sendable {
             guard let data = try? Data(contentsOf: folder.appendingPathComponent(Self.packMeta)), let meta = try? JSONValue.parse(data: data),
                   let pack = meta["id"]?.string else { return [] }
             let title = meta["title"]?.string ?? pack
+            let emoji = meta["emoji"]
             return list(folder).filter { isImagePath($0.path) }.sorted { $0.path < $1.path }.map {
-                ChatSticker(id: $0.path, pack: pack, packTitle: title, name: $0.lastPathComponent, location: $0.path, custom: true)
+                ChatSticker(id: $0.path, pack: pack, packTitle: title, name: $0.lastPathComponent, location: $0.path, custom: true,
+                            emoji: emoji?[$0.lastPathComponent]?.string ?? "")
             }
         }
     }
@@ -97,8 +118,14 @@ final class LocalStickerRepository: StickerRepository, @unchecked Sendable {
             // Written beside the set first, so a failed write never leaves a half set (or loses the one it replaces).
             try? fm.removeItem(at: staging)
             try fm.createDirectory(at: staging, withIntermediateDirectories: true)
-            for s in stickers { try s.bytes.write(to: staging.appendingPathComponent(safeName(s.name))) }
-            try Data(JSONValue.object(JSONObject([("id", .string(pack)), ("title", .string(title))])).serialized().utf8).write(to: staging.appendingPathComponent(Self.packMeta))
+            var emoji: [(String, JSONValue)] = []
+            for s in stickers {
+                let safe = safeName(s.name)
+                try s.bytes.write(to: staging.appendingPathComponent(safe))
+                if !s.emoji.isEmpty { emoji.append((safe, .string(s.emoji))) }
+            }
+            let meta = JSONValue.object(JSONObject([("id", .string(pack)), ("title", .string(title)), ("emoji", .object(JSONObject(emoji)))]))
+            try Data(meta.serialized().utf8).write(to: staging.appendingPathComponent(Self.packMeta))
             try? fm.removeItem(at: target)
             try fm.moveItem(at: staging, to: target)
             return .success(())

@@ -35,6 +35,13 @@ public final class RoutingTranslationService: TranslationService, @unchecked Sen
         return await backend.translateText(key: key, text: text, targetLang: targetLang, model: model)
     }
 
+    public func complete(key: String, prompt: String, model: String?) async -> Outcome<TextTranslation> {
+        let backend = await pick()
+        register(key, backend)
+        defer { unregister(key) }
+        return await backend.complete(key: key, prompt: prompt, model: model)
+    }
+
     public func cancel(_ ticketId: String) async {
         await inFlight.withLock { $0[ticketId] }?.cancel(ticketId)
     }

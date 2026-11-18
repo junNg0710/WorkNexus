@@ -8,8 +8,8 @@ public struct TicketSource: Sendable, Equatable {
     public init(title: String, body: String) { self.title = title; self.body = body }
 }
 
-/// A free-form text translation and the model that produced it — which may differ from the one asked for when the
-/// user's API key is in charge. `model` is nil when the backend picked its own default and did not say which.
+/// Free-form text from the model (a translation, or the answer to a prompt passed to `TranslationService.complete`) and the
+/// model that produced it — which may differ from the one asked for when the user's API key is in charge. `model` is nil when the backend picked its own default and did not say which.
 public struct TextTranslation: Sendable, Equatable {
     public var text: String
     public var model: String?
@@ -29,6 +29,10 @@ public protocol TranslationService: Sendable {
 
     /// `key` identifies the run so `cancel` can stop it. Nothing is cached — the caller owns the result.
     func translateText(key: String, text: String, targetLang: String, model: String?) async -> Outcome<TextTranslation>
+
+    /// Answers a free-form `prompt` (a chat summary, reply ideas, a rewrite) with the same backend and model that translate,
+    /// so every AI feature runs on the one the user set up. `key` identifies the run so `cancel` can stop it.
+    func complete(key: String, prompt: String, model: String?) async -> Outcome<TextTranslation>
 
     /// Aborts the in-flight translation for `ticketId`; a no-op when there is none. The pending call still completes (with a failure).
     func cancel(_ ticketId: String) async

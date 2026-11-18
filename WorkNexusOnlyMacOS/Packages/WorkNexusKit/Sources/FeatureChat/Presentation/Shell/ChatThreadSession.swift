@@ -11,6 +11,8 @@ final class ChatThreadSession {
     let state: ChatThreadState
     let search: ChatThreadSearch
     let history: ChatHistoryDownloadModel
+    /// The AI assistant of this visit (the catch-up offer, the summary panel's scope).
+    let assistant: ChatAssistantModel
     /// Kept once known, so "N members" does not blink out when the chat reopens.
     private(set) var memberCount: Int?
     /// The chat's image and file messages stored locally, newest first; nil until the first read.
@@ -32,6 +34,7 @@ final class ChatThreadSession {
         state = ChatThreadState(accountId: accountId, chat: chat, selfAccount: selfAccount)
         search = ChatThreadSearch(accountId: accountId, chatGid: chat.gid, repository: repository, period: period)
         history = ChatHistoryDownloadModel(accountId: accountId, chatGid: chat.gid, repository: repository, period: period)
+        assistant = ChatAssistantModel(accountId: accountId, chatGid: chat.gid)
         self.repository = repository; self.onFailure = onFailure; self.isAppActive = isAppActive
         let state = state
         search.onQuery = { state.searchQuery = $0 }
@@ -45,6 +48,8 @@ final class ChatThreadSession {
     /// Pulls the newest page, marks the chat read and counts the members.
     func open() {
         let gid = state.chatGid, id = state.accountId
+        // What was unread before opening marks it read, for the AI catch-up.
+        assistant.opened(unread: state.chat.unreadCount)
         tasks.append(Task { [weak self] in
             guard let self else { return }
             if case .success(let n) = await repository.memberCount(accountId: id, chatGid: gid), state.chat.type != .one2one { memberCount = n }

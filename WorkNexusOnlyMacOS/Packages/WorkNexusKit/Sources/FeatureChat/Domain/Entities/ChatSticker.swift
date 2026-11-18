@@ -14,8 +14,15 @@ public struct ChatSticker: Hashable, Sendable, Identifiable {
     public var name: String
     public var location: String
     public var custom: Bool
-    public init(id: String, pack: String, packTitle: String? = nil, name: String, location: String, custom: Bool = false) {
+    /// The emoji it stands for, most fitting first (`😂🤣`): from the Telegram set it was imported from, or the bundled set's
+    /// `stickers.json`. Empty for the user's own stickers, which are then never suggested.
+    public var emoji: String
+    /// Words it is suggested for besides its emoji, folded (lower case, no diacritics): `cam on`, `ship it`.
+    public var keywords: [String]
+    public init(id: String, pack: String, packTitle: String? = nil, name: String, location: String, custom: Bool = false,
+                emoji: String = "", keywords: [String] = []) {
         self.id = id; self.pack = pack; self.packTitle = packTitle; self.name = name; self.location = location; self.custom = custom
+        self.emoji = emoji; self.keywords = keywords
     }
 }
 

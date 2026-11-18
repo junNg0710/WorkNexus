@@ -35,6 +35,11 @@ public struct ChatComposerView: View {
         .onChange(of: settings) { _, _ in sync() }
         .onDisappear { controller.stopTyping() }
         .task(id: state.chatGid) { await controller.loadMembers() }
+        .task(id: state.chatGid) { await controller.stickerSuggestions.load(services?.stickers) }
+        .task(id: state.chatGid) {
+            guard let repository = services?.chat else { return }
+            await controller.stickerSuggestions.watchLatest(repository, accountId: state.accountId, chatGid: state.chatGid)
+        }
     }
 
     private func sync() {
@@ -45,6 +50,9 @@ public struct ChatComposerView: View {
     private var composer: some View {
         VStack(spacing: 0) {
             ComposerErrorLine(message: controller.error) { controller.error = nil }
+            // The replies the AI suggested, when asked, and stickers for what is typed (or to answer with), over the tools.
+            ChatReplySuggestionsBar(controller: controller)
+            ChatStickerSuggestionsBar(controller: controller)
             ComposerToolbar(controller: controller, state: state)
             Rectangle().fill(theme.colors.line).frame(height: theme.borders.hairline)
             if let draft = state.replyDraft {

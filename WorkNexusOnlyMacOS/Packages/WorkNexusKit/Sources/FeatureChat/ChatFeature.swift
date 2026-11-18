@@ -21,11 +21,12 @@ import GRDB
 ///    (read `\.chatServices` / `\.chatSettings`; the host saves what they report). `ChatPersonChip`, `ChatPersonChatButton` and
 ///    `ChatPersonAvatar` are the person hooks (tapping opens the 1:1 chat through `ChatServices.showChat`).
 /// 8. **Host hooks on `ChatServices`** — `ticketLookup` / `mergeRequests` (link cards), `showChat`, `openTicket`,
-///    `ensureTranslatorReady` (the "OpenCode not linked" gate before a message is translated).
+///    `ensureTranslatorReady` (the "OpenCode not linked" gate before a message is translated or the AI is asked), `ai` +
+///    `aiLanguages` (the ✨ AI help: summaries, reply ideas, rewrites) and `setStickerSuggestions` (saves the ✨ menu's switch).
 ///
 /// Settings read from `AppSettings` (via `ChatSettings`): chatAppearance, chatPrimaryBubbles, chatWallpaper, chatWallpaperDim,
 /// chatSendMarkdown, chatNotifications, chatNotifyWhileViewing, chatSendTypingStatus, chatReactions, chatCacheLimitMb,
-/// chatAutoDownloadVideos, chatAutoDownloadVideoMb, chatTextScale, translationLang, translationModel.
+/// chatAutoDownloadVideos, chatAutoDownloadVideoMb, chatTextScale, chatStickerSuggestions, translationLang, translationModel.
 public enum ChatFeature {
     public static var migrationRegistrar: MigrationRegistrar { ChatMigrations.registrar }
 
@@ -50,6 +51,8 @@ public enum ChatFeature {
     /// - Parameter bundledStickers: a folder of `<pack>/<image>` sticker sets shipped in the app (nil: none).
     public static func makeServices(repository: ChatRepository, db: AppDatabase, credentials: CredentialStore, bundledStickers: URL? = nil,
                                     translator: ChatTextTranslator? = nil, ensureTranslatorReady: (@Sendable () async -> Bool)? = nil,
+                                    ai: ChatAiTextGenerator? = nil, aiLanguages: [ChatAiLanguage] = [],
+                                    setStickerSuggestions: (@Sendable (Bool) -> Void)? = nil,
                                     translations: MessageTranslationRepository? = nil,
                                     ticketLookup: (@Sendable (String) async -> Ticket?)? = nil, mergeRequests: MergeRequestLinkService? = nil,
                                     showChat: (@Sendable (String, String) -> Void)? = nil, openTicket: (@Sendable (Ticket) -> Void)? = nil) -> ChatServices {
@@ -57,12 +60,14 @@ public enum ChatFeature {
         let converter = ImageStickerConverter()
         let stickers = LocalStickerRepository(bundleRoot: bundledStickers, directory: base.appendingPathComponent("stickers", isDirectory: true), converter: converter)
         let source = TelegramStickerSource()
-        return ChatServices(
+        var services = ChatServices(
             chat: repository, stickers: stickers, wallpapers: LocalWallpaperRepository(directory: base.appendingPathComponent("wallpapers", isDirectory: true)),
             linkPreviews: CachedLinkPreviewRepository(db: db), translations: translations ?? (repository as? XxdChatRepository).map { LocalMessageTranslationRepository(local: $0.local) },
             translator: translator, ensureTranslatorReady: ensureTranslatorReady, telegramTokens: CredentialTelegramTokenStore(store: credentials),
             stickerImport: ImportStickerPack(source, converter, stickers), ticketLookup: ticketLookup, mergeRequests: mergeRequests,
             showChat: showChat, openTicket: openTicket)
+        services.ai = ai; services.aiLanguages = aiLanguages; services.setStickerSuggestions = setStickerSuggestions
+        return services
     }
 
     public static func unreadCounter(repository: ChatRepository) -> ChatUnreadCounter { ChatUnreadCounter(repository: repository) }

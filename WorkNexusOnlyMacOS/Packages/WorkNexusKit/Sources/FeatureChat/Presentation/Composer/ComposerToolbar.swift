@@ -26,7 +26,8 @@ struct ComposerToolButton: View {
     }
 }
 
-/// The tool row above the input: send image, attach file, mention someone, emoji, send code and the Markdown toggle.
+/// The tool row above the input: send image, attach file, mention someone, emoji, send code, the AI tools (replies, rewrites,
+/// the summary, sticker suggestions) and the Markdown toggle.
 struct ComposerToolbar: View {
     @Environment(\.appTheme) private var theme
     let controller: ChatComposerController
@@ -51,6 +52,7 @@ struct ComposerToolbar: View {
                 }
             ComposerToolButton(systemImage: "chevron.left.forwardslash.chevron.right", help: appString("chatSendCode", "Send code")) { codeOpen = true }
                 .sheet(isPresented: $codeOpen) { SendCodeDialog(controller: controller) }
+            if controller.offersAi { ChatAiComposeButton(controller: controller, state: state) }
             ComposerToolButton(systemImage: "textformat", help: controller.markdown
                                ? appString("chatMarkdownOn", "Markdown on — messages are sent formatted")
                                : appString("chatMarkdownOff", "Markdown off — messages are sent as plain text"),

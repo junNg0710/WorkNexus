@@ -43,7 +43,7 @@ public struct ImportStickerPack: Sendable {
         for (i, result) in results.enumerated() {
             switch result {
             case .success(let v)?:
-                files.append((name: String(format: "%03d.webp", i + 1), bytes: v.bytes))
+                files.append((name: String(format: "%03d.webp", i + 1), bytes: v.bytes, emoji: set.stickers[i].emoji))
                 if v.still { stills += 1 }
             case .failure(let f)?: failed += 1; lastFailure = f
             case nil: failed += 1

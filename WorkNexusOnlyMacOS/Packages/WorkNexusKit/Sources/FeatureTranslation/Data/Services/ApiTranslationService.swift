@@ -50,8 +50,13 @@ public final class ApiTranslationService: TranslationService, @unchecked Sendabl
 
     public func translateText(key: String, text: String, targetLang: String, model: String?) async -> Outcome<TextTranslation> {
         let language = translationLanguage(for: targetLang)
+        return await complete(key: key, prompt: textPrompt(text, language.englishName), model: model)
+    }
+
+    /// The model is the configured one: with an API key the user's setting is in charge.
+    public func complete(key: String, prompt: String, model: String?) async -> Outcome<TextTranslation> {
         let cfg = await config()
-        switch await complete(key: key, config: cfg, prompt: textPrompt(text, language.englishName)) {
+        switch await complete(key: key, config: cfg, prompt: prompt) {
         case .failure(let f): return .failure(f)
         case .success(let out):
             let trimmed = out.trimmingCharacters(in: .whitespacesAndNewlines)
