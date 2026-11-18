@@ -639,18 +639,6 @@
     "en": "%1$@ selected",
     "vi": "Đã chọn %1$@"
   },
-  "leaderSortDeadline": {
-    "en": "Sort: deadline",
-    "vi": "Sắp xếp: hạn chót"
-  },
-  "leaderSortHelp": {
-    "en": "Order of the cards in each column",
-    "vi": "Thứ tự thẻ trong mỗi cột"
-  },
-  "leaderSortPriority": {
-    "en": "Sort: priority",
-    "vi": "Sắp xếp: ưu tiên"
-  },
   "leaderStale": {
     "en": "Idle %1$@ days+",
     "vi": "Không đổi %1$@+ ngày"

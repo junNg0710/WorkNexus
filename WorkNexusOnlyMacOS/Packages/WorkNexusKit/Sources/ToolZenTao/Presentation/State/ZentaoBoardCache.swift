@@ -12,7 +12,8 @@ final class ZentaoBoardCache {
         var revision: Int
         var leader: ZenTaoLeaderFilter
         var names: [String: String]
-        var sort: ZenTaoColumnSort
+        /// The order of the cards (the session's, shared by every board).
+        var sort: TicketSort
         var includeClosed: Bool
         var roster: [String]
         /// Deadlines are by calendar day: what is "overdue" changes at midnight.
@@ -73,7 +74,7 @@ extension ZentaoUIState {
     /// The inputs of a board's derived values. Reading them here is also what makes a view depend on them.
     func cacheKey(bugs: Bool) -> ZentaoBoardCache.Key {
         ZentaoBoardCache.Key(revision: (bugs ? bugBoard : taskBoard).revision, leader: leader(bugs: bugs), names: memberNames,
-                             sort: columnSort, includeClosed: bugs && bugTab == .all, roster: boardMembers.map(\.account),
+                             sort: deps.nav.boardSort, includeClosed: bugs && bugTab == .all, roster: boardMembers.map(\.account),
                              day: Int(Date().timeIntervalSince1970 / 86_400))
     }
 }

@@ -4,7 +4,8 @@ import CoreUI
 import SwiftUI
 
 /// Ported from: lib/shared/board/presentation/widgets/{board_toolbar,board_toolbar_layout,render_board_toolbar}.dart
-/// The strip above a board: scope tabs, filters button, search, refresh and view-mode switch, plus an optional row
+/// The strip above a board: scope tabs, filters button (and, on the Kanban view, the card Sort button), search, refresh
+/// and view-mode switch, plus an optional row
 /// (`below`, e.g. the active-filter bar). It degrades with the width: full → icon-only view modes → scopes as a menu →
 /// no search field (`ViewThatFits`).
 public struct BoardToolbar<Filters: View, Refresh: View, Below: View>: View {
@@ -13,14 +14,20 @@ public struct BoardToolbar<Filters: View, Refresh: View, Below: View>: View {
     let scopes: [AppSegmentedTab]; let searchScope: String?
     let modes: [ToolViewMode]; let viewMode: ViewModeID; let onViewMode: (ViewModeID) -> Void
     let filters: Filters; let refresh: Refresh; let below: Below
+    /// What the Kanban view's Sort button offers; the List view sorts by its own column headers, so it gets none.
+    let sortFields: [TicketSortField]
 
     public init(controller: BoardController, scopes: [AppSegmentedTab] = [], searchScope: String? = nil,
                 modes: [ToolViewMode], viewMode: ViewModeID, onViewMode: @escaping (ViewModeID) -> Void,
+                sortFields: [TicketSortField] = TicketSortField.boardFields,
                 @ViewBuilder filters: () -> Filters, @ViewBuilder refresh: () -> Refresh, @ViewBuilder below: () -> Below) {
         self.controller = controller; self.scopes = scopes; self.searchScope = searchScope; self.modes = modes
-        self.viewMode = viewMode; self.onViewMode = onViewMode
+        self.viewMode = viewMode; self.onViewMode = onViewMode; self.sortFields = sortFields
         self.filters = filters(); self.refresh = refresh(); self.below = below()
     }
+
+    /// The Sort button's fields, on the Kanban view only (the view mode id every board section gives it is `board`).
+    private var shownSortFields: [TicketSortField] { viewMode == "board" ? sortFields : [] }
 
     /// From the widest arrangement to the narrowest; `ViewThatFits` picks the first that fits.
     fileprivate static var layouts: [ToolbarLayout] {
@@ -39,10 +46,10 @@ public struct BoardToolbar<Filters: View, Refresh: View, Below: View>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ViewThatFits(in: .horizontal) {
-                ToolbarRow(controller: controller, scopes: scopes, searchScope: searchScope, modeTabs: modes.count > 1 ? modeTabs : [], layout: Self.layouts[0], filters: filters, refresh: refresh)
-                ToolbarRow(controller: controller, scopes: scopes, searchScope: searchScope, modeTabs: modes.count > 1 ? modeTabs : [], layout: Self.layouts[1], filters: filters, refresh: refresh)
-                ToolbarRow(controller: controller, scopes: scopes, searchScope: searchScope, modeTabs: modes.count > 1 ? modeTabs : [], layout: Self.layouts[2], filters: filters, refresh: refresh)
-                ToolbarRow(controller: controller, scopes: scopes, searchScope: searchScope, modeTabs: modes.count > 1 ? modeTabs : [], layout: Self.layouts[3], filters: filters, refresh: refresh)
+                ToolbarRow(controller: controller, scopes: scopes, searchScope: searchScope, modeTabs: modes.count > 1 ? modeTabs : [], layout: Self.layouts[0], sortFields: shownSortFields, filters: filters, refresh: refresh)
+                ToolbarRow(controller: controller, scopes: scopes, searchScope: searchScope, modeTabs: modes.count > 1 ? modeTabs : [], layout: Self.layouts[1], sortFields: shownSortFields, filters: filters, refresh: refresh)
+                ToolbarRow(controller: controller, scopes: scopes, searchScope: searchScope, modeTabs: modes.count > 1 ? modeTabs : [], layout: Self.layouts[2], sortFields: shownSortFields, filters: filters, refresh: refresh)
+                ToolbarRow(controller: controller, scopes: scopes, searchScope: searchScope, modeTabs: modes.count > 1 ? modeTabs : [], layout: Self.layouts[3], sortFields: shownSortFields, filters: filters, refresh: refresh)
             }
             // The search results hang below the field, over `below` (the leader bar, the active filters): drawn after,
             // `below` would take the clicks meant for them.
@@ -62,11 +69,12 @@ fileprivate struct ToolbarLayout { var iconOnlyModes: Bool; var scopesAsMenu: Bo
 private struct ToolbarRow<Filters: View, Refresh: View>: View {
     @Environment(\.appTheme) private var theme
     let controller: BoardController; let scopes: [AppSegmentedTab]; let searchScope: String?; let modeTabs: [AppSegmentedTab]
-    let layout: ToolbarLayout; let filters: Filters; let refresh: Refresh
+    let layout: ToolbarLayout; let sortFields: [TicketSortField]; let filters: Filters; let refresh: Refresh
     var body: some View {
         HStack(spacing: theme.spacing.s6) {
             if !scopes.isEmpty { if layout.scopesAsMenu { ScopesMenu(tabs: scopes) } else { AppSegmentedTabs(scopes).fixedSize() } }
             filters
+            if !sortFields.isEmpty { BoardSortButton(nav: controller.nav, fields: sortFields) }
             if layout.search { ContextualSearchField(controller: controller, scope: searchScope).frame(minWidth: 160, maxWidth: 480) }
             else { Spacer(minLength: 0) }
             refresh
@@ -79,9 +87,10 @@ public extension BoardToolbar where Filters == FiltersButton, Below == ActiveFil
     /// Toolbar with the standard `FiltersButton` and `ActiveFilterBar`.
     init(controller: BoardController, scopes: [AppSegmentedTab] = [], searchScope: String? = nil, modes: [ToolViewMode],
          viewMode: ViewModeID, onViewMode: @escaping (ViewModeID) -> Void, catalog: BoardFacetCatalog? = nil,
-         statusOption: FacetStatusOption? = nil, @ViewBuilder refresh: () -> Refresh) {
+         statusOption: FacetStatusOption? = nil, sortFields: [TicketSortField] = TicketSortField.boardFields,
+         @ViewBuilder refresh: () -> Refresh) {
         self.init(controller: controller, scopes: scopes, searchScope: searchScope, modes: modes, viewMode: viewMode,
-                  onViewMode: onViewMode,
+                  onViewMode: onViewMode, sortFields: sortFields,
                   filters: { FiltersButton(controller: controller, statusOption: statusOption, catalog: catalog) },
                   refresh: refresh,
                   below: { ActiveFilterBar(controller: controller, catalog: catalog, statusOption: statusOption) })

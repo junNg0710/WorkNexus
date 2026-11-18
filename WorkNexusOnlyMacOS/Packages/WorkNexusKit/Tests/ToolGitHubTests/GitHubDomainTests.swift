@@ -29,6 +29,18 @@ final class GitHubDomainTests: XCTestCase {
         XCTAssertEqual(BuildGitHubPrBoard()([a, b, c]).column(.review).tickets.map(\.id), ["hi-new", "hi-old", "lo"])
     }
 
+    /// The board's Sort button (test/domain/compare_tickets_test.dart): every column follows the session's sort.
+    func testColumnsFollowTheBoardSort() {
+        var a = pr("a", "open", priority: .urgent); a.title = "zeta"
+        var b = pr("b", "open", priority: .low); b.title = "Alpha"
+        XCTAssertEqual(BuildGitHubPrBoard()([a, b]).column(.review).tickets.map(\.id), ["a", "b"])
+        XCTAssertEqual(BuildGitHubPrBoard(sort: TicketSort(.title))([a, b]).column(.review).tickets.map(\.id), ["b", "a"])
+        XCTAssertEqual(BuildGitHubPrBoard(sort: TicketSort(.priority, descending: true))([a, b]).column(.review).tickets.map(\.id), ["b", "a"])
+        var i1 = issue("i1", "open"); i1.title = "beta"
+        var i2 = issue("i2", "open"); i2.title = "alpha"
+        XCTAssertEqual(BuildGitHubIssueBoard(sort: TicketSort(.title))([i1, i2]).column(.open).tickets.map(\.id), ["i2", "i1"])
+    }
+
     func testPrBoardExcludesIssuesAndOtherProviders() {
         XCTAssertEqual(BuildGitHubPrBoard()([issue("i", "open")]).total, 0)
         var gl = pr("x", "open"); gl.providerType = .gitlab

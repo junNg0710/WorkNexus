@@ -49,6 +49,19 @@ final class BoardControllerTests: XCTestCase {
         c.stop()
     }
 
+    /// The card order is the session's (`AppNavController.boardSort`): picking another re-sorts a running board.
+    func testPickingAnotherCardOrderReSortsTheBoard() async {
+        let (c, _) = make(tickets: [makeTicket("a", key: "1", priority: .urgent, title: "zeta"), makeTicket("b", key: "2", priority: .low, title: "alpha")])
+        c.start(); await waitFor { c.board.total == 2 }
+        func todo() -> [String] { ids(c.board.columns.first { $0.status == .todo }!.tickets) }
+        XCTAssertEqual(todo(), ["a", "b"])
+        c.nav.sortBoardCards(by: .title)
+        await waitFor { todo() == ["b", "a"] }
+        XCTAssertEqual(todo(), ["b", "a"])
+        XCTAssertEqual(c.boardQuery.sort, TicketSort(.title))
+        c.stop()
+    }
+
     /// A scope that reads the settings (a team view leaving executions out) follows a change of them.
     func testASettingsChangeReScopes() async {
         let (c, _) = make(tickets: [makeTicket("a"), makeTicket("b", project: "p2")])

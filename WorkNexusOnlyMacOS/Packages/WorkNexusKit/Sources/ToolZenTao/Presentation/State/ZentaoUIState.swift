@@ -27,8 +27,6 @@ public final class ZentaoUIState {
     public internal(set) var bugTab: ZenTaoBugBrowseType = .unclosed
     /// The team leader's filter of each board (people, quick chips, keyword), by `BoardController.currentBoardKey`.
     public internal(set) var leaders: [String: ZenTaoLeaderFilter] = [:]
-    /// How the cards inside a column are ordered.
-    public var columnSort = ZenTaoColumnSort.priority
     /// The team groups saved for each account (watched from the store once an account's board opens).
     public internal(set) var teamGroups: [String: [ZenTaoTeamGroup]] = [:]
     /// The team a board shows instead of one execution / product, with what was read of each person.

@@ -766,6 +766,57 @@
         }
       }
     },
+    "subtaskCountNested": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ total"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · tổng %2$@"
+          }
+        }
+      }
+    },
+    "subtaskExpand": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show subtasks"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện task con"
+          }
+        }
+      }
+    },
+    "subtaskCollapse": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide subtasks"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ẩn task con"
+          }
+        }
+      }
+    },
     "relatedBugs": {
       "extractionState": "manual",
       "localizations": {
@@ -1701,6 +1752,40 @@
         }
       }
     },
+    "boardSort": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort cards"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sắp xếp thẻ"
+          }
+        }
+      }
+    },
+    "boardSortCreated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ngày tạo"
+          }
+        }
+      }
+    },
     "priorityUrgent": {
       "extractionState": "manual",
       "localizations": {
@@ -1843,13 +1928,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Translate with OpenCode"
+            "value": "Translate with %1$@"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dịch bằng OpenCode"
+            "value": "Dịch bằng %1$@"
           }
         }
       }
@@ -1860,13 +1945,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Re-translate with OpenCode"
+            "value": "Re-translate with %1$@"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dịch lại bằng OpenCode"
+            "value": "Dịch lại bằng %1$@"
           }
         }
       }
@@ -1877,13 +1962,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Translating with OpenCode…"
+            "value": "Translating with %1$@…"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Đang dịch bằng OpenCode…"
+            "value": "Đang dịch bằng %1$@…"
           }
         }
       }
@@ -1939,19 +2024,19 @@
         }
       }
     },
-    "runOpenCodeToTranslate": {
+    "runAiToTranslate": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run OpenCode to generate a %1$@ version."
+            "value": "Translate with %1$@ to get a %2$@ version."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chạy OpenCode để tạo bản dịch %1$@."
+            "value": "Dịch bằng %1$@ để có bản %2$@."
           }
         }
       }
@@ -9738,6 +9823,771 @@
           "stringUnit": {
             "state": "translated",
             "value": "Đổi ảnh nhóm"
+          }
+        }
+      }
+    },
+    "chatRenameGroup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename group"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đổi tên nhóm"
+          }
+        }
+      }
+    },
+    "chatDismissGroup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss group"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giải tán nhóm"
+          }
+        }
+      }
+    },
+    "chatDismissGroupConfirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss “%1$@” for every member? It leaves everyone's chat list and can't be undone."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giải tán “%1$@” với mọi thành viên? Nhóm sẽ biến khỏi danh sách chat của mọi người và không thể hoàn tác."
+          }
+        }
+      }
+    },
+    "chatGroupDismissed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group dismissed"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã giải tán nhóm"
+          }
+        }
+      }
+    },
+    "chatSetCategory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phân loại…"
+          }
+        }
+      }
+    },
+    "chatCategorize": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categorize"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phân loại"
+          }
+        }
+      }
+    },
+    "chatFilterByStatus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By status"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theo trạng thái"
+          }
+        }
+      }
+    },
+    "chatFilterAll": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tất cả"
+          }
+        }
+      }
+    },
+    "chatFilterUnread": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unread"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa đọc"
+          }
+        }
+      }
+    },
+    "chatFilterByCategory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By category tag"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theo thẻ phân loại"
+          }
+        }
+      }
+    },
+    "chatNoCategories": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No tags yet. Right-click a chat and pick “Category…” to tag it."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa có thẻ nào. Chuột phải vào một chat và chọn “Phân loại…” để gắn thẻ."
+          }
+        }
+      }
+    },
+    "chatManageCategories": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage category tags"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quản lý thẻ phân loại"
+          }
+        }
+      }
+    },
+    "chatManageCategoriesHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renaming or deleting a tag changes it on every chat it is on."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đổi tên hay xoá thẻ sẽ áp dụng cho mọi chat đang gắn thẻ đó."
+          }
+        }
+      }
+    },
+    "chatCategorizeTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categorize chat"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phân loại chat"
+          }
+        }
+      }
+    },
+    "chatCategoryName": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category name, e.g. Projects"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tên phân loại, ví dụ: Dự án"
+          }
+        }
+      }
+    },
+    "chatRemoveCategory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from category"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bỏ phân loại"
+          }
+        }
+      }
+    },
+    "chatRenameCategory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename category"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đổi tên phân loại"
+          }
+        }
+      }
+    },
+    "chatDeleteCategory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete category"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xoá phân loại"
+          }
+        }
+      }
+    },
+    "chatDeleteCategoryConfirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the “%1$@” category? Its chats stay, just uncategorised."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xoá phân loại “%1$@”? Các chat trong đó vẫn còn, chỉ không còn được phân loại."
+          }
+        }
+      }
+    },
+    "chatGroupSettings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group settings"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cài đặt nhóm"
+          }
+        }
+      }
+    },
+    "chatPublicGroup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public group"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhóm công khai"
+          }
+        }
+      }
+    },
+    "chatPublicGroupHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anyone can find this group and join it"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ai cũng tìm thấy và tự vào được nhóm"
+          }
+        }
+      }
+    },
+    "chatAdminInvite": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the owner and admins add members"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chỉ chủ nhóm và admin được thêm thành viên"
+          }
+        }
+      }
+    },
+    "chatAdminInviteHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off: anyone who can post may add people"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tắt: ai được gửi tin đều thêm được người"
+          }
+        }
+      }
+    },
+    "chatWhoCanPost": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who can send messages"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ai được gửi tin nhắn"
+          }
+        }
+      }
+    },
+    "chatPostEveryone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mọi người"
+          }
+        }
+      }
+    },
+    "chatPostAdmins": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admins only"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chỉ admin"
+          }
+        }
+      }
+    },
+    "chatPostSelected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chosen members"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Người được chọn"
+          }
+        }
+      }
+    },
+    "chatPostSelectedHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The owner can always post. Tick who else can:"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chủ nhóm luôn được gửi tin. Chọn thêm những người được gửi:"
+          }
+        }
+      }
+    },
+    "chatAdminBadge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admin"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admin"
+          }
+        }
+      }
+    },
+    "chatMakeAdmin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make admin"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đặt làm admin"
+          }
+        }
+      }
+    },
+    "chatRemoveAdmin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove as admin"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bỏ quyền admin"
+          }
+        }
+      }
+    },
+    "chatTransferOwner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make group owner"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chuyển quyền chủ nhóm"
+          }
+        }
+      }
+    },
+    "chatTransferOwnerConfirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make %1$@ the owner of “%2$@”? You become a regular member and can no longer undo this yourself."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chuyển quyền chủ nhóm “%2$@” cho %1$@? Bạn sẽ thành thành viên thường và không tự lấy lại quyền được."
+          }
+        }
+      }
+    },
+    "chatOwnerTransferred": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group owner changed"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã chuyển quyền chủ nhóm"
+          }
+        }
+      }
+    },
+    "chatMemberActions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Member actions"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thao tác với thành viên"
+          }
+        }
+      }
+    },
+    "chatLeaveGroup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave group"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rời nhóm"
+          }
+        }
+      }
+    },
+    "chatLeaveGroupConfirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave “%1$@”? You stop getting its messages until someone adds you back."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rời “%1$@”? Bạn sẽ không nhận tin nhắn của nhóm nữa cho tới khi có người thêm lại."
+          }
+        }
+      }
+    },
+    "chatLeftGroup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You left the group"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã rời nhóm"
+          }
+        }
+      }
+    },
+    "chatAddMembers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add members"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm thành viên"
+          }
+        }
+      }
+    },
+    "chatAdd": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm"
+          }
+        }
+      }
+    },
+    "chatMembersAdded": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Members added"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã thêm thành viên"
+          }
+        }
+      }
+    },
+    "chatRemoveMember": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from group"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xoá khỏi nhóm"
+          }
+        }
+      }
+    },
+    "chatRemoveMemberConfirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove %1$@ from “%2$@”? They stop seeing new messages."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xoá %1$@ khỏi “%2$@”? Họ sẽ không thấy tin nhắn mới nữa."
+          }
+        }
+      }
+    },
+    "chatMemberRemoved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed from the group"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã xoá khỏi nhóm"
           }
         }
       }
@@ -19738,6 +20588,142 @@
         }
       }
     },
+    "chatPrivacyMode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy mode"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chế độ riêng tư"
+          }
+        }
+      }
+    },
+    "chatPrivacyModeHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hides chats on screen until you point at them, for a shared screen or a look over your shoulder: names and previews turn into dots, avatars into a placeholder, messages fade out. Nothing stored or sent changes. Shortcut: %1$@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ẩn chat trên màn hình cho tới khi bạn rê chuột vào, khi chia sẻ màn hình hay có người nhìn qua vai: tên và xem trước thành dấu chấm, ảnh đại diện thành ảnh mặc định, tin nhắn mờ đi. Không thay đổi dữ liệu đã lưu hay đã gửi. Phím tắt: %1$@."
+          }
+        }
+      }
+    },
+    "chatHidePreviews": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide message previews"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ẩn xem trước tin nhắn"
+          }
+        }
+      }
+    },
+    "chatHidePreviewsHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The last message under each chat in the list shows as dots."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tin nhắn cuối dưới mỗi chat trong danh sách hiện thành dấu chấm."
+          }
+        }
+      }
+    },
+    "chatHideIdentities": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide chat names and avatars"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ẩn tên và ảnh đại diện"
+          }
+        }
+      }
+    },
+    "chatHideIdentitiesHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the chat list, at the top of the open chat and in its message box."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trong danh sách chat, ở đầu chat đang mở và trong ô nhập tin."
+          }
+        }
+      }
+    },
+    "chatHideMessages": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fade out messages"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Làm mờ tin nhắn"
+          }
+        }
+      }
+    },
+    "chatHideMessagesHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every message in the open chat, its threads and pins."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mọi tin nhắn trong chat đang mở, trong thread và tin ghim."
+          }
+        }
+      }
+    },
     "chatSendTypingStatus": {
       "extractionState": "manual",
       "localizations": {
@@ -19768,6 +20754,329 @@
           "stringUnit": {
             "state": "translated",
             "value": "Người trong chat 1-1 và nhóm thấy khi bạn đang nhập tin nhắn."
+          }
+        }
+      }
+    },
+    "chatLocalApiSection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI tools"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Công cụ AI"
+          }
+        }
+      }
+    },
+    "chatLocalApi": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let local AI tools use chat"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cho công cụ AI trên máy dùng chat"
+          }
+        }
+      }
+    },
+    "chatLocalApiHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Programs on this computer, such as an AI assistant's MCP server, can send chat messages as you, load older history and download files and images through this app, without your password. Only turn this on for tools you trust."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chương trình trên máy này, như MCP server của trợ lý AI, có thể gửi tin chat dưới tên bạn, tải thêm tin cũ và tải file, ảnh qua app này mà không cần mật khẩu. Chỉ bật khi bạn tin công cụ đó."
+          }
+        }
+      }
+    },
+    "mcpSetupOpen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect an AI tool (MCP)"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kết nối công cụ AI (MCP)"
+          }
+        }
+      }
+    },
+    "mcpSetupTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect an AI tool"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kết nối công cụ AI"
+          }
+        }
+      }
+    },
+    "mcpSetupIntro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WorkNexus comes with an MCP server: add it to Claude or another MCP-capable assistant, and it can list, read and search your ZenTao chats (and TBChat, when installed), send messages, load older history and open files and images."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WorkNexus có sẵn một MCP server: thêm nó vào Claude hoặc trợ lý AI khác hỗ trợ MCP để xem danh sách, đọc, tìm tin chat ZenTao (và TBChat nếu máy có cài), gửi tin, tải thêm tin cũ và mở file, ảnh."
+          }
+        }
+      }
+    },
+    "mcpSetupNodeFound": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Node.js %1$@ at %2$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Node.js %1$@ tại %2$@"
+          }
+        }
+      }
+    },
+    "mcpSetupNodeOld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Node.js %1$@ is too old: the MCP server needs %2$@ or newer."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Node.js %1$@ quá cũ: MCP server cần bản %2$@ trở lên."
+          }
+        }
+      }
+    },
+    "mcpSetupNodeMissing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Node.js was not found. Install Node.js %1$@ or newer, then open this guide again."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không tìm thấy Node.js. Cài Node.js %1$@ trở lên rồi mở lại hướng dẫn này."
+          }
+        }
+      }
+    },
+    "mcpSetupNodeVersionManager": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Node.js belongs to one version of a version manager (nvm, fnm, asdf, …). If you switch away from or remove that version, the AI tool can no longer start the server: open this guide again and register it with the new path."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Node.js này thuộc một phiên bản của trình quản lý phiên bản (nvm, fnm, asdf, …). Nếu đổi sang hoặc gỡ phiên bản đó, công cụ AI sẽ không chạy được server nữa: mở lại hướng dẫn này và đăng ký lại với đường dẫn mới."
+          }
+        }
+      }
+    },
+    "mcpSetupGetNode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get Node.js"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tải Node.js"
+          }
+        }
+      }
+    },
+    "mcpSetupFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not prepare the MCP server"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không chuẩn bị được MCP server"
+          }
+        }
+      }
+    },
+    "mcpSetupClaudeCode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code"
+          }
+        }
+      }
+    },
+    "mcpSetupClaudeCodeHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run in a terminal, then start a new Claude Code session."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chạy lệnh này trong terminal, rồi mở session Claude Code mới."
+          }
+        }
+      }
+    },
+    "mcpSetupClaudeDesktop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Desktop"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Desktop"
+          }
+        }
+      }
+    },
+    "mcpSetupClaudeDesktopHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to %1$@ (merge into its \"mcpServers\" if it has one), then restart Claude Desktop."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm vào %1$@ (nếu file đã có \"mcpServers\" thì gộp vào đó), rồi khởi động lại Claude Desktop."
+          }
+        }
+      }
+    },
+    "mcpSetupOtherClient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other MCP clients"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client MCP khác"
+          }
+        }
+      }
+    },
+    "mcpSetupOtherClientHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor, Windsurf and others take the same entry in their MCP settings."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor, Windsurf và các client khác dùng cùng mục này trong phần cài đặt MCP."
+          }
+        }
+      }
+    },
+    "mcpSetupSendNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading what WorkNexus already stored works right away. To let the assistant send messages, load older history and open files and images, also turn on \"Let local AI tools use chat\" below. WorkNexus must be running for that."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đọc tin WorkNexus đã lưu dùng được ngay. Muốn trợ lý gửi tin, tải thêm tin cũ và mở file, ảnh thì bật thêm \"Cho công cụ AI trên máy dùng chat\" bên dưới, và WorkNexus phải đang chạy."
           }
         }
       }
@@ -24260,6 +25569,23 @@
         }
       }
     },
+    "miniAppCookiesKeychainTimeout": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS got no answer to the prompt for %1$@'s cookie key. It may be behind this window, or on another desktop while the app is full screen. Try again and choose Allow."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS chưa nhận được câu trả lời cho hộp thoại khoá cookie của %1$@. Hộp thoại có thể bị che sau cửa sổ này, hoặc nằm ở desktop khác khi app đang full-screen. Thử lại và chọn Cho phép."
+          }
+        }
+      }
+    },
     "miniAppCookiesSafariAccess": {
       "extractionState": "manual",
       "localizations": {
@@ -24341,6 +25667,720 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cookie đăng nhập đã hết hạn: nhập lại từ %1$@"
+          }
+        }
+      }
+    },
+    "translatedVia": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translated · via %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã dịch · qua %1$@"
+          }
+        }
+      }
+    },
+    "translatedViaDefault": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translated · via OpenCode's default model"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã dịch · qua model mặc định của OpenCode"
+          }
+        }
+      }
+    },
+    "chatTranslatedByDefault": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translated by OpenCode's default model"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dịch bởi model mặc định của OpenCode"
+          }
+        }
+      }
+    },
+    "chatAiAssistant": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI assistant"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trợ lý AI"
+          }
+        }
+      }
+    },
+    "chatAiOpenAssistant": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summarize with AI"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tóm tắt bằng AI"
+          }
+        }
+      }
+    },
+    "chatAiCatchUp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ new messages since you last looked"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tin nhắn mới kể từ lần cuối bạn xem"
+          }
+        }
+      }
+    },
+    "chatAiCatchUpAction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summarize"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tóm tắt"
+          }
+        }
+      }
+    },
+    "chatAiDismiss": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bỏ qua"
+          }
+        }
+      }
+    },
+    "chatAiScopeUnread": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unread"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa đọc"
+          }
+        }
+      }
+    },
+    "chatAiSummaryIntro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get the gist of the conversation: key points, decisions, who does what and what is still open."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nắm nhanh nội dung cuộc trò chuyện: ý chính, quyết định, ai làm gì và việc gì còn bỏ ngỏ."
+          }
+        }
+      }
+    },
+    "chatAiSummarize": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summarize"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tóm tắt"
+          }
+        }
+      }
+    },
+    "chatAiSummarizing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summarizing…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang tóm tắt…"
+          }
+        }
+      }
+    },
+    "chatAiOverview": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overview"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tổng quan"
+          }
+        }
+      }
+    },
+    "chatAiKeyPoints": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key points"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ý chính"
+          }
+        }
+      }
+    },
+    "chatAiDecisions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decisions"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quyết định"
+          }
+        }
+      }
+    },
+    "chatAiActionItems": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action items"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Việc cần làm"
+          }
+        }
+      }
+    },
+    "chatAiOpenQuestions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open questions"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Câu hỏi còn mở"
+          }
+        }
+      }
+    },
+    "chatAiDue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hạn %1$@"
+          }
+        }
+      }
+    },
+    "chatAiSummaryFooter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ messages · %2$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tin nhắn · %2$@"
+          }
+        }
+      }
+    },
+    "chatAiSummaryFooterNoModel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ messages summarized"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã tóm tắt %1$@ tin nhắn"
+          }
+        }
+      }
+    },
+    "chatAiRegenerate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summarize again"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tóm tắt lại"
+          }
+        }
+      }
+    },
+    "chatAiCopySummary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy summary"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chép bản tóm tắt"
+          }
+        }
+      }
+    },
+    "chatAiSummaryCopied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summary copied"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã chép bản tóm tắt"
+          }
+        }
+      }
+    },
+    "chatAiFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The AI couldn't answer: %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI không trả lời được: %1$@"
+          }
+        }
+      }
+    },
+    "chatAiNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Written by AI from the messages · check before relying on it"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do AI viết từ các tin nhắn · hãy kiểm tra trước khi tin dùng"
+          }
+        }
+      }
+    },
+    "chatAiTools": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI tools"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Công cụ AI"
+          }
+        }
+      }
+    },
+    "chatAiSuggestReplies": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggest replies"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gợi ý trả lời"
+          }
+        }
+      }
+    },
+    "chatAiSuggesting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thinking of replies…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang nghĩ câu trả lời…"
+          }
+        }
+      }
+    },
+    "chatAiSuggestionHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick one to edit it before sending"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chọn một câu để đưa vào ô soạn, sửa rồi gửi"
+          }
+        }
+      }
+    },
+    "chatAiRewriteClearer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make it clearer"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viết lại rõ ràng hơn"
+          }
+        }
+      }
+    },
+    "chatAiRewriteFormal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More formal"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trang trọng hơn"
+          }
+        }
+      }
+    },
+    "chatAiRewriteFriendly": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Friendlier"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thân thiện hơn"
+          }
+        }
+      }
+    },
+    "chatAiRewriteShorter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorter"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ngắn gọn hơn"
+          }
+        }
+      }
+    },
+    "chatAiRewriteNeedsDraft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type a message for the AI to rewrite"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gõ tin nhắn để AI viết lại"
+          }
+        }
+      }
+    },
+    "chatAiRewriteNoMentions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rewriting would drop the @mentions in this message"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viết lại sẽ làm mất các lượt nhắc (@) trong tin này"
+          }
+        }
+      }
+    },
+    "chatAiRewriting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rewriting…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang viết lại…"
+          }
+        }
+      }
+    },
+    "chatAiScopeLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages to summarize"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tin nhắn cần tóm tắt"
+          }
+        }
+      }
+    },
+    "chatStickerSuggestions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send as a sticker"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gửi bằng sticker"
+          }
+        }
+      }
+    },
+    "chatStickerReplies": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply with a sticker"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trả lời bằng sticker"
+          }
+        }
+      }
+    },
+    "chatStickerSuggestionsClose": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide sticker suggestions"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ẩn gợi ý sticker"
+          }
+        }
+      }
+    },
+    "chatStickerSuggestionsSetting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sticker suggestions"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gợi ý sticker"
+          }
+        }
+      }
+    },
+    "chatAiSummaryLanguage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summary language"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ngôn ngữ tóm tắt"
           }
         }
       }
@@ -27061,57 +29101,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Đã chọn %1$@"
-          }
-        }
-      }
-    },
-    "leaderSortDeadline": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sort: deadline"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sắp xếp: hạn chót"
-          }
-        }
-      }
-    },
-    "leaderSortHelp": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Order of the cards in each column"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Thứ tự thẻ trong mỗi cột"
-          }
-        }
-      }
-    },
-    "leaderSortPriority": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sort: priority"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sắp xếp: ưu tiên"
           }
         }
       }

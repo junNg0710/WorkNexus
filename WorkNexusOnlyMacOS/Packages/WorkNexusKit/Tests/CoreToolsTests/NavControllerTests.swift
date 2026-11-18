@@ -75,4 +75,14 @@ final class NavControllerTests: XCTestCase {
         n.setPane(key, collapsed: true); XCTAssertTrue(n.isPaneCollapsed(key))
         n.setPane(key, collapsed: false); XCTAssertFalse(n.isPaneCollapsed(key))
     }
+
+    /// Dart `BoardSortController.sortBy`: the same field flips its direction, another starts in its own default one.
+    func testPickingTheBoardSortFieldAgainFlipsItsDirection() {
+        let n = nav()
+        XCTAssertEqual(n.boardSort, .boardDefault)
+        n.sortBoardCards(by: .priority); XCTAssertEqual(n.boardSort, TicketSort(.priority, descending: true))
+        n.sortBoardCards(by: .updated); XCTAssertEqual(n.boardSort, TicketSort(.updated, descending: true))
+        n.sortBoardCards(by: .title); XCTAssertEqual(n.boardSort, TicketSort(.title))
+        n.sortBoardCards(by: .title); XCTAssertEqual(n.boardSort, TicketSort(.title, descending: true))
+    }
 }

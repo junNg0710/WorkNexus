@@ -10,6 +10,9 @@ public final class AppNavController {
     /// The navigation panes the reader folded away (`paneKey`), kept for the session so a pane stays folded across a trip to
     /// another place. Dart `collapsedPanesProvider`.
     public private(set) var collapsedPanes: Set<String> = []
+    /// The order of the cards in each Kanban column, picked from a board's toolbar: kept for the session and shared by
+    /// every board. Dart `boardSortProvider`.
+    public private(set) var boardSort = TicketSort.boardDefault
     private let defaultSection: (String) -> SectionID
     /// What the notifications panel (its state lives in FeatureNotifications, not here) must do when something takes the
     /// whole area beside the rail: the editor and a mini app close it (Dart `notificationsOpen: false`). Set by the host.
@@ -128,6 +131,11 @@ public final class AppNavController {
     public func setPane(_ key: String, collapsed: Bool) {
         if collapsed { collapsedPanes.insert(key) } else { collapsedPanes.remove(key) }
     }
+
+    // MARK: board card order
+
+    /// Picking the current field flips its direction; another field starts in its own default direction.
+    public func sortBoardCards(by field: TicketSortField) { boardSort = boardSort.toggled(field) }
 
     // MARK: overlays
 

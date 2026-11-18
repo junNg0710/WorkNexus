@@ -37,8 +37,8 @@ final class GitlabSectionModel {
     /// The scoped tickets after the user's filters and search.
     var filtered: [Ticket] { FilterTickets()(board.boardQuery) }
 
-    var mrBoard: GitLabMrBoardModel { BuildGitLabMrBoard()(filtered) }
-    var issueBoard: GitLabIssueBoardModel { BuildGitLabIssueBoard()(filtered) }
+    var mrBoard: GitLabMrBoardModel { BuildGitLabMrBoard(sort: board.nav.boardSort)(filtered) }
+    var issueBoard: GitLabIssueBoardModel { BuildGitLabIssueBoard(sort: board.nav.boardSort)(filtered) }
 
     /// The list rows: the scoped, filtered tickets, narrowed to a state tab and a chip for merge requests.
     func listRows(state: GitlabMrListState?, chip: GitlabMrChip) -> [Ticket] {

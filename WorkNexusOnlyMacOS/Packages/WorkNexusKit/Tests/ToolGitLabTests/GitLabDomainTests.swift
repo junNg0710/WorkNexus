@@ -34,6 +34,18 @@ final class GitLabDomainTests: XCTestCase {
         XCTAssertEqual(board.column(.review).tickets.map(\.id), ["hi2", "hi", "lo"])
     }
 
+    /// The board's Sort button (test/domain/compare_tickets_test.dart): every column follows the session's sort.
+    func testColumnsFollowTheBoardSort() {
+        var a = mr("a", "opened", priority: .urgent); a.title = "zeta"
+        var b = mr("b", "opened", priority: .low); b.title = "Alpha"
+        XCTAssertEqual(BuildGitLabMrBoard()([a, b]).column(.review).tickets.map(\.id), ["a", "b"])
+        XCTAssertEqual(BuildGitLabMrBoard(sort: TicketSort(.title))([a, b]).column(.review).tickets.map(\.id), ["b", "a"])
+        XCTAssertEqual(BuildGitLabMrBoard(sort: TicketSort(.priority, descending: true))([a, b]).column(.review).tickets.map(\.id), ["b", "a"])
+        var i1 = issue("i1", "opened"); i1.title = "beta"
+        var i2 = issue("i2", "opened"); i2.title = "alpha"
+        XCTAssertEqual(BuildGitLabIssueBoard(sort: TicketSort(.title))([i1, i2]).column(.open).tickets.map(\.id), ["i2", "i1"])
+    }
+
     func testMrBoardExcludesIssues() {
         XCTAssertEqual(BuildGitLabMrBoard()([issue("i", "opened")]).total, 0)
     }

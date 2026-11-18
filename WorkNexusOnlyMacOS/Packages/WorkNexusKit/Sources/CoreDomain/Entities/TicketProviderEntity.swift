@@ -8,14 +8,20 @@ public enum TicketProviderEntity: Codable, Hashable, Sendable {
     case githubItem(GitHubItemEntity)
 }
 
+/// One subtask of a parent task (any level below it), as listed on the parent.
 public struct TicketSubtask: Codable, Hashable, Sendable, Identifiable {
     public var id: String
     public var title: String
     public var status: UnifiedStatus
     public var priority: Int?
     public var assignee: String?
-    public init(id: String, title: String, status: UnifiedStatus, priority: Int? = nil, assignee: String? = nil) {
+    /// The subtask's own parent: ZenTao lists every descendant of a task flat, so this is what nests a grandchild under
+    /// its parent. Nil in items stored before it was kept (they show as direct subtasks).
+    public var parentId: String?
+    public init(id: String, title: String, status: UnifiedStatus, priority: Int? = nil, assignee: String? = nil,
+                parentId: String? = nil) {
         self.id = id; self.title = title; self.status = status; self.priority = priority; self.assignee = assignee
+        self.parentId = parentId
     }
 }
 

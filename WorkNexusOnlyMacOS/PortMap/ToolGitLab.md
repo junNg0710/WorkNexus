@@ -36,7 +36,7 @@ Paths: Dart under `lib/`, Swift under `Packages/WorkNexusKit/Sources/ToolGitLab/
 `lib/tools/gitlab/gitlab_module.dart` and everything under `lib/tools/gitlab/presentation/` (nav pane, sections, board view, MR detail, ticket actions, providers). Widget tests (`test/widget/gitlab_*`, `test/features/task_detail/gitlab_mr_phase_test.dart`) belong with that pass.
 
 ## Deviations
-- Board builders and metrics take pre-filtered tickets / return plain counts (no `BoardQuery`/`FilterTickets`/`ToolMetrics` dependency from the domain layer).
+- Board builders and metrics take pre-filtered tickets / return plain counts (no `BoardQuery`/`FilterTickets`/`ToolMetrics` dependency from the domain layer). The card order (Dart `q.sort`) is the builder's `sort:` (the section model passes `AppNavController.boardSort`), compared by CoreDomain's `CompareTickets.board`.
 - Typed DTOs (`GitLabCommitRow`, `GitLabDiffRow`) replace the Dart client's raw `Map` rows.
 - `GitLabMrServiceImpl` talks to `TicketRepository` / `TicketDetailService` / `SyncStatusRepository` (CoreDomain) instead of `SyncCoordinator`; it has no image/project caches (those stay with the sync layer).
 - `RepoCommit`/`RepoFileChange` live in this target (and, identically, in ToolGitHub) until hoisted into `CoreDomain`.

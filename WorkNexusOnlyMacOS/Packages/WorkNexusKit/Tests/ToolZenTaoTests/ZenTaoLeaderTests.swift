@@ -122,8 +122,8 @@ final class ZenTaoLeaderTests: XCTestCase {
 
     // MARK: On the board
 
-    private func query(_ tickets: [Ticket]) -> BoardQuery {
-        BoardQuery(tickets: tickets, filter: FilterState(), accountWorkspace: [:], now: now)
+    private func query(_ tickets: [Ticket], sort: TicketSort = .boardDefault) -> BoardQuery {
+        BoardQuery(tickets: tickets, filter: FilterState(), accountWorkspace: [:], now: now, sort: sort)
     }
 
     func testTaskBoardAppliesTheLeaderFilterToItsColumns() {
@@ -139,9 +139,12 @@ final class ZenTaoLeaderTests: XCTestCase {
 
     func testColumnsCanBeOrderedByDeadline() {
         let tickets = [task("far", deadline: 9, pri: .urgent), task("none", pri: .urgent), task("late", deadline: -3, pri: .low), task("soon", deadline: 1)]
-        let byDeadline = BuildZenTaoTaskBoard(sort: .deadline)(query(tickets))
+        let byDeadline = BuildZenTaoTaskBoard()(query(tickets, sort: TicketSort(.deadline)))
         XCTAssertEqual(byDeadline.column(.inProgress)?.tickets.map(\.id), ["late", "soon", "far", "none"])
-        let byPriority = BuildZenTaoTaskBoard(sort: .priority)(query(tickets))
+        // Latest first, and still no deadline last.
+        let latest = BuildZenTaoTaskBoard()(query(tickets, sort: TicketSort(.deadline, descending: true)))
+        XCTAssertEqual(latest.column(.inProgress)?.tickets.map(\.id), ["far", "soon", "late", "none"])
+        let byPriority = BuildZenTaoTaskBoard()(query(tickets))
         XCTAssertEqual(byPriority.column(.inProgress)?.tickets.map(\.id).prefix(2).sorted(), ["far", "none"])
     }
 

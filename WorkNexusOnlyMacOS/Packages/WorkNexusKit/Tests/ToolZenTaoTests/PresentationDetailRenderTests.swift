@@ -37,7 +37,8 @@ final class PresentationDetailRenderTests: XCTestCase {
     private var task: Ticket {
         var t = detailTicket("Task", "doing", entity: .zentaoTask(ZenTaoTaskEntity(
             parentId: "10", parentName: "Chat feature", subtasks: [TicketSubtask(id: "13", title: "Write tests", status: .todo, assignee: "Cat"),
-                                                                    TicketSubtask(id: "14", title: "Ship it", status: .done)],
+                                                                    TicketSubtask(id: "14", title: "Ship it", status: .done),
+                                                                    TicketSubtask(id: "15", title: "Snapshot tests", status: .inprogress, parentId: "13")],
             execution: "31", estimate: 8, consumed: 5, left: 3, realStarted: Date().addingTimeInterval(-86_400), openedByHandle: "ryan", executionName: "Sprint 12",
             estStarted: "2026-11-01", deadline: "2026-11-30", openedBy: "Ryan", openedDate: Date().addingTimeInterval(-9 * 86_400))))
         t.assignee = "Thanh"; t.title = "Notification layer display"

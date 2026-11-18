@@ -185,7 +185,8 @@ private func zentaoTaskEntity(_ e: ZenTaoEntity) -> TicketProviderEntity {
             TicketSubtask(
                 id: child.idString, title: decodeHtmlEntities(str(child.name) ?? ""),
                 status: mapZenTaoStatus(.task, str(child.status) ?? ""), priority: child.pri,
-                assignee: assigneeHandle(child.assignedTo) == nil ? nil : accountName(child.assignedTo))
+                assignee: assigneeHandle(child.assignedTo) == nil ? nil : accountName(child.assignedTo),
+                parentId: (child.parent ?? 0) > 0 ? "\(child.parent!)" : nil)
         },
         execution: executionId(e.execution), project: executionId(e.project), module: trimmedText(e.module),
         isParent: e.isParent == 1 || e.parent == -1 || !e.children.isEmpty,

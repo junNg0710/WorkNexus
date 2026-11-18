@@ -100,7 +100,18 @@ public final class BoardController {
                 for await v in s { self?.savedFilters = v }
             },
         ]
+        watchSort()
         pulse()
+    }
+
+    /// The card order is the session's (`AppNavController.boardSort`, shared by every board): a change re-sorts.
+    private func watchSort() {
+        withObservationTracking { _ = nav.boardSort } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self, !self.tasks.isEmpty else { return }
+                self.recompute(); self.watchSort()
+            }
+        }
     }
 
     public func stop() { tasks.forEach { $0.cancel() }; tasks = []; loadingTask?.cancel() }
@@ -122,7 +133,7 @@ public final class BoardController {
     /// The query `FilterTickets` / `BuildBoard` run on.
     public var boardQuery: BoardQuery {
         BoardQuery(tickets: scoped, filter: filter, accountWorkspace: accountWorkspace, now: Date(),
-                   workspaceOrder: workspaces.keys.sorted(), accounts: accounts)
+                   workspaceOrder: workspaces.keys.sorted(), accounts: accounts, sort: nav.boardSort)
     }
 
     func recompute() {

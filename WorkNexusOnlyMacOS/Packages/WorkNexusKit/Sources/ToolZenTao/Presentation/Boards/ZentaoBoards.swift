@@ -9,14 +9,13 @@ enum ZentaoBoards {
     /// The bug board's columns after the filters (the Closed column only on the All tab).
     static func bugBoard(_ s: ZentaoUIState) -> ZenTaoBugBoardModel {
         s.bugCache.bugBoard(s.cacheKey(bugs: true)) {
-            BuildZenTaoBugBoard(includeClosed: s.bugTab == .all, leader: s.leader(bugs: true), names: s.memberNames,
-                                sort: s.columnSort)(s.bugBoard.boardQuery)
+            BuildZenTaoBugBoard(includeClosed: s.bugTab == .all, leader: s.leader(bugs: true), names: s.memberNames)(s.bugBoard.boardQuery)
         }
     }
 
     static func taskBoard(_ s: ZentaoUIState) -> ZenTaoTaskBoardModel {
         s.taskCache.taskBoard(s.cacheKey(bugs: false)) {
-            BuildZenTaoTaskBoard(leader: s.leader(bugs: false), names: s.memberNames, sort: s.columnSort)(s.taskBoard.boardQuery)
+            BuildZenTaoTaskBoard(leader: s.leader(bugs: false), names: s.memberNames)(s.taskBoard.boardQuery)
         }
     }
 

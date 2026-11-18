@@ -37,8 +37,8 @@ final class GithubSectionModel {
     /// The scoped tickets after the user's filters and search.
     var filtered: [Ticket] { FilterTickets()(board.boardQuery) }
 
-    var prBoard: GitHubPrBoardModel { BuildGitHubPrBoard()(filtered) }
-    var issueBoard: GitHubIssueBoardModel { BuildGitHubIssueBoard()(filtered) }
+    var prBoard: GitHubPrBoardModel { BuildGitHubPrBoard(sort: board.nav.boardSort)(filtered) }
+    var issueBoard: GitHubIssueBoardModel { BuildGitHubIssueBoard(sort: board.nav.boardSort)(filtered) }
 
     /// The list rows: the scoped, filtered tickets, narrowed to a state tab for pull requests.
     func listRows(state: GithubPrListState?) -> [Ticket] {

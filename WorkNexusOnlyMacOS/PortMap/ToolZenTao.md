@@ -52,6 +52,7 @@ Paths: Dart under `lib/`, Swift under `Packages/WorkNexusKit/Sources/ToolZenTao/
 | Use cases: bug / task / create actions | tools/zentao/domain/usecases/{list_zentao_bug_actions,list_zentao_task_actions,list_zentao_create_actions}.dart | Domain/UseCases/ZenTaoActionUseCases.swift |
 | Use cases: task input checks, assign-left check, effort summary | tools/zentao/domain/usecases/{check_zentao_task_input,check_zentao_assign_left,summarize_task_effort}.dart | Domain/UseCases/ZenTaoTaskInputUseCases.swift |
 | Use cases: doc HTML render + export (Markdown / HTML / backup) | tools/zentao/domain/usecases/{render_zentao_doc_html,render_zentao_doc_markdown,export_zentao_doc}.dart | Domain/UseCases/ExportZenTaoDoc.swift, Data/Mappers/ZenTaoDocMarkdown.swift (compact html2md stand-in) |
+| Use case: nest a task's flat subtask list by each subtask's parent | tools/zentao/domain/usecases/build_subtask_tree.dart | Domain/UseCases/BuildSubtaskTree.swift (+ `SubtaskTree.visible(expanded:)`, the list's `_visible` walk) |
 | Use cases: module tree, task bugs, due this week, doc lib filter, pin toggle, profile update | tools/zentao/domain/usecases/{build_zentao_module_tree,list_task_bugs,is_due_this_week,filter_zentao_doc_libs,toggle_zentao_doc_pin,update_zentao_profile}.dart | Domain/UseCases/ZenTaoListUseCases.swift |
 
 ## Tests (Tests/ToolZenTaoTests)
@@ -60,6 +61,7 @@ Paths: Dart under `lib/`, Swift under `Packages/WorkNexusKit/Sources/ToolZenTao/
 |---|---|
 | test/data/zentao_client_test.dart | ZenTaoAdapterTests.swift, ZenTaoViewPagesTests.swift (URLProtocol stub in StubServer.swift) |
 | test/data/zentao_normalize_test.dart, zentao_order_by_test.dart | ZenTaoNormalizeTests.swift |
+| test/unit/build_subtask_tree_test.dart, test/widget/subtask_list_tree_test.dart (visible rows) | BuildSubtaskTreeTests.swift |
 | test/data/zentao_workflow_test.dart, zentao_workflow_actions_test.dart, zentao_language_interceptor_test.dart | ZenTaoWorkflowTests.swift |
 | test/data/zentao_ticket_forms_test.dart | ZenTaoTicketFormsTests.swift |
 | test/data/zentao_{doc_mapper,doc_history_mapper,doc_html,notification_mapper,dashboard_mapper,product_tree}_test.dart, test/unit/zentao_project_group_test.dart | ZenTaoMapperTests.swift |

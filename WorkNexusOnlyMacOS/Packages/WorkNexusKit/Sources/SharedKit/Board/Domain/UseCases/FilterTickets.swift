@@ -10,14 +10,16 @@ public struct BoardQuery: Equatable, Sendable {
     public var now: Date
     public var workspaceOrder: [String]
     public var accounts: [String: Account]
+    /// The order of the cards within each board column.
+    public var sort: TicketSort
     public init(tickets: [Ticket], filter: FilterState, accountWorkspace: [String: String], now: Date,
-                workspaceOrder: [String] = [], accounts: [String: Account] = [:]) {
+                workspaceOrder: [String] = [], accounts: [String: Account] = [:], sort: TicketSort = .boardDefault) {
         self.tickets = tickets; self.filter = filter; self.accountWorkspace = accountWorkspace; self.now = now
-        self.workspaceOrder = workspaceOrder; self.accounts = accounts
+        self.workspaceOrder = workspaceOrder; self.accounts = accounts; self.sort = sort
     }
     public func withFilter(_ filter: FilterState) -> BoardQuery {
         BoardQuery(tickets: tickets, filter: filter, accountWorkspace: accountWorkspace, now: now,
-                   workspaceOrder: workspaceOrder, accounts: accounts)
+                   workspaceOrder: workspaceOrder, accounts: accounts, sort: sort)
     }
 }
 

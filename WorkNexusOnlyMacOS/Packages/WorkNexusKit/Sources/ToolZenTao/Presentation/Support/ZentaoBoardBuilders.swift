@@ -20,43 +20,19 @@ public struct ZenTaoBugBoardModel {
     public func column(_ c: ZenTaoBugColumn) -> ZenTaoBugBoardColumn? { columns.first { $0.column == c } }
 }
 
-/// Sorts a column: priority first, then most recently updated.
-func zentaoByPriorityThenUpdated(_ a: Ticket, _ b: Ticket) -> Bool {
-    if a.priority.level != b.priority.level { return a.priority.level < b.priority.level }
-    return (a.updatedAt ?? .distantPast) > (b.updatedAt ?? .distantPast)
-}
-
-/// Sorts a column by deadline, the soonest (the most overdue) first and tickets without one last, then by priority.
-func zentaoByDeadlineThenPriority(_ a: Ticket, _ b: Ticket) -> Bool {
-    let da = extractZenTaoDeadline(a), db = extractZenTaoDeadline(b)
-    switch (da, db) {
-    case (let x?, let y?) where x != y: return x < y
-    case (.some, .none): return true
-    case (.none, .some): return false
-    default: return zentaoByPriorityThenUpdated(a, b)
-    }
-}
-
-/// How the cards inside each column are ordered.
-public enum ZenTaoColumnSort: String, CaseIterable, Sendable, Hashable {
-    case priority, deadline
-    var areInOrder: (Ticket, Ticket) -> Bool { self == .deadline ? zentaoByDeadlineThenPriority : zentaoByPriorityThenUpdated }
-}
-
 private func isZenTao(_ t: Ticket, _ type: String) -> Bool {
     t.providerType == .zentao && (t.externalType ?? "").lowercased() == type
 }
 
-/// Groups the filtered bugs into ZenTao's bug columns; without `includeClosed` (the Unclosed tab) there is no Closed column.
+/// Groups the filtered bugs into ZenTao's bug columns, each ordered by the query's sort; without `includeClosed` (the
+/// Unclosed tab) there is no Closed column.
 public struct BuildZenTaoBugBoard: Sendable {
     public var filter = FilterTickets()
     public var includeClosed = true
     public var leader = ZenTaoLeaderFilter()
     public var names: [String: String] = [:]
-    public var sort = ZenTaoColumnSort.priority
-    public init(includeClosed: Bool = true, leader: ZenTaoLeaderFilter = ZenTaoLeaderFilter(), names: [String: String] = [:],
-                sort: ZenTaoColumnSort = .priority) {
-        self.includeClosed = includeClosed; self.leader = leader; self.names = names; self.sort = sort
+    public init(includeClosed: Bool = true, leader: ZenTaoLeaderFilter = ZenTaoLeaderFilter(), names: [String: String] = [:]) {
+        self.includeClosed = includeClosed; self.leader = leader; self.names = names
     }
 
     public func callAsFunction(_ q: BoardQuery) -> ZenTaoBugBoardModel {
@@ -64,7 +40,7 @@ public struct BuildZenTaoBugBoard: Sendable {
         let bugs = filter(q).filter { isZenTao($0, "bug") }
         for t in ApplyLeaderFilter()(bugs, leader, names: names, now: q.now) { by[zentaoBugColumnFor(t), default: []].append(t) }
         return ZenTaoBugBoardModel(columns: ZenTaoBugColumn.columns.compactMap { c in
-            includeClosed || c != .closed ? ZenTaoBugBoardColumn(column: c, tickets: (by[c] ?? []).sorted(by: sort.areInOrder)) : nil
+            includeClosed || c != .closed ? ZenTaoBugBoardColumn(column: c, tickets: CompareTickets.boardOrdered(by[c] ?? [], by: q.sort)) : nil
         })
     }
 }
@@ -82,16 +58,15 @@ public struct ZenTaoTaskBoardModel {
     public func column(_ c: ZenTaoTaskColumn) -> ZenTaoTaskBoardColumn? { columns.first { $0.column == c } }
 }
 
-/// Groups the filtered tasks into ZenTao's task columns; `dueThisWeekOnly` keeps those whose deadline is this week.
+/// Groups the filtered tasks into ZenTao's task columns, each ordered by the query's sort; `dueThisWeekOnly` keeps those
+/// whose deadline is this week.
 public struct BuildZenTaoTaskBoard: Sendable {
     public var filter = FilterTickets()
     public var dueThisWeekOnly = false
     public var leader = ZenTaoLeaderFilter()
     public var names: [String: String] = [:]
-    public var sort = ZenTaoColumnSort.priority
-    public init(dueThisWeekOnly: Bool = false, leader: ZenTaoLeaderFilter = ZenTaoLeaderFilter(), names: [String: String] = [:],
-                sort: ZenTaoColumnSort = .priority) {
-        self.dueThisWeekOnly = dueThisWeekOnly; self.leader = leader; self.names = names; self.sort = sort
+    public init(dueThisWeekOnly: Bool = false, leader: ZenTaoLeaderFilter = ZenTaoLeaderFilter(), names: [String: String] = [:]) {
+        self.dueThisWeekOnly = dueThisWeekOnly; self.leader = leader; self.names = names
     }
 
     public func callAsFunction(_ q: BoardQuery) -> ZenTaoTaskBoardModel {
@@ -104,7 +79,7 @@ public struct BuildZenTaoTaskBoard: Sendable {
             by[zentaoTaskColumnFor(t), default: []].append(t)
         }
         return ZenTaoTaskBoardModel(columns: ZenTaoTaskColumn.columns.map {
-            ZenTaoTaskBoardColumn(column: $0, tickets: (by[$0] ?? []).sorted(by: sort.areInOrder))
+            ZenTaoTaskBoardColumn(column: $0, tickets: CompareTickets.boardOrdered(by[$0] ?? [], by: q.sort))
         })
     }
 }

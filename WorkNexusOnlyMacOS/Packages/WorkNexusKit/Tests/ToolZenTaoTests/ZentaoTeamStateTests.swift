@@ -147,7 +147,7 @@ final class ZentaoTeamStateTests: XCTestCase {
         XCTAssertEqual(ZentaoBoards.taskBoard(env.state).total, 0)
         // And so is the order of the cards.
         env.state.updateLeader(bugs: false) { $0.quick = [] }
-        env.state.columnSort = .deadline
+        env.state.deps.nav.sortBoardCards(by: .deadline)
         let afterSort = cache.builds
         _ = ZentaoBoards.taskBoard(env.state); _ = ZentaoBoards.taskBoard(env.state)
         XCTAssertEqual(cache.builds - afterSort, 1)

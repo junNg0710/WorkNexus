@@ -141,6 +141,24 @@ final class FilterTicketsTests: XCTestCase {
         XCTAssertEqual(ids(todo.tickets), ["urgent", "med", "low"])
     }
 
+    /// Ported from: test/domain/compare_tickets_test.dart (`BuildBoard orders each column by the query sort`).
+    func testBuildBoardOrdersEachColumnByTheQuerySort() {
+        let t = [makeTicket("1", key: "1", priority: .urgent, title: "b"), makeTicket("2", key: "2", priority: .low, title: "a")]
+        func todo(_ sort: TicketSort) -> [String] {
+            var query = q(t, FilterState()); query.sort = sort
+            return ids(BuildBoard()(query).columns.first { $0.status == .todo }!.tickets)
+        }
+        XCTAssertEqual(todo(.boardDefault), ["1", "2"])
+        XCTAssertEqual(todo(TicketSort(.title)), ["2", "1"])
+    }
+
+    func testAQueryWithAnotherSortIsNotEqualAndAFilterChangeKeepsIt() {
+        var other = q([], FilterState()); other.sort = .newest
+        XCTAssertEqual(q([], FilterState()).sort, .boardDefault)
+        XCTAssertNotEqual(q([], FilterState()), other)
+        XCTAssertEqual(other.withFilter(FilterState()).sort, .newest)
+    }
+
     func testQueryEqualityIgnoresNothingRelevant() {
         let a = q([makeTicket("a")], FilterState()), b = q([makeTicket("a")], FilterState())
         XCTAssertEqual(a, b)

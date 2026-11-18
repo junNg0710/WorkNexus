@@ -5,8 +5,8 @@ import CoreUI
 import SharedKit
 import SwiftUI
 
-/// The bar under a ZenTao board's header: the shared `BoardToolbar`, with what to show (`scopes`: all, related to me...)
-/// and the Filters button.
+/// The bar under a ZenTao board's header: the shared `BoardToolbar`, with what to show (`scopes`: all, related to me...),
+/// the Filters button and the card Sort button.
 struct ZentaoBoardToolbar: View {
     @Environment(\.appTheme) private var theme
     let state: ZentaoUIState; let bugs: Bool; let scopes: [AppSegmentedTab]; let modes: [ToolViewMode]
@@ -14,12 +14,20 @@ struct ZentaoBoardToolbar: View {
     /// Off on a view that is a filter of its own (Related to me): no Filters button there.
     let filtering: Bool; let searchScope: String?
 
+    /// What the Sort button offers: bugs carry a severity of their own, tasks don't. Deadline (macOS-only) is the order
+    /// the team-leader tools offered before the Sort button came; it leads with the most overdue.
+    static func sortFields(bugs: Bool) -> [TicketSortField] {
+        var fields = bugs ? TicketSortField.boardFieldsWithSeverity : TicketSortField.boardFields
+        fields.insert(.deadline, at: bugs ? 2 : 1)
+        return fields
+    }
+
     var body: some View {
         let controller = bugs ? state.bugBoard : state.taskBoard
         let option = ZentaoColumnVisual.statusFilterOption(bugBoard: bugs, palette: theme.colors)
         let catalog = state.facetCatalog(bugs: bugs)
         BoardToolbar(controller: controller, scopes: scopes, searchScope: searchScope, modes: modes, viewMode: viewMode,
-                     onViewMode: onViewMode) {
+                     onViewMode: onViewMode, sortFields: Self.sortFields(bugs: bugs)) {
             if filtering {
                 // Picking a filter shows it over every ticket: the All view.
                 FiltersButton(controller: controller, statusOption: option, catalog: catalog,

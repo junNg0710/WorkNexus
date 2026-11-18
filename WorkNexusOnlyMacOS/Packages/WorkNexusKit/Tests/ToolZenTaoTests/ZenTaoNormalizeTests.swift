@@ -272,6 +272,19 @@ final class ZenTaoNormalizeTests: XCTestCase {
         ])
     }
 
+    func testEachListedSubtaskKeepsItsOwnParentToNestGrandchildren() {
+        let t = normalize([
+            "id": 14429, "name": "Multi-sign", "isParent": 1,
+            "children": [
+                ["id": 14520, "name": "Flow 1", "status": "wait", "parent": 14429] as JSON,
+                ["id": 14528, "name": "Flow 1 · UI", "status": "wait", "parent": 14520] as JSON,
+                ["id": 14530, "name": "No parent field", "status": "wait"] as JSON,
+            ] as [Any],
+        ], .task)
+        guard case .zentaoTask(let entity)? = t.providerEntity else { return XCTFail() }
+        XCTAssertEqual(entity.subtasks.map(\.parentId), ["14429", "14520", nil])
+    }
+
     // MARK: Order by / text helpers
 
     func testMapsASortToTheFieldNamesOfEachZenTaoList() {

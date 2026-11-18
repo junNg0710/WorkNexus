@@ -31,7 +31,7 @@ Paths: Dart under `lib/`, Swift under `Packages/WorkNexusKit/Sources/ToolGitHub/
 `lib/tools/github/github_module.dart` and everything under `lib/tools/github/presentation/` (nav pane, sections, board view, PR detail, ticket actions, providers). Widget tests (`test/widget/github_*`) belong with that pass.
 
 ## Deviations
-- Board builders and metrics take pre-filtered tickets / return plain counts (no `BoardQuery`/`FilterTickets`/`ToolMetrics` dependency from the domain layer).
+- Board builders and metrics take pre-filtered tickets / return plain counts (no `BoardQuery`/`FilterTickets`/`ToolMetrics` dependency from the domain layer). The card order (Dart `q.sort`) is the builder's `sort:` (the section model passes `AppNavController.boardSort`), compared by CoreDomain's `CompareTickets.board`.
 - Typed DTOs (`GitHubCommitRow`, `GitHubFileRow`) replace the Dart client's raw `Map` rows.
 - GHES base URL keeps a custom port (`http://ghe:8443` → `…:8443/api/v3`); the Dart client dropped it.
 - `GitHubPrServiceImpl` talks to `TicketRepository` / `TicketDetailService` / `SyncStatusRepository` (CoreDomain) instead of `SyncCoordinator`; no image/project caches (those stay with the sync layer).
