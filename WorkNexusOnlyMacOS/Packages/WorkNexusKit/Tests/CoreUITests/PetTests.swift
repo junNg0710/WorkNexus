@@ -251,6 +251,63 @@ final class PetTests: XCTestCase {
         XCTAssertFalse(d.showsGaze)                                         // a gesture plays its own frames
     }
 
+    func testWhatItSaysStaysAWhileAndThePointerShowsTheState() {
+        let d = director()
+        d.status = "All quiet"
+        XCTAssertNil(d.bubble(hovering: false))
+        XCTAssertEqual(d.bubble(hovering: true), "All quiet")
+        d.say("New chat message", for: 2)
+        XCTAssertEqual(d.bubble(hovering: false), "New chat message")
+        XCTAssertEqual(d.bubble(hovering: true), "All quiet")          // the pointer asks for the whole picture
+        clock.date += 1; d.tick()
+        XCTAssertNotNil(d.speech)
+        clock.date += 1.5; d.tick()
+        XCTAssertNil(d.speech)                                          // said its line, then quiet again
+        d.reduceMotion = true
+        d.say("Sync failed")
+        XCTAssertEqual(d.bubble(hovering: false), "Sync failed")        // still says it, standing still
+    }
+
+    func testItWalksAboutInAnyMoodButOnlyGesturesWhenCalm() {
+        // Waiting for the user: after a while it still walks to another spot, then goes back to waiting.
+        let d = director([0.0, 0.5, 0.1, 0.1])
+        d.roomWidth = 900
+        d.place(x: 0.9, y: 1)
+        d.mood = .attention
+        XCTAssertEqual(d.animation, .waiting)
+        tick(d) { d.isWalking }
+        XCTAssertTrue(d.isWalking)
+        tick(d) { !d.isWalking }
+        XCTAssertEqual(d.animation, .waiting)
+        // Without room to walk, a pet that is not calm keeps its mood instead of waving out of the blue.
+        let still = director([0.0, 0.5, 0.9, 0.1])
+        still.canWander = false
+        still.mood = .busy
+        var gestured = false
+        tick(still, limit: 600) { gestured = still.animation.isGesture; return gestured }
+        XCTAssertFalse(gestured)
+        XCTAssertEqual(still.animation, .running)
+    }
+
+    func testItWandersWithinHalfAMinute() {
+        let d = director()
+        d.roomWidth = 900
+        let start = clock.date
+        tick(d) { d.isWalking || d.animation.isGesture }
+        XCTAssertTrue(d.isWalking)
+        XCTAssertLessThanOrEqual(clock.date.timeIntervalSince(start), 21)   // 8-20 s of standing about, then a walk
+    }
+
+    func testTheBubbleStaysInsideTheRoom() {
+        // In the middle of a wide room: right above the pet.
+        XCTAssertEqual(PetView.bubbleShift(petLeft: 400, petWidth: 84, roomWidth: 1000), 0)
+        // Against the right edge: moved left so its right side meets the edge.
+        let shift = PetView.bubbleShift(petLeft: 916, petWidth: 84, roomWidth: 1000)
+        XCTAssertEqual(916 + 42 - PetSpeechBubble.maxWidth / 2 + shift + PetSpeechBubble.maxWidth, 1000, accuracy: 0.001)
+        // Against the left edge: moved right.
+        XCTAssertGreaterThan(PetView.bubbleShift(petLeft: 0, petWidth: 84, roomWidth: 1000), 0)
+    }
+
     func testReducedMotionKeepsItStill() {
         let d = director()
         d.reduceMotion = true

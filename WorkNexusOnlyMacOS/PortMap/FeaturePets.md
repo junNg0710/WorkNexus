@@ -24,4 +24,5 @@ Pets uploaded to codex-pets.net carry no redistribution terms, so none is bundle
 Shared pieces outside the module:
 - `CoreUI/Widgets/Pet/` — sprite sheet v1/v2 (`PetSpriteSheet`, look cells), `PetTiming` (steady for TBChat, Codex per-frame timings for downloaded pets), `PetDirector` moods (`calm` / `busy` / `offline` / `trouble` / `attention`) and reactions (`poke`, `notify`, `celebrate`, `done`, `gaze`), `PetView`.
 - `CoreUI/Platform/FloatingPetPanel.swift` — the non-activating, see-through panel of the floating pet.
-- `SharedKit/Presentation/Shell/PetLayer.swift` — picks the sheet, drives the director from sync status, unread chats, ZenTao notifications and celebrations, and shows the pet in the window or in the floating panel.
+- `CoreUI/Widgets/Pet/PetSpeechBubble.swift` — the speech bubble (`PetDirector.say`, `status`, `bubble(hovering:)`).
+- `SharedKit/Presentation/Shell/PetLayer.swift` — picks the sheet, drives the director from sync status, unread chats, ZenTao notifications (`ShellHost.petWaiting`) and celebrations, says what it reacts to (`PetSignalText`), and shows the pet in the window or in the floating panel (`FloatingPetContent`).

@@ -8,6 +8,7 @@ import SwiftUI
 /// moves it), so what is under the rest of the room stays usable. Not in the Flutter app.
 public struct PetView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.appTheme) private var theme
     let director: PetDirector
     let sheet: PetSpriteSheet
     /// How wide the character is drawn; its height keeps the sheet's cell proportions.
@@ -18,15 +19,18 @@ public struct PetView: View {
     var pausesWithApp = true
     /// Whether a drag moves it about its room (off when whatever holds it moves instead, like the floating pet's panel).
     var movable = true
+    /// Whether it draws its speech bubble over itself (off when whatever holds it draws the bubble, like the floating pet's panel).
+    var showsBubble = true
     var onTap: (() -> Void)?
     var onMoved: ((Double, Double) -> Void)?
     @State private var dragStart: (x: Double, y: Double)?
     @State private var gazeTracker = PetGazeTracker()
+    @State private var hovering = false
 
     public init(director: PetDirector, sheet: PetSpriteSheet, width: CGFloat = 84, followsCursor: Bool = false,
-                pausesWithApp: Bool = true, movable: Bool = true, onTap: (() -> Void)? = nil, onMoved: ((Double, Double) -> Void)? = nil) {
+                pausesWithApp: Bool = true, movable: Bool = true, showsBubble: Bool = true, onTap: (() -> Void)? = nil, onMoved: ((Double, Double) -> Void)? = nil) {
         self.director = director; self.sheet = sheet; self.width = width; self.followsCursor = followsCursor
-        self.pausesWithApp = pausesWithApp; self.movable = movable; self.onTap = onTap; self.onMoved = onMoved
+        self.pausesWithApp = pausesWithApp; self.movable = movable; self.showsBubble = showsBubble; self.onTap = onTap; self.onMoved = onMoved
     }
 
     private var height: CGFloat { width * CGFloat(PetSpriteSheet.cellHeight) / CGFloat(PetSpriteSheet.cellWidth) }
@@ -36,8 +40,9 @@ public struct PetView: View {
             let freeW = max(geo.size.width - width, 1), freeH = max(geo.size.height - height, 1)
             // Paused while it stands: the timeline then asks for no frames at all.
             TimelineView(.animation(paused: director.walk == nil)) { timeline in
-                sprite(freeW: freeW, freeH: freeH)
-                    .offset(x: CGFloat(director.x(at: timeline.date)) * freeW, y: CGFloat(director.y) * freeH)
+                let left = CGFloat(director.x(at: timeline.date)) * freeW
+                sprite(freeW: freeW, freeH: freeH, bubbleShift: Self.bubbleShift(petLeft: left, petWidth: width, roomWidth: geo.size.width))
+                    .offset(x: left, y: CGFloat(director.y) * freeH)
             }
             .onChange(of: geo.size.width, initial: true) { _, w in director.roomWidth = Double(max(w - width, 1)) }
         }
@@ -64,11 +69,38 @@ public struct PetView: View {
         return sheet.unitRect(director.animation, director.frame)
     }
 
-    private func sprite(freeW: CGFloat, freeH: CGFloat) -> some View {
+    /// How far the bubble moves sideways from above the pet's middle to stay inside the room (the tail moves back the
+    /// other way, so it still points at the pet).
+    static func bubbleShift(petLeft: CGFloat, petWidth: CGFloat, roomWidth: CGFloat) -> CGFloat {
+        let w = PetSpeechBubble.maxWidth
+        let centred = petLeft + petWidth / 2 - w / 2
+        let clamped = min(max(centred, 0), max(roomWidth - w, 0))
+        return clamped - centred
+    }
+
+    private func sprite(freeW: CGFloat, freeH: CGFloat, bubbleShift: CGFloat) -> some View {
         PetSpriteLayer(atlas: sheet.atlas, cell: cell, tracker: gazeTracker)
             .frame(width: width, height: height)
             .opacity(director.mood == .offline ? 0.55 : 1)
             .contentShape(Rectangle())
+            .onHover { hovering = $0 }
+            .overlay(alignment: .bottom) {
+                // Above its head, as wide as a bubble gets; it never takes the pointer from what is under it.
+                if showsBubble, let text = director.bubble(hovering: hovering) {
+                    // The bubble keeps to the room (towards its middle when moved); the tail stays right above the pet.
+                    VStack(spacing: -theme.borders.hairline) {
+                        PetSpeechBubble(text, showsTail: false)
+                            .frame(width: PetSpeechBubble.maxWidth,
+                                   alignment: bubbleShift < 0 ? .trailing : (bubbleShift > 0 ? .leading : .center))
+                            .offset(x: bubbleShift)
+                        PetBubbleTail()
+                    }
+                    .offset(y: -height)
+                        .allowsHitTesting(false)
+                        .transition(.opacity)
+                }
+            }
+            .animation(.easeOut(duration: 0.15), value: director.bubble(hovering: hovering))
             .onTapGesture { director.poke(); onTap?() }
             .gesture(DragGesture(minimumDistance: 4, coordinateSpace: .named("petRoom"))
                 .onChanged { drag in
@@ -77,7 +109,6 @@ public struct PetView: View {
                     director.place(x: start.x + Double(drag.translation.width / freeW), y: start.y + Double(drag.translation.height / freeH))
                 }
                 .onEnded { _ in dragStart = nil; onMoved?(director.x, director.y) }, isEnabled: movable)
-            .help(appString("tipPet", "TBChat: click to wave, drag to move it. Turn it off in Settings"))
     }
 }
 

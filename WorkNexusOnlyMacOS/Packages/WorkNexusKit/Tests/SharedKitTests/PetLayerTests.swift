@@ -8,7 +8,7 @@ import XCTest
 @MainActor
 final class PetLayerTests: XCTestCase {
     func testTroubleBeatsWorkBeatsNoConnection() {
-        func mood(_ s: [AccountSyncStatus]) -> PetDirector.Mood { PetLayer.mood(of: s, attention: false) }
+        func mood(_ s: [AccountSyncStatus]) -> PetDirector.Mood { PetLayer.mood(of: s, waiting: 0) }
         XCTAssertEqual(mood([]), .calm)
         XCTAssertEqual(mood([.idle(lastSyncedAt: nil)]), .calm)
         XCTAssertEqual(mood([.offline]), .offline)
@@ -16,9 +16,9 @@ final class PetLayerTests: XCTestCase {
         XCTAssertEqual(mood([.syncing, .error("x"), .idle(lastSyncedAt: nil)]), .trouble)
         XCTAssertEqual(mood([.authExpired, .syncing]), .trouble)
         // Something waiting for the user beats work and no connection, never trouble.
-        XCTAssertEqual(PetLayer.mood(of: [.syncing, .offline], attention: true), .attention)
-        XCTAssertEqual(PetLayer.mood(of: [.error("x")], attention: true), .trouble)
-        XCTAssertEqual(PetLayer.mood(of: [], attention: true), .attention)
+        XCTAssertEqual(PetLayer.mood(of: [.syncing, .offline], waiting: 2), .attention)
+        XCTAssertEqual(PetLayer.mood(of: [.error("x")], waiting: 2), .trouble)
+        XCTAssertEqual(PetLayer.mood(of: [], waiting: 2), .attention)
     }
 
     func testThePetSettingsDefaultToTheBuiltInPetInTheWindow() throws {
@@ -31,6 +31,42 @@ final class PetLayerTests: XCTestCase {
         // An unknown display (a newer build) falls back rather than losing the settings.
         let odd = try JSONDecoder().decode(AppSettings.self, from: Data(#"{"petDisplay": "orbit", "showPet": false}"#.utf8))
         XCTAssertEqual(odd.petDisplay, .inWindow); XCTAssertFalse(odd.showPet)
+    }
+
+    func testThePetSaysWhatItReactsTo() {
+        XCTAssertEqual(PetSignalText.mood(.busy, statuses: [.syncing], waiting: 0), "Syncing your work…")
+        XCTAssertNil(PetSignalText.mood(.calm, statuses: [], waiting: 0))
+        XCTAssertEqual(PetSignalText.mood(.trouble, statuses: [.authExpired], waiting: 0), "Sign-in expired — sign in again in Connections")
+        XCTAssertEqual(PetSignalText.mood(.trouble, statuses: [.error("x")], waiting: 0), "Sync failed — see Connections")
+        XCTAssertEqual(PetSignalText.mood(.attention, statuses: [], waiting: 3), "3 notifications are waiting for you")
+        XCTAssertEqual(PetSignalText.waiting(1), "1 notification is waiting for you")
+        XCTAssertEqual(PetSignalText.newChats(1), "New chat message")
+        XCTAssertEqual(PetSignalText.newChats(4), "4 new chat messages")
+        XCTAssertEqual(PetSignalText.status(mood: .calm, statuses: [], unreadChats: 0, waiting: 0), "All quiet — nothing waiting")
+        XCTAssertEqual(PetSignalText.status(mood: .attention, statuses: [.offline], unreadChats: 2, waiting: 1),
+                       "2 unread chat messages\n1 notification is waiting for you")
+        XCTAssertEqual(PetSignalText.status(mood: .busy, statuses: [.syncing], unreadChats: 1, waiting: 0),
+                       "Syncing your work…\n1 unread chat message")
+    }
+
+    func testTheFloatingPanelGrowsUpwardForABubble() {
+        let pet = CGSize(width: 96, height: 104)
+        XCTAssertEqual(FloatingPetPanel.size(pet: pet, bubble: false), pet)
+        let grown = FloatingPetPanel.size(pet: pet, bubble: true)
+        XCTAssertEqual(grown.height, 104 + PetSpeechBubble.areaHeight)
+        XCTAssertGreaterThanOrEqual(grown.width, PetSpeechBubble.maxWidth)
+    }
+
+    func testAGrownPanelStaysOnTheScreenAndThePetStaysPut() {
+        let screen = CGRect(x: 0, y: 0, width: 1512, height: 950)
+        let grown = FloatingPetPanel.size(pet: CGSize(width: 96, height: 104), bubble: true)
+        // In the middle: centred on the pet.
+        let mid = FloatingPetPanel.frame(anchor: NSPoint(x: 700, y: 100), size: grown, screen: screen)
+        XCTAssertEqual(mid.frame.midX, 700); XCTAssertEqual(mid.petShift, 0); XCTAssertEqual(mid.frame.minY, 100)
+        // In the bottom-right corner: the panel stops at the edge, the pet is drawn right of its middle, where it stood.
+        let corner = FloatingPetPanel.frame(anchor: NSPoint(x: 1440, y: 24), size: grown, screen: screen)
+        XCTAssertEqual(corner.frame.maxX, 1512)
+        XCTAssertEqual(corner.frame.midX + corner.petShift, 1440)
     }
 
     func testTheFloatingPetStaysOnAScreen() {

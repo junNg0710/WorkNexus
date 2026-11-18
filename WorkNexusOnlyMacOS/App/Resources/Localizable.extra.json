@@ -1622,5 +1622,57 @@
   "petHide": {
     "en": "Hide the pet",
     "vi": "Ẩn thú cưng"
+  },
+  "petSaySyncing": {
+    "en": "Syncing your work…",
+    "vi": "Đang đồng bộ công việc…"
+  },
+  "petSayOffline": {
+    "en": "Offline — waiting for the connection",
+    "vi": "Mất kết nối — đang chờ mạng"
+  },
+  "petSayAuthExpired": {
+    "en": "Sign-in expired — sign in again in Connections",
+    "vi": "Phiên đăng nhập hết hạn — đăng nhập lại trong Kết nối"
+  },
+  "petSaySyncFailed": {
+    "en": "Sync failed — see Connections",
+    "vi": "Đồng bộ lỗi — xem mục Kết nối"
+  },
+  "petSayWaitingOne": {
+    "en": "1 notification is waiting for you",
+    "vi": "1 thông báo đang chờ bạn"
+  },
+  "petSayWaitingOther": {
+    "en": "%1$@ notifications are waiting for you",
+    "vi": "%1$@ thông báo đang chờ bạn"
+  },
+  "petSayChatOne": {
+    "en": "New chat message",
+    "vi": "Có tin nhắn mới"
+  },
+  "petSayChatOther": {
+    "en": "%1$@ new chat messages",
+    "vi": "%1$@ tin nhắn mới"
+  },
+  "petSayUnreadChatOne": {
+    "en": "1 unread chat message",
+    "vi": "1 tin nhắn chưa đọc"
+  },
+  "petSayUnreadChatOther": {
+    "en": "%1$@ unread chat messages",
+    "vi": "%1$@ tin nhắn chưa đọc"
+  },
+  "petSaySynced": {
+    "en": "All synced",
+    "vi": "Đồng bộ xong"
+  },
+  "petSayResolved": {
+    "en": "Ticket resolved — nice work!",
+    "vi": "Ticket đã xong — tuyệt lắm!"
+  },
+  "petSayAllQuiet": {
+    "en": "All quiet — nothing waiting",
+    "vi": "Mọi thứ ổn — không có gì đang chờ"
   }
 }

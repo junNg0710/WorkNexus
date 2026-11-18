@@ -48,11 +48,23 @@ public final class PetDirector {
     /// Which way it looks (0 = up, clockwise, of `PetSpriteSheet.lookDirections`), for a sheet that can look; nil looks
     /// nowhere in particular. Only shown while it stands idling (`showsGaze`).
     public var gaze: Int?
+    /// What it is saying, in a speech bubble, and until when (`say`); nil when it says nothing.
+    public private(set) var speech: Speech?
+    /// What goes on now, in words: shown while the pointer rests on it, so a reaction can be read after the fact.
+    public var status: String?
+
+    /// A line in a speech bubble, shown until `until`.
+    public struct Speech: Equatable, Sendable {
+        public var text: String
+        public var until: Date
+    }
 
     /// Walking pace, in points per second.
     static let walkSpeed = 90.0
-    /// Seconds of idling before it does something of its own.
-    static let flourishAfter: ClosedRange<Double> = 18...40
+    /// Seconds of standing about before it does something of its own (mostly a walk to another spot).
+    static let flourishAfter: ClosedRange<Double> = 8...20
+    /// How long a line stays in its speech bubble.
+    public static let speechDuration: TimeInterval = 6
 
     @ObservationIgnored private var idleFor = 0.0
     @ObservationIgnored private var nextFlourish: Double
@@ -87,6 +99,15 @@ public final class PetDirector {
     /// A piece of work finished (a sync done): looks it over once.
     public func done() { guard !reduceMotion, !animation.isGesture else { return }; gesture(.review, cycles: 1) }
 
+    /// Says `text` in a speech bubble for `seconds` (a newer line replaces it). Said even with reduced motion: it is
+    /// how the user learns what a reaction was about.
+    public func say(_ text: String, for seconds: TimeInterval = PetDirector.speechDuration) {
+        speech = Speech(text: text, until: now().addingTimeInterval(seconds))
+    }
+
+    /// The bubble's line: what it is saying, or - while the pointer rests on it - what goes on now.
+    public func bubble(hovering: Bool) -> String? { hovering ? (status ?? speech?.text) : speech?.text }
+
     /// Dragged to a spot: stays there.
     public func place(x: Double, y: Double) {
         self.x = min(max(x, 0), 1); self.y = min(max(y, 0), 1)
@@ -98,12 +119,13 @@ public final class PetDirector {
 
     /// Moves on one frame; at the end of a cycle decides what comes next.
     public func tick() {
+        if let s = speech, now() >= s.until { speech = nil }
         guard !reduceMotion else { frame = 0; return }
         let dt = frameDuration
         frame += 1
         // The walk is over once its time is up: the character is at its target and goes back to what it was doing.
         if let w = walk, w.isOver(at: now()) { x = w.to; walk = nil; setBase(); return }
-        if animation == .idle { idleFor += dt }
+        if isStandingAbout { idleFor += dt }
         if frame >= animation.frames { frame = 0; cycleEnded() }
     }
 
@@ -113,11 +135,17 @@ public final class PetDirector {
             if gestureCycles <= 0 { setBase() }
             return
         }
-        guard animation == .idle, mood == .calm, idleFor >= nextFlourish else { return }
+        // Whatever its mood, it walks to another spot now and then; only a calm pet also waves or looks things over
+        // (in another mood a gesture would read as news).
+        guard isStandingAbout, idleFor >= nextFlourish else { return }
         idleFor = 0
         nextFlourish = Self.flourishAfter.lowerBound + random() * (Self.flourishAfter.upperBound - Self.flourishAfter.lowerBound)
-        if canWander, random() < 0.6 { wander() } else { gesture(random() < 0.5 ? .review : .waving, cycles: 1) }
+        if canWander, random() < 0.75 { wander() }
+        else if mood == .calm { gesture(random() < 0.5 ? .review : .waving, cycles: 1) }
     }
+
+    /// Playing its mood's own animation: no gesture, no walk.
+    private var isStandingAbout: Bool { !animation.isGesture && !isWalking }
 
     /// Walks to somewhere else along the bottom.
     private func wander() {
@@ -158,6 +186,6 @@ public final class PetDirector {
     private func start(_ a: PetAnimation) {
         animation = a
         frame = 0
-        if a == .idle { idleFor = 0 }
+        if !a.isGesture, a != .runningLeft, a != .runningRight { idleFor = 0 }
     }
 }

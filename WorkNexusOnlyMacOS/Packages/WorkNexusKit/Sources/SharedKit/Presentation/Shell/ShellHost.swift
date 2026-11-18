@@ -45,8 +45,8 @@ public struct ShellHost {
     public var placeSearch: (RailTarget) -> PlaceSearch? = { _ in nil }
     /// The sprite sheet of the pet chosen in the settings; nil: the TBChat character that ships with the app.
     public var petSheet: () -> PetSpriteSheet? = { nil }
-    /// Whether something waits for the user (unread ZenTao notifications): the pet waits with them.
-    public var petAttention: () -> Bool = { false }
+    /// How many things wait for the user (unread ZenTao notifications): the pet waits with them and says how many.
+    public var petWaiting: () -> Int = { 0 }
     /// Brings the app's window forward (a click on the floating pet).
     public var revealApp: () -> Void = {}
     public init() {}
