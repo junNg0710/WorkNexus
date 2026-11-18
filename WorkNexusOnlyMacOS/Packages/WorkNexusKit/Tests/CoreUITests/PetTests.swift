@@ -289,6 +289,32 @@ final class PetTests: XCTestCase {
         XCTAssertEqual(still.animation, .running)
     }
 
+    func testALineThatOpensSomethingStaysClickable() {
+        let d = PetDirector()
+        d.status = "All quiet"
+        d.say("Lan: ok em")
+        XCTAssertNil(d.link)
+        XCTAssertEqual(d.bubble(hovering: true), "All quiet", "pointing at it sums things up")
+        d.say("Lan: ok em", link: "chat:zt:g1")
+        XCTAssertEqual(d.link, "chat:zt:g1")
+        XCTAssertEqual(d.bubble(hovering: true), "Lan: ok em", "a line to open stays while the pointer is on the pet")
+        d.hush()
+        XCTAssertNil(d.link); XCTAssertNil(d.bubble(hovering: false))
+    }
+
+    func testTheBubbleTakesThePointerOnlyWhenItOpensSomething() {
+        let d = PetDirector()
+        d.place(x: 0.5, y: 1)
+        let room = CGSize(width: 800, height: 600)
+        let sprite = PetView.spriteRect(director: d, room: room, width: 84)
+        XCTAssertEqual(PetView.pointerRect(director: d, room: room, width: 84), sprite)
+        d.say("New task", link: "{}")
+        let both = PetView.pointerRect(director: d, room: room, width: 84)
+        XCTAssertTrue(both.contains(sprite))
+        XCTAssertEqual(both.minY, sprite.minY - PetSpeechBubble.areaHeight)
+        XCTAssertEqual(both.width, PetSpeechBubble.maxWidth)
+    }
+
     func testItWandersWithinHalfAMinute() {
         let d = director()
         d.roomWidth = 900

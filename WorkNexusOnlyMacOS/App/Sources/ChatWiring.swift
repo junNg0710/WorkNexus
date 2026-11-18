@@ -168,7 +168,11 @@ final class ChatWiring {
     }
 
     /// A clicked chat notification: the app comes forward on that chat.
-    private func openFromTap(_ payload: String) {
+    private func openFromTap(_ payload: String) { open(payload: payload) }
+
+    /// Opens the chat a `chat:<accountId>:<chatGid>` payload names (a notification tapped, the pet's line clicked) and
+    /// brings the window forward.
+    func open(payload: String) {
         let parts = payload.split(separator: ":", maxSplits: 2).map(String.init)
         guard parts.count == 3, parts[0] == "chat" else { return }
         shell.chatAccountId = parts[1]
@@ -232,7 +236,8 @@ final class ChatNotificationSinkImpl: ChatNotificationSink, @unchecked Sendable 
         let s = live.value
         if s.showPet && s.petShowsDetails {
             let shell = shell
-            Task { @MainActor in shell.announceChat(title: n.title, sender: n.subtitle, body: n.body) }
+            let link = "chat:\(n.accountId):\(n.chatGid)"
+            Task { @MainActor in shell.announceChat(title: n.title, sender: n.subtitle, body: n.body, link: link) }
         }
         guard s.chatNotifications else { return }
         let title = n.title, body = n.subtitle.map { "\($0): \(n.body)" } ?? n.body

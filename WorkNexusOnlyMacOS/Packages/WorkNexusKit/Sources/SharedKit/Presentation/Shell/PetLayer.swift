@@ -57,10 +57,10 @@ struct PetLayer: View {
                 // In a graph of its own: the pet's frames, walks and bubbles never re-render the window (`PetStage`).
                 let director = director, inset = Self.inset
                 PetStage(petRect: { size in
-                    PetView.spriteRect(director: director, room: CGSize(width: size.width - 2 * inset, height: size.height - 2 * inset),
-                                       width: PetView.defaultWidth).offsetBy(dx: inset, dy: inset)
+                    PetView.pointerRect(director: director, room: CGSize(width: size.width - 2 * inset, height: size.height - 2 * inset),
+                                        width: PetView.defaultWidth).offsetBy(dx: inset, dy: inset)
                 }) {
-                    PetView(director: director, sheet: sheet, followsCursor: settings.petFollowsCursor) { x, y in
+                    PetView(director: director, sheet: sheet, followsCursor: settings.petFollowsCursor, onOpenLink: model.host.petOpen) { x, y in
                         UserDefaults.standard.set(x, forKey: Self.xKey); UserDefaults.standard.set(y, forKey: Self.yKey)
                     }
                     .padding(inset)
@@ -79,7 +79,7 @@ struct PetLayer: View {
         }
         .onChange(of: model.petChatNews) { _, news in
             guard details, let news else { return }
-            director.notify(); director.say(PetSignalText.chat(news), for: Self.detailDuration)
+            director.notify(); director.say(PetSignalText.chat(news), for: Self.detailDuration, link: news.link)
         }
         .onChange(of: mood, initial: true) { old, mood in
             director.mood = mood
@@ -92,7 +92,7 @@ struct PetLayer: View {
         // More notifications waiting while it already waits is news too.
         .onChange(of: waiting) { old, new in
             guard new > old, mood == .attention else { return }
-            if details, let text = model.host.petNewestWaiting() { director.say(text, for: Self.detailDuration) }
+            if details, let notice = model.host.petNewestWaiting() { director.say(notice.text, for: Self.detailDuration, link: notice.link) }
             else { director.say(PetSignalText.waiting(new)) }
         }
         .onChange(of: status, initial: true) { _, s in director.status = s }
@@ -111,7 +111,7 @@ struct PetLayer: View {
         let width = Self.floatingWidth
         let height = width * CGFloat(PetSpriteSheet.cellHeight) / CGFloat(PetSpriteSheet.cellWidth)
         let content = FloatingPetContent(director: director, sheet: sheet, width: width, followsCursor: settings.petFollowsCursor,
-                                         onOpen: model.host.revealApp,
+                                         onOpen: model.host.revealApp, onOpenLink: model.host.petOpen,
                                          onDock: { model.updateSettings { $0.petDisplay = .inWindow } },
                                          onHide: { model.updateSettings { $0.showPet = false } })
         let theme = theme

@@ -2,7 +2,8 @@ import CoreUI
 import SwiftUI
 
 /// What the floating panel holds: the pet. Dragged it moves the panel (and makes that its new place to stroll around),
-/// clicked it brings the app forward, and its menu puts it back in the window or hides it. When it walks the panel goes
+/// clicked it opens what it is saying (a message, a notification) or else brings the app forward, and its menu puts it
+/// back in the window or hides it. When it walks the panel goes
 /// with it (`FloatingPetPanel.follow`). What it says (or, while the pointer rests on it, the state of things) goes to
 /// the bubble's own panel above it (`FloatingPetPanel.setBubble`), so the pet's panel never changes size. Not in the
 /// Flutter app.
@@ -12,6 +13,7 @@ struct FloatingPetContent: View {
     let width: CGFloat
     let followsCursor: Bool
     let onOpen: () -> Void
+    let onOpenLink: (String) -> Void
     let onDock: () -> Void
     let onHide: () -> Void
     @State private var hovering = false
@@ -20,7 +22,7 @@ struct FloatingPetContent: View {
 
     var body: some View {
         PetView(director: director, sheet: sheet, width: width, followsCursor: followsCursor, pausesWithApp: false, movable: false,
-                showsBubble: false, onTap: onOpen)
+                showsBubble: false, onTap: onOpen, onOpenLink: onOpenLink)
             .frame(width: width, height: height)
             .onHover { hovering = $0 }
             .gesture(DragGesture(minimumDistance: 3)
@@ -28,19 +30,29 @@ struct FloatingPetContent: View {
                     if director.walk != nil { director.place(x: director.x(at: Date()), y: director.y) }   // stops the walk
                     FloatingPetPanel.shared.drag(ended: false)
                 }
-                .onEnded { _ in
-                    FloatingPetPanel.shared.drag(ended: true)
-                    let stroll = FloatingPetPanel.shared.stroll
-                    director.roomWidth = stroll.points; director.place(x: stroll.x, y: director.y)
-                })
+                .onEnded { _ in FloatingPetPanel.shared.drag(ended: true); syncStroll() })
             .contextMenu {
                 Button(appString("trayOpenApp", "Open WorkNexus"), action: onOpen)
                 Button(appString("petShowInWindow", "Put the pet back in the window"), action: onDock)
                 Divider()
                 Button(appString("petHide", "Hide the pet"), action: onHide)
             }
-            .onChange(of: director.walk) { _, walk in FloatingPetPanel.shared.follow(walk) }
-            .onChange(of: director.bubble(hovering: hovering), initial: true) { _, text in FloatingPetPanel.shared.setBubble(text) }
+            .onChange(of: director.walk) { _, walk in
+                FloatingPetPanel.shared.follow(walk)
+                // Done walking: where it now stands along the strip (the app's window may have moved or changed size).
+                if walk == nil { syncStroll() }
+            }
+            .onChange(of: Bubble(text: director.bubble(hovering: hovering), link: director.link), initial: true) { _, bubble in
+                let director = director, open = onOpenLink
+                FloatingPetPanel.shared.setBubble(bubble.text, onTap: bubble.link.map { link in { director.hush(); open(link) } })
+            }
+    }
+
+    private struct Bubble: Equatable { var text: String?; var link: String? }
+
+    private func syncStroll() {
+        let stroll = FloatingPetPanel.shared.stroll
+        director.roomWidth = stroll.points; director.place(x: stroll.x, y: director.y)
     }
 }
 

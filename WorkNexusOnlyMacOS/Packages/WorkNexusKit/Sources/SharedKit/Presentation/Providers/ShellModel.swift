@@ -107,8 +107,8 @@ public final class ShellModel {
     /// The newest chat message worth telling the user about, for the pet to say (`petShowsDetails`).
     public private(set) var petChatNews: PetChatNews?
     /// A new chat message came that the user is not looking at: the pet says what it says.
-    public func announceChat(title: String, sender: String?, body: String) {
-        petChatNews = PetChatNews(title: title, sender: sender, body: body, number: (petChatNews?.number ?? 0) + 1)
+    public func announceChat(title: String, sender: String?, body: String, link: String? = nil) {
+        petChatNews = PetChatNews(title: title, sender: sender, body: body, link: link, number: (petChatNews?.number ?? 0) + 1)
     }
 
     public func account(_ id: String) -> Account? { accounts.first { $0.id == id } }

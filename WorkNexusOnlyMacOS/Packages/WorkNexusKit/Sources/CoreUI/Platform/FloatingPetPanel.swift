@@ -12,8 +12,10 @@ import SwiftUI
 /// goes through. Near a screen edge the bubble's panel is kept on the screen and its tail is drawn `tailShift` points off
 /// its middle, so it still points at the pet.
 ///
-/// Now and then the pet strolls along a strip around the place it was put (`strollSpan`, kept on its screen): its
-/// director decides the walk, the panel follows it at the display's rate (`follow`). Not in the Flutter app.
+/// Now and then the pet strolls: across the whole width of the app's window when it stands over it, else along a strip
+/// around the place it was put (`strollSpan`); kept on its screen. Its director decides the walk, the panel follows it
+/// at the display's rate (`follow`), from wherever the pet stands to the walk's end. A bubble that says something the
+/// user can open (a message, a notification) takes the click; any other lets the pointer through. Not in the Flutter app.
 @MainActor
 public final class FloatingPetPanel {
     public static let shared = FloatingPetPanel()
@@ -32,9 +34,13 @@ public final class FloatingPetPanel {
     /// Where it was put (shown, or dragged to): the middle of the strip it strolls along.
     private var home = NSPoint.zero
     private var walk: PetDirector.Walk?
+    /// Where the walk under way set off from and goes to (the pet's middle).
+    private var walkFrom: CGFloat = 0, walkTo: CGFloat = 0
     private var ticker: DisplayTicker?
+    /// What a click on the bubble does; nil: the bubble lets the pointer through.
+    private var bubbleTap: (() -> Void)?
     /// What the bubble shows now, so it is drawn again only when that changes (not on every step of a walk).
-    private var shownBubble: (text: String, tailShift: CGFloat)?
+    private var shownBubble: (text: String, tailShift: CGFloat, clickable: Bool)?
     private let defaults: UserDefaults
     static let xKey = "pet.floating.centerX", yKey = "pet.floating.bottomY"
 
@@ -64,10 +70,10 @@ public final class FloatingPetPanel {
         if !panel.isVisible { panel.orderFrontRegardless(); layout() }
     }
 
-    /// Shows what the pet says above it, or takes the bubble away (nil).
-    public func setBubble(_ text: String?) {
-        guard text != bubbleText else { return }
-        bubbleText = text
+    /// Shows what the pet says above it, or takes the bubble away (nil). With `onTap` a click on the bubble does it.
+    public func setBubble(_ text: String?, onTap: (() -> Void)? = nil) {
+        guard text != bubbleText || (onTap == nil) != (bubbleTap == nil) else { bubbleTap = onTap; return }
+        bubbleText = text; bubbleTap = onTap
         layout()
     }
 
@@ -76,34 +82,55 @@ public final class FloatingPetPanel {
 
     /// The strip a pet `petWidth` wide strolls along around `home` (kept inside `screen`): where its middle is at the left
     /// end, and how many points it can go from there.
-    static func strip(home: CGFloat, petWidth: CGFloat, span: CGFloat, screen: CGRect?) -> (start: CGFloat, travel: CGFloat) {
+    /// Over the app's `window` (sideways), the strip is the window's width instead.
+    static func strip(home: CGFloat, petWidth: CGFloat, span: CGFloat, screen: CGRect?, window: CGRect? = nil) -> (start: CGFloat, travel: CGFloat) {
+        if let window, window.minX <= home, home <= window.maxX {
+            let left = max(window.minX, screen?.minX ?? window.minX), right = min(window.maxX, screen?.maxX ?? window.maxX)
+            if right - left >= petWidth * 2 { return (left + petWidth / 2, right - left - petWidth) }
+        }
         var minX = home - span / 2
         if let screen, screen.width >= span { minX = min(max(minX, screen.minX), screen.maxX - span) }
         return (minX + petWidth / 2, max(span - petWidth, 1))
     }
 
     private var currentStrip: (start: CGFloat, travel: CGFloat) {
-        Self.strip(home: home.x, petWidth: petSize.width, span: Self.strollSpan, screen: Self.screen(at: home))
+        Self.strip(home: home.x, petWidth: petSize.width, span: Self.strollSpan, screen: Self.screen(at: home), window: Self.appWindowFrame())
+    }
+
+    /// The app's main window on screen (the biggest ordinary one), if it is up.
+    static func appWindowFrame() -> CGRect? {
+        NSApp?.windows.filter { $0.isVisible && !$0.isMiniaturized && !($0 is NSPanel) && $0.level == .normal && $0.frame.width >= 400 }
+            .max { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }?.frame
     }
 
     /// Where along its strip the pet stands (0 at the left end, 1 at the right) and how long the strip is, in points: what
     /// its director needs to plan a walk.
     public var stroll: (x: Double, points: Double) {
         let s = currentStrip
-        return (Double((anchor.x - s.start) / s.travel), Double(s.travel))
+        return (min(max(Double((anchor.x - s.start) / s.travel), 0), 1), Double(s.travel))
     }
 
-    /// Moves the panel along with the pet's walk until it is over (nil: it stands, wherever it got to).
+    /// Moves the panel along with the pet's walk until it is over (nil: it stands, wherever it got to). The walk goes
+    /// from where the pet stands now - the window may have moved since it was planned - to its end along the strip.
     public func follow(_ walk: PetDirector.Walk?) {
+        if walk == nil, let done = self.walk, done.isOver(at: Date()), dragStart == nil { anchor.x = walkTo; layout() }
         self.walk = walk
-        guard walk != nil, dragStart == nil, let view = panel?.contentView else { stopTicker(); return }
+        guard let walk, dragStart == nil, let view = panel?.contentView else { stopTicker(); return }
+        let s = currentStrip
+        walkFrom = anchor.x; walkTo = s.start + CGFloat(walk.to) * s.travel
         if ticker == nil { ticker = DisplayTicker(view: view) { [weak self] in self?.step() } }
+    }
+
+    /// How far along `walk` is at `date`, 0...1 (eased as the walk is).
+    static func progress(_ walk: PetDirector.Walk, at date: Date) -> CGFloat {
+        guard walk.to != walk.from else { return walk.isOver(at: date) ? 1 : 0 }
+        return CGFloat((walk.x(at: date) - walk.from) / (walk.to - walk.from))
     }
 
     private func step() {
         guard let walk, dragStart == nil else { stopTicker(); return }
-        let s = currentStrip, now = Date()
-        anchor.x = s.start + CGFloat(walk.x(at: now)) * s.travel
+        let now = Date()
+        anchor.x = walkFrom + (walkTo - walkFrom) * Self.progress(walk, at: now)
         layout()
         if walk.isOver(at: now) { self.walk = nil; stopTicker() }
     }
@@ -133,10 +160,14 @@ public final class FloatingPetPanel {
         guard let text = bubbleText, let makeBubble, panel.isVisible else { bubblePanel?.orderOut(nil); return }
         let placed = Self.frame(anchor: NSPoint(x: anchor.x, y: petFrame.maxY), size: Self.bubbleSize, screen: Self.screen(at: anchor))
         let bubble = bubblePanel ?? makeBubblePanel()
-        if shownBubble?.text != text || shownBubble?.tailShift != placed.tailShift {
-            shownBubble = (text, placed.tailShift)
-            if let bubbleHost { bubbleHost.rootView = makeBubble(text, placed.tailShift) } else {
-                let h = NSHostingView(rootView: makeBubble(text, placed.tailShift))
+        let clickable = bubbleTap != nil
+        bubble.ignoresMouseEvents = !clickable
+        if shownBubble?.text != text || shownBubble?.tailShift != placed.tailShift || shownBubble?.clickable != clickable {
+            shownBubble = (text, placed.tailShift, clickable)
+            let view = clickable ? AnyView(makeBubble(text, placed.tailShift).pointerStyle(.link)
+                                            .onTapGesture { [weak self] in self?.bubbleTap?() }) : makeBubble(text, placed.tailShift)
+            if let bubbleHost { bubbleHost.rootView = view } else {
+                let h = NSHostingView(rootView: view)
                 bubble.contentView = h
                 bubbleHost = h
             }
@@ -148,7 +179,7 @@ public final class FloatingPetPanel {
 
     public func hide() {
         stopTicker(); walk = nil
-        panel?.orderOut(nil); bubblePanel?.orderOut(nil); bubbleText = nil
+        panel?.orderOut(nil); bubblePanel?.orderOut(nil); bubbleText = nil; bubbleTap = nil
     }
 
     /// Follows a drag of the pet: the panel moves with the pointer; at the end its place is remembered.

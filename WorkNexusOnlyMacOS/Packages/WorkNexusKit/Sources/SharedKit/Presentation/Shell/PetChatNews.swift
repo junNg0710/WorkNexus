@@ -9,5 +9,7 @@ public struct PetChatNews: Equatable, Sendable {
     public var sender: String?
     /// One line of the message ("Photo", "File: spec.pdf", the text...).
     public var body: String
+    /// What a click on the pet's line opens: the chat (`chat:<accountId>:<chatGid>`, as a chat notification's payload).
+    public var link: String?
     public var number: Int
 }

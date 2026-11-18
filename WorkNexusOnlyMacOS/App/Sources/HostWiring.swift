@@ -50,7 +50,12 @@ struct HostWiring {
         host.quickSettings = { AnyView(QuickSettingsView(root: r)) }
         host.petSheet = { r.petLibrary.sheet(for: shell.settings.petId) }
         host.petWaiting = { r.notifications?.unreadCount ?? 0 }
-        host.petNewestWaiting = { r.notifications?.newestUnreadText }
+        host.petNewestWaiting = { r.notifications?.newestUnread.map { PetNotice(text: $0.text, link: $0.payload) } }
+        // A line of the pet's opens what it is about: a chat (`chat:` payload) or a notification's ticket.
+        host.petOpen = { link in
+            if link.hasPrefix("chat:") { r.chat.open(payload: link) }
+            else if let n = r.notifications { Task { await n.handleTap(payload: link) } }
+        }
         host.revealApp = { NSApp.activate(); _ = r.platform.reopenWindow() }
         // On the Chat page the title bar searches the chats and their stored messages; a hit opens the chat (at the message).
         let chat = r.chat

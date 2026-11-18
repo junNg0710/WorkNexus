@@ -53,10 +53,12 @@ public final class PetDirector {
     /// What goes on now, in words: shown while the pointer rests on it, so a reaction can be read after the fact.
     public var status: String?
 
-    /// A line in a speech bubble, shown until `until`.
+    /// A line in a speech bubble, shown until `until`; `link` is what a click on it opens (a chat, a notification), if
+    /// anything - opaque here, the app knows what it means.
     public struct Speech: Equatable, Sendable {
         public var text: String
         public var until: Date
+        public var link: String?
     }
 
     /// Walking pace, in points per second.
@@ -101,12 +103,22 @@ public final class PetDirector {
 
     /// Says `text` in a speech bubble for `seconds` (a newer line replaces it). Said even with reduced motion: it is
     /// how the user learns what a reaction was about.
-    public func say(_ text: String, for seconds: TimeInterval = PetDirector.speechDuration) {
-        speech = Speech(text: text, until: now().addingTimeInterval(seconds))
+    public func say(_ text: String, for seconds: TimeInterval = PetDirector.speechDuration, link: String? = nil) {
+        speech = Speech(text: text, until: now().addingTimeInterval(seconds), link: link)
     }
 
-    /// The bubble's line: what it is saying, or - while the pointer rests on it - what goes on now.
-    public func bubble(hovering: Bool) -> String? { hovering ? (status ?? speech?.text) : speech?.text }
+    /// Stops saying what it says (the user opened it).
+    public func hush() { speech = nil }
+
+    /// The bubble's line: what it is saying, or - while the pointer rests on it - what goes on now. A line that opens
+    /// something stays while the pointer is on the pet, so it can be clicked.
+    public func bubble(hovering: Bool) -> String? {
+        if speech?.link != nil { return speech?.text }
+        return hovering ? (status ?? speech?.text) : speech?.text
+    }
+
+    /// What a click on the pet or its bubble opens now, if anything.
+    public var link: String? { speech?.link }
 
     /// Dragged to a spot: stays there.
     public func place(x: Double, y: Double) {

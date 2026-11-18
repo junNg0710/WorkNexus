@@ -47,11 +47,15 @@ public final class NotificationsModel {
 
     public var unreadCount: Int { notifications.filter { !$0.read }.count }
     /// What the newest unread notification says, as its desktop alert does: "JunNg assigned Bug · #6492 Feed: video...".
-    public var newestUnreadText: String? {
+    public var newestUnreadText: String? { newestUnread?.text }
+    /// The newest unread notification: what it says, and the payload that opens it (`handleTap(payload:)`), as its
+    /// desktop alert's.
+    public var newestUnread: (text: String, payload: String)? {
         let unread = notifications.filter { !$0.read }
         guard let n = unread.max(by: { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }) ?? unread.first else { return nil }
         let object = [n.objectId.map { "#\($0)" }, n.objectTitle].compactMap { $0 }.joined(separator: " ")
-        return object.isEmpty ? NotificationStrings.eventText(n) : "\(NotificationStrings.eventText(n)) · \(object)"
+        let text = object.isEmpty ? NotificationStrings.eventText(n) : "\(NotificationStrings.eventText(n)) · \(object)"
+        return (text, NotificationAlertPayload(notificationId: n.id, accountId: n.accountId).json)
     }
     /// The notifications shown on the panel, grouped by day.
     public var days: [NotificationDay] { GroupNotificationsByDay()(notifications, unreadOnly: unreadOnly) }

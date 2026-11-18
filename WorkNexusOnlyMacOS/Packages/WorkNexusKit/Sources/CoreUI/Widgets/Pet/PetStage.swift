@@ -56,4 +56,17 @@ public extension PetView {
         let freeW = max(room.width - width, 1), freeH = max(room.height - height, 1)
         return CGRect(x: CGFloat(director.x(at: date)) * freeW, y: CGFloat(director.y) * freeH, width: width, height: height)
     }
+
+    /// The room a bubble over `sprite` takes in a room `roomWidth` wide (moved sideways to stay inside, as drawn).
+    static func bubbleRect(sprite: CGRect, roomWidth: CGFloat) -> CGRect {
+        let w = PetSpeechBubble.maxWidth
+        let x = sprite.midX - w / 2 + bubbleShift(petLeft: sprite.minX, petWidth: sprite.width, roomWidth: roomWidth)
+        return CGRect(x: x, y: sprite.minY - PetSpeechBubble.areaHeight, width: w, height: PetSpeechBubble.areaHeight)
+    }
+
+    /// What takes the pointer in the room: the sprite, and its bubble while that opens something when clicked.
+    static func pointerRect(director: PetDirector, room: CGSize, width: CGFloat) -> CGRect {
+        let sprite = spriteRect(director: director, room: room, width: width)
+        return director.link == nil ? sprite : sprite.union(bubbleRect(sprite: sprite, roomWidth: room.width))
+    }
 }

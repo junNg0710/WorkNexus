@@ -25,14 +25,18 @@ public struct PetView: View {
     var showsBubble = true
     var onTap: (() -> Void)?
     var onMoved: ((Double, Double) -> Void)?
+    /// Opens what the pet is saying (a message, a notification: `PetDirector.link`) when it or its bubble is clicked.
+    var onOpenLink: ((String) -> Void)?
     @State private var dragStart: (x: Double, y: Double)?
     @State private var gazeTracker = PetGazeTracker()
     @State private var hovering = false
 
     public init(director: PetDirector, sheet: PetSpriteSheet, width: CGFloat = PetView.defaultWidth, followsCursor: Bool = false,
-                pausesWithApp: Bool = true, movable: Bool = true, showsBubble: Bool = true, onTap: (() -> Void)? = nil, onMoved: ((Double, Double) -> Void)? = nil) {
+                pausesWithApp: Bool = true, movable: Bool = true, showsBubble: Bool = true, onTap: (() -> Void)? = nil,
+                onOpenLink: ((String) -> Void)? = nil, onMoved: ((Double, Double) -> Void)? = nil) {
         self.director = director; self.sheet = sheet; self.width = width; self.followsCursor = followsCursor
-        self.pausesWithApp = pausesWithApp; self.movable = movable; self.showsBubble = showsBubble; self.onTap = onTap; self.onMoved = onMoved
+        self.pausesWithApp = pausesWithApp; self.movable = movable; self.showsBubble = showsBubble; self.onTap = onTap
+        self.onOpenLink = onOpenLink; self.onMoved = onMoved
     }
 
     private var height: CGFloat { width * CGFloat(PetSpriteSheet.cellHeight) / CGFloat(PetSpriteSheet.cellWidth) }
@@ -101,7 +105,9 @@ public struct PetView: View {
                         PetBubbleTail()
                     }
                     .offset(y: -height)
-                        .allowsHitTesting(false)
+                        // Only a line that opens something takes the click (the tap below); any other lets it through.
+                        .allowsHitTesting(director.link != nil)
+                        .pointerStyle(director.link != nil ? .link : nil)
                         // Not an accessibility element: one appearing makes SwiftUI walk the window for focus whenever an
                         // accessibility client runs. What it says is the sprite's label instead.
                         .accessibilityHidden(true)
@@ -109,7 +115,9 @@ public struct PetView: View {
                 }
             }
             .animation(.easeOut(duration: 0.15), value: director.bubble(hovering: hovering))
-            .onTapGesture { director.poke(); onTap?() }
+            .onTapGesture {
+                if let link = director.link, let onOpenLink { director.hush(); onOpenLink(link) } else { director.poke(); onTap?() }
+            }
             .gesture(DragGesture(minimumDistance: 4, coordinateSpace: .named("petRoom"))
                 .onChanged { drag in
                     let start = dragStart ?? (director.x(at: Date()), director.y)

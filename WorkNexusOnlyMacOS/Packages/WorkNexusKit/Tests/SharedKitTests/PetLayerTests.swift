@@ -87,6 +87,26 @@ final class PetLayerTests: XCTestCase {
         XCTAssertGreaterThan((1480 - edge.start) / edge.travel, 0.5)
     }
 
+    func testOverTheAppsWindowTheFloatingPetStrollsItsWholeWidth() {
+        let screen = CGRect(x: 0, y: 0, width: 1512, height: 950), window = CGRect(x: 100, y: 50, width: 1200, height: 800)
+        let over = FloatingPetPanel.strip(home: 700, petWidth: 96, span: FloatingPetPanel.strollSpan, screen: screen, window: window)
+        XCTAssertEqual(over.start, 100 + 48); XCTAssertEqual(over.travel, 1200 - 96)
+        // A window partly off the screen: only the part on it.
+        let off = FloatingPetPanel.strip(home: 1400, petWidth: 96, span: 360, screen: screen, window: CGRect(x: 1000, y: 0, width: 900, height: 600))
+        XCTAssertEqual(off.start + off.travel + 48, 1512)
+        // Away from the window: the strip around its place.
+        let away = FloatingPetPanel.strip(home: 50, petWidth: 96, span: 360, screen: screen, window: window)
+        XCTAssertEqual(away.travel, 360 - 96)
+    }
+
+    func testAFloatingWalkGoesFromWhereThePetStands() {
+        let start = Date(timeIntervalSince1970: 0)
+        let walk = PetDirector.Walk(from: 0.2, to: 0.8, start: start, duration: 2)
+        XCTAssertEqual(FloatingPetPanel.progress(walk, at: start), 0)
+        XCTAssertEqual(FloatingPetPanel.progress(walk, at: start.addingTimeInterval(1)), 0.5, accuracy: 0.001)
+        XCTAssertEqual(FloatingPetPanel.progress(walk, at: start.addingTimeInterval(3)), 1)
+    }
+
     func testTheFloatingPetStaysOnAScreen() {
         let screens = [CGRect(x: 0, y: 0, width: 1440, height: 900), CGRect(x: 1440, y: 0, width: 1920, height: 1080)]
         let size = CGSize(width: 96, height: 104)
