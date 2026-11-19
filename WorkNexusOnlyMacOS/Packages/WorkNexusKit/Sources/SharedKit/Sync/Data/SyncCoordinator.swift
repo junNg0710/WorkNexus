@@ -52,7 +52,11 @@ public actor SyncCoordinator: AccountSyncService, TicketDetailService {
     /// account is shared instead of fetched again (the launch sync and the Overview's can ask at once).
     public func syncAccount(_ account: Account) async -> Outcome<Int> {
         if let running = accountSyncs[account.id] { return await running.value }
-        let task = Task { await self.trackSync(account.id) { await self.runSync(account) } }
+        let task = Task {
+            await PerformanceLog.measure("sync: \(account.providerType.rawValue) account", slowerThan: 5) {
+                await self.trackSync(account.id) { await self.runSync(account) }
+            }
+        }
         accountSyncs[account.id] = task
         let result = await task.value
         accountSyncs[account.id] = nil

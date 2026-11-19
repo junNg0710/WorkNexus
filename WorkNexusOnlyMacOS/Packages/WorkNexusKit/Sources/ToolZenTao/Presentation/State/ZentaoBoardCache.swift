@@ -38,35 +38,35 @@ final class ZentaoBoardCache {
         fresh(k)
         if let taskBoard { return taskBoard }
         builds += 1
-        let v = make(); taskBoard = v; return v
+        let v = PerformanceLog.measureSync("zentao: build task columns") { make() }; taskBoard = v; return v
     }
 
     func bugBoard(_ k: Key, _ make: () -> ZenTaoBugBoardModel) -> ZenTaoBugBoardModel {
         fresh(k)
         if let bugBoard { return bugBoard }
         builds += 1
-        let v = make(); bugBoard = v; return v
+        let v = PerformanceLog.measureSync("zentao: build bug columns") { make() }; bugBoard = v; return v
     }
 
     func pool(_ k: Key, _ make: () -> [Ticket]) -> [Ticket] {
         fresh(k)
         if let pool { return pool }
         builds += 1
-        let v = make(); pool = v; return v
+        let v = PerformanceLog.measureSync("zentao: pick the tickets on the board") { make() }; pool = v; return v
     }
 
     func workload(_ k: Key, _ make: () -> [ZenTaoWorkload]) -> [ZenTaoWorkload] {
         fresh(k)
         if let workload { return workload }
         builds += 1
-        let v = make(); workload = v; return v
+        let v = PerformanceLog.measureSync("zentao: count each person's work") { make() }; workload = v; return v
     }
 
     func counts(_ k: Key, _ make: () -> [ZenTaoQuickFilter: Int]) -> [ZenTaoQuickFilter: Int] {
         fresh(k)
         if let counts { return counts }
         builds += 1
-        let v = make(); counts = v; return v
+        let v = PerformanceLog.measureSync("zentao: count the quick filters") { make() }; counts = v; return v
     }
 }
 

@@ -54,6 +54,10 @@ public final class FrameStutterMonitor: NSObject {
         defer { last = link.timestamp }
         guard let last else { return }
         let frame = link.duration > 0 ? link.duration : 1.0 / 60
-        if let line = window.add(gap: link.timestamp - last, frame: frame, now: link.timestamp) { PerformanceLog.note(line) }
+        let gap = link.timestamp - last
+        // What held a late frame up: the measured main-thread work between the two frames.
+        let busy = gap - frame >= FrameStutterWindow.lateAfter ? PerformanceLog.busy(from: last, to: link.timestamp) : [:]
+        if let line = window.add(gap: gap, frame: frame, now: link.timestamp, busy: busy) { PerformanceLog.note(line) }
+        PerformanceLog.frameShown(at: link.timestamp)
     }
 }

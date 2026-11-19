@@ -93,6 +93,7 @@ public final class ZentaoUIState {
         bugBoard.fetchTicketByKey = { [weak self] key in await self?.fetchByKey(key, bugsFirst: true) }
         taskBoard.facetScope = .task
         bugBoard.facetScope = .bug
+        taskBoard.perfName = "zentao tasks"; bugBoard.perfName = "zentao bugs"
         bugBoard.usesFacetFilters = true
         taskBoard.usesFacetFilters = true
     }

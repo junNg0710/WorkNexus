@@ -45,7 +45,9 @@ public final class TicketDetailModel {
         syncing = true
         refreshing = Task { [weak self] in
             guard let self else { return }
-            _ = await services.ticketDetail.refresh(ticket: ticket)
+            _ = await PerformanceLog.measure("detail: read ticket, comments and history", slowerThan: 2) {
+                await services.ticketDetail.refresh(ticket: ticket)
+            }
             if !Task.isCancelled { syncing = false }
         }
     }

@@ -8,16 +8,20 @@ extension ZenTaoTicketServiceImpl {
                                     sort: TicketSort, cancel: CancelSignal?) async -> Outcome<ViewPage> {
         guard await accounts.account(id: accountId) != nil else { return .failure(.auth("ZenTao account not found")) }
         guard let adapter = await adapters.adapter(accountId: accountId) else { return .failure(.auth("No stored credentials for this account")) }
-        return await store(await adapter.listProductBugsPage(productId: productId, browseType: browseType, page: page,
-                                                             limit: limit, sort: sort, cancel: cancel))
+        let read = await PerformanceLog.measure("zentao: read bugs \(browseType) page \(page)", slowerThan: Self.slowRead) {
+            await adapter.listProductBugsPage(productId: productId, browseType: browseType, page: page, limit: limit, sort: sort, cancel: cancel)
+        }
+        return await store(read)
     }
 
     public func syncExecutionTasksPage(accountId: String, executionId: String, browseType: String, page: Int, limit: Int,
                                        sort: TicketSort, cancel: CancelSignal?) async -> Outcome<ViewPage> {
         guard await accounts.account(id: accountId) != nil else { return .failure(.auth("ZenTao account not found")) }
         guard let adapter = await adapters.adapter(accountId: accountId) else { return .failure(.auth("No stored credentials for this account")) }
-        return await store(await adapter.listExecutionTasksPage(executionId: executionId, browseType: browseType, page: page,
-                                                                limit: limit, sort: sort, cancel: cancel))
+        let read = await PerformanceLog.measure("zentao: read tasks \(browseType) page \(page)", slowerThan: Self.slowRead) {
+            await adapter.listExecutionTasksPage(executionId: executionId, browseType: browseType, page: page, limit: limit, sort: sort, cancel: cancel)
+        }
+        return await store(read)
     }
 
     public func syncAssignedWork(accountId: String, login: String, bugs: Bool, cap: Int, cancel: CancelSignal?) async -> Outcome<ZenTaoPersonWork> {
@@ -37,7 +41,10 @@ extension ZenTaoTicketServiceImpl {
         var page = 1
         while true {
             if cancel?.isCancelled == true { return .failure(.cancelled("Reading \(login)'s work was stopped")) }
-            switch await store(await adapter.listAssignedWorkPage(userId: userId, bugs: bugs, page: page, limit: limit, cancel: cancel)) {
+            let read = await PerformanceLog.measure("zentao: read \(bugs ? "bugs" : "tasks") of a person, page \(page)", slowerThan: Self.slowRead) {
+                await adapter.listAssignedWorkPage(userId: userId, bugs: bugs, page: page, limit: limit, cancel: cancel)
+            }
+            switch await store(read) {
             case .failure(let f): return .failure(f)
             case .success(let v):
                 total = v.total
@@ -52,9 +59,13 @@ extension ZenTaoTicketServiceImpl {
     }
 
     private func store(_ res: Outcome<ViewPage>) async -> Outcome<ViewPage> {
+        // Its time is written by the store itself ("db: write N tickets").
         if case .success(let page) = res { _ = await tickets.upsertTickets(page.tickets) }
         return res
     }
+
+    /// A list page read from the server slower than this is written to the performance log.
+    static var slowRead: TimeInterval { 1.5 }
 
     public func syncTaskBugs(accountId: String, executionId: String, taskId: String) async -> Outcome<Void> {
         guard let task = Int(taskId) else { return .success(()) }

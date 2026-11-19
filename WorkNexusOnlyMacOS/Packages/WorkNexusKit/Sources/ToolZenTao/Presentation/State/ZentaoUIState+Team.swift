@@ -76,11 +76,13 @@ extension ZentaoUIState {
         for l in logins { updateTeam(bugs: bugs) { $0.loads[l] = .loading } }
         let pages = deps.viewPages
         Task {
-            await withTaskGroup(of: Void.self) { group in
-                var pending = logins[...]
-                func next() { if let login = pending.popFirst() { group.addTask { await self.read(login, accountId: accountId, bugs: bugs, generation: generation, pages: pages) } } }
-                for _ in 0..<3 { next() }
-                while await group.next() != nil { next() }
+            await PerformanceLog.measure("zentao: read the work of \(logins.count) people (\(bugs ? "bugs" : "tasks"))", slowerThan: 3) {
+                await withTaskGroup(of: Void.self) { group in
+                    var pending = logins[...]
+                    func next() { if let login = pending.popFirst() { group.addTask { await self.read(login, accountId: accountId, bugs: bugs, generation: generation, pages: pages) } } }
+                    for _ in 0..<3 { next() }
+                    while await group.next() != nil { next() }
+                }
             }
         }
     }

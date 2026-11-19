@@ -9,7 +9,11 @@ public final class GRDBTicketRepository: TicketRepository {
     ///   markers each list sync stamps only its own of); the composition root passes the rule.
     public init(db: AppDatabase, keepsLabel: @escaping @Sendable (String) -> Bool = { _ in false }) {
         self.db = db; self.keepsLabel = keepsLabel
-        allTickets = SharedObservation { db.observe { try TicketRow.fetchAll($0).compactMap(\.entity) } }
+        allTickets = SharedObservation {
+            db.observe { d in
+                try PerformanceLog.measureSync("db: read every ticket", slowerThan: 0.15) { try TicketRow.fetchAll(d).compactMap(\.entity) }
+            }
+        }
     }
 
     /// Every ticket, read and decoded once per change for all the boards, counters and panes watching it (each used to
@@ -27,7 +31,7 @@ public final class GRDBTicketRepository: TicketRepository {
     /// its own marker would take the ticket off every other board.
     public func upsertTickets(_ tickets: [Ticket]) async -> Outcome<Void> {
         let keepsLabel = self.keepsLabel
-        return await guarded {
+        return await PerformanceLog.measure("db: write \(tickets.count) tickets", slowerThan: 0.2) { await guarded {
             try await self.db.writer.write { d in
                 for t in tickets {
                     let old = try TicketRow.fetchOne(d, key: t.id)
@@ -39,7 +43,7 @@ public final class GRDBTicketRepository: TicketRepository {
                     try row.save(d)
                 }
             }
-        }
+        } }
     }
     public func moveTicket(id: String, to status: UnifiedStatus) async -> Outcome<Void> {
         await guarded {

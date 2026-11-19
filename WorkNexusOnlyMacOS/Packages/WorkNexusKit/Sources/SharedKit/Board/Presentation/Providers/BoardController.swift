@@ -52,7 +52,14 @@ public final class BoardController {
     public private(set) var revision = 0
     /// False while the board's section is kept mounted behind another one: it then stops recomputing on every ticket
     /// change (a sync writes many) and catches up once when it is shown again.
-    public var isActive = true { didSet { if isActive, !oldValue, stale { recompute() } } }
+    public var isActive = true {
+        didSet {
+            if isActive, !oldValue, stale { recompute() }
+            if isActive != oldValue { describeForPerformanceLog() }
+        }
+    }
+    /// What the performance log calls this board ("zentao tasks"): its work and what it holds are written under it.
+    public var perfName = "board"
     @ObservationIgnored private var stale = false
 
     /// Tickets picked for a bulk action (⌘-click, ⇧-click); cards and rows draw them selected.
@@ -140,9 +147,19 @@ public final class BoardController {
         guard isActive else { stale = true; return }
         stale = false
         revision &+= 1
-        scoped = scopedTicketsOverride ?? scopeTickets?(tickets) ?? tickets
-        board = BuildBoard()(boardQuery)
+        let all = tickets.count
+        scoped = PerformanceLog.measureSync("board: scope \(perfName)", detail: "of \(all) tickets") {
+            scopedTicketsOverride ?? scopeTickets?(tickets) ?? tickets
+        }
+        board = PerformanceLog.measureSync("board: build \(perfName)", detail: "\(scoped.count) tickets") { BuildBoard()(boardQuery) }
         resultCount = board.total
+        describeForPerformanceLog()
+    }
+
+    /// While the board is on screen, the performance log says how much it holds with each entry.
+    private func describeForPerformanceLog() {
+        guard PerformanceLog.isEnabled, perfName != "board" else { return }
+        PerformanceLog.setContext("board.\(perfName)", isActive ? "\(perfName): \(scoped.count) of \(tickets.count) tickets in scope" : nil)
     }
 
     /// Facet groups (with counts) for the tickets in scope.

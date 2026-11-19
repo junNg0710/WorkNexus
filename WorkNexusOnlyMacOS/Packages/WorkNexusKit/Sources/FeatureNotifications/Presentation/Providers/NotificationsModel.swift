@@ -110,7 +110,9 @@ public final class NotificationsModel {
     private func onStored(_ list: [ZenTaoNotification]) { all = list; hasLoaded = true; recompute() }
 
     private func recompute() {
-        let filtered = FilterSelfNotifications()(all, accounts: accounts, realnamesByAccountId: realnames)
+        let filtered = PerformanceLog.measureSync("notifications: filter out your own", detail: "\(all.count) notifications") {
+            FilterSelfNotifications()(all, accounts: accounts, realnamesByAccountId: realnames)
+        }
         guard filtered != notifications || !hasLoaded else { return }
         notifications = filtered
         dockBadge?.show(unreadCount)

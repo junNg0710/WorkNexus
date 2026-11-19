@@ -26,6 +26,7 @@ public final class AppNavController {
     /// Goes to a rail place. Leaving for a place from the rail also leaves the editor and the mini app, which cover the whole
     /// area beside the rail (or the click would look dead).
     public func select(_ rail: RailTarget) {
+        if rail != state.rail { PerformanceLog.beginInteraction("open \(rail.key)") }
         state.rail = rail; state.editor = nil; state.miniAppId = nil
         state.userSelectedWorkspace = rail == .workspace
         if case .account(let id) = rail, state.locations[id] == nil {
@@ -77,9 +78,11 @@ public final class AppNavController {
         state.locations[accountId] ?? ToolLocation(section: defaultSection(accountId))
     }
     public func setSection(_ section: SectionID, accountId: String) {
+        PerformanceLog.beginInteraction("open \(section.rawValue)")
         var l = location(for: accountId); l.section = section; l.scopeId = nil; state.locations[accountId] = l
     }
     public func setScope(_ scopeId: String?, accountId: String) {
+        if scopeId != location(for: accountId).scopeId { PerformanceLog.beginInteraction("open scope \(scopeId ?? "all")") }
         var l = location(for: accountId); l.scopeId = scopeId
         if let scopeId { l.recentScopeIds.removeAll { $0 == scopeId }; l.recentScopeIds.append(scopeId); l.recentScopeIds = Array(l.recentScopeIds.suffix(8)) }
         state.locations[accountId] = l
@@ -88,19 +91,22 @@ public final class AppNavController {
         var l = location(for: accountId); l.quickScope = q; state.locations[accountId] = l
     }
     public func setViewMode(_ mode: ViewModeID, section: SectionID, accountId: String) {
+        PerformanceLog.beginInteraction("switch to \(mode.rawValue) view")
         var l = location(for: accountId); l.viewModes[section] = mode; state.locations[accountId] = l
     }
     public func setWorkspaceSection(_ id: String) {
+        PerformanceLog.beginInteraction("open workspace \(id)")
         state.workspaceSection = id; state.rail = .workspace; state.userSelectedWorkspace = true
         state.editor = nil; state.miniAppId = nil
     }
-    public func setSettingsSection(_ id: String) { state.settingsSection = id }
+    public func setSettingsSection(_ id: String) { PerformanceLog.beginInteraction("open settings \(id)"); state.settingsSection = id }
 
     // MARK: ticket detail (one slide-over history per place)
 
     /// Shows ticket `id` in the detail slide-over of the place on screen. Opened from the detail itself (a parent / subtask
     /// or a linked ticket) it goes on top of the history, so `goBackTicket` returns to the one it came from.
     public func openTicket(_ id: String) {
+        PerformanceLog.beginInteraction("open ticket")
         let k = state.rail.key
         var h = state.ticketHistories[k] ?? []
         h.removeAll { $0 == id }; h.append(id)
