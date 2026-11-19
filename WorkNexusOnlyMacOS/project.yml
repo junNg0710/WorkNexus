@@ -31,8 +31,8 @@ targets:
       path: App/Info.plist
       properties:
         CFBundleDisplayName: WorkNexus Mac
-        CFBundleShortVersionString: "1.9.3"
-        CFBundleVersion: "24"
+        CFBundleShortVersionString: "1.9.4"
+        CFBundleVersion: "25"
         LSMinimumSystemVersion: "15.0"
         LSApplicationCategoryType: public.app-category.developer-tools
         LSMultipleInstancesProhibited: true
