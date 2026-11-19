@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Ported from: lib/features/panic_switch/presentation/widgets/panic_switch_settings_card.dart (+ panic_chat_picker.dart,
 /// panic_try_button.dart, panic_switch_save.dart)
-/// Settings' "Thầy vô" card: the floating button that sends the sticker, and what this computer does when the sticker
+/// Settings' "Thầy vô" card: three clicks on the pet that send the sticker, and what this computer does when the sticker
 /// arrives. Shown only to users of the ZenTao the feature is offered for.
 public struct PanicSwitchSettingsCard: View {
     let model: PanicSwitchModel
@@ -39,8 +39,8 @@ private struct PanicCardSections: View {
     var body: some View {
         let team = title(of: config.chatGid)
         AppExpandableCard(icon: Self.icon, title: Self.title, summary: summary, initiallyExpanded: initiallyExpanded) {
-            AppExpandableCardSection(title: appString("panicSwitchOverlayLabel", "Floating button"),
-                                     hint: appString("panicSwitchOverlayHint", "A button above every app: click it three times to send the sticker. Drag it to move it."),
+            AppExpandableCardSection(title: appString("panicSwitchPetLabel", "Alert from the pet"),
+                                     hint: appString("panicSwitchPetHint", "Click the pet three times to send the sticker; once it is sent, your apps switch too. The pet must be shown (Settings › Pet)."),
                                      trailing: { PanicToggle(isOn: config.overlayVisible) { on in save { $0.overlayVisible = on } } })
             AppExpandableCardSection(title: appString("panicSwitchGroupLabel", "Team group"),
                                      hint: appString("panicSwitchTeamGroupHint", "Where the sticker is sent and listened for, outside test mode."),

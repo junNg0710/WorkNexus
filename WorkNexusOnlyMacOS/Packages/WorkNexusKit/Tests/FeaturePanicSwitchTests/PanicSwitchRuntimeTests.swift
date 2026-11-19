@@ -37,10 +37,28 @@ final class PanicSwitchRuntimeTests: XCTestCase {
         XCTAssertEqual(apps.calls, [.hideSelf, .hideSelf])
     }
 
-    func testSendsTheStickerToTheGroupOncePerDebounceWindow() async {
+    /// The one who raises the alert hides too, once the sticker is out — at most once per debounce window.
+    func testTheAlertSendsTheStickerThenSwitchesHereOncePerDebounceWindow() async {
         let r = runtime(PanicSwitchConfig(chatGid: "g1"))
-        _ = await r.onOverlayTriggered()
-        _ = await r.onOverlayTriggered()
+        _ = await r.onAlert()
+        _ = await r.onAlert()
+        XCTAssertEqual(chats.sent.map(\.chatGid), ["g1"])
+        XCTAssertEqual(apps.calls, [.hideSelf])
+    }
+
+    /// A sticker that could not be sent does not hide this computer: nobody else hides either.
+    func testAFailedSendDoesNotSwitchHere() async {
+        chats.sendResult = .failure(.network("server down"))
+        let r = runtime(PanicSwitchConfig(chatGid: "g1"))
+        let result = await r.onAlert()
+        XCTAssertTrue(apps.calls.isEmpty)
+        XCTAssertEqual(result.failure, .network("server down"))
+    }
+
+    /// Switched off ("enabled" off: this computer does not switch), the alert is still sent.
+    func testWithSwitchingOffTheAlertIsOnlySent() async {
+        let r = runtime(PanicSwitchConfig(enabled: false, chatGid: "g1"))
+        _ = await r.onAlert()
         XCTAssertEqual(chats.sent.map(\.chatGid), ["g1"])
         XCTAssertTrue(apps.calls.isEmpty)
     }
@@ -49,7 +67,7 @@ final class PanicSwitchRuntimeTests: XCTestCase {
         chats.sendResult = .failure(.network("server down"))
         let r = runtime(PanicSwitchConfig(testMode: true, testChatGid: "cloud", testChatIsSelf: true))
 
-        let result = await r.onOverlayTriggered()
+        let result = await r.onAlert()
 
         // Switched even though the chat server is down; the send failure is still reported.
         XCTAssertEqual(apps.calls, [.hideSelf])
@@ -61,17 +79,6 @@ final class PanicSwitchRuntimeTests: XCTestCase {
         _ = await runtime(PanicSwitchConfig(chatGid: "g1")).runNow()
         XCTAssertEqual(apps.calls, [.hideSelf])
         XCTAssertTrue(chats.sent.isEmpty)
-    }
-
-    func testThreeQuickClicksMakeOneTrigger() {
-        let r = runtime(PanicSwitchConfig(chatGid: "g1"))
-        XCTAssertFalse(r.onOverlayClick())
-        now += 0.2
-        XCTAssertFalse(r.onOverlayClick())
-        now += 0.2
-        XCTAssertTrue(r.onOverlayClick())
-        now += 0.2
-        XCTAssertFalse(r.onOverlayClick())
     }
 
     func testTripleClickCounterStartsOverAfterAPause() {

@@ -65,6 +65,7 @@ struct PetLayer: View {
                     }
                     .padding(inset)
                     .environment(\.appTheme, theme)
+                    .environment(\.petTripleTap, model.host.petTripleTap)
                 }
             }
         }
@@ -115,7 +116,7 @@ struct PetLayer: View {
                                          onDock: { model.updateSettings { $0.petDisplay = .inWindow } },
                                          onHide: { model.updateSettings { $0.showPet = false } })
         let theme = theme
-        FloatingPetPanel.shared.show(AnyView(content.environment(\.appTheme, theme)), petSize: CGSize(width: width, height: height)) { text, tail in
+        FloatingPetPanel.shared.show(AnyView(content.environment(\.appTheme, theme).environment(\.petTripleTap, model.host.petTripleTap)), petSize: CGSize(width: width, height: height)) { text, tail in
             AnyView(FloatingPetBubble(text: text, tailShift: tail).environment(\.appTheme, theme))
         }
         // On the desktop it strolls along a strip around where it was put.

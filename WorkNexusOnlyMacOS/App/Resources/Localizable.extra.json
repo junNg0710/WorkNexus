@@ -1910,5 +1910,13 @@
   "chatAiRoleBa": {
     "en": "Business analyst",
     "vi": "Business analyst (BA)"
+  },
+  "panicSwitchPetLabel": {
+    "en": "Alert from the pet",
+    "vi": "Cảnh báo bằng pet"
+  },
+  "panicSwitchPetHint": {
+    "en": "Click the pet three times to send the sticker; once it is sent, your apps switch too. The pet must be shown (Settings › Pet).",
+    "vi": "Bấm vào pet 3 lần để gửi sticker; gửi thành công thì máy bạn cũng chuyển app luôn. Cần bật pet (Cài đặt › Pet)."
   }
 }

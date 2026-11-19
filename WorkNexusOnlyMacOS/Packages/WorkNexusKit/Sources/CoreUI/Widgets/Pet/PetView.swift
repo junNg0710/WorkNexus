@@ -27,6 +27,8 @@ public struct PetView: View {
     var onMoved: ((Double, Double) -> Void)?
     /// Opens what the pet is saying (a message, a notification: `PetDirector.link`) when it or its bubble is clicked.
     var onOpenLink: ((String) -> Void)?
+    @Environment(\.petTripleTap) private var tripleTap
+    @State private var taps = PetTapCounter()
     @State private var dragStart: (x: Double, y: Double)?
     @State private var gazeTracker = PetGazeTracker()
     @State private var hovering = false
@@ -115,9 +117,7 @@ public struct PetView: View {
                 }
             }
             .animation(.easeOut(duration: 0.15), value: director.bubble(hovering: hovering))
-            .onTapGesture {
-                if let link = director.link, let onOpenLink { director.hush(); onOpenLink(link) } else { director.poke(); onTap?() }
-            }
+            .onTapGesture { taps.tap(armed: tripleTap?.armed() == true, single: tapped, triple: { tripleTap?.run() }) }
             .gesture(DragGesture(minimumDistance: 4, coordinateSpace: .named("petRoom"))
                 .onChanged { drag in
                     let start = dragStart ?? (director.x(at: Date()), director.y)
@@ -125,6 +125,11 @@ public struct PetView: View {
                     director.place(x: start.x + Double(drag.translation.width / freeW), y: start.y + Double(drag.translation.height / freeH))
                 }
                 .onEnded { _ in dragStart = nil; onMoved?(director.x, director.y) }, isEnabled: movable)
+    }
+
+    /// One click on the pet: opens what it is saying, else pokes it (and whatever the holder does on a click).
+    private func tapped() {
+        if let link = director.link, let onOpenLink { director.hush(); onOpenLink(link) } else { director.poke(); onTap?() }
     }
 }
 
@@ -180,4 +185,5 @@ final class PetGazeTracker {
         guard distance > tooClose, distance < reach else { return nil }
         return PetSpriteSheet.lookDirection(dx: dx, dy: dy)
     }
+
 }

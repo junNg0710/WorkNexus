@@ -53,6 +53,8 @@ public struct ShellHost {
     public var petOpen: (String) -> Void = { _ in }
     /// Brings the app's window forward (a click on the floating pet).
     public var revealApp: () -> Void = {}
+    /// Three quick clicks on the pet (in the window or floating): the panic switch's alert; nil: clicks act as usual.
+    public var petTripleTap: PetTripleTap?
     public init() {}
 }
 

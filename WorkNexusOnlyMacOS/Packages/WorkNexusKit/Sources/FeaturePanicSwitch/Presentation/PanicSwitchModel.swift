@@ -50,15 +50,21 @@ public final class PanicSwitchModel {
                                      run: RunPanicSwitch(deps.apps), send: SendPanicSticker(deps.chats, deps.sticker))
     }
 
-    /// Whether the floating button should be on screen: wanted, with a chat to send to, for a user of the ZenTao the
-    /// feature is offered for.
+    /// Whether three clicks on the pet send the alert: wanted (`overlayVisible`, the setting the Flutter app keeps for its
+    /// floating button), with a chat to send to, for a user of the ZenTao the feature is offered for.
     public var overlayVisible: Bool { account != nil && config?.overlayVisible == true && config?.sendChatGid != nil }
+
+    /// Three clicks on the pet: sends the sticker and, once it is sent, switches apps here too (see
+    /// `PanicSwitchRuntime.onAlert`).
+    public func petAlert() {
+        guard overlayVisible else { return }
+        Task { report(await runtime.onAlert()) }
+    }
 
     /// Loads the settings, follows the accounts, listens for the sticker and puts the floating button up. Runs for the life
     /// of the app (also while the window is hidden).
     public func start() {
         guard tasks.isEmpty else { return }
-        deps.overlay.onClick = { [weak self] in self?.overlayClicked() }
         let accounts = deps.accounts
         tasks.append(Task { [weak self] in
             await self?.loadConfig()
@@ -143,7 +149,6 @@ public final class PanicSwitchModel {
         case .success(let c): config = c; loadFailed = false
         case .failure(let f): loadFailed = true; report(.failure(f))
         }
-        applyOverlay()
         ensureDefaultGroup()
     }
 
@@ -151,13 +156,11 @@ public final class PanicSwitchModel {
         guard next != account else { return }
         account = next
         chats = []; chatRefs = nil; people = [:]; members = .idle
-        applyOverlay()
         ensureDefaultGroup()
     }
 
     private func configChanged(from old: PanicSwitchConfig) {
         guard let config else { return }
-        if config.overlayVisible != old.overlayVisible || config.sendChatGid != old.sendChatGid { applyOverlay() }
         if config.chatGid == nil { ensureDefaultGroup() }
     }
 
@@ -173,19 +176,6 @@ public final class PanicSwitchModel {
                 return
             }
         }
-    }
-
-    private func applyOverlay() {
-        guard overlayVisible else { deps.overlay.hide(); return }
-        switch deps.sticker.bytes() {
-        case .success(let image): report(deps.overlay.show(image: image))
-        case .failure(let f): report(.failure(f))
-        }
-    }
-
-    private func overlayClicked() {
-        guard runtime.onOverlayClick() else { return }
-        Task { report(await runtime.onOverlayTriggered()) }
     }
 
     private func received(_ message: PanicIncomingMessage) async {

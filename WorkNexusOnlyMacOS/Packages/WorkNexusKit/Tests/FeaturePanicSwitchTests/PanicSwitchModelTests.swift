@@ -16,15 +16,20 @@ final class PanicSwitchModelTests: XCTestCase {
             sticker: FakeSticker(result: .success(Data([9]))), accounts: { AsyncStream { $0.yield(accounts); $0.finish() } }))
     }
 
-    func testShowsTheOverlayWithTheStickerOnceThereIsAGroup() async {
-        let overlay = FakeOverlay()
-        let m = model(PanicSwitchConfig(chatGid: "g1"), chats: FakeChatGateway(), overlay: overlay)
+    /// Three clicks on the pet (not a floating sticker button) raise the alert, once there is a group and it is on.
+    func testThePetAlertSendsOnceThereIsAGroupAndNoButtonShows() async {
+        let overlay = FakeOverlay(), chats = FakeChatGateway(), apps = FakeAppSwitcher()
+        let m = model(PanicSwitchConfig(chatGid: "g1"), chats: chats, apps: apps, overlay: overlay)
         m.start()
-        let shown = await eventually { overlay.shown == Data([9]) }
-        XCTAssertTrue(shown)
+        let armed = await eventually { m.overlayVisible }
+        XCTAssertTrue(armed)
+        XCTAssertNil(overlay.shown, "the pet is the trigger: no floating sticker button")
+        m.petAlert()
+        let sent = await eventually { chats.sent.map(\.chatGid) == ["g1"] && apps.calls == [.hideSelf] }
+        XCTAssertTrue(sent, "sent, then this computer switches too")
 
         await m.edit { $0.overlayVisible = false }
-        XCTAssertNil(overlay.shown)
+        XCTAssertFalse(m.overlayVisible)
         m.stop()
     }
 

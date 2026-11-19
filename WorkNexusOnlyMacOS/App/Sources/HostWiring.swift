@@ -57,6 +57,8 @@ struct HostWiring {
             else if let n = r.notifications { Task { await n.handleTap(payload: link) } }
         }
         host.revealApp = { NSApp.activate(); _ = r.platform.reopenWindow() }
+        // Three quick clicks on the pet raise the panic switch's alert (when it is on for this user).
+        host.petTripleTap = PetTripleTap(armed: { r.panic.model.overlayVisible }, run: { r.panic.model.petAlert() })
         // On the Chat page the title bar searches the chats and their stored messages; a hit opens the chat (at the message).
         let chat = r.chat
         host.placeSearch = { rail in

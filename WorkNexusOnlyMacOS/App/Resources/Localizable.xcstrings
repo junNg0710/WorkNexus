@@ -35258,6 +35258,40 @@
           }
         }
       }
+    },
+    "panicSwitchPetLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alert from the pet"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cảnh báo bằng pet"
+          }
+        }
+      }
+    },
+    "panicSwitchPetHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click the pet three times to send the sticker; once it is sent, your apps switch too. The pet must be shown (Settings › Pet)."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bấm vào pet 3 lần để gửi sticker; gửi thành công thì máy bạn cũng chuyển app luôn. Cần bật pet (Cài đặt › Pet)."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
