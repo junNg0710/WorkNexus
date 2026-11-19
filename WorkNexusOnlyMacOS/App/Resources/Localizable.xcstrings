@@ -26385,6 +26385,754 @@
         }
       }
     },
+    "panicSwitchTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thầy vô (boss alert)"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thầy vô"
+          }
+        }
+      }
+    },
+    "panicSwitchSummary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ people can set it off"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ người được kích hoạt"
+          }
+        }
+      }
+    },
+    "panicSwitchNoGroup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Team group not found"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa tìm thấy nhóm của team"
+          }
+        }
+      }
+    },
+    "panicSwitchReceiveLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "React to the sticker"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phản ứng khi nhận sticker"
+          }
+        }
+      }
+    },
+    "panicSwitchReceiveHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When the \"Thầy vô\" sticker arrives from someone allowed below, switch apps on this computer."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khi sticker \"Thầy vô\" được gửi tới bởi người được phép bên dưới, máy này sẽ chuyển app."
+          }
+        }
+      }
+    },
+    "panicSwitchOverlayLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Floating button"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nút nổi"
+          }
+        }
+      }
+    },
+    "panicSwitchOverlayHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A button above every app: click it three times to send the sticker. Drag it to move it."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nút nằm trên mọi app: bấm 3 lần để gửi sticker. Kéo để di chuyển."
+          }
+        }
+      }
+    },
+    "panicSwitchGroupLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Team group"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhóm của team"
+          }
+        }
+      }
+    },
+    "panicSwitchGroupPick": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a chat"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chọn đoạn chat"
+          }
+        }
+      }
+    },
+    "panicSwitchSendersLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who can set it off"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ai được kích hoạt"
+          }
+        }
+      }
+    },
+    "panicSwitchSendersHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whose sticker switches apps here: anyone in the chat, or only the people ticked."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sticker của ai sẽ làm máy này chuyển app: bất kì ai trong đoạn chat, hoặc chỉ những người được chọn."
+          }
+        }
+      }
+    },
+    "panicSwitchSendersNeedGroup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick the test chat first."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy chọn đoạn chat thử trước."
+          }
+        }
+      }
+    },
+    "panicSwitchSendersFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not load the chat's members."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không tải được thành viên của đoạn chat."
+          }
+        }
+      }
+    },
+    "panicSwitchTargetLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App to open"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App sẽ mở"
+          }
+        }
+      }
+    },
+    "panicSwitchTargetHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brought to the front, or started when it is not running."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đưa lên trước, hoặc khởi động nếu chưa chạy."
+          }
+        }
+      }
+    },
+    "panicSwitchPickApp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick an app"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chọn app"
+          }
+        }
+      }
+    },
+    "panicSwitchHideLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apps to hide"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App sẽ ẩn"
+          }
+        }
+      }
+    },
+    "panicSwitchHideHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden at the same moment (minimised on Windows and Linux)."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ẩn cùng lúc (thu nhỏ trên Windows và Linux)."
+          }
+        }
+      }
+    },
+    "panicSwitchAddApp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add an app"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm app"
+          }
+        }
+      }
+    },
+    "panicSwitchAppsFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not list the apps on this computer."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không lấy được danh sách app trên máy."
+          }
+        }
+      }
+    },
+    "panicSwitchHideSelfLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide WorkNexus too"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ẩn luôn WorkNexus"
+          }
+        }
+      }
+    },
+    "panicSwitchHideSelfHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden on macOS, minimised on Windows and Linux."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ẩn trên macOS, thu nhỏ trên Windows và Linux."
+          }
+        }
+      }
+    },
+    "panicSwitchDebounceLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most once every"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tối đa 1 lần mỗi"
+          }
+        }
+      }
+    },
+    "panicSwitchDebounceHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For both sending and switching, so repeated stickers do nothing."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Áp dụng cho cả gửi và chuyển app, sticker gửi dồn sẽ bị bỏ qua."
+          }
+        }
+      }
+    },
+    "panicSwitchSeconds": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@s"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ giây"
+          }
+        }
+      }
+    },
+    "panicSwitchWaylandNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On Wayland apps can only be opened, not raised or hidden. Sign in with \"Ubuntu on Xorg\" for the full switch."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trên Wayland chỉ mở được app, không đưa lên trước hay ẩn được. Đăng nhập bằng \"Ubuntu on Xorg\" để dùng đầy đủ."
+          }
+        }
+      }
+    },
+    "panicSwitchSaveFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save the setting"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không lưu được cài đặt"
+          }
+        }
+      }
+    },
+    "panicSwitchSearch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tìm…"
+          }
+        }
+      }
+    },
+    "panicSwitchNoMatches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matches"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có kết quả"
+          }
+        }
+      }
+    },
+    "panicSwitchLoadFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not load these settings"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không tải được cài đặt này"
+          }
+        }
+      }
+    },
+    "panicSwitchSelfChat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send to myself (try it out)"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gửi cho chính tôi (thử)"
+          }
+        }
+      }
+    },
+    "panicSwitchTryLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try it now"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thử ngay"
+          }
+        }
+      }
+    },
+    "panicSwitchTryHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switches apps on this computer right away, with no chat involved (works while the chat server is down). WorkNexus hides too when that is on."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chuyển app ngay trên máy này, không cần chat (dùng được cả khi chat server đang down). WorkNexus cũng ẩn nếu đã bật."
+          }
+        }
+      }
+    },
+    "panicSwitchTryButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chạy thử"
+          }
+        }
+      }
+    },
+    "panicSwitchTryFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some steps did not work"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Có bước không chạy được"
+          }
+        }
+      }
+    },
+    "panicSwitchAnySender": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anyone in the chat"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bất kì ai trong đoạn chat"
+          }
+        }
+      }
+    },
+    "panicSwitchSummaryAnyone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · anyone can set it off"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · ai cũng kích hoạt được"
+          }
+        }
+      }
+    },
+    "panicSwitchTeamGroupHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where the sticker is sent and listened for, outside test mode."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nơi gửi và lắng nghe sticker khi không ở chế độ thử."
+          }
+        }
+      }
+    },
+    "panicSwitchTestModeLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test mode"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chế độ thử"
+          }
+        }
+      }
+    },
+    "panicSwitchTestModeHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use a chat of your choice instead of the team group, for both sending and listening, to try it without bothering anyone."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dùng một đoạn chat tuỳ chọn thay cho nhóm của team, cho cả gửi lẫn lắng nghe, để thử mà không làm phiền ai."
+          }
+        }
+      }
+    },
+    "panicSwitchSummaryTestMode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test mode is on"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang bật chế độ thử"
+          }
+        }
+      }
+    },
+    "panicSwitchTestChatLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test chat"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đoạn chat thử"
+          }
+        }
+      }
+    },
+    "panicSwitchTestChatHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The sticker is sent here and listened for here. \"Send to myself\" switches apps on this computer as soon as you click."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sticker được gửi vào và lắng nghe ở đây. Chọn \"Gửi cho chính tôi\" để máy này chuyển app ngay khi bấm."
+          }
+        }
+      }
+    },
+    "panicSwitchSelfChatNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent to yourself: clicking the button switches apps on this computer right away."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gửi cho chính bạn: bấm nút là máy này chuyển app ngay."
+          }
+        }
+      }
+    },
     "accentColor": {
       "extractionState": "manual",
       "localizations": {

@@ -16,6 +16,7 @@ macOS-only ports. No composition-root wiring is done here: each service is creat
 | Custom app icon | lib/core/platform/app_icon_service.dart, app_icon_image.dart | AppIconService.swift |
 | Custom app name | lib/core/platform/app_name_service.dart | AppNameService.swift |
 | Focus-regained counter (10 s gap) | lib/core/platform/app_resume.dart | AppResumeCounter.swift |
+| Floating sticker button (panic switch: non-activating panel above every app, drag to move, clicks reported) | macos/Runner/PanicOverlayPanel.swift | FloatingStickerPanel.swift |
 | Tests | test/core/platform/video_thumbnailer_test.dart | Tests/CoreUITests/PlatformTests.swift |
 
 Integration pass: `PlatformPaths.applicationSupport()` honours `WN_SUPPORT_DIR`; `AppDatabase.open(path:registrars:)` added (CorePersistence); `FeatureChat.ChatPersonAvatar` / `ChatPersonChip` (public) back the shared `\.personAvatar` / `\.personChip` hooks.

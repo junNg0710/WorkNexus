@@ -7,7 +7,7 @@ let package = Package(
     name: "WorkNexusKit",
     platforms: [.macOS(.v15)],
     products: [
-        .library(name: "WorkNexusKit", targets: ["CoreDomain", "CorePersistence", "CoreUI", "CoreTools", "SharedKit", "ToolZenTao", "ToolGitLab", "ToolGitHub", "FeatureConnections", "FeatureWorkspaceOverview", "FeatureTicketEditor", "FeatureTranslation", "FeatureNotifications", "FeatureChat", "FeatureMiniApps", "FeatureAppUpdate", "FeaturePets"]),
+        .library(name: "WorkNexusKit", targets: ["CoreDomain", "CorePersistence", "CoreUI", "CoreTools", "SharedKit", "ToolZenTao", "ToolGitLab", "ToolGitHub", "FeatureConnections", "FeatureWorkspaceOverview", "FeatureTicketEditor", "FeatureTranslation", "FeatureNotifications", "FeatureChat", "FeatureMiniApps", "FeatureAppUpdate", "FeaturePets", "FeaturePanicSwitch"]),
     ],
     dependencies: [
         // Exact pins, no ranges (same policy as pubspec.yaml).
@@ -49,6 +49,8 @@ let package = Package(
         .testTarget(name: "FeatureAppUpdateTests", dependencies: ["FeatureAppUpdate"]),
         .target(name: "FeaturePets", dependencies: ["CoreDomain", "CoreUI"]),
         .testTarget(name: "FeaturePetsTests", dependencies: ["FeaturePets"], exclude: ["Fixtures"]),
+        .target(name: "FeaturePanicSwitch", dependencies: ["CoreDomain", "CoreUI"]),
+        .testTarget(name: "FeaturePanicSwitchTests", dependencies: ["FeaturePanicSwitch"]),
         .testTarget(name: "ArchitectureTests"),
     ],
     swiftLanguageModes: [.v5]

@@ -3,7 +3,8 @@ import SwiftUI
 /// Ported from: lib/core/widgets/searchable_dropdown_field.dart (+ .parts / .leaves)
 /// A themed select field with a filterable popover list. Renders like the app's input fields when closed;
 /// clicking opens an anchored popover with a search box and a scrollable, keyboard-navigable list of `items`
-/// (↑ / ↓ move, Return picks, Esc closes). `searchTextOf` is the text matched against the query (default: the label).
+/// (↑ / ↓ move, Return picks, Esc closes). `searchTextOf` is the text matched against the query (default: the label);
+/// `imageOf` puts a small picture before each option (an app's icon).
 public struct SearchableDropdownField<T: Hashable>: View {
     @Environment(\.appTheme) private var theme
     @State private var open = false
@@ -14,14 +15,16 @@ public struct SearchableDropdownField<T: Hashable>: View {
     let searchTextOf: ((T) -> String)?
     let hintText: String; let searchHint: String; let emptyLabel: String
     let maxListHeight: CGFloat; let popoverMinWidth: CGFloat?; let labelMaxLines: Int
+    let imageOf: ((T) -> Image?)?
 
     public init(items: [T], value: T?, labelOf: @escaping (T) -> String, searchTextOf: ((T) -> String)? = nil,
                 hintText: String = "Select…", searchHint: String = "Search…", emptyLabel: String = "No matches",
                 maxListHeight: CGFloat = 260, popoverMinWidth: CGFloat? = nil, labelMaxLines: Int = 1,
-                onChanged: @escaping (T) -> Void) {
+                imageOf: ((T) -> Image?)? = nil, onChanged: @escaping (T) -> Void) {
         self.items = items; self.value = value; self.labelOf = labelOf; self.searchTextOf = searchTextOf
         self.hintText = hintText; self.searchHint = searchHint; self.emptyLabel = emptyLabel
         self.maxListHeight = maxListHeight; self.popoverMinWidth = popoverMinWidth; self.labelMaxLines = labelMaxLines
+        self.imageOf = imageOf
         self.onChanged = onChanged
     }
 
@@ -72,8 +75,8 @@ public struct SearchableDropdownField<T: Hashable>: View {
                     ScrollView {
                         LazyVStack(spacing: 0) {
                             ForEach(Array(list.enumerated()), id: \.offset) { i, item in
-                                DropdownOptionRow(label: labelOf(item), selected: item == value, highlighted: i == highlighted,
-                                                  lines: labelMaxLines) { pick(item) }
+                                DropdownOptionRow(label: labelOf(item), image: imageOf?(item), selected: item == value,
+                                                  highlighted: i == highlighted, lines: labelMaxLines) { pick(item) }
                                     .id(i)
                             }
                         }.padding(theme.spacing.s4)
@@ -93,10 +96,11 @@ public struct SearchableDropdownField<T: Hashable>: View {
 private struct DropdownOptionRow: View {
     @Environment(\.appTheme) private var theme
     @State private var hovering = false
-    let label: String; let selected: Bool; let highlighted: Bool; let lines: Int; let action: () -> Void
+    let label: String; let image: Image?; let selected: Bool; let highlighted: Bool; let lines: Int; let action: () -> Void
     var body: some View {
         Button(action: action) {
             HStack(spacing: theme.spacing.s8) {
+                if let image { image.resizable().interpolation(.high).frame(width: theme.sizes.icon16, height: theme.sizes.icon16) }
                 Text(label).font(theme.typography.body).foregroundStyle(theme.colors.tx).lineLimit(lines).multilineTextAlignment(.leading)
                 Spacer(minLength: 0)
                 if selected { Image(systemName: "checkmark").font(.system(size: theme.sizes.icon12)).foregroundStyle(theme.colors.accent) }

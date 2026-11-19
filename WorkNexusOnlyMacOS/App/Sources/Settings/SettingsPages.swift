@@ -2,6 +2,7 @@ import CoreDomain
 import CoreUI
 import FeatureChat
 import FeatureMiniApps
+import FeaturePanicSwitch
 import SharedKit
 import SwiftUI
 
@@ -57,6 +58,8 @@ struct GeneralSettingsPage: View {
                                 dateFormat: s.dateFormat,
                                 onLiveLimit: { v in shell.updateSettings { $0.miniAppLiveLimit = v } },
                                 onNotifyInBackground: { on in shell.updateSettings { $0.miniAppNotifyInBackground = on } })
+            // Only for people signed in to the oasoft ZenTao (the card hides itself otherwise).
+            PanicSwitchSettingsCard(model: root.panic.model)
             SettingsCard(title: appString("appIdentity", "App name and icon")) { AppIdentityControls(root: root) }
             SettingsCard(title: appString("appUpdatesTitle", "App updates"), subtitle: "v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")") {
                 SettingsToggleRow(label: appString("autoUpdateLabel", "Update automatically"), isOn: autoUpdate) { on in

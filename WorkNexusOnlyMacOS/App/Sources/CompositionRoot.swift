@@ -8,6 +8,7 @@ import FeatureChat
 import FeatureConnections
 import FeatureMiniApps
 import FeatureNotifications
+import FeaturePanicSwitch
 import FeaturePets
 import FeatureTranslation
 import FeatureWorkspaceOverview
@@ -47,6 +48,8 @@ final class CompositionRoot {
     let ticketLinks: TicketLinkHandler
     let notifications: NotificationsModel?
     let chat: ChatWiring
+    /// The panic switch ("Thầy vô"): the floating button, the sticker listener and its settings card.
+    let panic: PanicSwitchWiring
     /// The local chat API for AI tools and the MCP setup guide.
     let aiTools: AiToolsWiring
     /// The "New todo" dialog any place of the app may ask for (a chat message → "Create todo").
@@ -154,6 +157,7 @@ final class CompositionRoot {
         chat = ChatWiring(db: db, services: services, shell: shell, notifier: notifier, translation: translation, live: live,
                           todoPrompt: todoPrompt, isDemo: DemoMode.isEnabled)
         aiTools = AiToolsWiring(db: db, repository: chat.repository, isDemo: DemoMode.isEnabled)
+        panic = PanicSwitchWiring(chat: chat.repository, workspaces: services.workspaces)
         let bridge = chat.dockBadgeBridge
         let notificationsModel = NotificationsFeature.makeModel(
             services: services,
@@ -201,6 +205,7 @@ final class CompositionRoot {
         for account in accounts where account.credentialsRef != nil {
             Task { _ = await coordinator.syncAccount(account) }
         }
+        panic.start()
         await chat.start()
     }
 
