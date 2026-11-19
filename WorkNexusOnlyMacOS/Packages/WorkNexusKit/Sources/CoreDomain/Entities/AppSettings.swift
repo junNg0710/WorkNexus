@@ -62,7 +62,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var showPet = true
     /// The pet shown (an installed pet's id); nil is the TBChat character that ships with the app (macOS only).
     public var petId: String?
-    public var petDisplay: PetDisplay = .inWindow
+    public var petDisplay: PetDisplay = .floating
     /// Whether a pet that can look around turns toward the pointer while it idles (macOS only).
     public var petFollowsCursor = true
     /// Whether the pet says what a new chat message or ZenTao notification says, rather than only that one came (macOS only).

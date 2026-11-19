@@ -21,18 +21,18 @@ final class PetLayerTests: XCTestCase {
         XCTAssertEqual(PetLayer.mood(of: [], waiting: 2), .attention)
     }
 
-    func testThePetSettingsDefaultToTheBuiltInPetInTheWindow() throws {
+    func testThePetSettingsDefaultToTheBuiltInPetOnTheDesktop() throws {
         let s = try JSONDecoder().decode(AppSettings.self, from: Data("{}".utf8))
-        XCTAssertNil(s.petId); XCTAssertEqual(s.petDisplay, .inWindow); XCTAssertTrue(s.petFollowsCursor)
+        XCTAssertNil(s.petId); XCTAssertEqual(s.petDisplay, .floating); XCTAssertTrue(s.petFollowsCursor)
         XCTAssertTrue(s.petShowsDetails, "it says what a message or notification says unless told not to")
         var chosen = AppSettings()
-        chosen.petId = "fox"; chosen.petDisplay = .floating; chosen.petFollowsCursor = false; chosen.petShowsDetails = false
+        chosen.petId = "fox"; chosen.petDisplay = .inWindow; chosen.petFollowsCursor = false; chosen.petShowsDetails = false
         let back = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(chosen))
-        XCTAssertEqual(back.petId, "fox"); XCTAssertEqual(back.petDisplay, .floating); XCTAssertFalse(back.petFollowsCursor)
+        XCTAssertEqual(back.petId, "fox"); XCTAssertEqual(back.petDisplay, .inWindow); XCTAssertFalse(back.petFollowsCursor)
         XCTAssertFalse(back.petShowsDetails)
         // An unknown display (a newer build) falls back rather than losing the settings.
         let odd = try JSONDecoder().decode(AppSettings.self, from: Data(#"{"petDisplay": "orbit", "showPet": false}"#.utf8))
-        XCTAssertEqual(odd.petDisplay, .inWindow); XCTAssertFalse(odd.showPet)
+        XCTAssertEqual(odd.petDisplay, .floating); XCTAssertFalse(odd.showPet)
     }
 
     func testThePetSaysWhatAChatMessageSays() {
