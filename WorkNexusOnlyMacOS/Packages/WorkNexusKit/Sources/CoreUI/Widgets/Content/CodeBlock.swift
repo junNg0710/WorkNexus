@@ -8,6 +8,10 @@ import SwiftUI
 public struct CodeBlock: View {
     @Environment(\.appTheme) private var theme
     @State private var expanded = false
+    /// The code's rows at the width it is drawn at (only measured when it can collapse).
+    @State private var rows: (count: Int, rowHeight: CGFloat)?
+    @State private var measuredWidth: CGFloat = 0
+    @State private var measuredCode = ""
     let code: String; let fontSize: CGFloat; let collapsedLines: Int?
 
     public init(_ code: String, fontSize: CGFloat, collapsedLines: Int? = nil) {
@@ -21,15 +25,24 @@ public struct CodeBlock: View {
         return lines.prefix(limit).joined(separator: "\n")
     }
 
+    private var lineSpacing: CGFloat { fontSize * 0.2 }
+
     public var body: some View {
-        let lineCount = code.components(separatedBy: "\n").count
-        let collapsible = collapsedLines.map { lineCount > $0 } ?? false
+        // Rows as shown, wrapped to the block's width; before the first measure, the line breaks stand in for them.
+        let rowCount = rows?.count ?? code.components(separatedBy: "\n").count
+        let collapsible = collapsedLines.map { rowCount > $0 } ?? false
+        let collapsed = collapsible && !expanded
         VStack(spacing: 0) {
             ZStack(alignment: .topTrailing) {
-                Text(Self.shownText(code, collapsedLines: collapsedLines, expanded: expanded))
-                    .font(.custom("Space Mono", size: fontSize)).lineSpacing(fontSize * 0.2).foregroundStyle(theme.colors.tx)
-                    .textSelection(.enabled).padding(theme.spacing.s12)
+                // Past the limit's lines nothing would show anyway: dropping them keeps a long paste from laying out in full.
+                Text(Self.shownText(code, collapsedLines: collapsedLines, expanded: !collapsed))
+                    .font(.custom("Space Mono", size: fontSize)).lineSpacing(lineSpacing).foregroundStyle(theme.colors.tx)
+                    .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(height: collapsed ? collapsedHeight : nil, alignment: .top).clipped()
+                    .padding(theme.spacing.s12)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { measure(width: $0 - theme.spacing.s12 * 2) }
+                    .onChange(of: code) { measure(width: measuredWidth) }
                 CodeCopyButton(code: code).padding(theme.spacing.s4)
             }
             if collapsible {
@@ -38,7 +51,7 @@ public struct CodeBlock: View {
                     HStack(spacing: theme.spacing.s4) {
                         Image(systemName: expanded ? "chevron.up" : "chevron.down").font(.system(size: theme.sizes.icon12))
                         Text(expanded ? appString("codeBlockCollapse", "Collapse")
-                             : appString("codeBlockShowAll", "Show all {count} lines").replacingOccurrences(of: "{count}", with: "\(lineCount)"))
+                             : appString("codeBlockShowAll", "Show all {count} lines").replacingOccurrences(of: "{count}", with: "\(rowCount)"))
                             .font(theme.typography.paragraph)
                     }
                     .foregroundStyle(theme.colors.tx2).frame(maxWidth: .infinity).padding(.vertical, theme.spacing.s6)
@@ -49,6 +62,18 @@ public struct CodeBlock: View {
         .background(theme.colors.panel2)
         .clipShape(RoundedRectangle(cornerRadius: theme.radii.sm))
         .overlay(RoundedRectangle(cornerRadius: theme.radii.sm).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
+    }
+
+    /// The height of `collapsedLines` rows.
+    private var collapsedHeight: CGFloat? {
+        guard let limit = collapsedLines, let rows else { return nil }
+        return CGFloat(limit) * rows.rowHeight + CGFloat(limit - 1) * lineSpacing
+    }
+
+    private func measure(width: CGFloat) {
+        guard collapsedLines != nil, width > 0, abs(width - measuredWidth) >= 1 || measuredCode != code else { return }
+        measuredWidth = width; measuredCode = code
+        rows = CodeRows.measure(code, font: CodeRows.font(size: fontSize), lineSpacing: lineSpacing, width: width)
     }
 }
 

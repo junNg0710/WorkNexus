@@ -16,6 +16,20 @@ final class WidgetLogicTests: XCTestCase {
         XCTAssertEqual(CodeBlock.shownText(code, collapsedLines: nil, expanded: false), code)
     }
 
+    /// One huge line (a pasted JSON body) takes many rows once wrapped: it collapses like many short lines.
+    func testCodeRowsCountWrappedRowsNotLineBreaks() {
+        let font = CodeRows.font(size: 12)
+        let short = CodeRows.measure("a\nb\nc", font: font, lineSpacing: 2, width: 400)
+        XCTAssertEqual(short.count, 3)
+        XCTAssertGreaterThan(short.rowHeight, 0)
+        let json = "{" + (1...200).map { "\"key\($0)\": \"value \($0)\"" }.joined(separator: ", ") + "}"
+        let wrapped = CodeRows.measure(json, font: font, lineSpacing: 2, width: 400)
+        XCTAssertGreaterThan(wrapped.count, 10, "one line, many rows")
+        let wider = CodeRows.measure(json, font: font, lineSpacing: 2, width: 800)
+        XCTAssertLessThan(wider.count, wrapped.count)
+        XCTAssertEqual(CodeRows.measure("", font: font, lineSpacing: 2, width: 400).count, 0)
+    }
+
     func testToastsStackNewestFirstCappedAndDeduplicated() {
         let c = AppToastController()
         c.show("a"); c.show("b"); c.show("c"); c.show("d")

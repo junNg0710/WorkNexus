@@ -104,7 +104,8 @@ final class MiniAppWebDelegate: NSObject, WKNavigationDelegate, WKUIDelegate {
     /// The page's process died (out of memory, mostly): bring it back instead of leaving a blank view.
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { webView.reload() }
 
-    /// A server the system refuses is let through when the user chose to trust its site (`MiniAppsModel.askToTrust`), or when
+    /// A server the system refuses is let through when the user chose to trust its site (`MiniAppsModel.askToTrust`, or the
+    /// edit dialog's switch, also for the servers the mini app's own trusted site calls), or when
     /// its certificate is one the user already accepted in the app (the ZenTao chat server's self-signed one, which
     /// ZenTao's own web chat calls) — for that very certificate only. Every other answer stays the web view's own.
     ///
@@ -120,6 +121,11 @@ final class MiniAppWebDelegate: NSObject, WKNavigationDelegate, WKUIDelegate {
         let shown = MiniAppsModel.origin(of: webView.url)
         if await model.isTrusted(origin) { return (.useCredential, URLCredential(trust: trust)) }
         if let shown, await model.isTrusted(shown) { return (.useCredential, URLCredential(trust: trust)) }
+        // The mini app's own site, trusted in its settings: the servers its page calls are let through too, wherever
+        // the page has gone since.
+        if let home = MiniAppsModel.origin(of: URL(string: app.url)), await model.isTrusted(home) {
+            return (.useCredential, URLCredential(trust: trust))
+        }
         if let leaf = (SecTrustCopyCertificateChain(trust) as? [SecCertificate])?.first,
            await model.services.isPinnedCertificate(SecCertificateCopyData(leaf) as Data) {
             return (.useCredential, URLCredential(trust: trust))

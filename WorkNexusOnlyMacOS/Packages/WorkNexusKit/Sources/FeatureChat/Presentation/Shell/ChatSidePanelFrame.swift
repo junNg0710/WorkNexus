@@ -72,12 +72,17 @@ struct ChatSidePanelHost<Messages: View, Panel: View>: View {
     @ViewBuilder let panel: Panel
     /// Set once the chat is on screen: a panel there from the start (the info column) shows as it is, without sliding in.
     @State private var settled = false
+    /// `infoRoom` as of the last update: a panel that comes beside the messages because the window got wide enough
+    /// shows at once; only one the user opens slides in.
+    @State private var lastInfoRoom: Bool?
 
     var body: some View {
         // `messages` stays the first child in both layouts: moved in the tree, the list would lose its scroll position.
         HStack(spacing: 0) {
             messages
-            if infoRoom && showsPanel { panel.modifier(ChatPanelEntrance(animate: settled && !reduceMotion)) }
+            if infoRoom && showsPanel {
+                panel.modifier(ChatPanelEntrance(animate: settled && !reduceMotion && (lastInfoRoom ?? infoRoom) == infoRoom))
+            }
         }
         .overlay(alignment: .trailing) {
             ZStack(alignment: .trailing) {
@@ -91,7 +96,8 @@ struct ChatSidePanelHost<Messages: View, Panel: View>: View {
             .animation(reduceMotion ? nil : showsPanel ? .easeOut(duration: theme.motion.slow) : .easeIn(duration: theme.motion.base),
                        value: showsPanel)
         }
-        .onAppear { settled = true }
+        .onAppear { settled = true; lastInfoRoom = infoRoom }
+        .onChange(of: infoRoom) { _, now in lastInfoRoom = now }
     }
 
     /// How much the messages are dimmed under a panel drawn over them.
