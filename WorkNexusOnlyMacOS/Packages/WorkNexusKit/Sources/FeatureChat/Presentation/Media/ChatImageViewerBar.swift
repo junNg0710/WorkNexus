@@ -68,16 +68,18 @@ private struct ViewerMoreMenu: View {
     let actions: ChatImageViewerActions
 
     var body: some View {
-        Menu {
+        AppMenuButton(help: appString("more", "More"), items: {
+            var out: [AppNativeMenu.Item] = []
             if actions.pictureTools, let onSticker = actions.onSticker {
-                Button(action: onSticker) { Label(appString("chatSaveSticker", "Save as sticker"), systemImage: "face.smiling") }
+                out.append(.init(appString("chatSaveSticker", "Save as sticker"), icon: "face.smiling", action: onSticker))
             }
-            Button(action: actions.onOpen) { Label(appString("chatOpenWith", "Open in default app"), systemImage: "arrow.up.forward.app") }
-        } label: {
+            out.append(.init(appString("chatOpenWith", "Open in default app"), icon: "arrow.up.forward.app", action: actions.onOpen))
+            return out
+        }) {
             Image(systemName: "ellipsis").font(.system(size: theme.sizes.icon16)).foregroundStyle(theme.colors.tx2)
                 .frame(width: theme.sizes.control32, height: theme.sizes.control32).contentShape(Rectangle())
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize().help(appString("more", "More"))
+        .fixedSize()
     }
 }
 

@@ -79,18 +79,16 @@ private struct ChatSearchPeriodButton: View {
     let session: ChatThreadSession
 
     var body: some View {
-        Menu {
-            ForEach(ChatSearchPeriod.allCases, id: \.self) { p in
-                Button { pick(p) } label: {
-                    Label(ChatShellLabels.searchPeriodLabel(p), systemImage: p == model.searchPeriod ? "checkmark" : p == .all ? "infinity" : "calendar")
-                }
+        AppMenuButton(help: shellString("chatSearchPeriod", "Time range"), items: {
+            ChatSearchPeriod.allCases.map { p in
+                AppNativeMenu.Item(ChatShellLabels.searchPeriodLabel(p), icon: p == .all ? "infinity" : "calendar",
+                                   checked: p == model.searchPeriod) { pick(p) }
             }
-        } label: {
+        }) {
             Label(ChatShellLabels.searchPeriodLabel(model.searchPeriod), systemImage: "calendar.badge.clock")
                 .font(theme.typography.meta).foregroundStyle(theme.colors.tx2)
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
-        .help(shellString("chatSearchPeriod", "Time range"))
+        .fixedSize()
     }
 
     private func pick(_ p: ChatSearchPeriod) {

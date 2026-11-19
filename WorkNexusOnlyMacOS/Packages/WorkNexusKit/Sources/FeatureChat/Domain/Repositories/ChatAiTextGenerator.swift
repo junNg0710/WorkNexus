@@ -39,10 +39,16 @@ public struct ChatAiPeople: Sendable {
     public var selfName: String
     private var names: [Int: String]
 
-    public init(users: [Int: ChatUser], selfUserId: Int?) {
+    /// - Parameter roleOf: when given, each person's name carries their role in brackets (`Lan (QA tester)`), so reply
+    ///   ideas can tell who is asking what; summaries leave it out.
+    public init(users: [Int: ChatUser], selfUserId: Int?, roleOf: ((ChatUser) -> String?)? = nil) {
         let own = selfUserId.flatMap { users[$0]?.realname } ?? ""
         selfName = own.isEmpty ? "Me" : own
-        names = users.compactMapValues { $0.realname.isEmpty ? nil : $0.realname }
+        names = users.compactMapValues { u in
+            guard !u.realname.isEmpty else { return nil }
+            guard let role = roleOf?(u), !role.isEmpty else { return u.realname }
+            return "\(u.realname) (\(role))"
+        }
     }
 
     public func name(of userId: Int) -> String { names[userId] ?? "User \(userId)" }

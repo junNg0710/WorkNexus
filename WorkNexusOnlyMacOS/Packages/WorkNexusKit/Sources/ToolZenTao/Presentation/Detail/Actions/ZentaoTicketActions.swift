@@ -105,19 +105,18 @@ struct ZentaoMoreMenu: View {
     @Environment(\.appTheme) private var theme
     let items: [ZentaoActionsModel.Item]; let onPick: (ZentaoActionsModel.Item) -> Void
     var body: some View {
-        Menu {
-            ForEach(items, id: \.self) { item in
+        AppMenuButton(help: appString("more", "More"), items: {
+            items.map { item in
                 let look = ZentaoActionsModel.look(item)
-                Button { onPick(item) } label: { Label(look.label, systemImage: look.icon) }
+                return AppNativeMenu.Item(look.label, icon: look.icon) { onPick(item) }
             }
-        } label: {
+        }) {
             Image(systemName: "ellipsis").font(.system(size: theme.sizes.icon16)).foregroundStyle(theme.colors.tx)
                 .frame(width: theme.sizes.control32, height: theme.sizes.control32)
                 .background(theme.colors.panel2, in: RoundedRectangle(cornerRadius: theme.radii.md))
                 .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
         }
-        .menuStyle(.button).menuIndicator(.hidden).buttonStyle(.plain).fixedSize()
-        .help(appString("more", "More"))
+        .fixedSize()
     }
 }
 

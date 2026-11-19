@@ -62,19 +62,18 @@ struct ZentaoDocExportButton: View {
     let docs: ZentaoDocsState; let account: Account; let doc: ZenTaoDoc
 
     var body: some View {
-        Menu {
-            ForEach(ZenTaoDocExportFormat.allCases, id: \.self) { format in
-                Button { Task { await save(format) } } label: { Label(label(format), systemImage: icon(format)) }
+        AppMenuButton(help: appString("docsExport", "Export"), items: {
+            ZenTaoDocExportFormat.allCases.map { format in
+                AppNativeMenu.Item(label(format), icon: icon(format)) { Task { await save(format) } }
             }
-        } label: {
+        }) {
             Group {
                 if saving { ProgressView().controlSize(.small) }
                 else { Image(systemName: "square.and.arrow.up").font(.system(size: theme.sizes.icon16)).foregroundStyle(theme.colors.tx2) }
             }
             .frame(width: theme.sizes.control32, height: theme.sizes.control32).contentShape(Rectangle())
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
-        .help(appString("docsExport", "Export")).disabled(saving)
+        .fixedSize().disabled(saving)
     }
 
     private func icon(_ f: ZenTaoDocExportFormat) -> String {

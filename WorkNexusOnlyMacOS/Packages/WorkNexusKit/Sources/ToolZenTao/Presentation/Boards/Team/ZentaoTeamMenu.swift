@@ -18,28 +18,8 @@ struct ZentaoTeamMenu: View {
     @State private var confirmDelete = false
 
     var body: some View {
-        let groups = state.teamGroups[account.id] ?? []
         let current = state.team(bugs: bugs)?.group
-        Menu {
-            if current != nil {
-                Button { state.closeTeam(bugs: bugs) } label: {
-                    Label(bugs ? appString("leaderBackToProduct", "Back to the product") : appString("leaderBackToExecution", "Back to the execution"),
-                          systemImage: "arrow.uturn.backward")
-                }
-                Divider()
-            }
-            ForEach(groups) { g in
-                Button { state.openTeam(g, bugs: bugs) } label: {
-                    Label("\(g.name) · \(g.members.count)", systemImage: g.id == current?.id ? "checkmark" : "person.3")
-                }
-            }
-            if !groups.isEmpty { Divider() }
-            Button { dialog = ZentaoTeamEdit(group: nil) } label: { Label(appString("leaderNewGroup", "New team group…"), systemImage: "plus") }
-            if let current {
-                Button { dialog = ZentaoTeamEdit(group: current) } label: { Label(appString("leaderEditGroup", "Edit this group…"), systemImage: "pencil") }
-                Button(role: .destructive) { confirmDelete = true } label: { Label(appString("leaderDeleteGroup", "Delete this group"), systemImage: "trash") }
-            }
-        } label: {
+        AppMenuButton(help: appString("leaderTeamHelp", "Follow a group of people across every execution"), items: menuItems) {
             HStack(spacing: theme.spacing.s4) {
                 Image(systemName: "person.3.fill").font(.system(size: theme.sizes.icon12))
                 Text(current?.name ?? appString("leaderTeam", "Team")).font(theme.typography.metaStrong).lineLimit(1)
@@ -49,8 +29,7 @@ struct ZentaoTeamMenu: View {
             .padding(.horizontal, theme.spacing.s8).padding(.vertical, theme.spacing.s4)
             .background(current == nil ? theme.colors.panel2 : theme.colors.sel, in: RoundedRectangle(cornerRadius: theme.radii.sm))
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
-        .help(appString("leaderTeamHelp", "Follow a group of people across every execution"))
+        .fixedSize()
         .task(id: account.id) { state.loadTeamGroups(account.id) }
         .appDialog(item: $dialog) { edit in
             ZentaoTeamGroupDialog(deps: deps, state: state, account: account, bugs: bugs, editing: edit.group, onClose: { dialog = nil })
@@ -60,5 +39,27 @@ struct ZentaoTeamMenu: View {
                           destructive: true) {
             if let id = current?.id { Task { _ = await state.deleteTeamGroup(id) } }
         }
+    }
+
+    /// The menu, read when the button is pressed: back to the execution (product), the groups (the open one checked),
+    /// then new / edit / delete.
+    private func menuItems() -> [AppNativeMenu.Item] {
+        let groups = state.teamGroups[account.id] ?? []
+        let current = state.team(bugs: bugs)?.group
+        var out: [AppNativeMenu.Item] = []
+        if current != nil {
+            out.append(.init(bugs ? appString("leaderBackToProduct", "Back to the product") : appString("leaderBackToExecution", "Back to the execution"),
+                             icon: "arrow.uturn.backward") { state.closeTeam(bugs: bugs) })
+        }
+        for g in groups {
+            out.append(.init("\(g.name) · \(g.members.count)", icon: "person.3", dividerBefore: g.id == groups.first?.id,
+                             checked: g.id == current?.id) { state.openTeam(g, bugs: bugs) })
+        }
+        out.append(.init(appString("leaderNewGroup", "New team group…"), icon: "plus", dividerBefore: true) { dialog = ZentaoTeamEdit(group: nil) })
+        if let current {
+            out.append(.init(appString("leaderEditGroup", "Edit this group…"), icon: "pencil") { dialog = ZentaoTeamEdit(group: current) })
+            out.append(.init(appString("leaderDeleteGroup", "Delete this group"), icon: "trash", destructive: true) { confirmDelete = true })
+        }
+        return out
     }
 }

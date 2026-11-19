@@ -102,9 +102,7 @@ private struct ScopesMenu: View {
     @Environment(\.appTheme) private var theme
     let tabs: [AppSegmentedTab]
     var body: some View {
-        Menu {
-            ForEach(tabs) { t in Button(t.label) { t.onTap() } }
-        } label: {
+        AppMenuButton(items: { tabs.map { t in AppNativeMenu.Item(t.label) { t.onTap() } } }) {
             HStack(spacing: theme.spacing.s4) {
                 Text(tabs.first(where: \.active)?.label ?? "").font(theme.typography.metaStrong)
                 Image(systemName: "chevron.down").font(.system(size: theme.sizes.icon12))
@@ -112,6 +110,6 @@ private struct ScopesMenu: View {
             .padding(.horizontal, theme.spacing.s10).frame(height: theme.sizes.control32)
             .background(theme.colors.panel2, in: RoundedRectangle(cornerRadius: theme.radii.md))
         }
-        .menuStyle(.button).buttonStyle(.plain).fixedSize()
+        .fixedSize()
     }
 }

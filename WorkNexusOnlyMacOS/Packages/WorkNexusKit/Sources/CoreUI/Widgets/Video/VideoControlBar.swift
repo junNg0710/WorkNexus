@@ -49,17 +49,14 @@ private struct VideoSpeedMenu: View {
     let model: AppVideoPlayerModel
 
     var body: some View {
-        Menu {
-            Picker(appString("videoSpeed", "Playback speed"), selection: Binding(get: { model.speed }, set: { model.setSpeed($0) })) {
-                ForEach(VideoSpeeds.options, id: \.self) { Text(VideoSpeeds.label($0)).tag($0) }
-            }.pickerStyle(.inline)
-        } label: {
+        AppMenuButton(help: appString("videoSpeed", "Playback speed"), items: {
+            VideoSpeeds.options.map { s in AppNativeMenu.Item(VideoSpeeds.label(s), checked: s == model.speed) { model.setSpeed(s) } }
+        }) {
             Text(VideoSpeeds.label(model.speed)).font(theme.typography.metaStrong)
                 .foregroundStyle(model.speed == 1 ? theme.colors.tx2 : theme.colors.accent)
                 .padding(.horizontal, theme.spacing.s8).frame(height: theme.sizes.control32).contentShape(Rectangle())
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
-        .help(appString("videoSpeed", "Playback speed"))
+        .fixedSize()
     }
 }
 

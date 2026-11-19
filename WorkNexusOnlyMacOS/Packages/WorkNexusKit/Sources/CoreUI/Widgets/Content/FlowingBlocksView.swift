@@ -26,6 +26,7 @@ struct FlowingBlocksView: View {
                         .textSelection(.enabled)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .linkPointer(text, font: typography.nsFont(size: fontSize), lineSpacing: max(lineHeight - 1.2, 0) * fontSize)
                 case .block(let block):
                     BodyBlockView(block: block, fontSize: fontSize, lineHeight: lineHeight, ink: ink, images: images)
                 }

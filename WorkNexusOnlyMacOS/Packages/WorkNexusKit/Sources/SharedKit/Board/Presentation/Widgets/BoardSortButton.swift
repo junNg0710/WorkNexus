@@ -20,13 +20,9 @@ public struct BoardSortButton: View {
         let c = theme.colors
         let changed = sort != .boardDefault
         let ink = changed ? c.accent : c.tx2
-        Menu {
-            ForEach(fields, id: \.self) { f in
-                Button { nav.sortBoardCards(by: f) } label: {
-                    if f == sort.field { Label(boardSortLabel(f), systemImage: "checkmark") } else { Text(boardSortLabel(f)) }
-                }
-            }
-        } label: {
+        AppMenuButton(help: appString("boardSort", "Sort cards"), items: {
+            fields.map { f in AppNativeMenu.Item(boardSortLabel(f), checked: f == nav.boardSort.field) { nav.sortBoardCards(by: f) } }
+        }) {
             HStack(spacing: theme.spacing.s6) {
                 Image(systemName: sort.descending ? "arrow.down" : "arrow.up").font(.system(size: theme.sizes.icon14)).foregroundStyle(ink)
                 Text(boardSortLabel(sort.field)).font(theme.typography.metaStrong).foregroundStyle(ink).lineLimit(1)
@@ -38,8 +34,7 @@ public struct BoardSortButton: View {
             }
             .contentShape(RoundedRectangle(cornerRadius: theme.radii.md))
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
-        .help(appString("boardSort", "Sort cards"))
+        .fixedSize()
         .accessibilityLabel(appString("boardSort", "Sort cards"))
     }
 }

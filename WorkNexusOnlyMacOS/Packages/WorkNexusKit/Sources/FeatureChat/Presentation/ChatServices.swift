@@ -24,6 +24,8 @@ public struct ChatServices: Sendable {
     public var aiLanguages: [ChatAiLanguage] = []
     /// Turns sticker suggestions on or off (the ✨ menu's switch); the host saves it in `AppSettings.chatStickerSuggestions`.
     public var setStickerSuggestions: (@Sendable (Bool) -> Void)?
+    /// Saves whose voice the ✨ reply ideas take (the ✨ menu's "Reply as").
+    public var setReplyRole: (@Sendable (ChatReplyRole) -> Void)?
     public var telegramTokens: TelegramTokenStore?
     public var stickerImport: ImportStickerPack?
     /// Looks up a ticket by (ZenTao / GitLab / GitHub) URL for link cards; the app wires it to its ticket repository.

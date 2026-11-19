@@ -28,12 +28,10 @@ struct ChatVideoControls: View {
                     .padding(.leading, theme.spacing.s8)
                 Slider(value: Binding(get: { player.volume }, set: { player.setVolume($0) }), in: 0...1).frame(width: theme.sizes.dialogSm / 3)
                 Spacer(minLength: 0)
-                Menu {
-                    ForEach(ChatVideoPlayer.speeds, id: \.self) { s in
-                        Button { player.setSpeed(s) } label: { Label("\(speed(s))x", systemImage: s == player.speed ? "checkmark" : "") }
-                    }
-                } label: { Text("\(speed(player.speed))x").font(theme.typography.label).foregroundStyle(ink) }
-                    .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize().help(shellString("chatSpeed", "Speed"))
+                AppMenuButton(help: shellString("chatSpeed", "Speed"), items: {
+                    ChatVideoPlayer.speeds.map { s in AppNativeMenu.Item("\(speed(s))x", checked: s == player.speed) { player.setSpeed(s) } }
+                }) { Text("\(speed(player.speed))x").font(theme.typography.label).foregroundStyle(ink) }
+                    .fixedSize()
                     .padding(.horizontal, theme.spacing.s8)
                 ControlButton(icon: "repeat", help: shellString("chatLoop", "Loop"), selected: player.isLooping) { player.isLooping.toggle() }
                 ControlButton(icon: "arrow.up.left.and.arrow.down.right", help: shellString("chatFullScreen", "Full screen"), action: onToggleFullScreen)

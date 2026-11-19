@@ -41,6 +41,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var chatPrivacy = ChatPrivacy()
     /// Stickers offered over the composer while typing and to answer the newest message (turned on and off in its ✨ menu).
     public var chatStickerSuggestions = true
+    /// Whose voice the ✨ reply ideas take (`ChatReplyRole` raw value; "auto" follows the ZenTao role).
+    public var chatAiReplyRole = "auto"
     /// Whether local AI tools (the bundled MCP server) may use chat through the loopback chat API: send messages, load older
     /// history, download attachments. Off by default.
     public var chatLocalApi = false
@@ -89,7 +91,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         s.chatAutoDownloadVideoMb = v(.chatAutoDownloadVideoMb, s.chatAutoDownloadVideoMb)
         s.chatTextScale = v(.chatTextScale, s.chatTextScale); s.chatPrivacy = v(.chatPrivacy, s.chatPrivacy)
         s.chatLocalApi = v(.chatLocalApi, s.chatLocalApi)
-        s.chatStickerSuggestions = v(.chatStickerSuggestions, s.chatStickerSuggestions); s.miniAppLiveLimit = v(.miniAppLiveLimit, s.miniAppLiveLimit)
+        s.chatStickerSuggestions = v(.chatStickerSuggestions, s.chatStickerSuggestions); s.chatAiReplyRole = v(.chatAiReplyRole, s.chatAiReplyRole); s.miniAppLiveLimit = v(.miniAppLiveLimit, s.miniAppLiveLimit)
         s.miniAppNotifyInBackground = v(.miniAppNotifyInBackground, s.miniAppNotifyInBackground)
         s.accentColorValue = try? c.decodeIfPresent(Int.self, forKey: .accentColorValue)
         s.pinnedProjects = v(.pinnedProjects, s.pinnedProjects); s.pinnedExecutions = v(.pinnedExecutions, s.pinnedExecutions)

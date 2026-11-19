@@ -21,7 +21,7 @@ struct ChatAiComposeButton: View {
     }
 }
 
-/// The menu itself; it reads the draft (rewrites need something typed), so only it redraws as the user types.
+/// The menu itself. Its entries (rewrites need something typed) are read when it is pressed, so typing doesn't redraw it.
 private struct ChatAiMenu: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatSettings) private var settings
@@ -32,28 +32,7 @@ private struct ChatAiMenu: View {
     private var inThread: Bool { controller.threadRootId != nil }
 
     var body: some View {
-        Menu {
-            Button { controller.suggestReplies() } label: {
-                Label(appString("chatAiSuggestReplies", "Suggest replies"), systemImage: "text.bubble")
-            }
-            // Rewriting needs something typed.
-            if !controller.model.isBlank {
-                Divider()
-                ForEach(ChatDraftTone.allCases, id: \.self) { tone in
-                    Button { controller.rewrite(tone) } label: { Label(Self.label(tone), systemImage: "wand.and.stars") }
-                }
-            }
-            Divider()
-            // The summary is of the chat itself, not of a reply thread.
-            if !inThread {
-                Button { state.sidePanel = .assistant } label: {
-                    Label(appString("chatAiOpenAssistant", "Summarize with AI"), systemImage: "text.alignleft")
-                }
-            }
-            Toggle(isOn: Binding(get: { settings.stickerSuggestions }, set: { controller.setStickerSuggestions($0) })) {
-                Label(appString("chatStickerSuggestionsSetting", "Sticker suggestions"), systemImage: "face.smiling")
-            }
-        } label: {
+        AppMenuButton(help: appString("chatAiTools", "AI tools"), items: menuItems) {
             Image(systemName: "sparkles")
                 .font(.system(size: theme.sizes.icon18))
                 .foregroundStyle(theme.colors.tx2)
@@ -61,9 +40,56 @@ private struct ChatAiMenu: View {
                 .background(hovering ? theme.colors.panel2 : .clear, in: RoundedRectangle(cornerRadius: theme.radii.md))
                 .contentShape(Rectangle())
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
+        .fixedSize()
         .onHover { hovering = $0 }
-        .help(appString("chatAiTools", "AI tools"))
+    }
+
+    private func menuItems() -> [AppNativeMenu.Item] {
+        var out = [AppNativeMenu.Item(appString("chatAiSuggestReplies", "Suggest replies"), icon: "text.bubble") { controller.suggestReplies() },
+                   replyAsMenu()]
+        // Rewriting needs something typed.
+        if !controller.model.isBlank {
+            for (i, tone) in ChatDraftTone.allCases.enumerated() {
+                out.append(.init(Self.label(tone), icon: "wand.and.stars", dividerBefore: i == 0) { controller.rewrite(tone) })
+            }
+        }
+        // The summary is of the chat itself, not of a reply thread.
+        if !inThread {
+            out.append(.init(appString("chatAiOpenAssistant", "Summarize with AI"), icon: "text.alignleft", dividerBefore: true) {
+                state.sidePanel = .assistant
+            })
+        }
+        let stickers = settings.stickerSuggestions
+        out.append(.init(appString("chatStickerSuggestionsSetting", "Sticker suggestions"), icon: "face.smiling", dividerBefore: inThread,
+                         checked: stickers) { controller.setStickerSuggestions(!stickers) })
+        return out
+    }
+
+    /// "Reply as ▸": whose voice the reply ideas take — the ZenTao role (named) or one picked.
+    private func replyAsMenu() -> AppNativeMenu.Item {
+        let current = settings.replyRole
+        let code = state.selfUserId.flatMap { state.users[$0]?.role }.flatMap { $0.isEmpty ? nil : $0 }
+        let detected = code.map { ChatShellLabels.roleLabel($0, serverNames: state.roleNames) }
+        let auto = detected.map { appFormat("chatAiReplyRoleAutoNamed", "From ZenTao (%1$@)", $0) }
+            ?? appString("chatAiReplyRoleAuto", "From ZenTao")
+        var items = [AppNativeMenu.Item(auto, checked: current == .auto) { controller.setReplyRole(.auto) }]
+        for (i, role) in ChatReplyRole.picks.enumerated() {
+            items.append(.init(Self.label(role), dividerBefore: i == 0, checked: current == role) { controller.setReplyRole(role) })
+        }
+        return AppNativeMenu.Item(appString("chatAiReplyAs", "Reply as"), icon: "person.text.rectangle", children: items)
+    }
+
+    static func label(_ role: ChatReplyRole) -> String {
+        switch role {
+        case .auto: appString("chatAiReplyRoleAuto", "From ZenTao")
+        case .techLead: appString("chatAiRoleTechLead", "Tech lead")
+        case .developer: appString("chatAiRoleDeveloper", "Developer")
+        case .tester: appString("chatAiRoleTester", "Tester (QA)")
+        case .projectManager: appString("chatAiRolePm", "Project manager")
+        case .productOwner: appString("chatAiRolePo", "Product owner")
+        case .designer: appString("chatAiRoleDesigner", "Designer (UI/UX)")
+        case .businessAnalyst: appString("chatAiRoleBa", "Business analyst")
+        }
     }
 
     static func label(_ tone: ChatDraftTone) -> String {

@@ -35,6 +35,8 @@ public final class ChatThreadState {
     public let selfAccount: String?
     public var chat: ChatConversation
     public var users: [Int: ChatUser] = [:]
+    /// The server's names for ZenTao role codes (`dev` → "Developer"), for the AI's reply ideas.
+    public var roleNames: [String: String] = [:]
     public var selfUserId: Int?
     /// The message being replied to (shown above the composer, sent as `replyToId`).
     public var replyDraft: ChatMessage?

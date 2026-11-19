@@ -133,7 +133,7 @@ public final class ChatShellModel {
     }
 
     private func loadRoleNames() async {
-        if case .success(let names) = await repository.roleNames(accountId: accountId) { roleNames = names }
+        if case .success(let names) = await repository.roleNames(accountId: accountId) { roleNames = names; thread?.state.roleNames = names }
     }
 
     // MARK: selection
@@ -156,7 +156,7 @@ public final class ChatShellModel {
         let session = ChatThreadSession(accountId: accountId, chat: chat, selfAccount: selfAccount, repository: repository,
                                         period: { [weak self] in self?.searchPeriod ?? .all },
                                         onFailure: { [weak self] in self?.report($0) })
-        session.state.users = users; session.state.selfUserId = selfUserId
+        session.state.users = users; session.state.selfUserId = selfUserId; session.state.roleNames = roleNames
         thread = session
         session.open()
     }

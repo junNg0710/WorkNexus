@@ -74,18 +74,21 @@ private struct PinnedBarMenu: View {
     let message: ChatMessage?
 
     var body: some View {
-        Menu {
-            Button { state.requestJump(to: serverId) } label: { Label(L.viewOriginal, systemImage: "arrowshape.turn.up.right") }
-            if let services, let message, PinChatMessage(services.chat).canPin(state.chat, selfUserId: state.selfUserId, selfAccount: state.selfAccount) {
-                Button(role: .destructive) {
-                    Task { @MainActor in
-                        if case .failure(let f) = await PinChatMessage(services.chat)(message, pinned: false) { toasts?.show(f.message, kind: .error) }
-                    }
-                } label: { Label(L.unpin, systemImage: "pin.slash") }
-            }
-        } label: {
+        AppMenuButton(help: L.moreActions, items: menuItems) {
             Image(systemName: "ellipsis").foregroundStyle(theme.colors.tx2).frame(width: 28, height: 28).contentShape(Rectangle())
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize().help(L.moreActions)
+        .fixedSize()
+    }
+
+    private func menuItems() -> [AppNativeMenu.Item] {
+        var out = [AppNativeMenu.Item(L.viewOriginal, icon: "arrowshape.turn.up.right") { state.requestJump(to: serverId) }]
+        if let services, let message, PinChatMessage(services.chat).canPin(state.chat, selfUserId: state.selfUserId, selfAccount: state.selfAccount) {
+            out.append(.init(L.unpin, icon: "pin.slash", destructive: true) {
+                Task { @MainActor in
+                    if case .failure(let f) = await PinChatMessage(services.chat)(message, pinned: false) { toasts?.show(f.message, kind: .error) }
+                }
+            })
+        }
+        return out
     }
 }

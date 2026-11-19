@@ -59,6 +59,7 @@ public enum ChatFeature {
                                     ai: ChatAiTextGenerator? = nil, ensureAiReady: (@Sendable () async -> Bool)? = nil,
                                     aiLanguages: [ChatAiLanguage] = [],
                                     setStickerSuggestions: (@Sendable (Bool) -> Void)? = nil,
+                                    setReplyRole: (@Sendable (ChatReplyRole) -> Void)? = nil,
                                     translations: MessageTranslationRepository? = nil,
                                     ticketLookup: (@Sendable (String) async -> Ticket?)? = nil, mergeRequests: MergeRequestLinkService? = nil,
                                     showChat: (@Sendable (String, String) -> Void)? = nil, openTicket: (@Sendable (Ticket) -> Void)? = nil) -> ChatServices {
@@ -73,6 +74,7 @@ public enum ChatFeature {
             stickerImport: ImportStickerPack(source, converter, stickers), ticketLookup: ticketLookup, mergeRequests: mergeRequests,
             showChat: showChat, openTicket: openTicket)
         services.ai = ai; services.ensureAiReady = ensureAiReady; services.aiLanguages = aiLanguages; services.setStickerSuggestions = setStickerSuggestions
+        services.setReplyRole = setReplyRole
         return services
     }
 

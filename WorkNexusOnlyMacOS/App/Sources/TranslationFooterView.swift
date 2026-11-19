@@ -31,7 +31,6 @@ struct TranslationFooterView: View {
                 .font(theme.typography.caption).foregroundStyle(theme.colors.tx3).lineSpacing(theme.spacing.s2)
                 .frame(maxWidth: .infinity, alignment: .leading)
             TranslationLanguageControl(value: shell.settings.translationLang) { v in shell.updateSettings { $0.translationLang = v } }
-                .help(appString("translationLanguage", "Translation language"))
         }
         .padding(.horizontal, theme.spacing.s20).padding(.vertical, theme.spacing.s12)
         .background(theme.colors.panel)
@@ -58,11 +57,11 @@ struct TranslationLanguageControl: View {
 
     var body: some View {
         let selected = translationLanguage(for: value)
-        Menu {
-            ForEach(translationLanguages, id: \.code) { lang in
-                Button { onChange(lang.code) } label: { Label("\(lang.flag)  \(lang.nativeName)", systemImage: lang.code == selected.code ? "checkmark" : "") }
+        AppMenuButton(help: appString("translationLanguage", "Translation language"), items: {
+            translationLanguages.map { lang in
+                AppNativeMenu.Item("\(lang.flag)  \(lang.nativeName)", checked: lang.code == selected.code) { onChange(lang.code) }
             }
-        } label: {
+        }) {
             HStack(spacing: theme.spacing.s4) {
                 Text(selected.flag).font(theme.typography.label)
                 Text(selected.nativeName).font(theme.typography.label).foregroundStyle(theme.colors.tx)
@@ -72,6 +71,6 @@ struct TranslationLanguageControl: View {
             .background(theme.colors.panel2, in: RoundedRectangle(cornerRadius: theme.radii.md))
             .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
+        .fixedSize()
     }
 }

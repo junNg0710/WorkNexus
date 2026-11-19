@@ -19,11 +19,10 @@ struct RichEditorToolbar: View {
                 ToolbarButton("arrow.uturn.backward", help: appString("chatUndo", "Undo")) { commands.undo() }
                 ToolbarButton("arrow.uturn.forward", help: appString("chatRedo", "Redo")) { commands.redo() }
                 ToolbarDivider()
-                Menu {
-                    Button(appString("editorToolParagraph", "Paragraph")) { commands.setHeader(nil) }
-                    ForEach(1...3, id: \.self) { n in Button("\(appString("chatFormatHeading", "Heading")) \(n)") { commands.setHeader(n) } }
-                } label: { ToolbarGlyph("textformat.size", active: b.header != nil) }
-                    .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).help(appString("chatFormatHeading", "Heading"))
+                AppMenuButton(help: appString("chatFormatHeading", "Heading"), items: {
+                    [AppNativeMenu.Item(appString("editorToolParagraph", "Paragraph")) { commands.setHeader(nil) }]
+                        + (1...3).map { n in AppNativeMenu.Item("\(appString("chatFormatHeading", "Heading")) \(n)") { commands.setHeader(n) } }
+                }) { ToolbarGlyph("textformat.size", active: b.header != nil) }
                 ToolbarButton("bold", active: i.bold, help: appString("chatFormatBold", "Bold")) { commands.toggle(\.bold) }
                 ToolbarButton("italic", active: i.italic, help: appString("chatFormatItalic", "Italic")) { commands.toggle(\.italic) }
                 ToolbarButton("underline", active: i.underline, help: appString("chatFormatUnderline", "Underline")) { commands.toggle(\.underline) }

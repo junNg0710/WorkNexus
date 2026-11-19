@@ -85,13 +85,11 @@ private struct LanguageRow: View {
         HStack {
             Text(appString("chatAiSummaryLanguage", "Summary language")).font(theme.typography.label).foregroundStyle(theme.colors.tx2)
             Spacer(minLength: theme.spacing.s8)
-            Menu {
-                ForEach(languages, id: \.code) { lang in
-                    Button { pick(lang.code) } label: {
-                        Label("\(lang.flag)  \(lang.nativeName)", systemImage: lang.code == selected.code ? "checkmark" : "")
-                    }
+            AppMenuButton(help: appString("chatAiSummaryLanguage", "Summary language"), items: {
+                languages.map { lang in
+                    AppNativeMenu.Item("\(lang.flag)  \(lang.nativeName)", checked: lang.code == selected.code) { pick(lang.code) }
                 }
-            } label: {
+            }) {
                 HStack(spacing: theme.spacing.s4) {
                     Text(selected.flag).font(theme.typography.label)
                     Text(selected.nativeName).font(theme.typography.label).foregroundStyle(theme.colors.tx)
@@ -101,8 +99,7 @@ private struct LanguageRow: View {
                 .background(theme.colors.panel2, in: RoundedRectangle(cornerRadius: theme.radii.md))
                 .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
             }
-            .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
-            .help(appString("chatAiSummaryLanguage", "Summary language"))
+            .fixedSize()
         }
     }
 

@@ -11,21 +11,22 @@ struct ChatSelfAvatarButton: View {
 
     var body: some View {
         if let me = model.selfUserId {
-            let current = ChatShellLabels.presence(model.users, me)
-            Menu {
-                Button { model.profileUserId = me } label: { Label(shellString("chatMyProfile", "Your profile"), systemImage: "person.crop.circle") }
-                Divider()
-                ForEach(ChatPresence.selectable, id: \.self) { p in
-                    Button { if p != current { model.setPresence(p) } } label: {
-                        Label(ChatShellLabels.presenceLabel(p), systemImage: p == current ? "checkmark" : Self.icon(p))
-                    }
-                }
-            } label: {
+            AppMenuButton(help: shellString("chatMyProfile", "Your profile"), items: { menuItems(me) }) {
                 ChatAvatarView(userId: me, users: model.users, diameter: theme.sizes.control32 + theme.spacing.s4)
             }
-            .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
-            .help(shellString("chatMyProfile", "Your profile"))
+            .fixedSize()
         }
+    }
+
+    /// Your profile, then the presences with the current one checked — read when pressed, so it is the presence of now.
+    private func menuItems(_ me: Int) -> [AppNativeMenu.Item] {
+        let current = ChatShellLabels.presence(model.users, me)
+        return [AppNativeMenu.Item(shellString("chatMyProfile", "Your profile"), icon: "person.crop.circle") { model.profileUserId = me }]
+            + ChatPresence.selectable.enumerated().map { i, p in
+                AppNativeMenu.Item(ChatShellLabels.presenceLabel(p), icon: Self.icon(p), dividerBefore: i == 0, checked: p == current) {
+                    if p != current { model.setPresence(p) }
+                }
+            }
     }
 
     static func icon(_ p: ChatPresence) -> String {

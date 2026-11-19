@@ -1870,5 +1870,45 @@
   "claudeCodeNotInstalledTitle": {
     "en": "Claude Code is not installed",
     "vi": "Chưa cài Claude Code"
+  },
+  "chatAiReplyAs": {
+    "en": "Reply as",
+    "vi": "Trả lời với vai trò"
+  },
+  "chatAiReplyRoleAuto": {
+    "en": "From ZenTao",
+    "vi": "Theo ZenTao"
+  },
+  "chatAiReplyRoleAutoNamed": {
+    "en": "From ZenTao (%1$@)",
+    "vi": "Theo ZenTao (%1$@)"
+  },
+  "chatAiRoleTechLead": {
+    "en": "Tech lead",
+    "vi": "Tech lead"
+  },
+  "chatAiRoleDeveloper": {
+    "en": "Developer",
+    "vi": "Lập trình viên"
+  },
+  "chatAiRoleTester": {
+    "en": "Tester (QA)",
+    "vi": "Tester (QA)"
+  },
+  "chatAiRolePm": {
+    "en": "Project manager",
+    "vi": "Quản lý dự án (PM)"
+  },
+  "chatAiRolePo": {
+    "en": "Product owner",
+    "vi": "Product owner (PO)"
+  },
+  "chatAiRoleDesigner": {
+    "en": "Designer (UI/UX)",
+    "vi": "Designer (UI/UX)"
+  },
+  "chatAiRoleBa": {
+    "en": "Business analyst",
+    "vi": "Business analyst (BA)"
   }
 }

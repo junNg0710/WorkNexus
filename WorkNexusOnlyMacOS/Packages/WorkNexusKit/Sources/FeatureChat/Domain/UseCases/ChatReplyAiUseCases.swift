@@ -13,11 +13,13 @@ public struct SuggestChatReplies: Sendable {
         self.generator = generator; self.transcript = transcript; self.count = count
     }
 
+    /// - Parameter selfRole: how the user writes in the team (`ResolveReplyRole`); nil leaves the voice to the conversation.
     public func callAsFunction(_ messages: [ChatMessage], key: String, selfName: String, nameOf: (Int) -> String,
-                               model: String? = nil) async -> Outcome<[String]> {
+                               selfRole: String? = nil, model: String? = nil) async -> Outcome<[String]> {
         let quoted = transcript(messages, nameOf: nameOf, selfName: selfName)
         guard quoted.count > 0 else { return .failure(.unexpected("There is nothing to reply to yet")) }
-        let reply = await generator.generate(key: key, prompt: Self.prompt(quoted.text, selfName: selfName, count: count), model: model)
+        let prompt = Self.prompt(quoted.text, selfName: selfName, count: count, selfRole: selfRole)
+        let reply = await generator.generate(key: key, prompt: prompt, model: model)
         return reply.flatMap { answer in
             let replies = Self.parse(answer.text, count: count)
             return replies.isEmpty ? .failure(.parse("The model suggested no replies")) : .success(replies)
@@ -37,9 +39,16 @@ public struct SuggestChatReplies: Sendable {
         return replies.prefix(count).map { quotes.replace($0) { _ in "" }.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
     }
 
-    public static func prompt(_ transcript: String, selfName: String, count: Int) -> String {
-        "You help \(selfName) answer in a team chat. Read the latest messages and write \(count) different short replies "
+    public static func prompt(_ transcript: String, selfName: String, count: Int, selfRole: String? = nil) -> String {
+        let role = selfRole.map {
+            "\(selfName) is \($0). Write every reply the way someone in that role would: what they would say, decide, ask or "
+                + "report next, with the details that role cares about.\n"
+                + "A name in the conversation may carry that person's role in brackets; use it to judge what they need from "
+                + "\(selfName) (a tester reporting a bug, a lead asking for status, …).\n"
+        } ?? ""
+        return "You help \(selfName) answer in a team chat. Read the latest messages and write \(count) different short replies "
             + "\(selfName) could send next.\n"
+            + role
             + "Lines from \"\(selfName)\" are \(selfName)'s own messages. When the last message is \(selfName)'s own, write "
             + "follow-ups \(selfName) could add, not answers to it.\n"
             + "Use the language the conversation is written in, and match its tone. Be natural, specific and brief (under 25 "

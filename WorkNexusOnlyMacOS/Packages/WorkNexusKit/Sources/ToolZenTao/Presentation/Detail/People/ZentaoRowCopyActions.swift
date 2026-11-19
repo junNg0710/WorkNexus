@@ -36,13 +36,10 @@ public struct ZentaoCopyActionsMenu: View {
     public init(deps: ZentaoDependencies? = nil, state: ZentaoUIState? = nil, ticket: Ticket) { self.ticket = ticket }
 
     public var body: some View {
-        Menu {
-            ForEach(Array(ZentaoCopyText.entries(ticket).enumerated()), id: \.offset) { _, e in
-                Button { copy(e.text, e.toast) } label: { Label(e.label, systemImage: e.icon) }
-            }
-        } label: { Image(systemName: "doc.on.doc") }
-        .menuStyle(.button).menuIndicator(.hidden).buttonStyle(.plain).fixedSize()
-        .help(appString("copyTitle", "Copy title"))
+        AppMenuButton(help: appString("copyTitle", "Copy title"), items: {
+            ZentaoCopyText.entries(ticket).map { e in AppNativeMenu.Item(e.label, icon: e.icon) { copy(e.text, e.toast) } }
+        }) { Image(systemName: "doc.on.doc") }
+        .fixedSize()
     }
 
     private func copy(_ text: String, _ toast: String) {

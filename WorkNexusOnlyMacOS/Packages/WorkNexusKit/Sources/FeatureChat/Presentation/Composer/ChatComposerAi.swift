@@ -18,6 +18,21 @@ struct ChatAiContext {
 
     var ai: ChatAiTextGenerator? { services.ai }
     var people: ChatAiPeople { ChatAiPeople(users: state.users, selfUserId: state.selfUserId) }
+
+    /// The people with their roles in brackets, for reply ideas (`Lan (QA tester)`).
+    var peopleWithRoles: ChatAiPeople {
+        let names = state.roleNames
+        return ChatAiPeople(users: state.users, selfUserId: state.selfUserId) { user in
+            guard let code = user.role?.trimmingCharacters(in: .whitespaces), !code.isEmpty else { return nil }
+            return ChatReplyRole.fromZenTao(code)?.englishName ?? names[code] ?? code
+        }
+    }
+
+    /// How the user writes in the team, for reply ideas: the role picked in the ✨ menu, else the ZenTao one.
+    var selfRole: String? {
+        let code = state.selfUserId.flatMap { state.users[$0]?.role }
+        return ResolveReplyRole()(settings.replyRole, zenTaoRole: code, roleName: code.flatMap { state.roleNames[$0] })
+    }
     /// The model pinned in Settings for the AI backend; nil leaves it its own.
     var model: String? { settings.translationModel.isEmpty ? nil : settings.translationModel }
 
@@ -59,9 +74,9 @@ final class ChatComposerAi {
         replies = .loading
         busyKeys.insert(repliesKey)
         let messages = await context.latest(Self.contextMessages)
-        let people = context.people
+        let people = context.peopleWithRoles
         let result = await SuggestChatReplies(ai)(messages, key: repliesKey, selfName: people.selfName, nameOf: people.name(of:),
-                                                  model: context.model)
+                                                  selfRole: context.selfRole, model: context.model)
         guard mine == run else { return }
         busyKeys.remove(repliesKey)
         switch result {

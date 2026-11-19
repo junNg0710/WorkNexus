@@ -15,33 +15,38 @@ struct GitlabMrMoreButton: View {
     let commands: GitlabMrCommands
 
     var body: some View {
-        let phase = GitlabMrPhase.of(ticket, entity)
-        let path = entity.projectPath ?? ""
         let busy = commands.busy != nil
-        Menu {
-            if phase.isActive {
-                if phase == .draft {
-                    Button { commands.setDraft(false) } label: { Label(appString("markAsReady", "Mark as ready"), systemImage: "checkmark.circle") }
-                } else {
-                    Button { commands.setDraft(true) } label: { Label(appString("markAsDraft", "Mark as draft"), systemImage: "circle.dashed") }
-                }
-            }
-            if !path.isEmpty {
-                Button { copy("\(path)!\(ticket.externalKey)") } label: { Label(appString("copyReference", "Copy reference"), systemImage: "doc.on.doc") }
-            }
-            if phase.isActive {
-                Divider()
-                Button(role: .destructive, action: commands.close) { Label(appString("closeMergeRequest", "Close merge request"), systemImage: "xmark.circle") }
-            }
-            if phase == .closed {
-                Divider()
-                Button(action: commands.reopen) { Label(appString("reopenMergeRequest", "Reopen merge request"), systemImage: "arrow.counterclockwise") }
-            }
-        } label: {
+        AppMenuButton(help: appString("more", "More"), items: menuItems) {
             Image(systemName: "ellipsis").font(.system(size: theme.sizes.icon16)).foregroundStyle(theme.colors.tx2)
                 .frame(width: theme.sizes.control32, height: theme.sizes.control32).contentShape(Rectangle())
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize().disabled(busy).help(appString("more", "More"))
+        .fixedSize().disabled(busy)
+    }
+
+    /// The menu, read when the button is pressed (the MR's phase may have moved on since the header was drawn).
+    private func menuItems() -> [AppNativeMenu.Item] {
+        let phase = GitlabMrPhase.of(ticket, entity)
+        let path = entity.projectPath ?? ""
+        var out: [AppNativeMenu.Item] = []
+        if phase.isActive {
+            if phase == .draft {
+                out.append(.init(appString("markAsReady", "Mark as ready"), icon: "checkmark.circle") { commands.setDraft(false) })
+            } else {
+                out.append(.init(appString("markAsDraft", "Mark as draft"), icon: "circle.dashed") { commands.setDraft(true) })
+            }
+        }
+        if !path.isEmpty {
+            out.append(.init(appString("copyReference", "Copy reference"), icon: "doc.on.doc") { copy("\(path)!\(ticket.externalKey)") })
+        }
+        if phase.isActive {
+            out.append(.init(appString("closeMergeRequest", "Close merge request"), icon: "xmark.circle", destructive: true, dividerBefore: true,
+                             action: commands.close))
+        }
+        if phase == .closed {
+            out.append(.init(appString("reopenMergeRequest", "Reopen merge request"), icon: "arrow.counterclockwise", dividerBefore: true,
+                             action: commands.reopen))
+        }
+        return out
     }
 
     private func copy(_ text: String) {

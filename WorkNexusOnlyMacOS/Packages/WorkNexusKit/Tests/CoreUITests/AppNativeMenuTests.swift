@@ -21,4 +21,25 @@ final class AppNativeMenuTests: XCTestCase {
         _ = (bug.target as AnyObject?)?.perform(bug.action, with: bug)
         XCTAssertEqual(ran, ["bug"])
     }
+
+    /// A picker's menu checks the current value; a disabled item stays visible but unusable; a submenu holds its items.
+    func testCheckedDisabledAndSubmenuItems() {
+        var ran: [String] = []
+        let menu = AppNativeMenu.menu([
+            AppNativeMenu.Item("English", checked: true) { ran.append("en") },
+            AppNativeMenu.Item("Tiếng Việt") { ran.append("vi") },
+            AppNativeMenu.Item("Off", enabled: false) { ran.append("off") },
+            AppNativeMenu.Item("More", dividerBefore: true, children: [AppNativeMenu.Item("Inner") { ran.append("inner") }]),
+        ])
+        XCTAssertEqual(menu.items.map(\.title), ["English", "Tiếng Việt", "Off", "", "More"])
+        XCTAssertEqual(menu.items[0].state, .on)
+        XCTAssertEqual(menu.items[1].state, .off)
+        XCTAssertFalse(menu.items[2].isEnabled)
+        let more = menu.items[4]
+        XCTAssertNil(more.action, "a submenu has no action of its own")
+        XCTAssertEqual(more.submenu?.items.map(\.title), ["Inner"])
+        let inner = more.submenu!.items[0]
+        _ = (inner.target as AnyObject?)?.perform(inner.action, with: inner)
+        XCTAssertEqual(ran, ["inner"])
+    }
 }

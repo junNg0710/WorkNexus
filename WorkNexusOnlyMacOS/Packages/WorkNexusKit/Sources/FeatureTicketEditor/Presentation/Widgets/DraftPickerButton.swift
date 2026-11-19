@@ -27,13 +27,14 @@ struct DraftPickerButton: View {
         Group {
             let list = drafts
             if !list.isEmpty {
-                Menu {
-                    ForEach(list) { d in Button(Self.label(d)) { onPick(.resuming(d)) } }
-                } label: {
-                    Label(appFormat("ticketDrafts", "Drafts (%1$@)", "\(list.count)"), systemImage: "doc.badge.clock")
-                        .font(theme.typography.label).foregroundStyle(theme.colors.tx2)
+                AppMenuButton(items: { drafts.map { d in AppNativeMenu.Item(Self.label(d)) { onPick(.resuming(d)) } } }) {
+                    HStack(spacing: theme.spacing.s4) {
+                        Label(appFormat("ticketDrafts", "Drafts (%1$@)", "\(list.count)"), systemImage: "doc.badge.clock")
+                        Image(systemName: "chevron.down").font(.system(size: theme.sizes.icon12))
+                    }
+                    .font(theme.typography.label).foregroundStyle(theme.colors.tx2)
                 }
-                .menuStyle(.borderlessButton).fixedSize()
+                .fixedSize()
             }
         }
         .task { for await drafts in repository.watchAll() { all = drafts } }

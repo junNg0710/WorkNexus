@@ -408,3 +408,4 @@ Flutter app's, **unchanged**. It reaches the app two ways, and both are native h
 
 | Presentation/Composer/ChatComposerDrafts.swift | providers/chat_composer_draft_provider.dart (each composer's unsent text, mentions and caret, plus its staged files, kept per account / chat / thread root while the app runs) |
 | Domain/UseCases/BackgroundChatFailure.swift | (Swift-only) failures of work the app starts by itself (refresh on open, mark read, paging) are logged, not toasted, when they are a lost connection |
+| Domain/ValueObjects/ChatReplyRole.swift | (Swift-only) the user's team role for the ✨ reply ideas (`ResolveReplyRole`: picked in "Reply as", else the ZenTao role); others' roles go in the transcript names |

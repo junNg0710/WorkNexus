@@ -16,13 +16,9 @@ public struct AppDropdown<T: Hashable>: View {
     }
 
     public var body: some View {
-        Menu {
-            ForEach(values, id: \.self) { option in
-                Button { onChanged(option) } label: {
-                    if option == value { Label(labelOf(option), systemImage: "checkmark") } else { Text(labelOf(option)) }
-                }
-            }
-        } label: {
+        AppMenuButton(help: help, items: {
+            values.map { option in AppNativeMenu.Item(labelOf(option), checked: option == value) { onChanged(option) } }
+        }) {
             HStack(spacing: theme.spacing.s4) {
                 Text(labelOf(value)).font(font(for: value)).foregroundStyle(theme.colors.tx).lineLimit(1)
                 Spacer(minLength: 0)
@@ -32,9 +28,7 @@ public struct AppDropdown<T: Hashable>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(theme.colors.panel2, in: RoundedRectangle(cornerRadius: theme.radii.md))
             .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
-            .contentShape(Rectangle())
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).help(help ?? "")
     }
 
     private func font(for v: T) -> Font {

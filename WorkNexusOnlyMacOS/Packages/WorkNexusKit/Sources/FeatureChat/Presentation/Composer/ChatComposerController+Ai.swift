@@ -59,6 +59,13 @@ extension ChatComposerController {
     /// The ✨ menu's switch for the sticker strip (saved by the host).
     func setStickerSuggestions(_ on: Bool) { services?.setStickerSuggestions?(on) }
 
+    /// Saves whose voice the reply ideas take; ideas already shown are asked for again in it.
+    func setReplyRole(_ role: ChatReplyRole) {
+        services?.setReplyRole?(role)
+        settings.replyRole = role
+        if case .ready = ai.replies { suggestReplies() }
+    }
+
     /// Sends a suggested sticker (answering the reply being written, else the thread root); it clears the draft when it says
     /// all of it.
     func sendSuggested(_ sticker: ChatSticker, clearDraft: Bool) {

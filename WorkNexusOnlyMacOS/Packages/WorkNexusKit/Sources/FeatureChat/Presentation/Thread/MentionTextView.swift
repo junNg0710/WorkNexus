@@ -13,12 +13,14 @@ struct MentionTextView: View {
     static let mentionScheme = "worknexus-mention"
 
     var body: some View {
-        Text(Self.cachedAttributed(text, ink: ink, font: theme.typography.font(size: ink.fontSize)))
+        let shown = Self.cachedAttributed(text, ink: ink, font: theme.typography.font(size: ink.fontSize))
+        Text(shown)
             .foregroundStyle(ink.text.color)
             .lineSpacing(ink.fontSize * 0.2)
             .tint(ink.link.color)
             .textSelection(.enabled)
             .fixedSize(horizontal: false, vertical: true)
+            .linkPointer(shown, font: theme.typography.nsFont(size: ink.fontSize), lineSpacing: ink.fontSize * 0.2)
             .environment(\.openURL, OpenURLAction { url in
                 if url.scheme == Self.mentionScheme, let id = url.host.flatMap(Int.init) { ctx.actions.openProfile(id) }
                 else { ctx.openLink(url.absoluteString) }

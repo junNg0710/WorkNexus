@@ -51,6 +51,7 @@ final class ChatWiring {
             ensureAiReady: { await OpenCodeLinkGate.shared.ensureLinked(.chat) },
             aiLanguages: translationLanguages.map { ChatAiLanguage(code: $0.code, englishName: $0.englishName, nativeName: $0.nativeName, flag: $0.flag) },
             setStickerSuggestions: { on in Task { @MainActor in shell.updateSettings { $0.chatStickerSuggestions = on } } },
+            setReplyRole: { role in Task { @MainActor in shell.updateSettings { $0.chatAiReplyRole = role.rawValue } } },
             ticketLookup: { url in
                 var it = tickets.watchTickets().makeAsyncIterator()
                 return await it.next()?.first { $0.url == url }

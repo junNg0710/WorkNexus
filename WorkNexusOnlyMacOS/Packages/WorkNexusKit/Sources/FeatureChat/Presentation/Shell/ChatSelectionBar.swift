@@ -50,13 +50,13 @@ private struct SelectionCreateMenu: View {
     let create: (ChatTicketKind) -> Void
 
     var body: some View {
-        Menu {
-            Button { create(.bug) } label: { Label(L.createBug, systemImage: "ladybug") }
-            Button { create(.task) } label: { Label(L.createTask, systemImage: "checklist") }
-            Button { create(.todo) } label: { Label(L.createTodo, systemImage: "calendar.badge.plus") }
-        } label: {
+        AppMenuButton(items: {
+            [AppNativeMenu.Item(L.createBug, icon: "ladybug") { create(.bug) },
+             AppNativeMenu.Item(L.createTask, icon: "checklist") { create(.task) },
+             AppNativeMenu.Item(L.createTodo, icon: "calendar.badge.plus") { create(.todo) }]
+        }) {
             Label(shellString("chatCreateFrom", "Create…"), systemImage: "plus.circle").font(theme.typography.bodyStrong)
         }
-        .menuStyle(.button).buttonStyle(.plain).fixedSize().foregroundStyle(theme.colors.tx).disabled(disabled)
+        .fixedSize().foregroundStyle(theme.colors.tx).disabled(disabled)
     }
 }
