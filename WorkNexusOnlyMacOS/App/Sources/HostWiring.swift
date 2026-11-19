@@ -47,7 +47,7 @@ struct HostWiring {
             host.overlay = { inset in AnyView(NotificationsPanel(model: n, leftInset: inset, dateFormat: shell.settings.dateFormat)) }
         }
         host.updateButton = { AnyView(UpdateRailButton(model: r.update)) }
-        host.banner = { AnyView(UpdateBannerView(model: r.update)) }
+        host.banner = { AnyView(UpdateBannerHost(model: r.update, whatsNew: r.whatsNew)) }
         host.quickSettings = { AnyView(QuickSettingsView(root: r)) }
         host.petSheet = { r.petLibrary.sheet(for: shell.settings.petId) }
         host.petWaiting = { r.notifications?.unreadCount ?? 0 }

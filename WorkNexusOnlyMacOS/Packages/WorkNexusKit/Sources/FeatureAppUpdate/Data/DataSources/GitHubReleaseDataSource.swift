@@ -16,6 +16,8 @@ public struct GitHubRelease: Sendable, Equatable {
 /// HTTP / hashing seam so the repository is testable without a network.
 public protocol GitHubReleaseSource: Sendable {
     func fetchLatestStableRelease() async throws -> GitHubRelease
+    /// The newest hundred releases, drafts and pre-releases left out.
+    func fetchStableReleases() async throws -> [GitHubRelease]
     func readText(_ url: String) async throws -> String
     func downloadFile(_ url: String, to path: String, onProgress: @escaping @Sendable (Double) -> Void) async throws
     func sha256Of(_ path: String) throws -> String
@@ -33,23 +35,42 @@ public final class GitHubReleaseDataSource: GitHubReleaseSource, @unchecked Send
     }
 
     public func fetchLatestStableRelease() async throws -> GitHubRelease {
-        var req = URLRequest(url: config.latestReleaseURL)
+        try Self.parseRelease(try await apiGet(config.latestReleaseURL))
+    }
+
+    public func fetchStableReleases() async throws -> [GitHubRelease] {
+        try Self.parseReleases(try await apiGet(config.releasesURL))
+    }
+
+    private func apiGet(_ url: URL) async throws -> Data {
+        var req = URLRequest(url: url)
         req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         req.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
         req.setValue(config.appName, forHTTPHeaderField: "User-Agent")
         let (data, response) = try await session.data(for: req)
         try Self.check(response)
-        return try Self.parseRelease(data)
+        return data
     }
 
     static func parseRelease(_ data: Data) throws -> GitHubRelease {
         guard let body = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw ReleaseFormatError(message: "Invalid GitHub release response")
         }
-        guard let tag = body["tag_name"] as? String, let html = body["html_url"] as? String,
-              (body["draft"] as? Bool) == false, (body["prerelease"] as? Bool) == false else {
-            throw ReleaseFormatError(message: "GitHub did not return a stable release")
+        guard let release = release(body) else { throw ReleaseFormatError(message: "GitHub did not return a stable release") }
+        return release
+    }
+
+    /// The stable releases of a `/releases` list; drafts, pre-releases and malformed entries are skipped.
+    static func parseReleases(_ data: Data) throws -> [GitHubRelease] {
+        guard let body = try JSONSerialization.jsonObject(with: data) as? [Any] else {
+            throw ReleaseFormatError(message: "Invalid GitHub releases response")
         }
+        return body.compactMap { ($0 as? [String: Any]).flatMap(release) }
+    }
+
+    private static func release(_ body: [String: Any]) -> GitHubRelease? {
+        guard let tag = body["tag_name"] as? String, let html = body["html_url"] as? String,
+              (body["draft"] as? Bool) == false, (body["prerelease"] as? Bool) == false else { return nil }
         var assets: [String: String] = [:]
         for a in (body["assets"] as? [Any]) ?? [] {
             guard let m = a as? [String: Any], let n = m["name"] as? String, let u = m["browser_download_url"] as? String else { continue }
