@@ -59,9 +59,13 @@ final class CompositionRoot {
     let diagnostics: DiagnosticsWiring
     let autoUpdate: AutoUpdatePreference
 
+    /// What every release since the last version run brought, shown once after an update.
+    let whatsNew: WhatsNewModel
+
     /// Own release identity: the Flutter app's releases ship `WorkNexus-macos-universal.zip` — never offer those to this app.
+    /// This app's releases are tagged `vX.Y.Z+mac`: only their notes are collected.
     static let updateConfig = AppUpdateConfig(appName: "WorkNexus Mac", githubOwner: "junNg0710", githubRepo: "WorkNexus",
-                                              macAssetName: "WorkNexusMac-macos-universal.zip")
+                                              macAssetName: "WorkNexusMac-macos-universal.zip", releaseTagSuffix: "+mac")
 
     init() throws {
         diagnostics = DiagnosticsWiring()
@@ -145,6 +149,7 @@ final class CompositionRoot {
         if !DemoMode.isEnabled { miniApps.startSessionCookies() }
         autoUpdate = MarkerFileAutoUpdatePreference(file: PlatformPaths.applicationSupport().appendingPathComponent("auto_update.txt"))
         update = AppUpdateFeature.makeModel(config: Self.updateConfig, preference: autoUpdate, quit: { DispatchQueue.main.async { AppQuit.now() } })
+        whatsNew = AppUpdateFeature.makeWhatsNew(config: Self.updateConfig)
         // Pets from codex-pets.net live in Application Support; the demo build browses but keeps its own folder (`WN_SUPPORT_DIR`).
         let pets = PetsFeature.makeServices(root: PlatformPaths.applicationSupport().appendingPathComponent("pets", isDirectory: true))
         petLibrary = PetLibraryModel(services: pets)
@@ -193,6 +198,8 @@ final class CompositionRoot {
         platform.start(shell: shell)
         aiTools.start()
         update.start()
+        // Not in the demo build (returned above): it must not move the real app's "last version run" on.
+        Task { [whatsNew] in await whatsNew.checkAtLaunch() }
         notifications?.start()
         let accounts = await currentAccounts(services.workspaces)
         // The profile (real name) is what chat signs in with, so every saved ZenTao account refreshes it at launch, not only

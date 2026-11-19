@@ -1,7 +1,8 @@
 /// Ported from: lib/features/app_update/domain/entities/available_update.dart
 /// A stable release newer than the running build. `downloadUrl`/`sha256` are nil when the release carries no
 /// (verifiable) build for this platform; the update then can only be fetched by hand from `releaseUrl`.
-public struct AvailableUpdate: Sendable, Equatable {
+public struct AvailableUpdate: Sendable, Equatable, Identifiable {
+    public var id: String { latestVersion }
     public var currentVersion: String
     public var latestVersion: String
     public var releaseUrl: String
@@ -17,4 +18,7 @@ public struct AvailableUpdate: Sendable, Equatable {
     }
 
     public var canInstallInApp: Bool { downloadUrl != nil && sha256 != nil }
+
+    /// `v1.9.5` for the tag `v1.9.5+mac`: the version as the UI names it.
+    public var latestTag: String { AppVersion(latestVersion)?.tag ?? latestVersion }
 }

@@ -58,6 +58,24 @@ public final class GitHubUpdateRepository: UpdateRepository, @unchecked Sendable
         }
     }
 
+    public func fetchStableReleaseNotes() async -> Outcome<[ReleaseNote]> {
+        do {
+            return .success(try await releases.fetchStableReleases()
+                .filter { config.isOwnRelease($0.tagName) }
+                .map { ReleaseNote(version: $0.tagName, notes: $0.notes) })
+        } catch is ReleaseFormatError {
+            return .failure(.parse("Could not read the release notes"))
+        } catch is CancellationError {
+            return .failure(.cancelled("cancelled"))
+        } catch let e as ReleaseHTTPError {
+            return .failure(.network("Could not read the release notes (HTTP \(e.status))"))
+        } catch is URLError {
+            return .failure(.network("Could not read the release notes"))
+        } catch {
+            return .failure(.unexpected("Could not read the release notes: \(error)"))
+        }
+    }
+
     public func download(_ update: AvailableUpdate, onProgress: @escaping @Sendable (Double) -> Void) async -> Outcome<String> {
         guard let installer, let url = update.downloadUrl, let expected = update.sha256 else {
             return .failure(.unexpected("This update cannot be installed"))

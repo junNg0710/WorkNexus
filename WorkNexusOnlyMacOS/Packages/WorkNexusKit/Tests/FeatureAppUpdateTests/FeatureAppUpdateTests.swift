@@ -5,17 +5,20 @@ import XCTest
 
 // MARK: doubles
 
-private struct StubRepository: UpdateRepository {
-    var snapshot: Outcome<UpdateVersionSnapshot?>
-    func currentVersion() -> String { "1.0.0" }
+struct StubRepository: UpdateRepository {
+    var snapshot: Outcome<UpdateVersionSnapshot?> = .success(nil)
+    var current = "1.0.0"
+    var notes: Outcome<[ReleaseNote]> = .success([])
+    func currentVersion() -> String { current }
     func fetchLatestStableRelease() async -> Outcome<UpdateVersionSnapshot?> { snapshot }
+    func fetchStableReleaseNotes() async -> Outcome<[ReleaseNote]> { notes }
     func download(_ update: AvailableUpdate, onProgress: @escaping @Sendable (Double) -> Void) async -> Outcome<String> {
         onProgress(0.5); onProgress(1); return .success("/staged/WorkNexus.app")
     }
     func install(stagedPath: String) async -> Outcome<Void> { .success(()) }
 }
 
-private func snap(_ current: String, _ latest: String, url: String? = nil, sha: String? = nil, notes: String = "") -> Outcome<UpdateVersionSnapshot?> {
+func snap(_ current: String, _ latest: String, url: String? = nil, sha: String? = nil, notes: String = "") -> Outcome<UpdateVersionSnapshot?> {
     .success(UpdateVersionSnapshot(currentVersion: current, latestVersion: latest, releaseUrl: "https://example.test/r",
                                    releaseNotes: notes, downloadUrl: url, sha256: sha))
 }
@@ -38,6 +41,7 @@ private final class FakeReleases: GitHubReleaseSource, @unchecked Sendable {
     let content: String
     init(_ content: String) { self.content = content }
     func fetchLatestStableRelease() async throws -> GitHubRelease { throw ReleaseHTTPError(status: 404) }
+    func fetchStableReleases() async throws -> [GitHubRelease] { [] }
     func readText(_ url: String) async throws -> String { "" }
     func downloadFile(_ url: String, to path: String, onProgress: @escaping @Sendable (Double) -> Void) async throws {
         try content.write(toFile: path, atomically: true, encoding: .utf8); onProgress(1)
@@ -277,6 +281,7 @@ final class UpdateModelTests: XCTestCase {
         struct Failing: UpdateRepository {
             func currentVersion() -> String { "1.0.0" }
             func fetchLatestStableRelease() async -> Outcome<UpdateVersionSnapshot?> { snap("1.0.0", "v1.1.0", url: "u", sha: "s") }
+            func fetchStableReleaseNotes() async -> Outcome<[ReleaseNote]> { .success([]) }
             func download(_ u: AvailableUpdate, onProgress: @escaping @Sendable (Double) -> Void) async -> Outcome<String> { .success("/p") }
             func install(stagedPath: String) async -> Outcome<Void> { .failure(.storage("no write access")) }
         }

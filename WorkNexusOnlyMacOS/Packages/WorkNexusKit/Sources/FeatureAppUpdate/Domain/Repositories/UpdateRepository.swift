@@ -16,10 +16,19 @@ public struct UpdateVersionSnapshot: Sendable, Equatable {
     }
 }
 
+/// One stable release's notes: its tag (`version`, e.g. `v1.9.5+mac`) and its GitHub Markdown.
+public struct ReleaseNote: Sendable, Equatable {
+    public var version: String
+    public var notes: String
+    public init(version: String, notes: String) { self.version = version; self.notes = notes }
+}
+
 public protocol UpdateRepository: Sendable {
     /// The version of the running build (`1.4.1`).
     func currentVersion() -> String
     func fetchLatestStableRelease() async -> Outcome<UpdateVersionSnapshot?>
+    /// The notes of this app's recent stable releases (the newest hundred), in no particular order.
+    func fetchStableReleaseNotes() async -> Outcome<[ReleaseNote]>
     /// Downloads, verifies the checksum and unpacks; returns the path of the staged build.
     func download(_ update: AvailableUpdate, onProgress: @escaping @Sendable (Double) -> Void) async -> Outcome<String>
     /// Swaps the staged build in for the running one and restarts the app. Only returns when the install could not start.
