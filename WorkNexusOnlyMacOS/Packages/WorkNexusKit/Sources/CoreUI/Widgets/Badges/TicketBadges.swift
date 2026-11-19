@@ -93,6 +93,7 @@ public struct SkeletonBox: View {
 /// box flickering on its own.
 struct SkeletonSheen: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.animationsRun) private var animationsRun
     /// One sweep, and how far it travels (wider than any window).
     static let period: TimeInterval = 1.6
     static let travel: CGFloat = 2600
@@ -101,7 +102,7 @@ struct SkeletonSheen: View {
     var body: some View {
         GeometryReader { geo in
             let frame = geo.frame(in: .global)
-            TimelineView(.animation(minimumInterval: 1 / 30)) { context in
+            TimelineView(.animation(minimumInterval: 1 / 30, paused: !animationsRun)) { context in
                 let t = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: Self.period) / Self.period
                 let center = -Self.band + CGFloat(t) * Self.travel - frame.minX
                 LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: theme.colors.skel2, location: 0.5),

@@ -9,11 +9,14 @@ public final class GRDBTicketRepository: TicketRepository {
     ///   markers each list sync stamps only its own of); the composition root passes the rule.
     public init(db: AppDatabase, keepsLabel: @escaping @Sendable (String) -> Bool = { _ in false }) {
         self.db = db; self.keepsLabel = keepsLabel
+        allTickets = SharedObservation { db.observe { try TicketRow.fetchAll($0).compactMap(\.entity) } }
     }
 
-    public func watchTickets() -> AsyncStream<[Ticket]> {
-        db.observe { try TicketRow.fetchAll($0).compactMap(\.entity) }
-    }
+    /// Every ticket, read and decoded once per change for all the boards, counters and panes watching it (each used to
+    /// run its own query: ten watchers decoded the whole table ten times on every write).
+    private let allTickets: SharedObservation<[Ticket]>
+
+    public func watchTickets() -> AsyncStream<[Ticket]> { allTickets.stream() }
     public func ticket(id: String) async -> Outcome<Ticket?> {
         await guarded { try await self.db.writer.read { try TicketRow.fetchOne($0, key: id)?.entity } }
     }

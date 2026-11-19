@@ -38,7 +38,7 @@ enum ChatSwitchBench {
 #if DEBUG
 /// Gaps between display frames since the last `reset`.
 @MainActor
-private final class FrameGaps: NSObject {
+final class FrameGaps: NSObject {
     private var link: CADisplayLink?
     private var last: CFTimeInterval?
     private var gaps: [CFTimeInterval] = []

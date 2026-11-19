@@ -60,6 +60,7 @@ struct KeepAliveStack: View {
                         // minWidth/minHeight 0: never larger than the viewport, however wide its content wants to be.
                         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
                         .environment(\.sectionIsActive, active)
+                        .environment(\.animationsRun, active)
                         .opacity(active ? 1 : 0)
                         .allowsHitTesting(active)
                         .disabled(!active)

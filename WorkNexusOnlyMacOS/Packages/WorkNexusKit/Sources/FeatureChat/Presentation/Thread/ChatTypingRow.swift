@@ -81,6 +81,7 @@ private struct TypingOthers: View {
 /// reduced motion.
 struct ThreadTypingDots: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.animationsRun) private var animationsRun
     let color: Color
     /// Diameter of one dot; gaps and the rise scale with it.
     let size: CGFloat
@@ -98,7 +99,7 @@ struct ThreadTypingDots: View {
     }
 
     var body: some View {
-        TimelineView(.animation(paused: reduceMotion)) { timeline in
+        TimelineView(.animation(paused: reduceMotion || !animationsRun)) { timeline in
             let t = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: Self.period) / Self.period
             HStack(spacing: size * 0.5) {
                 ForEach(0..<3, id: \.self) { i in

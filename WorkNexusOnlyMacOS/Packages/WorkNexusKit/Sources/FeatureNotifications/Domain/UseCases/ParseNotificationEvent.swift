@@ -27,20 +27,25 @@ public struct ParseNotificationEvent: Sendable {
 
     private static func isAscii(_ s: String) -> Bool { s.unicodeScalars.allSatisfy { $0.value >= 97 && $0.value <= 122 } }
 
+    /// Every label's pattern, compiled once (compiling them for each notification made filtering the list on every
+    /// store change the costliest thing the main thread did).
+    nonisolated(unsafe) private static let patterns: [(NotificationAction, NSRegularExpression)] = labels.flatMap { action, words in
+        words.compactMap { label in
+            let pattern = isAscii(label) ? "\\s\(label)\\s" : NSRegularExpression.escapedPattern(for: label)
+            return (try? NSRegularExpression(pattern: pattern)).map { (action, $0) }
+        }
+    }
+
     public func callAsFunction(_ text: String) -> NotificationEvent? {
         let summary = text.trimmingCharacters(in: .whitespacesAndNewlines)
         let ns = summary as NSString
         var first: (at: Int, actor: String, action: NotificationAction)?
-        for (action, labels) in Self.labels {
-            for label in labels {
-                let pattern = Self.isAscii(label) ? "\\s\(label)\\s" : NSRegularExpression.escapedPattern(for: label)
-                guard let re = try? NSRegularExpression(pattern: pattern),
-                      let m = re.firstMatch(in: summary, range: NSRange(location: 0, length: ns.length)) else { continue }
-                let actor = ns.substring(to: m.range.location).trimmingCharacters(in: .whitespacesAndNewlines)
-                // An action needs someone doing it and something it was done to.
-                if actor.isEmpty || m.range.location + m.range.length >= ns.length { continue }
-                if first == nil || m.range.location < first!.at { first = (m.range.location, actor, action) }
-            }
+        for (action, re) in Self.patterns {
+            guard let m = re.firstMatch(in: summary, range: NSRange(location: 0, length: ns.length)) else { continue }
+            let actor = ns.substring(to: m.range.location).trimmingCharacters(in: .whitespacesAndNewlines)
+            // An action needs someone doing it and something it was done to.
+            if actor.isEmpty || m.range.location + m.range.length >= ns.length { continue }
+            if first == nil || m.range.location < first!.at { first = (m.range.location, actor, action) }
         }
         return first.map { NotificationEvent(actor: $0.actor, action: $0.action) }
     }
