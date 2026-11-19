@@ -51,8 +51,18 @@ public final class AppDatabase: @unchecked Sendable {
 public extension AppDatabase {
     /// Re-runs `fetch` whenever the tables it reads change; ends when the consumer cancels.
     func observe<T: Sendable>(_ fetch: @escaping @Sendable (Database) throws -> T) -> AsyncStream<T> {
-        let obs = ValueObservation.tracking(fetch)
-        return AsyncStream { cont in
+        stream(ValueObservation.tracking(fetch))
+    }
+
+    /// `observe` for a fetch that always reads the same tables (no query that depends on what an earlier one found): it
+    /// reads beside the writes instead of holding them up while it runs, which a large read (every ticket) otherwise
+    /// does after each write, so a burst of small writes waited for one whole read each.
+    func observeConstantRegion<T: Sendable>(_ fetch: @escaping @Sendable (Database) throws -> T) -> AsyncStream<T> {
+        stream(ValueObservation.trackingConstantRegion(fetch))
+    }
+
+    private func stream<T: Sendable>(_ obs: ValueObservation<ValueReducers.Fetch<T>>) -> AsyncStream<T> {
+        AsyncStream { cont in
             let task = Task {
                 do { for try await v in obs.values(in: writer) { cont.yield(v) } } catch {}
                 cont.finish()

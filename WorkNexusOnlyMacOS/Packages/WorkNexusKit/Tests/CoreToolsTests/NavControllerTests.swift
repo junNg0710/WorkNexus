@@ -85,4 +85,21 @@ final class NavControllerTests: XCTestCase {
         n.sortBoardCards(by: .title); XCTAssertEqual(n.boardSort, TicketSort(.title))
         n.sortBoardCards(by: .title); XCTAssertEqual(n.boardSort, TicketSort(.title, descending: true))
     }
+
+    /// Going from Tasks to Bugs and back finds each on the scope it was left on (an execution, a product), so neither has
+    /// to pick a scope and read its board again.
+    func testEachSectionComesBackOnTheScopeItWasLeftOn() {
+        let n = nav()
+        n.select(.account("zt"))
+        n.setSection("zentao.tasks", accountId: "zt"); n.setScope("6", accountId: "zt")
+        n.setSection("zentao.bugs", accountId: "zt")
+        XCTAssertNil(n.location(for: "zt").scopeId, "a section opened for the first time has no scope yet")
+        n.setScope("1", accountId: "zt")
+        n.setSection("zentao.tasks", accountId: "zt")
+        XCTAssertEqual(n.location(for: "zt").scopeId, "6")
+        n.setSection("zentao.bugs", accountId: "zt")
+        XCTAssertEqual(n.location(for: "zt").scopeId, "1")
+        n.setSection("zentao.bugs", accountId: "zt")
+        XCTAssertEqual(n.location(for: "zt").scopeId, "1", "the section on screen stays as it is")
+    }
 }

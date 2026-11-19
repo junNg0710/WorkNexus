@@ -77,9 +77,14 @@ public final class AppNavController {
     public func location(for accountId: String) -> ToolLocation {
         state.locations[accountId] ?? ToolLocation(section: defaultSection(accountId))
     }
+    /// Goes to `section`, on the scope it was last left on (none the first time). The section on screen stays as it is.
     public func setSection(_ section: SectionID, accountId: String) {
+        var l = location(for: accountId)
+        guard l.section != section else { return }
         PerformanceLog.beginInteraction("open \(section.rawValue)")
-        var l = location(for: accountId); l.section = section; l.scopeId = nil; state.locations[accountId] = l
+        if let scope = l.scopeId { l.sectionScopes[l.section] = scope } else { l.sectionScopes[l.section] = nil }
+        l.section = section; l.scopeId = l.sectionScopes[section]
+        state.locations[accountId] = l
     }
     public func setScope(_ scopeId: String?, accountId: String) {
         if scopeId != location(for: accountId).scopeId { PerformanceLog.beginInteraction("open scope \(scopeId ?? "all")") }

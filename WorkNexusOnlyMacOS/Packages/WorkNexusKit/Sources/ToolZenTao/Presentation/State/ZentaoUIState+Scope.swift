@@ -36,24 +36,17 @@ extension ZentaoUIState {
     }
 
     /// The bugs the Bugs section shows before the user's filters: the cached bugs tagged with the open product,
-    /// narrowed view by view to what each bug view has loaded (and to the picked execution, when there is one).
+    /// narrowed view by view to what each bug view has loaded. The Tasks board's execution does not narrow it: the two
+    /// boards keep their own scope, so going from one to the other changes neither.
     func scopeBugs(_ tickets: [Ticket]) -> [Ticket] {
         let place = place
         if let team = bugTeam { return team.accountId == place.accountId ? team.tickets(in: tickets, bugs: true) : [] }
         guard let product, product.accountId == place.accountId, product.productId == place.scopeId else { return [] }
-        let pickedExecution = execution?.accountId == product.accountId ? execution : nil
         let related = bugRelated
         var tickets = tickets
         // Until Related to me's view loads, its cached bugs are those that concern the user locally.
         if related, let account = bugBoard.accounts[product.accountId], !(bugStreams.views[.relatedToMe]?.started ?? false) {
             tickets = tickets.filter { IsRelatedToMe()($0, account) }
-        }
-        if let e = pickedExecution {
-            tickets = tickets.filter { t in
-                guard t.accountId == e.accountId else { return false }
-                if case .zentaoBug(let b) = t.providerEntity, b.execution == e.executionId { return true }
-                return t.labels.contains(zentaoExecutionLabel(e.executionId))
-            }
         }
         return ScopePagedViewTickets<ZenTaoBugStream>()(PagedViewScopeQuery(
             tickets: ScopeProviderTickets()(tickets: tickets, accountId: product.accountId, providerType: .zentao,
@@ -66,7 +59,7 @@ extension ZentaoUIState {
     public func scopeTitle(accountId: String, scopeId: String?, bugs: Bool) -> String? {
         let exec = execution?.accountId == accountId ? execution : nil
         if !bugs { return exec?.executionId == scopeId ? exec?.executionName : nil }
-        if let p = product, p.accountId == accountId, p.productId == scopeId { return exec?.executionName ?? p.productName }
+        if let p = product, p.accountId == accountId, p.productId == scopeId { return p.productName }
         guard let scopeId else { return nil }
         return products[accountId]?.value?.first { $0.id == scopeId }?.name
     }
@@ -83,7 +76,8 @@ extension ZentaoUIState {
         // Product ids are per server: another account's product 1 is not this one.
         let current = product?.accountId == account.id && product?.productId == pick.id
         if scoped != nil && current { return }
-        if scoped == nil { deps.nav.setScope(pick.id, accountId: account.id); clearExecution() }
+        // The Tasks board's execution is left alone: it does not narrow the bugs.
+        if scoped == nil { deps.nav.setScope(pick.id, accountId: account.id) }
         selectProduct(pick)
         bugBoard.openBoard(bugBoard.currentBoardKey)
         rescope()

@@ -55,11 +55,15 @@ final class PresentationBoardsTests: XCTestCase {
         XCTAssertEqual(Set(env.state.scopeBugs(all).map(\.externalKey)), ["1", "2", "3"])
     }
 
-    func testChildExecutionNarrowsBugsExclusivelyToThatExecution() {
+    /// The Tasks board's execution is its own: going to Bugs with one open neither narrows the bugs nor clears it (which
+    /// made coming back to Tasks read its board again).
+    func testTheTasksExecutionDoesNotNarrowTheBugs() {
         let env = scopingEnv()
         env.state.selectExecution(env.execution("exec_1", "Sprint 1"))
         let all = [boardBug("1", execution: "exec_1"), boardBug("2", execution: "exec_2"), boardBug("3")]
-        XCTAssertEqual(env.state.scopeBugs(all).map(\.externalKey), ["1"])
+        XCTAssertEqual(Set(env.state.scopeBugs(all).map(\.externalKey)), ["1", "2", "3"])
+        XCTAssertEqual(env.state.execution?.executionId, "exec_1")
+        XCTAssertEqual(env.state.scopeTitle(accountId: "zt1", scopeId: "p1", bugs: true), "VN_IM_Chat")
     }
 
     func testAnotherProductsBugsAndAnUnpickedBoardScopeToNothing() {

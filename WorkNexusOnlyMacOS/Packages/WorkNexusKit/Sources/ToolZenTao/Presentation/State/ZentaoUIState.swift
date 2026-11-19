@@ -122,13 +122,11 @@ public final class ZentaoUIState {
 
     // MARK: Opening boards
 
-    /// Opens `product`'s bug board: its scope, its selection and its own filter. An execution picked under another
-    /// product would narrow this product's bugs to nothing, so it is cleared.
+    /// Opens `product`'s bug board: its scope, its selection and its own filter. The Tasks board keeps its execution.
     public func openProduct(_ p: ProviderProduct) {
         closeTeam(bugs: true)
         deps.nav.setScope(p.id, accountId: p.accountId)
         selectProduct(p)
-        execution = nil
         bugBoard.openBoard(bugBoard.currentBoardKey)
         rescope()
     }

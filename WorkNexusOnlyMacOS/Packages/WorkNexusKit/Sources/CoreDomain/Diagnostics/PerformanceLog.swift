@@ -81,6 +81,10 @@ public enum PerformanceLog {
         state.lock.withLock { if state.interaction == nil { state.interaction = PendingInteraction(name: n, start: t) } }
     }
 
+    /// Forgets the action waiting: frames stopped meanwhile (the app was in the background), so the next one drawn says
+    /// nothing about how fast it was answered.
+    public static func cancelInteraction() { state.lock.withLock { state.interaction = nil } }
+
     /// A frame was drawn at `time` (the frame monitor): the action waiting is answered, and written down when it was slow.
     public static func frameShown(at time: TimeInterval) {
         guard isEnabled, let action = state.lock.withLock({ () -> PendingInteraction? in

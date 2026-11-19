@@ -9,9 +9,9 @@ public final class GRDBTicketRepository: TicketRepository {
     ///   markers each list sync stamps only its own of); the composition root passes the rule.
     public init(db: AppDatabase, keepsLabel: @escaping @Sendable (String) -> Bool = { _ in false }) {
         self.db = db; self.keepsLabel = keepsLabel
-        allTickets = SharedObservation {
-            db.observe { d in
-                try PerformanceLog.measureSync("db: read every ticket", slowerThan: 0.15) { try TicketRow.fetchAll(d).compactMap(\.entity) }
+        allTickets = SharedObservation(throttle: .milliseconds(300)) {
+            db.observeConstantRegion { d in
+                try PerformanceLog.measureSync("db: read every ticket", slowerThan: 0.3) { try TicketRow.fetchAll(d).compactMap(\.entity) }
             }
         }
     }

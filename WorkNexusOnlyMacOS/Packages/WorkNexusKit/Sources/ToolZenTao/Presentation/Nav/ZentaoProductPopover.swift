@@ -16,7 +16,7 @@ struct ZentaoProductPopover: View {
         let choices = ZentaoNavLogic.productChoices(
             products: state.products[account.id]?.value ?? [], tickets: state.bugBoard.tickets, account: account,
             accountId: account.id, search: search, tab: tab)
-        let openId = state.execution == nil ? state.product.flatMap { $0.accountId == account.id ? $0.productId : nil } : nil
+        let openId = state.product.flatMap { $0.accountId == account.id ? $0.productId : nil }
         ZentaoPickerShell(searchHint: appString("filterProducts", "Filter products"), search: $search, tab: $tab) {
             ZentaoProductPopoverList(choices: choices, selectedId: openId, pinnedIds: pinnedIds,
                                      onTogglePin: { state.togglePinnedProduct(accountId: account.id, productId: $0.id) }) { product in

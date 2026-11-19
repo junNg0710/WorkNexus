@@ -43,6 +43,8 @@ public final class FrameStutterMonitor: NSObject {
         let l = screen.displayLink(target: self, selector: #selector(tick(_:)))
         l.add(to: .main, forMode: .common)
         link = l; last = nil
+        // A click before the frames stopped (or at launch, before the window is in front) is not timed across the pause.
+        PerformanceLog.cancelInteraction()
     }
 
     private func pause() {

@@ -18,10 +18,13 @@ public struct ToolLocation: Hashable, Sendable {
     public var quickScope: QuickScope
     public var viewModes: [SectionID: ViewModeID]
     public var recentScopeIds: [String]
+    /// The scope each section was last left on (Tasks its execution, Bugs its product): going back to a section finds it
+    /// where it was, instead of re-picking a scope and reading the board again.
+    public var sectionScopes: [SectionID: String]
     public init(section: SectionID, scopeId: String? = nil, quickScope: QuickScope = .none,
-                viewModes: [SectionID: ViewModeID] = [:], recentScopeIds: [String] = []) {
+                viewModes: [SectionID: ViewModeID] = [:], recentScopeIds: [String] = [], sectionScopes: [SectionID: String] = [:]) {
         self.section = section; self.scopeId = scopeId; self.quickScope = quickScope
-        self.viewModes = viewModes; self.recentScopeIds = recentScopeIds
+        self.viewModes = viewModes; self.recentScopeIds = recentScopeIds; self.sectionScopes = sectionScopes
     }
 }
 

@@ -16,7 +16,11 @@ final class SharedObservation<T: Sendable>: @unchecked Sendable {
     /// Bumped each time the observation restarts: a value from one already stopped is dropped.
     private var generation = 0
 
-    init(_ start: @escaping @Sendable () -> AsyncStream<T>) { self.start = start }
+    /// Values arriving faster than this are gathered: the first goes out at once, then only the newest of each interval
+    /// (a burst of writes makes every board redraw a few times, not once per write).
+    private let throttle: Duration?
+
+    init(throttle: Duration? = nil, _ start: @escaping @Sendable () -> AsyncStream<T>) { self.throttle = throttle; self.start = start }
 
     func stream() -> AsyncStream<T> {
         let (stream, cont) = AsyncStream<T>.makeStream(bufferingPolicy: .bufferingNewest(1))
@@ -27,8 +31,23 @@ final class SharedObservation<T: Sendable>: @unchecked Sendable {
         if source == nil {
             generation += 1
             let values = start(), gen = generation
+            let throttle = self.throttle
             source = Task { [weak self] in
-                for await v in values { self?.publish(v, gen) }
+                guard let throttle else {
+                    for await v in values { self?.publish(v, gen) }
+                    return
+                }
+                // The newest value waiting while the last one's interval runs out.
+                let (pending, relay) = AsyncStream<T>.makeStream(bufferingPolicy: .bufferingNewest(1))
+                await withTaskGroup(of: Void.self) { group in
+                    group.addTask { for await v in values { relay.yield(v) }; relay.finish() }
+                    group.addTask { [weak self] in
+                        for await v in pending {
+                            self?.publish(v, gen)
+                            try? await Task.sleep(for: throttle)
+                        }
+                    }
+                }
             }
         }
         lock.unlock()
