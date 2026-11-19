@@ -109,6 +109,9 @@ final class ChatComposerController {
         case .tab: return mentions.handle(.tab, model: model)
         case .escape:
             if mentions.handle(.escape, model: model) { return true }
+            // The suggestion trays over the tools go first, as their close button does: AI replies, then stickers.
+            if ai.replies != .idle { ai.clearReplies(); return true }
+            if stickerSuggestions.offer(enabled: settings.stickerSuggestions) != nil { stickerSuggestions.close(); return true }
             if state.replyDraft != nil { state.replyDraft = nil; return true }
             if !state.stagedFiles.isEmpty { clearStaged(); return true }
             return false
