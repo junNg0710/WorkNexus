@@ -13,8 +13,9 @@ final class ShouldTriggerPanicTests: XCTestCase {
         PanicIncomingMessage(accountId: "a1", chatGid: chatGid, senderId: senderId, sentAt: sentAt ?? now, isMine: isMine, imageName: name)
     }
 
-    private func run(_ m: PanicIncomingMessage, _ c: PanicSwitchConfig? = nil, last: Date? = nil) -> Bool {
-        useCase(message: m, config: c ?? config, accountId: "a1", now: now, lastTriggeredAt: last)
+    private func run(_ m: PanicIncomingMessage, _ c: PanicSwitchConfig? = nil, last: Date? = nil,
+                     trigger: PanicTrigger = .release) -> Bool {
+        useCase(trigger: trigger, message: m, config: c ?? config, accountId: "a1", now: now, lastTriggeredAt: last)
     }
 
     func testFiresForTheStickerFromAnAllowedSenderInTheGroup() {
@@ -48,11 +49,35 @@ final class ShouldTriggerPanicTests: XCTestCase {
         XCTAssertTrue(run(message(), last: now.addingTimeInterval(-60)))
     }
 
-    func testListensInTheTestChatWhileTestModeIsOn() {
-        var test = config
-        test.testMode = true; test.testChatGid = "dm"
-        XCTAssertTrue(run(message(chatGid: "dm"), test))
-        XCTAssertFalse(run(message(), test))
+    func testDemoModeAddsTheDemoTriggerTheTeamGroupKeepsWorking() {
+        var demo = config; demo.demoMode = true; demo.demoChatGid = "dm"
+        let demoSticker = message(chatGid: "dm", senderId: 42, name: PanicSwitchConstants.demoStickerFileName)
+        // The release trigger is unchanged by demo mode.
+        XCTAssertTrue(run(message(), demo))
+        // The demo sticker in the demo chat, from anyone (the allowlist is the team group's).
+        XCTAssertTrue(run(demoSticker, demo, trigger: .demo))
+        // Each sticker only sets off its own trigger, in its own chat.
+        XCTAssertFalse(run(message(chatGid: "dm"), demo, trigger: .demo))
+        XCTAssertFalse(run(demoSticker, demo))
+        XCTAssertFalse(run(message(name: PanicSwitchConstants.demoStickerFileName), demo, trigger: .demo))
+        // Off without demo mode.
+        var noDemo = config; noDemo.demoChatGid = "dm"
+        XCTAssertFalse(run(demoSticker, noDemo, trigger: .demo))
+    }
+
+    func testTellsTheTwoStickersApart() {
+        func image(_ name: String?) -> PanicIncomingMessage { message(name: name) }
+        XCTAssertEqual(ShouldTriggerPanic.triggerOf(image(PanicSwitchConstants.stickerFileName)), .release)
+        XCTAssertEqual(ShouldTriggerPanic.triggerOf(image(PanicSwitchConstants.demoStickerFileName)), .demo)
+        XCTAssertEqual(ShouldTriggerPanic.triggerOf(image("WorkNexus-ThayVo-Demo-v1.PNG")), .demo)
+        XCTAssertNil(ShouldTriggerPanic.triggerOf(image("cat.png")))
+        XCTAssertNil(ShouldTriggerPanic.triggerOf(image(nil)))
+    }
+
+    /// The names both apps send and listen for: changing one breaks interop with the Flutter app.
+    func testTheReservedStickerNamesMatchTheFlutterApp() {
+        XCTAssertEqual(PanicTrigger.release.stickerFileName, "worknexus-thayvo-v1.png")
+        XCTAssertEqual(PanicTrigger.demo.stickerFileName, "worknexus-thayvo-demo-v1.png")
     }
 
     func testLetsAnyoneInTheChatSetItOffByDefault() {
@@ -66,5 +91,7 @@ final class ShouldTriggerPanicTests: XCTestCase {
         XCTAssertFalse(run(message(), off))
         var nobody = config; nobody.allowedSenderIds = []
         XCTAssertFalse(run(message(), nobody))
+        var demoOff = off; demoOff.demoMode = true; demoOff.demoChatGid = "dm"
+        XCTAssertFalse(run(message(chatGid: "dm", name: PanicSwitchConstants.demoStickerFileName), demoOff, trigger: .demo))
     }
 }

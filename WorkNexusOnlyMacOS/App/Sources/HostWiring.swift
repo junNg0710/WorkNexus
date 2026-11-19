@@ -58,14 +58,19 @@ struct HostWiring {
             else if let n = r.notifications { Task { await n.handleTap(payload: link) } }
         }
         host.revealApp = { NSApp.activate(); _ = r.platform.reopenWindow() }
-        // Holding the pet (or three quick clicks, as chosen) raises the panic switch's alert, when it is on for this user.
+        // Holding the pet (or two or three quick clicks, as chosen) sets off the panic switch's official trigger, when it is on
+        // for this user; "Demo" in its right-click menu sets off the demo trigger while demo mode is on.
         host.petTripleTap = PetTripleTap(armed: {
             switch r.panic.model.petGesture {
             case .hold: .hold(seconds: Double(r.panic.model.config?.petHoldSeconds ?? PanicSwitchConstants.defaultPetHoldSeconds))
+            case .doubleClick: .doubleTap
             case .tripleClick: .tripleTap
             case nil: nil
             }
-        }, run: { r.panic.model.petAlert() })
+        }, run: { r.panic.model.petTriggered(.release) })
+        host.petDemo = { r.panic.model.demoAvailable ? { r.panic.model.petTriggered(.demo) } : nil }
+        // The panic switch's settings page is listed only for the ZenTao the feature is offered for.
+        host.settingsSectionVisible = { $0 != "panicSwitch" || r.panic.model.account != nil }
         // On the Chat page the title bar searches the chats and their stored messages; a hit opens the chat (at the message).
         let chat = r.chat
         host.placeSearch = { rail in

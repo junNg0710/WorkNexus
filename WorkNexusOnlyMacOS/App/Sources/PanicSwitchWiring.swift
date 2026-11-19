@@ -51,7 +51,7 @@ struct ChatPanicGateway: PanicChatGateway {
 
     func users(accountId: String) -> AsyncStream<[PanicPerson]> {
         Self.map(repository.watchUsers(accountId: accountId), dropRepeats: true) { list in
-            list.map { PanicPerson(userId: $0.userId, account: $0.account, realname: $0.realname) }
+            list.map { PanicPerson(userId: $0.userId, account: $0.account, realname: $0.realname, avatarUrl: $0.avatarUrl) }
         }
     }
 

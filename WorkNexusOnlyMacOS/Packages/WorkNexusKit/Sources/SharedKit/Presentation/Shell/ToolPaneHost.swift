@@ -81,7 +81,7 @@ private struct SettingsPane: View {
     var body: some View {
         ToolPaneScaffold(title: appString("settings", "Settings")) {
             VStack(spacing: theme.spacing.s2) {
-                ForEach(ShellSections.settings, id: \.id) { r in
+                ForEach(ShellSections.settings.filter { model.host.settingsSectionVisible($0.id) }, id: \.id) { r in
                     ScopeRow(title: appString(r.key, r.fallback), systemImage: r.icon, selected: model.nav.state.settingsSection == r.id) {
                         model.nav.setSettingsSection(r.id)
                     }

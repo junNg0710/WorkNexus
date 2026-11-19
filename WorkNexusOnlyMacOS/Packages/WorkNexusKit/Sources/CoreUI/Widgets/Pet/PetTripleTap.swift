@@ -5,15 +5,26 @@ import SwiftUI
 public enum PetAlertGesture: Equatable, Sendable {
     /// Pressing and holding the pet (without moving it) for `seconds`.
     case hold(seconds: Double)
+    /// Two quick clicks on the pet.
+    case doubleTap
     /// Three quick clicks on the pet.
     case tripleTap
 
     var holdSeconds: Double? { if case .hold(let s) = self { s } else { nil } }
+
+    /// How many quick clicks raise it; nil for a hold.
+    var tapsNeeded: Int? {
+        switch self {
+        case .hold: nil
+        case .doubleTap: 2
+        case .tripleTap: 3
+        }
+    }
 }
 
 /// What the pet's alert gesture does (the panic switch's alert), and which gesture is on right now (nil: none). While
-/// three clicks are, a single click waits a moment for the next before doing what it usually does, so the first click
-/// of three does not bring the app forward; otherwise a click acts at once.
+/// clicks are, a single click waits a moment for the next before doing what it usually does, so the first click of the
+/// run does not bring the app forward; otherwise a click acts at once.
 public struct PetTripleTap {
     public var armed: () -> PetAlertGesture?
     public var run: () -> Void
@@ -28,7 +39,7 @@ public extension EnvironmentValues {
     }
 }
 
-/// Counts the clicks on the pet: three within `gap` of each other run `triple`; fewer, once the next does not come in
+/// Counts the clicks on the pet: `needed` within `gap` of each other run `alert`; fewer, once the next does not come in
 /// time, run `single` once.
 @MainActor
 final class PetTapCounter {
@@ -36,11 +47,12 @@ final class PetTapCounter {
     private var count = 0
     private var pending: Task<Void, Never>?
 
-    func tap(armed: Bool, single: @escaping () -> Void, triple: @escaping () -> Void) {
-        guard armed else { reset(); single(); return }
+    /// - Parameter needed: the clicks that raise the alert (2 or 3); nil: none do, a click acts at once.
+    func tap(needed: Int?, single: @escaping () -> Void, alert: @escaping () -> Void) {
+        guard let needed else { reset(); single(); return }
         count += 1
         pending?.cancel()
-        if count >= 3 { reset(); triple(); return }
+        if count >= needed { reset(); alert(); return }
         pending = Task { @MainActor [weak self] in
             try? await Task.sleep(for: Self.gap)
             guard !Task.isCancelled else { return }

@@ -13,16 +13,21 @@ final class PanicChatUseCasesTests: XCTestCase {
 
     func testSendsTheStickerBytesUnderTheReservedName() async {
         let chats = FakeChatGateway()
-        let result = await SendPanicSticker(chats, FakeSticker(result: .success(Data([1, 2]))))(accountId: "a1", chatGid: "g1")
+        let send = SendPanicSticker(chats, FakeSticker(result: .success(Data([1, 2]))))
+        let result = await send(trigger: .release, accountId: "a1", chatGid: "g1")
+        _ = await send(trigger: .demo, accountId: "a1", chatGid: "dm")
 
         XCTAssertNotNil(result.value)
         XCTAssertEqual(chats.sent, [.init(accountId: "a1", chatGid: "g1", name: "worknexus-thayvo-v1.png", bytes: Data([1, 2]),
+                                          mimeType: "image/png"),
+                                    .init(accountId: "a1", chatGid: "dm", name: "worknexus-thayvo-demo-v1.png", bytes: Data([1, 2]),
                                           mimeType: "image/png")])
     }
 
     func testReturnsTheFailureWhenTheStickerCannotBeLoaded() async {
         let chats = FakeChatGateway()
-        let result = await SendPanicSticker(chats, FakeSticker(result: .failure(.storage("missing"))))(accountId: "a1", chatGid: "g1")
+        let result = await SendPanicSticker(chats, FakeSticker(result: .failure(.storage("missing"))))(trigger: .release,
+                                                                                                     accountId: "a1", chatGid: "g1")
 
         XCTAssertEqual(result.failure, .storage("missing"))
         XCTAssertTrue(chats.sent.isEmpty)
@@ -39,12 +44,19 @@ final class PanicChatUseCasesTests: XCTestCase {
         let should = ShouldSendPanic()
         let now = Date(timeIntervalSince1970: 1_795_000_000)
         let config = PanicSwitchConfig(chatGid: "g1")
-        XCTAssertFalse(should(config: PanicSwitchConfig(), now: now))
-        XCTAssertTrue(should(config: config, now: now))
-        // Test mode sends to its own chat, which must be picked.
-        var test = config; test.testMode = true
-        XCTAssertFalse(should(config: test, now: now))
-        XCTAssertFalse(should(config: config, now: now, lastSentAt: now.addingTimeInterval(-30)))
+        XCTAssertFalse(should(trigger: .release, config: PanicSwitchConfig(), now: now))
+        XCTAssertTrue(should(trigger: .release, config: config, now: now))
+        // The demo needs demo mode and its own chat.
+        XCTAssertFalse(should(trigger: .demo, config: config, now: now))
+        var demo = config; demo.demoMode = true
+        XCTAssertFalse(should(trigger: .demo, config: demo, now: now))
+        demo.demoChatGid = "dm"
+        XCTAssertTrue(should(trigger: .demo, config: demo, now: now))
+        XCTAssertFalse(should(trigger: .release, config: config, now: now, lastSentAt: now.addingTimeInterval(-30)))
+        // Turned off, nothing is sent.
+        var off = demo; off.enabled = false
+        XCTAssertFalse(should(trigger: .release, config: off, now: now))
+        XCTAssertFalse(should(trigger: .demo, config: off, now: now))
     }
 
     func testListPanicChatsOffersYourselfThenGroupsAndDirectChats() {

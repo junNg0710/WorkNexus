@@ -3,8 +3,11 @@ import SwiftUI
 /// Ported from: lib/core/widgets/app_expandable_card.dart
 /// A settings card that folds away: an icon, a title and a one-line summary of what is in force, opening on a click into its
 /// sections (usually `AppExpandableCardSection`s, split by hairlines).
+/// Under `.appExpandableCardFlat()` it is shown flat instead (lib/core/widgets/app_expandable_card.dart
+/// `AppExpandableCardScope` / `AppFlatCard`).
 public struct AppExpandableCard<Sections: View>: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.appExpandableCardFlat) private var flat
     @State private var expanded: Bool
     @State private var hovering = false
     let icon: String
@@ -18,6 +21,20 @@ public struct AppExpandableCard<Sections: View>: View {
     }
 
     public var body: some View {
+        if flat {
+            // On a settings page of its own: no header (the page title names it), always open. The first section's hairline
+            // falls on the card's own edge.
+            VStack(alignment: .leading, spacing: 0) { sections }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(theme.colors.card, in: RoundedRectangle(cornerRadius: theme.radii.lg))
+                .clipShape(RoundedRectangle(cornerRadius: theme.radii.lg))
+                .overlay(RoundedRectangle(cornerRadius: theme.radii.lg).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
+        } else {
+            folding
+        }
+    }
+
+    private var folding: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button {
                 withAnimation(.easeOut(duration: theme.motion.base)) { expanded.toggle() }
@@ -84,6 +101,22 @@ public extension AppExpandableCardSection where Content == EmptyView {
     init(title: String, hint: String, @ViewBuilder trailing: () -> Trailing) {
         self.init(title: title, hint: hint, trailing: trailing, content: { EmptyView() })
     }
+}
+
+private struct AppExpandableCardFlatKey: EnvironmentKey { static let defaultValue = false }
+
+public extension EnvironmentValues {
+    /// The `AppExpandableCard`s below show flat: no header, always open.
+    var appExpandableCardFlat: Bool {
+        get { self[AppExpandableCardFlatKey.self] }
+        set { self[AppExpandableCardFlatKey.self] = newValue }
+    }
+}
+
+public extension View {
+    /// Shows the `AppExpandableCard`s in this view flat — for a card that has a settings page to itself, whose title
+    /// already names it (lib/core/widgets/app_expandable_card.dart `AppExpandableCardScope`).
+    func appExpandableCardFlat(_ flat: Bool = true) -> some View { environment(\.appExpandableCardFlat, flat) }
 }
 
 public extension AppExpandableCardSection where Trailing == EmptyView {

@@ -2,12 +2,12 @@ import CoreDomain
 import CoreUI
 import FeatureChat
 import FeatureMiniApps
-import FeaturePanicSwitch
 import SharedKit
 import SwiftUI
 
-/// The settings place: one page per section of the settings nav pane (`general`, `appearance`, `chat`, `translation`,
-/// `cache`) over the shell's `AppSettings` (lib/core/widgets/quick_settings_* and the settings cards of each feature).
+/// The settings place: one page per section of the settings nav pane (`general`, `appearance`, `pet`, `chat`,
+/// `translation`, `panicSwitch`, `cache`) over the shell's `AppSettings` (lib/core/widgets/quick_settings_* and the settings
+/// cards of each feature).
 struct SettingsPages: View {
     let root: CompositionRoot
     let section: String
@@ -20,6 +20,7 @@ struct SettingsPages: View {
         case "pet": PetSettingsPage(root: root)
         case "chat": ChatSettingsPage(shell: root.shell, mcp: root.aiTools.mcpModel)
         case "translation": TranslationSettingsPage(root: root)
+        case "panicSwitch": PanicSwitchSettingsPage(root: root)
         case "cache": CacheSettingsPage(root: root)
         default: GeneralSettingsPage(root: root)
         }
@@ -58,8 +59,6 @@ struct GeneralSettingsPage: View {
                                 dateFormat: s.dateFormat,
                                 onLiveLimit: { v in shell.updateSettings { $0.miniAppLiveLimit = v } },
                                 onNotifyInBackground: { on in shell.updateSettings { $0.miniAppNotifyInBackground = on } })
-            // Only for people signed in to the oasoft ZenTao (the card hides itself otherwise).
-            PanicSwitchSettingsCard(model: root.panic.model)
             SettingsCard(title: appString("appIdentity", "App name and icon")) { AppIdentityControls(root: root) }
             SettingsCard(title: appString("appUpdatesTitle", "App updates"), subtitle: "v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")") {
                 SettingsToggleRow(label: appString("autoUpdateLabel", "Update automatically"), isOn: autoUpdate) { on in

@@ -6,6 +6,8 @@ public enum PanicSwitchConstants {
     /// The file name the sticker is sent under. The chat server gives every upload a new id and carries no sticker
     /// identity, so this reserved name is what receivers recognise it by.
     public static let stickerFileName = "worknexus-thayvo-v1.png"
+    /// The demo trigger's sticker: the same picture under another name, so a demo never sets off the team's switch.
+    public static let demoStickerFileName = "worknexus-thayvo-demo-v1.png"
     public static let stickerMimeType = "image/png"
     /// The feature is only offered to people signed in to this ZenTao.
     public static let zentaoBaseUrl = "https://zentao.oasoft.xyz:4433/zentao"

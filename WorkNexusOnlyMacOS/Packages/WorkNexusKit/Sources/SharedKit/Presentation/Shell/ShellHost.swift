@@ -15,7 +15,7 @@ public struct ShellHost {
     public var chatView: (Account) -> AnyView = { _ in AnyView(EmptyView()) }
     /// The page of a workspace section (`overview` / `integrations` / `members` / `settings`).
     public var workspacePage: (_ section: String) -> AnyView = { _ in AnyView(EmptyView()) }
-    /// The page of a settings section (`general` / `appearance` / `chat` / `translation` / `cache`).
+    /// The page of a settings section (`general` / `appearance` / `pet` / `chat` / `translation` / `panicSwitch` / `cache`).
     public var settingsPage: (_ section: String) -> AnyView = { _ in AnyView(EmptyView()) }
     /// Rail: one button per mini app plus "Add".
     public var miniAppRail: () -> AnyView = { AnyView(EmptyView()) }
@@ -53,8 +53,15 @@ public struct ShellHost {
     public var petOpen: (String) -> Void = { _ in }
     /// Brings the app's window forward (a click on the floating pet).
     public var revealApp: () -> Void = {}
-    /// Three quick clicks on the pet (in the window or floating): the panic switch's alert; nil: clicks act as usual.
+    /// The pet's alert gesture (held, or two or three quick clicks, in the window or floating): the panic switch's official
+    /// trigger; nil: clicks act as usual.
     public var petTripleTap: PetTripleTap?
+    /// "Demo" in the pet's right-click menu (in the window and floating): the panic switch's demo trigger, while demo mode is
+    /// on; nil: no such item. Runs in a view body, so reading an `@Observable` model in it keeps the menu in step.
+    public var petDemo: () -> (() -> Void)? = { nil }
+    /// Whether a settings section is listed (the panic switch's page only for the ZenTao it is offered for); runs in a view
+    /// body, like `petDemo`.
+    public var settingsSectionVisible: (_ section: String) -> Bool = { _ in true }
     public init() {}
 }
 

@@ -23,11 +23,13 @@ final class PanicSwitchConfigRepositoryTests: XCTestCase {
     }
 
     func testRoundTripsEveryField() async {
-        let config = PanicSwitchConfig(enabled: false, overlayVisible: false, chatGid: "g1", testMode: true, testChatGid: "cloud",
-                                       testChatIsSelf: true, anySender: false, allowedSenderIds: [3, 7],
-                                       targetApp: AppRef(id: "com.google.android.studio", name: "Android Studio"),
-                                       appsToHide: [AppRef(id: "com.tinyspeck.slackmacgap", name: "Slack")], hideSelf: false,
+        var config = PanicSwitchConfig(enabled: false, overlayVisible: false, chatGid: "g1", demoMode: true, demoChatGid: "cloud",
+                                       anySender: false, allowedSenderIds: [3, 7],
+                                       appsToOpen: [AppRef(id: "com.google.android.studio", name: "Android Studio"),
+                                                    AppRef(id: "com.tinyspeck.slackmacgap", name: "Slack")],
                                        debounceSeconds: 90)
+        config.petGesture = .doubleClick
+        config.petHoldSeconds = 5
 
         let saved = await repository.save(config)
         XCTAssertNotNil(saved.value)
@@ -35,31 +37,60 @@ final class PanicSwitchConfigRepositoryTests: XCTestCase {
         XCTAssertEqual(loaded.value, config)
     }
 
-    func testReadsTheJsonTheFlutterAppWrites() {
-        let config = decode(#"{"enabled":true,"overlayVisible":true,"chatGid":"g1","testMode":false,"testChatGid":null,"#
-            + #""testChatIsSelf":false,"anySender":false,"allowedSenderIds":[3,"x",7],"#
-            + #""targetApp":{"id":"com.apple.Safari","name":"Safari"},"appsToHide":[{"id":"a","name":"A"},{"bad":1}],"#
-            + #""hideSelf":true,"debounceSeconds":30}"#)
-
-        XCTAssertEqual(config, PanicSwitchConfig(chatGid: "g1", anySender: false, allowedSenderIds: [3, 7],
-                                                 targetApp: AppRef(id: "com.apple.Safari", name: "Safari"),
-                                                 appsToHide: [AppRef(id: "a", name: "A")], debounceSeconds: 30))
+    /// The keys are the Flutter mapper's (`panic_switch_config_mapper.dart`), plus the pet's own two.
+    func testWritesTheKeysTheFlutterAppReads() throws {
+        let data = try PanicSwitchConfigMapper.toJSON(PanicSwitchConfig(chatGid: "g1", demoMode: true, demoChatGid: "dm",
+                                                                        appsToOpen: [AppRef(id: "a", name: "A")]))
+        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertEqual(Set(json.keys), ["enabled", "overlayVisible", "chatGid", "demoMode", "demoChatGid", "anySender",
+                                        "allowedSenderIds", "appsToOpen", "debounceSeconds", "petGesture", "petHoldSeconds"])
+        XCTAssertEqual(json["appsToOpen"] as? [[String: String]], [["id": "a", "name": "A"]])
     }
 
-    func testMovesAnOldSendToMyselfChatIntoTestMode() {
+    func testReadsTheJsonTheFlutterAppWrites() {
+        let config = decode(#"{"enabled":true,"overlayVisible":true,"overlaySize":80,"overlayOpacity":0.6,"#
+            + #""overlayGesture":"hold","chatGid":"g1","demoMode":true,"demoChatGid":"dm","anySender":false,"#
+            + #""allowedSenderIds":[3,"x",7],"appsToOpen":[{"id":"com.apple.Safari","name":"Safari"},{"bad":1}],"#
+            + #""debounceSeconds":30}"#)
+
+        XCTAssertEqual(config, PanicSwitchConfig(chatGid: "g1", demoMode: true, demoChatGid: "dm", anySender: false,
+                                                 allowedSenderIds: [3, 7],
+                                                 appsToOpen: [AppRef(id: "com.apple.Safari", name: "Safari")], debounceSeconds: 30))
+    }
+
+    func testMovesAnOldSendToMyselfChatIntoDemoMode() {
         let config = decode(#"{"chatGid":"40&40","chatIsSelf":true,"debounceSeconds":60}"#)
 
         XCTAssertNil(config.chatGid)
-        XCTAssertTrue(config.testMode)
-        XCTAssertEqual(config.testChatGid, "40&40")
-        XCTAssertTrue(config.testChatIsSelf)
+        XCTAssertTrue(config.demoMode)
+        XCTAssertEqual(config.demoChatGid, "40&40")
     }
 
     func testKeepsTheListeningChatOfTheOldTwoChatTestMode() {
         let config = decode(#"{"testMode":true,"testSendChatGid":"40&40","testSendToSelf":true,"testReceiveChatGid":"g9"}"#)
 
-        XCTAssertEqual(config.testChatGid, "g9")
-        XCTAssertFalse(config.testChatIsSelf)
+        XCTAssertTrue(config.demoMode)
+        XCTAssertEqual(config.demoChatGid, "g9")
+    }
+
+    func testTurnsTheSavedTestModeIntoDemoMode() {
+        let config = decode(#"{"chatGid":"g1","testMode":true,"testChatGid":"g9","testChatIsSelf":false}"#)
+
+        XCTAssertEqual(config.chatGid, "g1")
+        XCTAssertTrue(config.demoMode)
+        XCTAssertEqual(config.demoChatGid, "g9")
+    }
+
+    /// What this app saved before this port (test mode, one target app, apps to hide, hide WorkNexus) loads as the new shape.
+    func testTurnsTheOldTargetAppIntoTheAppsToOpen() {
+        let config = decode(#"{"targetApp":{"id":"a.b","name":"AB"},"appsToHide":[{"id":"c.d","name":"CD"}],"hideSelf":false,"#
+            + #""testMode":false,"testChatGid":"cloud","petGesture":"tripleClick","petHoldSeconds":4}"#)
+
+        XCTAssertEqual(config.appsToOpen, [AppRef(id: "a.b", name: "AB")])
+        XCTAssertFalse(config.demoMode, "test mode was off")
+        XCTAssertEqual(config.demoChatGid, "cloud")
+        XCTAssertEqual(config.petGesture, .tripleClick)
+        XCTAssertEqual(config.petHoldSeconds, 4)
     }
 
     func testDamagedJsonLoadsTheDefaults() {

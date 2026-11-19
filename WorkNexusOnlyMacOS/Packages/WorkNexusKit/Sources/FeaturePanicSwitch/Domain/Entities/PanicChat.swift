@@ -28,13 +28,15 @@ public struct PanicPerson: Hashable, Sendable, Identifiable {
     public var userId: Int
     public var account: String
     public var realname: String
+    /// The picture shown beside the name in the allowlist; nil: initials.
+    public var avatarUrl: String?
 
     public var id: Int { userId }
     /// The real name, or the account when there is none.
     public var displayName: String { realname.isEmpty ? account : realname }
 
-    public init(userId: Int, account: String, realname: String) {
-        self.userId = userId; self.account = account; self.realname = realname
+    public init(userId: Int, account: String, realname: String, avatarUrl: String? = nil) {
+        self.userId = userId; self.account = account; self.realname = realname; self.avatarUrl = avatarUrl
     }
 }
 

@@ -5,14 +5,17 @@ import Foundation
 /// Records what the switch asked of the OS; nothing really moves.
 @MainActor
 final class FakeAppSwitcher: AppSwitcher {
-    enum Call: Equatable { case activate(String), hide(String), hideSelf }
+    enum Call: Equatable { case activate(String), hideOthers([String]), hideSelf }
     var calls: [Call] = []
     var activateResult: Outcome<Void> = .success(())
 
     func listApps() async -> Outcome<[AppRef]> { .success([]) }
     func activate(_ app: AppRef) async -> Outcome<Void> { calls.append(.activate(app.id)); return activateResult }
-    func hide(_ app: AppRef) async -> Outcome<Void> { calls.append(.hide(app.id)); return .success(()) }
+    func hideOthers(keep: [AppRef]) async -> Outcome<Void> { calls.append(.hideOthers(keep.map(\.id))); return .success(()) }
     func hideSelf() async -> Outcome<Void> { calls.append(.hideSelf); return .success(()) }
+
+    /// What a switch with no app to open does: everything else hidden, then WorkNexus.
+    static let bareSwitch: [Call] = [.hideOthers([]), .hideSelf]
 }
 
 /// Chat with canned answers; records what is sent.

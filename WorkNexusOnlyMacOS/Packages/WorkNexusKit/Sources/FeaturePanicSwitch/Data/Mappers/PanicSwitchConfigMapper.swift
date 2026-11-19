@@ -1,45 +1,42 @@
 import Foundation
 
 /// Ported from: lib/features/panic_switch/data/mappers/panic_switch_config_mapper.dart
-/// `PanicSwitchConfig` ↔ the JSON it is stored as (the same object the Flutter app keeps). Unknown or missing fields fall
-/// back to the defaults, so older saved settings still load.
+/// `PanicSwitchConfig` ↔ the JSON it is stored as (the same object the Flutter app keeps, plus the pet's `petGesture` and
+/// `petHoldSeconds`; the Flutter-only floating button look — `overlaySize`, `overlayOpacity`, `overlayGesture` — is not
+/// kept). Unknown or missing fields fall back to the defaults, so older saved settings still load.
 enum PanicSwitchConfigMapper {
     static func toJSON(_ c: PanicSwitchConfig) throws -> Data {
         let object: [String: Any] = [
             "enabled": c.enabled, "overlayVisible": c.overlayVisible, "chatGid": c.chatGid ?? NSNull(),
-            "testMode": c.testMode, "testChatGid": c.testChatGid ?? NSNull(), "testChatIsSelf": c.testChatIsSelf,
-            "anySender": c.anySender, "allowedSenderIds": c.allowedSenderIds,
-            "targetApp": c.targetApp.map(app) ?? NSNull(), "appsToHide": c.appsToHide.map(app),
-            "hideSelf": c.hideSelf, "debounceSeconds": c.debounceSeconds, "petGesture": c.petGesture.rawValue,
-            "petHoldSeconds": c.petHoldSeconds,
+            "demoMode": c.demoMode, "demoChatGid": c.demoChatGid ?? NSNull(), "anySender": c.anySender,
+            "allowedSenderIds": c.allowedSenderIds, "appsToOpen": c.appsToOpen.map(app),
+            "debounceSeconds": c.debounceSeconds, "petGesture": c.petGesture.rawValue, "petHoldSeconds": c.petHoldSeconds,
         ]
         return try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
     }
 
     static func fromJSON(_ data: Data) -> PanicSwitchConfig {
         guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return PanicSwitchConfig() }
-        // Before test mode, "send to myself" was saved as the one chat (`chatIsSelf`); it is test mode's chat now, and the
-        // team group is looked up again.
+        // Demo mode was test mode (`test…` keys). Before that, "send to myself" was saved as the one chat (`chatIsSelf`); it
+        // is the demo chat now, and the team group is looked up again.
         let legacySelf = bool(json["chatIsSelf"]) == true
         let legacySelfGid = legacySelf ? json["chatGid"] as? String : nil
         // Test mode had a chat to send to and one to listen in; the listening one is kept (the one people picked a group
         // for), else the sending one.
         let send = json["testSendChatGid"] as? String ?? legacySelfGid
-        let testChatGid = json["testChatGid"] as? String ?? json["testReceiveChatGid"] as? String ?? send
-        let testChatIsSelf = bool(json["testChatIsSelf"])
-            ?? (testChatGid != nil && testChatGid == send && (bool(json["testSendToSelf"]) == true || legacySelf))
+        let demoChatGid = json["demoChatGid"] as? String ?? json["testChatGid"] as? String
+            ?? json["testReceiveChatGid"] as? String ?? send
+        // Before the apps to open, there was one target app (and a list to hide, which is now everything else).
+        let apps = json["appsToOpen"] as? [Any] ?? [json["targetApp"] as Any]
         var config = PanicSwitchConfig(
             enabled: bool(json["enabled"]) ?? true,
             overlayVisible: bool(json["overlayVisible"]) ?? true,
             chatGid: legacySelf ? nil : json["chatGid"] as? String,
-            testMode: bool(json["testMode"]) ?? legacySelf,
-            testChatGid: testChatGid,
-            testChatIsSelf: testChatIsSelf,
+            demoMode: bool(json["demoMode"]) ?? bool(json["testMode"]) ?? legacySelf,
+            demoChatGid: demoChatGid,
             anySender: bool(json["anySender"]) ?? true,
             allowedSenderIds: (json["allowedSenderIds"] as? [Any] ?? []).compactMap(int),
-            targetApp: readApp(json["targetApp"]),
-            appsToHide: (json["appsToHide"] as? [Any] ?? []).compactMap(readApp),
-            hideSelf: bool(json["hideSelf"]) ?? true,
+            appsToOpen: apps.compactMap(readApp),
             debounceSeconds: int(json["debounceSeconds"]) ?? PanicSwitchConstants.defaultDebounceSeconds)
         config.petGesture = (json["petGesture"] as? String).flatMap(PanicPetGesture.init(rawValue:)) ?? .hold
         let range = PanicSwitchConstants.petHoldRange

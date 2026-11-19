@@ -11,56 +11,51 @@ public struct AppRef: Hashable, Sendable {
 /// This computer's panic switch settings. Kept per device: who may set it off here, and what it does, is each person's own
 /// choice.
 public struct PanicSwitchConfig: Hashable, Sendable {
-    /// React to the sticker arriving.
+    /// The feature on this computer: off, the pet does not set it off, and nothing is sent or acted on.
     public var enabled: Bool
-    /// Show the floating button that sends the sticker.
+    /// The pet sets it off (the setting the Flutter app keeps for its floating button).
     public var overlayVisible: Bool
-    /// The team's group: where the sticker is sent and listened for; picked by name (`PickDefaultPanicGroup`), nil until found.
+    /// The team's group: where the official sticker is sent and listened for; picked by name (`PickDefaultPanicGroup`),
+    /// nil until found.
     public var chatGid: String?
-    /// Test mode: the sticker is sent to and listened for in `testChatGid` instead of the team's group, to try the switch
-    /// without bothering anyone.
-    public var testMode: Bool
-    public var testChatGid: String?
-    /// `testChatGid` is the user's own chat ("My Cloud"): sending there switches apps on this computer, as the user's own
-    /// messages never come back as incoming.
-    public var testChatIsSelf: Bool
-    /// Anyone in the chat (but you) may set the switch off here; when off, only `allowedSenderIds` may.
+    /// Demo mode: a second trigger, beside the team's group, that sends and listens for the demo sticker in `demoChatGid`.
+    public var demoMode: Bool
+    public var demoChatGid: String?
+    /// Anyone in the team's group (but you) may set the switch off here; when off, only `allowedSenderIds` may. The demo
+    /// chat accepts anyone.
     public var anySender: Bool
     /// Chat user ids whose sticker sets the switch off here when not `anySender`. Empty = nobody.
     public var allowedSenderIds: [Int]
-    /// Brought to the front when the switch goes off.
-    public var targetApp: AppRef?
-    public var appsToHide: [AppRef]
-    /// Also hide WorkNexus itself.
-    public var hideSelf: Bool
-    /// The least time between two triggers, sending or receiving.
+    /// Opened or brought forward when the switch goes off, the first in front; every other running app is hidden.
+    public var appsToOpen: [AppRef]
+    /// The least time between two triggers, sending or receiving (each trigger counts its own).
     public var debounceSeconds: Int
-    /// How the pet raises the alert (macOS only: the Flutter app has its floating button instead).
+    /// How the pet sets off the official trigger (macOS only: the Flutter app has its floating button instead).
     public var petGesture: PanicPetGesture = .hold
-    /// How long the pet is held for the alert, in seconds (`PanicSwitchConstants.petHoldRange`).
+    /// How long the pet is held for it, in seconds (`PanicSwitchConstants.petHoldRange`).
     public var petHoldSeconds: Int = PanicSwitchConstants.defaultPetHoldSeconds
 
-    public init(enabled: Bool = true, overlayVisible: Bool = true, chatGid: String? = nil, testMode: Bool = false,
-                testChatGid: String? = nil, testChatIsSelf: Bool = false, anySender: Bool = true, allowedSenderIds: [Int] = [],
-                targetApp: AppRef? = nil, appsToHide: [AppRef] = [], hideSelf: Bool = true,
+    public init(enabled: Bool = true, overlayVisible: Bool = true, chatGid: String? = nil, demoMode: Bool = false,
+                demoChatGid: String? = nil, anySender: Bool = true, allowedSenderIds: [Int] = [], appsToOpen: [AppRef] = [],
                 debounceSeconds: Int = PanicSwitchConstants.defaultDebounceSeconds) {
-        self.enabled = enabled; self.overlayVisible = overlayVisible; self.chatGid = chatGid; self.testMode = testMode
-        self.testChatGid = testChatGid; self.testChatIsSelf = testChatIsSelf; self.anySender = anySender
-        self.allowedSenderIds = allowedSenderIds; self.targetApp = targetApp; self.appsToHide = appsToHide
-        self.hideSelf = hideSelf; self.debounceSeconds = debounceSeconds
+        self.enabled = enabled; self.overlayVisible = overlayVisible; self.chatGid = chatGid; self.demoMode = demoMode
+        self.demoChatGid = demoChatGid; self.anySender = anySender; self.allowedSenderIds = allowedSenderIds
+        self.appsToOpen = appsToOpen; self.debounceSeconds = debounceSeconds
     }
 
-    /// Where the floating button sends the sticker.
-    public var sendChatGid: String? { testMode ? testChatGid : chatGid }
-    /// Sending switches apps on this computer too (test mode, to yourself).
-    public var sendsToSelf: Bool { testMode && testChatIsSelf }
-    /// Where an arriving sticker sets the switch off.
-    public var receiveChatGid: String? { testMode ? testChatGid : chatGid }
+    /// Where `trigger`'s sticker is sent and listened for; nil when it is off.
+    public func chatFor(_ trigger: PanicTrigger) -> String? {
+        switch trigger {
+        case .release: chatGid
+        case .demo: demoMode ? demoChatGid : nil
+        }
+    }
 }
 
-/// How the pet raises the alert: pressed and held for a few seconds (the default: hard to do by accident), or clicked
-/// three times quickly. Not in the Flutter app.
+/// How the pet sets off the official trigger: pressed and held for a few seconds (the default: hard to do by accident), or
+/// clicked two or three times quickly (upstream's `PanicGesture` of its floating button). Not in the Flutter app.
 public enum PanicPetGesture: String, Sendable, CaseIterable, Equatable {
-    case hold
+    case doubleClick
     case tripleClick
+    case hold
 }

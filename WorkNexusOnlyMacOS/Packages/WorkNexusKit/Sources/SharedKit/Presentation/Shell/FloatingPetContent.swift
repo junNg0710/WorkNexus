@@ -3,7 +3,7 @@ import SwiftUI
 
 /// What the floating panel holds: the pet. Dragged it moves the panel (and makes that its new place to stroll around),
 /// clicked it opens what it is saying (a message, a notification) or else brings the app forward, and its menu puts it
-/// back in the window or hides it. When it walks the panel goes
+/// back in the window or hides it (and, in the panic switch's demo mode, offers "Demo"). When it walks the panel goes
 /// with it (`FloatingPetPanel.follow`). What it says (or, while the pointer rests on it, the state of things) goes to
 /// the bubble's own panel above it (`FloatingPetPanel.setBubble`), so the pet's panel never changes size. Not in the
 /// Flutter app.
@@ -16,6 +16,8 @@ struct FloatingPetContent: View {
     let onOpenLink: (String) -> Void
     let onDock: () -> Void
     let onHide: () -> Void
+    /// The panic switch's demo trigger while demo mode is on (`ShellHost.petDemo`): "Demo" heads the menu.
+    var demo: () -> (() -> Void)? = { nil }
     @State private var hovering = false
 
     private var height: CGFloat { width * CGFloat(PetSpriteSheet.cellHeight) / CGFloat(PetSpriteSheet.cellWidth) }
@@ -32,6 +34,10 @@ struct FloatingPetContent: View {
                 }
                 .onEnded { _ in FloatingPetPanel.shared.drag(ended: true); syncStroll() })
             .contextMenu {
+                if let runDemo = demo() {
+                    Button(appString("panicSwitchMenuDemo", "Demo"), action: runDemo)
+                    Divider()
+                }
                 Button(appString("trayOpenApp", "Open WorkNexus"), action: onOpen)
                 Button(appString("petShowInWindow", "Put the pet back in the window"), action: onDock)
                 Divider()

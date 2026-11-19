@@ -1938,5 +1938,37 @@
   "panicSwitchPetHoldSeconds": {
     "en": "%1$@ seconds",
     "vi": "%1$@ giây"
+  },
+  "panicSwitchPetHowStep1": {
+    "en": "%1$@ the pet.",
+    "vi": "%1$@ vào pet."
+  },
+  "panicSwitchPetHowHold": {
+    "en": "Press and hold the pet for %1$@ seconds.",
+    "vi": "Nhấn giữ pet %1$@ giây."
+  },
+  "panicSwitchPetDemoStep1": {
+    "en": "Right-click the pet and pick \"Demo\".",
+    "vi": "Bấm chuột phải vào pet rồi chọn \"Demo\"."
+  },
+  "panicSwitchPetDemoModeHint": {
+    "en": "Uses the same pet and apps: right-click the pet and pick \"Demo\".",
+    "vi": "Dùng chung pet và các app sẽ mở: bấm chuột phải vào pet rồi chọn \"Demo\"."
+  },
+  "panicSwitchPetDemoShared": {
+    "en": "The apps to open are set in the Official tab, the gesture in the Pet tab.",
+    "vi": "Các app sẽ mở được cài ở tab Chính thức, cách kích hoạt ở tab Pet."
+  },
+  "panicSwitchPetEnabledHint": {
+    "en": "Off: on this computer the pet does not set it off, nothing is sent and arriving stickers are ignored.",
+    "vi": "Tắt thì trên máy này pet không kích hoạt được, không gửi gì và cũng không phản ứng khi nhận sticker."
+  },
+  "panicSwitchPetTabHint": {
+    "en": "The pet sets it off, in the window or on the desktop. The pet must be shown (Settings › Pet).",
+    "vi": "Pet sẽ kích hoạt, dù ở trong cửa sổ hay trên màn hình. Cần bật pet (Cài đặt › Pet)."
+  },
+  "panicSwitchPetGestureTabHint": {
+    "en": "For Official. Demo: right-click the pet and pick \"Demo\".",
+    "vi": "Dùng cho Chính thức. Demo: bấm chuột phải vào pet rồi chọn \"Demo\"."
   }
 }

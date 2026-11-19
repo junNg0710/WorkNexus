@@ -16,6 +16,8 @@ enum ShellSections {
         Row(id: "pet", key: "petSettings", fallback: "Pet", icon: "pawprint"),
         Row(id: "chat", key: "chat", fallback: "Chat", icon: "bubble.left.and.bubble.right"),
         Row(id: "translation", key: "translation", fallback: "Translation", icon: "character.bubble"),
+        // Listed only for users of the ZenTao the panic switch is offered for (`ShellHost.settingsSectionVisible`).
+        Row(id: "panicSwitch", key: "panicSwitchTitle", fallback: "Thầy vô (boss alert)", icon: "light.beacon.max"),
         Row(id: "cache", key: "localCache", fallback: "Local data", icon: "internaldrive"),
     ]
 

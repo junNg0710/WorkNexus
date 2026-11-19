@@ -64,6 +64,11 @@ struct PetLayer: View {
                         UserDefaults.standard.set(x, forKey: Self.xKey); UserDefaults.standard.set(y, forKey: Self.yKey)
                     }
                     .padding(inset)
+                    // Right-click: the panic switch's demo trigger, while demo mode is on (no menu otherwise). The stage
+                    // only takes the pointer over the pet, so this never shadows the content's own menus.
+                    .contextMenu {
+                        if let runDemo = model.host.petDemo() { Button(appString("panicSwitchMenuDemo", "Demo"), action: runDemo) }
+                    }
                     .environment(\.appTheme, theme)
                     .environment(\.petTripleTap, model.host.petTripleTap)
                 }
@@ -114,7 +119,7 @@ struct PetLayer: View {
         let content = FloatingPetContent(director: director, sheet: sheet, width: width, followsCursor: settings.petFollowsCursor,
                                          onOpen: model.host.revealApp, onOpenLink: model.host.petOpen,
                                          onDock: { model.updateSettings { $0.petDisplay = .inWindow } },
-                                         onHide: { model.updateSettings { $0.showPet = false } })
+                                         onHide: { model.updateSettings { $0.showPet = false } }, demo: model.host.petDemo)
         let theme = theme
         FloatingPetPanel.shared.show(AnyView(content.environment(\.appTheme, theme).environment(\.petTripleTap, model.host.petTripleTap)), petSize: CGSize(width: width, height: height)) { text, tail in
             AnyView(FloatingPetBubble(text: text, tailShift: tail).environment(\.appTheme, theme))

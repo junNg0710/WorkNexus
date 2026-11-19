@@ -8,8 +8,8 @@ public protocol AppSwitcher: Sendable {
     func listApps() async -> Outcome<[AppRef]>
     /// Brings `app` to the front, starting it when it is not running.
     func activate(_ app: AppRef) async -> Outcome<Void>
-    /// Hides `app`; nothing when it is not running.
-    func hide(_ app: AppRef) async -> Outcome<Void>
+    /// Hides every running regular app (one with a Dock icon) but `keep` and WorkNexus.
+    func hideOthers(keep: [AppRef]) async -> Outcome<Void>
     /// Hides WorkNexus.
     func hideSelf() async -> Outcome<Void>
 }

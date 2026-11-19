@@ -50,18 +50,22 @@ public final class PanicSwitchModel {
                                      run: RunPanicSwitch(deps.apps), send: SendPanicSticker(deps.chats, deps.sticker))
     }
 
-    /// Whether three clicks on the pet send the alert: wanted (`overlayVisible`, the setting the Flutter app keeps for its
-    /// floating button), with a chat to send to, for a user of the ZenTao the feature is offered for.
-    public var overlayVisible: Bool { account != nil && config?.overlayVisible == true && config?.sendChatGid != nil }
+    /// Whether the pet sets off the official trigger: on (`enabled`, and `overlayVisible`, the setting the Flutter app keeps
+    /// for its floating button), with the team group to send to, for a user of the ZenTao the feature is offered for.
+    public var petArmed: Bool { isOn && config?.chatFor(.release) != nil }
 
-    /// The gesture on the pet that raises the alert now; nil while the alert is off.
-    public var petGesture: PanicPetGesture? { overlayVisible ? config?.petGesture ?? .hold : nil }
+    /// The gesture on the pet that sets off the official trigger now; nil while it is off.
+    public var petGesture: PanicPetGesture? { petArmed ? config?.petGesture ?? .hold : nil }
 
-    /// The pet's alert gesture: sends the sticker and, once it is sent, switches apps here too (see
-    /// `PanicSwitchRuntime.onAlert`).
-    public func petAlert() {
-        guard overlayVisible else { return }
-        Task { report(await runtime.onAlert()) }
+    /// Whether the pet's right-click menu offers "Demo": as for the gesture, with demo mode on and a demo chat picked.
+    public var demoAvailable: Bool { isOn && config?.chatFor(.demo) != nil }
+
+    private var isOn: Bool { account != nil && config?.enabled == true && config?.overlayVisible == true }
+
+    /// The pet set `trigger` off: switches apps here and sends its sticker (see `PanicSwitchRuntime.onPetTriggered`).
+    public func petTriggered(_ trigger: PanicTrigger) {
+        guard trigger == .release ? petArmed : demoAvailable else { return }
+        Task { report(await runtime.onPetTriggered(trigger)) }
     }
 
     /// Loads the settings, follows the accounts, listens for the sticker and puts the floating button up. Runs for the life
@@ -73,11 +77,11 @@ public final class PanicSwitchModel {
             await self?.loadConfig()
             for await list in accounts() { self?.setAccount(FindPanicSwitchAccount()(list)) }
         })
-        // Every live message passes here: only a sticker under the reserved name (a string compare, off the main thread)
-        // goes on to the rest of the checks.
+        // Every live message passes here: only a sticker under a reserved name (a string compare, off the main thread) goes
+        // on to the rest of the checks.
         let incoming = deps.chats.incoming()
         tasks.append(Task.detached { [weak self] in
-            for await message in incoming where ShouldTriggerPanic.isPanicSticker(message) {
+            for await message in incoming where ShouldTriggerPanic.triggerOf(message) != nil {
                 await self?.received(message)
             }
         })
@@ -105,9 +109,6 @@ public final class PanicSwitchModel {
         return saved
     }
 
-    /// Switches apps now, as the sticker would, without any chat ("Try").
-    public func tryNow() async -> Outcome<Void> { await runtime.runNow() }
-
     /// Keeps `chats` in step with the account's chats and people until the caller is cancelled (the card's `.task`).
     public func watchChats(selfTitle: String) async {
         guard let accountId = account?.id else { return }
@@ -125,9 +126,9 @@ public final class PanicSwitchModel {
         }
     }
 
-    /// The members of the chat listened in who could send the sticker.
+    /// The members of the team group who could send the sticker (the allowlist is the team group's only).
     public func loadMembers() async {
-        guard let accountId = account?.id, let config, let chatGid = config.receiveChatGid, !config.sendsToSelf else {
+        guard let accountId = account?.id, let chatGid = config?.chatGid else {
             members = .idle; return
         }
         members = .loading

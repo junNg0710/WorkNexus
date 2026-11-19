@@ -93,19 +93,19 @@ public struct LoadPanicGroupMembers: Sendable {
 }
 
 /// Ported from: lib/features/panic_switch/domain/usecases/send_panic_sticker.dart
-/// Sends the "Thầy vô" sticker into `chatGid`, under the reserved file name receivers recognise it by — the same file name,
-/// type and image the Flutter app sends, so either app reacts to the other's sticker.
+/// Sends `trigger`'s sticker into `chatGid`, under the reserved file name receivers recognise it by — the same file names,
+/// type and image the Flutter app sends, so either app reacts to the other's stickers.
 public struct SendPanicSticker: Sendable {
     private let chats: PanicChatGateway
     private let sticker: PanicStickerSource
 
     public init(_ chats: PanicChatGateway, _ sticker: PanicStickerSource) { self.chats = chats; self.sticker = sticker }
 
-    public func callAsFunction(accountId: String, chatGid: String) async -> Outcome<Void> {
+    public func callAsFunction(trigger: PanicTrigger, accountId: String, chatGid: String) async -> Outcome<Void> {
         switch sticker.bytes() {
         case .failure(let f): return .failure(f)
         case .success(let bytes):
-            return await chats.sendFile(accountId: accountId, chatGid: chatGid, name: PanicSwitchConstants.stickerFileName,
+            return await chats.sendFile(accountId: accountId, chatGid: chatGid, name: trigger.stickerFileName,
                                         bytes: bytes, mimeType: PanicSwitchConstants.stickerMimeType)
         }
     }

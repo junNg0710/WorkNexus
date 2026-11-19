@@ -63,8 +63,15 @@ public final class WorkspaceAppSwitcher: AppSwitcher {
         }
     }
 
-    public func hide(_ app: AppRef) async -> Outcome<Void> {
-        for running in NSRunningApplication.runningApplications(withBundleIdentifier: app.id) { running.hide() }
+    /// Every app with a Dock icon (regular activation policy) but WorkNexus and the ones kept: menu-bar helpers and agents
+    /// stay as they are (macos/Runner/PanicSwitchChannel.swift `hideOthers`).
+    public func hideOthers(keep: [AppRef]) async -> Outcome<Void> {
+        let kept = Set(keep.map(\.id))
+        let me = NSRunningApplication.current.processIdentifier
+        for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular && app.processIdentifier != me {
+            if let id = app.bundleIdentifier, kept.contains(id) { continue }
+            app.hide()
+        }
         return .success(())
     }
 
