@@ -30,12 +30,18 @@ class ChannelAppSwitcher implements AppSwitcher {
   );
 
   @override
+  Future<Result<Uint8List?>> appIcon(AppRef app) =>
+      _guard('read the icon of ${app.name}', () => _channel.appIcon(app.id));
+
+  @override
   Future<Result<void>> activate(AppRef app) =>
       _guard('open ${app.name}', () => _channel.activate(app.id));
 
   @override
-  Future<Result<void>> hide(AppRef app) =>
-      _guard('hide ${app.name}', () => _channel.hide(app.id));
+  Future<Result<void>> hideOthers(List<AppRef> keep) => _guard(
+    'hide the other apps',
+    () => _channel.hideOthers([for (final a in keep) a.id]),
+  );
 
   // macOS hides the whole app (Dock icon stays); Windows minimises, so the
   // window is one taskbar click away rather than tucked into the tray.

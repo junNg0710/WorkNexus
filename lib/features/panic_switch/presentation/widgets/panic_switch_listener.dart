@@ -5,9 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/debug/app_talker.dart';
 import '../../../../core/error/result.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../chat/domain/entities/chat_message.dart';
 import '../../domain/usecases/list_panic_chats.dart';
 import '../../domain/usecases/pick_default_panic_group.dart';
+import '../../domain/value_objects/panic_button_look.dart';
+import '../../domain/value_objects/panic_trigger.dart';
 import '../providers/panic_switch_config_controller.dart';
 import '../providers/panic_switch_providers.dart';
 import '../providers/panic_switch_runtime.dart';
@@ -28,7 +31,11 @@ class PanicSwitchListener extends ConsumerStatefulWidget {
 
 class _PanicSwitchListenerState extends ConsumerState<PanicSwitchListener> {
   StreamSubscription<ChatMessage>? _incoming;
-  StreamSubscription<void>? _triggers;
+  StreamSubscription<PanicTrigger>? _triggers;
+
+  /// The right-click menu's demo item, in the app's language; null until the
+  /// first [didChangeDependencies].
+  String? _demoLabel;
 
   @override
   void initState() {
@@ -36,11 +43,33 @@ class _PanicSwitchListenerState extends ConsumerState<PanicSwitchListener> {
     final runtime = ref.read(panicSwitchRuntimeProvider);
     _incoming = runtime.incoming.listen((m) => _log(runtime.onIncoming(m)));
     _triggers = runtime.overlay.triggers.listen(
-      (_) => _log(runtime.onOverlayTriggered()),
+      (trigger) => _log(runtime.onOverlayTriggered(trigger)),
     );
-    ref.listenManual<bool>(
-      panicOverlayVisibleProvider,
-      (_, visible) => _log(runtime.showOverlay(visible)),
+  }
+
+  // The menu label needs the localizations, which initState cannot read;
+  // the button is also redrawn when the app's language changes.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final label = AppL10n.of(context).panicSwitchMenuDemo;
+    if (label == _demoLabel) return;
+    final first = _demoLabel == null;
+    _demoLabel = label;
+    final runtime = ref.read(panicSwitchRuntimeProvider);
+    if (!first) {
+      _log(
+        runtime.showOverlay(
+          ref.read(panicOverlayLookProvider),
+          demoLabel: label,
+        ),
+      );
+      return;
+    }
+    ref.listenManual<PanicButtonLook?>(
+      panicOverlayLookProvider,
+      (_, look) =>
+          _log(runtime.showOverlay(look, demoLabel: _demoLabel ?? label)),
       fireImmediately: true,
     );
   }

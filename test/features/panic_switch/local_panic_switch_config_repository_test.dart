@@ -7,6 +7,7 @@ import 'package:work_nexus/features/panic_switch/data/mappers/panic_switch_confi
 import 'package:work_nexus/features/panic_switch/data/repositories/local_panic_switch_config_repository.dart';
 import 'package:work_nexus/features/panic_switch/domain/entities/app_ref.dart';
 import 'package:work_nexus/features/panic_switch/domain/entities/panic_switch_config.dart';
+import 'package:work_nexus/features/panic_switch/domain/value_objects/panic_button_look.dart';
 
 void main() {
   late AppDatabase db;
@@ -29,18 +30,18 @@ void main() {
     const config = PanicSwitchConfig(
       enabled: false,
       overlayVisible: false,
+      overlaySize: 80,
+      overlayOpacity: 0.6,
+      overlayGesture: PanicGesture.hold,
       chatGid: 'g1',
-      testMode: true,
-      testChatGid: 'cloud',
-      testChatIsSelf: true,
+      demoMode: true,
+      demoChatGid: 'cloud',
       anySender: false,
       allowedSenderIds: [3, 7],
-      targetApp: AppRef(
-        id: 'com.google.android.studio',
-        name: 'Android Studio',
-      ),
-      appsToHide: [AppRef(id: 'com.tinyspeck.slackmacgap', name: 'Slack')],
-      hideSelf: false,
+      appsToOpen: [
+        AppRef(id: 'com.google.android.studio', name: 'Android Studio'),
+        AppRef(id: 'com.tinyspeck.slackmacgap', name: 'Slack'),
+      ],
       debounceSeconds: 90,
     );
 
@@ -48,15 +49,14 @@ void main() {
     expect((await repository.load()).valueOrNull, config);
   });
 
-  test('moves an old "send to myself" chat into test mode', () {
+  test('moves an old "send to myself" chat into demo mode', () {
     final config = PanicSwitchConfigMapper.fromJson(
       '{"chatGid":"40&40","chatIsSelf":true,"debounceSeconds":60}',
     );
 
     expect(config.chatGid, isNull);
-    expect(config.testMode, isTrue);
-    expect(config.testChatGid, '40&40');
-    expect(config.testChatIsSelf, isTrue);
+    expect(config.demoMode, isTrue);
+    expect(config.demoChatGid, '40&40');
   });
 
   test('keeps the listening chat of the old two-chat test mode', () {
@@ -65,7 +65,27 @@ void main() {
       '"testReceiveChatGid":"g9"}',
     );
 
-    expect(config.testChatGid, 'g9');
-    expect(config.testChatIsSelf, isFalse);
+    expect(config.demoMode, isTrue);
+    expect(config.demoChatGid, 'g9');
+  });
+
+  test('turns the old target app into the apps to open', () {
+    final config = PanicSwitchConfigMapper.fromJson(
+      '{"targetApp":{"id":"a.b","name":"AB"},'
+      '"appsToHide":[{"id":"c.d","name":"CD"}]}',
+    );
+
+    expect(config.appsToOpen, const [AppRef(id: 'a.b', name: 'AB')]);
+  });
+
+  test('turns the saved test mode into demo mode', () {
+    final config = PanicSwitchConfigMapper.fromJson(
+      '{"chatGid":"g1","testMode":true,"testChatGid":"g9",'
+      '"testChatIsSelf":false}',
+    );
+
+    expect(config.chatGid, 'g1');
+    expect(config.demoMode, isTrue);
+    expect(config.demoChatGid, 'g9');
   });
 }

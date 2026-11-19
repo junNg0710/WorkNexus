@@ -7,15 +7,19 @@ class PanicSwitchChannel {
   PanicSwitchChannel({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel('worknexus/panic_switch') {
     _channel.setMethodCallHandler((call) async {
-      if (call.method == 'overlayTriggered') _triggers.add(null);
+      if (call.method == 'overlayTriggered') {
+        // Older runners sent no argument: the left-button trigger.
+        _triggers.add(call.arguments as String? ?? 'release');
+      }
     });
   }
 
   final MethodChannel _channel;
-  final _triggers = StreamController<void>.broadcast();
+  final _triggers = StreamController<String>.broadcast();
 
-  /// Triple clicks on the floating button.
-  Stream<void> get triggers => _triggers.stream;
+  /// The floating button went off: `release` (its gesture) or `demo` (picked
+  /// from its right-click menu).
+  Stream<String> get triggers => _triggers.stream;
 
   Future<List<({String id, String name})>> listApps() async {
     final apps = await _channel.invokeListMethod<Map<Object?, Object?>>(
@@ -28,16 +32,30 @@ class PanicSwitchChannel {
     ];
   }
 
+  Future<Uint8List?> appIcon(String id) =>
+      _channel.invokeMethod<Uint8List>('appIcon', {'id': id});
+
   Future<void> activate(String id) =>
       _channel.invokeMethod<void>('activate', {'id': id});
 
-  Future<void> hide(String id) =>
-      _channel.invokeMethod<void>('hide', {'id': id});
+  Future<void> hideOthers(List<String> keep) =>
+      _channel.invokeMethod<void>('hideOthers', {'keep': keep});
 
   Future<void> hideSelf() => _channel.invokeMethod<void>('hideSelf');
 
-  Future<void> showOverlay(Uint8List image) =>
-      _channel.invokeMethod<void>('showOverlay', {'image': image});
+  Future<void> showOverlay(
+    Uint8List image, {
+    required int size,
+    required double opacity,
+    required String gesture,
+    String? demoLabel,
+  }) => _channel.invokeMethod<void>('showOverlay', {
+    'image': image,
+    'size': size,
+    'opacity': opacity,
+    'gesture': gesture,
+    'demoLabel': ?demoLabel,
+  });
 
   Future<void> hideOverlay() => _channel.invokeMethod<void>('hideOverlay');
 }

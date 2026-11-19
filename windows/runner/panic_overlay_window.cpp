@@ -16,8 +16,11 @@ namespace {
 
 constexpr wchar_t kClassName[] = L"WORKNEXUS_PANIC_OVERLAY";
 
-// The button's width in pixels at 100% scaling.
+// The window's size before the first Show.
 constexpr int kWidth = 120;
+
+// A press at least this long (ms) is a long press.
+constexpr DWORD kHoldMs = 800;
 
 // How far (in pixels) the cursor may move before a press becomes a drag.
 constexpr int kDragSlop = 3;
@@ -88,7 +91,7 @@ HBITMAP DecodeScaled(const std::vector<uint8_t>& image, int width, SIZE* size) {
 
 }  // namespace
 
-PanicOverlayWindow::PanicOverlayWindow(std::function<void()> on_trigger)
+PanicOverlayWindow::PanicOverlayWindow(std::function<void(bool demo)> on_trigger)
     : on_trigger_(std::move(on_trigger)) {}
 
 PanicOverlayWindow::~PanicOverlayWindow() {
@@ -114,13 +117,17 @@ bool PanicOverlayWindow::EnsureWindow() {
   return window_ != nullptr;
 }
 
-bool PanicOverlayWindow::Show(const std::vector<uint8_t>& image) {
+bool PanicOverlayWindow::Show(const std::vector<uint8_t>& image, int width,
+                              double opacity, const std::string& gesture,
+                              const std::wstring& demo_label) {
   if (!EnsureWindow()) return false;
+  gesture_ = gesture;
+  demo_label_ = demo_label;
   const UINT dpi = FlutterDesktopGetDpiForMonitor(
       MonitorFromWindow(window_, MONITOR_DEFAULTTOPRIMARY));
-  const int width = MulDiv(kWidth, dpi ? dpi : 96, 96);
   SIZE size = {};
-  HBITMAP bitmap = DecodeScaled(image, width, &size);
+  HBITMAP bitmap =
+      DecodeScaled(image, MulDiv(width, dpi ? dpi : 96, 96), &size);
   if (!bitmap) return false;
 
   RECT bounds = {};
@@ -139,7 +146,9 @@ bool PanicOverlayWindow::Show(const std::vector<uint8_t>& image) {
   HDC memory = CreateCompatibleDC(screen);
   HGDIOBJ previous = SelectObject(memory, bitmap);
   POINT source = {0, 0};
-  BLENDFUNCTION blend = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+  const BYTE alpha =
+      static_cast<BYTE>(std::clamp(opacity, 0.0, 1.0) * 255.0 + 0.5);
+  BLENDFUNCTION blend = {AC_SRC_OVER, 0, alpha, AC_SRC_ALPHA};
   UpdateLayeredWindow(window_, screen, &origin, &size, memory, &source, 0,
                       &blend, ULW_ALPHA);
   SelectObject(memory, previous);
@@ -182,6 +191,7 @@ LRESULT PanicOverlayWindow::HandleMessage(HWND window, UINT message,
       window_at_press_ = {bounds.left, bounds.top};
       pressed_ = true;
       dragged_ = false;
+      pressed_at_ = GetTickCount();
       SetCapture(window);
       return 0;
     }
@@ -210,6 +220,11 @@ LRESULT PanicOverlayWindow::HandleMessage(HWND window, UINT message,
         OnClick();
       }
       return 0;
+    case WM_RBUTTONDOWN:
+      return 0;
+    case WM_RBUTTONUP:
+      ShowDemoMenu(window);
+      return 0;
     case WM_CAPTURECHANGED:
       pressed_ = false;
       return 0;
@@ -219,12 +234,37 @@ LRESULT PanicOverlayWindow::HandleMessage(HWND window, UINT message,
 
 void PanicOverlayWindow::OnClick() {
   const DWORD now = GetTickCount();
+  if (gesture_ == "hold") {
+    const bool held = pressed_at_ != 0 && now - pressed_at_ >= kHoldMs;
+    pressed_at_ = 0;
+    if (held && on_trigger_) on_trigger_(false);
+    return;
+  }
+  const int needed = gesture_ == "double" ? 2 : 3;
   clicks_ = (clicks_ > 0 && now - last_click_ <= GetDoubleClickTime())
                 ? clicks_ + 1
                 : 1;
   last_click_ = now;
-  if (clicks_ >= 3) {
+  if (clicks_ >= needed) {
     clicks_ = 0;
-    if (on_trigger_) on_trigger_();
+    if (on_trigger_) on_trigger_(false);
   }
+}
+
+void PanicOverlayWindow::ShowDemoMenu(HWND window) {
+  if (demo_label_.empty()) return;
+  constexpr UINT kDemo = 1;
+  HMENU menu = CreatePopupMenu();
+  if (!menu) return;
+  AppendMenuW(menu, MF_STRING, kDemo, demo_label_.c_str());
+  POINT at = {};
+  GetCursorPos(&at);
+  // The menu only closes on a click elsewhere when its owner is in front.
+  SetForegroundWindow(window);
+  const UINT chosen = static_cast<UINT>(TrackPopupMenu(
+      menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, at.x, at.y, 0,
+      window, nullptr));
+  PostMessage(window, WM_NULL, 0, 0);
+  DestroyMenu(menu);
+  if (chosen == kDemo && on_trigger_) on_trigger_(true);
 }

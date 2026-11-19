@@ -3,12 +3,17 @@
 #include <dwmapi.h>
 #include <flutter/standard_method_codec.h>
 #include <shellapi.h>
+#include <shlwapi.h>
+#include <wincodec.h>
+#include <wrl/client.h>
 #include <windows.h>
 
 #include <algorithm>
+#include <cwchar>
 #include <cwctype>
 #include <iterator>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -145,6 +150,50 @@ void ForceForeground(HWND window) {
   if (attached) AttachThreadInput(this_thread, foreground_thread, FALSE);
 }
 
+// |exe|'s large shell icon encoded as PNG; empty when it has none.
+std::vector<uint8_t> IconPng(const std::wstring& exe) {
+  SHFILEINFOW info = {};
+  if (!SHGetFileInfoW(exe.c_str(), 0, &info, sizeof(info),
+                      SHGFI_ICON | SHGFI_LARGEICON) ||
+      !info.hIcon) {
+    return {};
+  }
+  std::vector<uint8_t> png;
+  using Microsoft::WRL::ComPtr;
+  ComPtr<IWICImagingFactory> factory;
+  ComPtr<IWICBitmap> bitmap;
+  ComPtr<IStream> stream;
+  ComPtr<IWICBitmapEncoder> encoder;
+  ComPtr<IWICBitmapFrameEncode> frame;
+  stream.Attach(SHCreateMemStream(nullptr, 0));
+  if (stream &&
+      SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, nullptr,
+                                 CLSCTX_INPROC_SERVER,
+                                 IID_PPV_ARGS(&factory))) &&
+      SUCCEEDED(factory->CreateBitmapFromHICON(info.hIcon, &bitmap)) &&
+      SUCCEEDED(factory->CreateEncoder(GUID_ContainerFormatPng, nullptr,
+                                       &encoder)) &&
+      SUCCEEDED(encoder->Initialize(stream.Get(), WICBitmapEncoderNoCache)) &&
+      SUCCEEDED(encoder->CreateNewFrame(&frame, nullptr)) &&
+      SUCCEEDED(frame->Initialize(nullptr)) &&
+      SUCCEEDED(frame->WriteSource(bitmap.Get(), nullptr)) &&
+      SUCCEEDED(frame->Commit()) && SUCCEEDED(encoder->Commit())) {
+    STATSTG stat = {};
+    if (SUCCEEDED(stream->Stat(&stat, STATFLAG_NONAME))) {
+      png.resize(static_cast<size_t>(stat.cbSize.QuadPart));
+      LARGE_INTEGER start = {};
+      ULONG read = 0;
+      if (FAILED(stream->Seek(start, STREAM_SEEK_SET, nullptr)) ||
+          FAILED(stream->Read(png.data(), static_cast<ULONG>(png.size()),
+                              &read))) {
+        png.clear();
+      }
+    }
+  }
+  DestroyIcon(info.hIcon);
+  return png;
+}
+
 const std::string* StringArg(const flutter::MethodCall<EncodableValue>& call,
                              const char* key) {
   const auto* args = std::get_if<EncodableMap>(call.arguments());
@@ -159,8 +208,10 @@ PanicSwitchChannel::PanicSwitchChannel(flutter::BinaryMessenger* messenger) {
   channel_ = std::make_unique<flutter::MethodChannel<EncodableValue>>(
       messenger, "worknexus/panic_switch",
       &flutter::StandardMethodCodec::GetInstance());
-  overlay_ = std::make_unique<PanicOverlayWindow>([this]() {
-    channel_->InvokeMethod("overlayTriggered", nullptr);
+  overlay_ = std::make_unique<PanicOverlayWindow>([this](bool demo) {
+    channel_->InvokeMethod(
+        "overlayTriggered",
+        std::make_unique<EncodableValue>(demo ? "demo" : "release"));
   });
   channel_->SetMethodCallHandler(
       [this](const flutter::MethodCall<EncodableValue>& call,
@@ -201,25 +252,70 @@ PanicSwitchChannel::PanicSwitchChannel(flutter::BinaryMessenger* messenger) {
             return result->Error("open_failed", "Could not start the app");
           }
           result->Success();
-        } else if (method == "hide") {
+        } else if (method == "appIcon") {
           const std::string* id = StringArg(call, "id");
           if (!id) return result->Error("bad_args", "Missing id");
-          const auto windows = AppWindows();
-          const auto it = windows.find(Lower(Utf16FromUtf8(*id)));
-          if (it != windows.end()) {
-            // Async: a hung app must not stall WorkNexus.
-            for (HWND window : it->second) ShowWindowAsync(window, SW_MINIMIZE);
+          const auto png = IconPng(Utf16FromUtf8(*id));
+          if (png.empty()) return result->Success();
+          result->Success(EncodableValue(png));
+        } else if (method == "hideOthers") {
+          // Minimises every app window but the kept apps' and the desktop's.
+          std::set<std::wstring> keep;
+          const auto* args = std::get_if<EncodableMap>(call.arguments());
+          const auto it =
+              args ? args->find(EncodableValue("keep")) : EncodableMap::const_iterator();
+          if (args && it != args->end()) {
+            if (const auto* ids = std::get_if<EncodableList>(&it->second)) {
+              for (const auto& id : *ids) {
+                if (const auto* s = std::get_if<std::string>(&id)) {
+                  keep.insert(Lower(Utf16FromUtf8(*s)));
+                }
+              }
+            }
+          }
+          for (const auto& [exe, windows] : AppWindows()) {
+            if (keep.count(exe)) continue;
+            for (HWND window : windows) {
+              wchar_t cls[32] = {};
+              GetClassNameW(window, cls, static_cast<int>(std::size(cls)));
+              if (wcscmp(cls, L"Progman") == 0 || wcscmp(cls, L"WorkerW") == 0) {
+                continue;
+              }
+              // Async: a hung app must not stall WorkNexus.
+              ShowWindowAsync(window, SW_MINIMIZE);
+            }
           }
           result->Success();
         } else if (method == "showOverlay") {
           const auto* args = std::get_if<EncodableMap>(call.arguments());
-          const auto it =
-              args ? args->find(EncodableValue("image")) : EncodableMap::const_iterator();
+          auto arg = [args](const char* key) -> const EncodableValue* {
+            if (!args) return nullptr;
+            const auto it = args->find(EncodableValue(key));
+            return it == args->end() ? nullptr : &it->second;
+          };
+          const auto* image_arg = arg("image");
           const auto* image =
-              args && it != args->end()
-                  ? std::get_if<std::vector<uint8_t>>(&it->second)
-                  : nullptr;
-          if (!image || !overlay_->Show(*image)) {
+              image_arg ? std::get_if<std::vector<uint8_t>>(image_arg) : nullptr;
+          int width = 120;
+          if (const auto* v = arg("size")) {
+            if (const auto* i = std::get_if<int32_t>(v)) width = *i;
+          }
+          double opacity = 1.0;
+          if (const auto* v = arg("opacity")) {
+            if (const auto* d = std::get_if<double>(v)) opacity = *d;
+          }
+          std::string gesture = "triple";
+          if (const auto* v = arg("gesture")) {
+            if (const auto* g = std::get_if<std::string>(v)) gesture = *g;
+          }
+          std::wstring demo_label;
+          if (const auto* v = arg("demoLabel")) {
+            if (const auto* d = std::get_if<std::string>(v)) {
+              demo_label = Utf16FromUtf8(*d);
+            }
+          }
+          if (!image ||
+              !overlay_->Show(*image, width, opacity, gesture, demo_label)) {
             return result->Error("overlay_failed", "Could not show the button");
           }
           result->Success();

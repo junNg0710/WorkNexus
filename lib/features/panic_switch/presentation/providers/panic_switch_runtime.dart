@@ -11,13 +11,15 @@ import '../../domain/usecases/run_panic_switch.dart';
 import '../../domain/usecases/send_panic_sticker.dart';
 import '../../domain/usecases/should_send_panic.dart';
 import '../../domain/usecases/should_trigger_panic.dart';
-
+import '../../domain/value_objects/panic_button_look.dart';
+import '../../domain/value_objects/panic_trigger.dart';
 import 'panic_switch_config_controller.dart';
 import 'panic_switch_providers.dart';
 
 /// Reacts to the two events of the panic switch: the sticker arriving (switch
-/// apps here) and the floating button's triple click (send the sticker). Holds
-/// when each last happened, for the debounce.
+/// apps here) and the floating button's triple click (send the sticker), for
+/// each [PanicTrigger] side by side. Holds when each last happened, per
+/// trigger, for the debounce.
 class PanicSwitchRuntime {
   PanicSwitchRuntime({
     required this._account,
@@ -40,72 +42,69 @@ class PanicSwitchRuntime {
 
   /// Messages from other people as they arrive.
   final Stream<ChatMessage> incoming;
-  DateTime? _lastTriggeredAt;
-  DateTime? _lastSentAt;
+  final _lastTriggeredAt = <PanicTrigger, DateTime>{};
+  final _lastSentAt = <PanicTrigger, DateTime>{};
 
-  /// Switches apps when [message] is the sticker this computer listens for.
+  /// Switches apps when [message] is a sticker this computer listens for.
   Future<Result<void>> onIncoming(ChatMessage message) async {
     final account = _account();
     final config = _config();
-    if (account == null || config == null) return const Ok(null);
+    final trigger = ShouldTriggerPanic.triggerOf(message.content);
+    if (account == null || config == null || trigger == null) {
+      return const Ok(null);
+    }
     final now = _clock();
     final fire = const ShouldTriggerPanic()(
+      trigger: trigger,
       message: message,
       config: config,
       accountId: account.id,
       now: now,
-      lastTriggeredAt: _lastTriggeredAt,
+      lastTriggeredAt: _lastTriggeredAt[trigger],
     );
     if (!fire) return const Ok(null);
-    _lastTriggeredAt = now;
+    _lastTriggeredAt[trigger] = now;
     return _run(config);
   }
 
-  /// Sends the sticker to the chosen chat, at most once per debounce time;
-  /// sent to yourself, also switches apps here.
-  Future<Result<void>> onOverlayTriggered() async {
+  /// Sends [trigger]'s sticker to its chat and switches apps here too, at
+  /// most once per debounce time. Switching comes first, so it works even
+  /// with the chat server down; a send failure is still reported.
+  Future<Result<void>> onOverlayTriggered(PanicTrigger trigger) async {
     final account = _account();
     final config = _config();
-    final chatGid = config?.sendChatGid;
+    final chatGid = config?.chatFor(trigger);
     if (account == null || config == null || chatGid == null) {
       return const Ok(null);
     }
     final now = _clock();
     final send = const ShouldSendPanic()(
+      trigger: trigger,
       config: config,
       now: now,
-      lastSentAt: _lastSentAt,
+      lastSentAt: _lastSentAt[trigger],
     );
     if (!send) return const Ok(null);
-    _lastSentAt = now;
-    if (!config.sendsToSelf) {
-      return _send(accountId: account.id, chatGid: chatGid);
-    }
-    // Your own messages never come back as incoming, so trying it on
-    // yourself switches here first — even with the chat server down — and
-    // the sticker is sent after.
-    Result<void> switched = const Ok(null);
-    if (config.enabled) {
-      _lastTriggeredAt = now;
-      switched = await _run(config);
-    }
-    final sent = await _send(accountId: account.id, chatGid: chatGid);
+    _lastSentAt[trigger] = now;
+    _lastTriggeredAt[trigger] = now;
+    final switched = await _run(config);
+    final sent = await _send(
+      trigger: trigger,
+      accountId: account.id,
+      chatGid: chatGid,
+    );
     return switched.isErr ? switched : sent;
   }
 
-  /// Switches apps now, as the sticker would, without any chat: the
-  /// "Try it" button in Settings.
-  Future<Result<void>> runNow() async {
-    final config = _config();
-    if (config == null) return const Ok(null);
-    return _run(config);
-  }
-
-  /// Puts the floating button up or takes it down.
-  Future<Result<void>> showOverlay(bool visible) async {
-    if (!visible) return overlay.hide();
+  /// Puts the floating button up as [look] says, or takes it down (null).
+  /// [demoLabel] names the right-click menu's demo item.
+  Future<Result<void>> showOverlay(
+    PanicButtonLook? look, {
+    required String demoLabel,
+  }) async {
+    if (look == null) return overlay.hide();
     return switch (await _sticker.bytes()) {
-      Ok(:final value) => overlay.show(value),
+      Ok(:final value) => overlay.show(value, look, demoLabel: demoLabel),
       Err(:final failure) => Err(failure),
     };
   }
@@ -123,10 +122,13 @@ final panicSwitchRuntimeProvider = Provider<PanicSwitchRuntime>(
   ),
 );
 
-/// Whether the floating button should be on screen: wanted, with a group to
-/// send to, for a user of the ZenTao the feature is offered for.
-final panicOverlayVisibleProvider = Provider<bool>((ref) {
-  if (ref.watch(panicSwitchAccountProvider) == null) return false;
+/// How the floating button should be on screen, or null to take it down: it
+/// is wanted, with a chat to send to (the team's group or the demo chat), for
+/// a user of the ZenTao the feature is offered for.
+final panicOverlayLookProvider = Provider<PanicButtonLook?>((ref) {
+  if (ref.watch(panicSwitchAccountProvider) == null) return null;
   final config = ref.watch(panicSwitchConfigProvider).asData?.value;
-  return config != null && config.overlayVisible && config.sendChatGid != null;
+  if (config == null || !config.enabled || !config.overlayVisible) return null;
+  final hasChat = PanicTrigger.values.any((t) => config.chatFor(t) != null);
+  return hasChat ? config.overlayLook : null;
 });

@@ -13,6 +13,7 @@ import 'package:work_nexus/features/panic_switch/domain/repositories/panic_overl
 import 'package:work_nexus/features/panic_switch/domain/repositories/panic_sticker_source.dart';
 import 'package:work_nexus/features/panic_switch/domain/usecases/run_panic_switch.dart';
 import 'package:work_nexus/features/panic_switch/domain/usecases/send_panic_sticker.dart';
+import 'package:work_nexus/features/panic_switch/domain/value_objects/panic_trigger.dart';
 import 'package:work_nexus/features/panic_switch/presentation/providers/panic_switch_runtime.dart';
 
 class _MockRun extends Mock implements RunPanicSwitch {}
@@ -36,7 +37,10 @@ void main() {
   late DateTime now;
   late PanicSwitchRuntime runtime;
 
-  setUpAll(() => registerFallbackValue(const PanicSwitchConfig()));
+  setUpAll(() {
+    registerFallbackValue(const PanicSwitchConfig());
+    registerFallbackValue(PanicTrigger.release);
+  });
 
   setUp(() {
     run = _MockRun();
@@ -45,6 +49,7 @@ void main() {
     when(() => run(any())).thenAnswer((_) async => const Ok(null));
     when(
       () => send(
+        trigger: any(named: 'trigger'),
         accountId: any(named: 'accountId'),
         chatGid: any(named: 'chatGid'),
       ),
@@ -61,19 +66,28 @@ void main() {
     );
   });
 
-  ChatMessage sticker() => ChatMessage(
+  ChatMessage sticker({
+    String chatGid = 'g1',
+    String name = PanicSwitchConstants.stickerFileName,
+  }) => ChatMessage(
     accountId: 'a1',
     gid: 'm',
-    chatGid: 'g1',
+    chatGid: chatGid,
     senderId: 7,
     sentAt: now,
     isMine: false,
-    content: const MessageContent.image(
-      fileId: 1,
-      name: PanicSwitchConstants.stickerFileName,
-      size: 1,
-      time: 0,
-    ),
+    content: MessageContent.image(fileId: 1, name: name, size: 1, time: 0),
+  );
+
+  PanicSwitchRuntime runtimeFor(PanicSwitchConfig c) => PanicSwitchRuntime(
+    account: () => account,
+    config: () => c,
+    run: run,
+    send: send,
+    overlay: _MockOverlay(),
+    sticker: _MockSticker(),
+    incoming: const Stream.empty(),
+    clock: () => now,
   );
 
   test('switches once per debounce window', () async {
@@ -88,52 +102,84 @@ void main() {
   });
 
   test('sends the sticker to the group once per debounce window', () async {
-    await runtime.onOverlayTriggered();
-    await runtime.onOverlayTriggered();
-    verify(() => send(accountId: 'a1', chatGid: 'g1')).called(1);
+    await runtime.onOverlayTriggered(PanicTrigger.release);
+    await runtime.onOverlayTriggered(PanicTrigger.release);
+    verify(
+      () => send(trigger: PanicTrigger.release, accountId: 'a1', chatGid: 'g1'),
+    ).called(1);
   });
 
-  test('sent to yourself, also switches apps here', () async {
-    const self = PanicSwitchConfig(
-      testMode: true,
-      testChatGid: 'cloud',
-      testChatIsSelf: true,
-    );
-    final r = PanicSwitchRuntime(
-      account: () => account,
-      config: () => self,
-      run: run,
-      send: send,
-      overlay: _MockOverlay(),
-      sticker: _MockSticker(),
-      incoming: const Stream.empty(),
-      clock: () => now,
-    );
+  test('demo and release run side by side, each debounced', () async {
+    final demo = config.copyWith(demoMode: true, demoChatGid: 'dm');
+    final r = runtimeFor(demo);
 
+    await r.onOverlayTriggered(PanicTrigger.release);
+    await r.onOverlayTriggered(PanicTrigger.demo);
+    await r.onOverlayTriggered(PanicTrigger.demo);
+    verify(
+      () => send(trigger: PanicTrigger.release, accountId: 'a1', chatGid: 'g1'),
+    ).called(1);
+    verify(
+      () => send(trigger: PanicTrigger.demo, accountId: 'a1', chatGid: 'dm'),
+    ).called(1);
+
+    await r.onIncoming(sticker());
+    await r.onIncoming(
+      sticker(chatGid: 'dm', name: PanicSwitchConstants.demoStickerFileName),
+    );
+    verify(() => run(demo)).called(2);
+  });
+
+  test('the demo trigger does nothing without demo mode', () async {
+    await runtime.onOverlayTriggered(PanicTrigger.demo);
+    verifyNever(
+      () => send(
+        trigger: any(named: 'trigger'),
+        accountId: any(named: 'accountId'),
+        chatGid: any(named: 'chatGid'),
+      ),
+    );
+  });
+
+  test('a triple click switches apps here too, then sends', () async {
     when(
       () => send(
+        trigger: any(named: 'trigger'),
         accountId: any(named: 'accountId'),
         chatGid: any(named: 'chatGid'),
       ),
     ).thenAnswer((_) async => const Err(NetworkFailure('server down')));
 
-    final result = await r.onOverlayTriggered();
+    final result = await runtime.onOverlayTriggered(PanicTrigger.release);
 
     // Switched even though the chat server is down; the send failure is
     // still reported.
-    verify(() => run(self)).called(1);
-    verify(() => send(accountId: 'a1', chatGid: 'cloud')).called(1);
+    verifyInOrder([
+      () => run(config),
+      () => send(trigger: PanicTrigger.release, accountId: 'a1', chatGid: 'g1'),
+    ]);
     expect(result.failureOrNull, isA<NetworkFailure>());
   });
 
-  test('runNow switches without any chat', () async {
-    await runtime.runNow();
-    verify(() => run(config)).called(1);
+  test('turned off, the button neither switches nor sends', () async {
+    final r = runtimeFor(config.copyWith(enabled: false));
+    await r.onOverlayTriggered(PanicTrigger.release);
+    verifyNever(() => run(any()));
     verifyNever(
       () => send(
+        trigger: any(named: 'trigger'),
         accountId: any(named: 'accountId'),
         chatGid: any(named: 'chatGid'),
       ),
+    );
+  });
+
+  test('offers the demo menu only with demo mode and a demo chat', () {
+    expect(config.overlayLook.demo, isFalse);
+    expect(config.copyWith(demoMode: true).overlayLook.demo, isFalse);
+    expect(
+      config.copyWith(demoMode: true, demoChatGid: 'dm').overlayLook.demo,
+      isTrue,
     );
   });
 
@@ -142,7 +188,10 @@ void main() {
     final source = _MockSticker();
     final image = Uint8List.fromList([1, 2, 3]);
     when(source.bytes).thenAnswer((_) async => Ok(image));
-    when(() => overlay.show(image)).thenAnswer((_) async => const Ok(null));
+    final look = config.overlayLook;
+    when(
+      () => overlay.show(image, look, demoLabel: 'Demo'),
+    ).thenAnswer((_) async => const Ok(null));
     final r = PanicSwitchRuntime(
       account: () => account,
       config: () => config,
@@ -153,7 +202,11 @@ void main() {
       incoming: const Stream.empty(),
     );
 
-    expect((await r.showOverlay(true)).isOk, isTrue);
-    verify(() => overlay.show(image)).called(1);
+    expect((await r.showOverlay(look, demoLabel: 'Demo')).isOk, isTrue);
+    verify(() => overlay.show(image, look, demoLabel: 'Demo')).called(1);
+
+    when(overlay.hide).thenAnswer((_) async => const Ok(null));
+    await r.showOverlay(null, demoLabel: 'Demo');
+    verify(overlay.hide).called(1);
   });
 }

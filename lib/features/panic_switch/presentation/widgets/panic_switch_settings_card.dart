@@ -2,24 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_expandable_card.dart';
 import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/panic_switch_config.dart';
+import '../../domain/usecases/list_panic_chats.dart';
 import '../providers/panic_switch_config_controller.dart';
 import '../providers/panic_switch_providers.dart';
-import 'panic_app_pickers.dart';
-import 'panic_chat_picker.dart';
-import 'panic_sender_list.dart';
+import 'panic_button_tab.dart';
+import 'panic_demo_tab.dart';
+import 'panic_release_tab.dart';
 import 'panic_switch_save.dart';
-import 'panic_try_button.dart';
 
-/// The debounce choices offered, in seconds.
-const _debounceChoices = [15, 30, 60, 120, 300];
-
-/// Settings' "Thầy vô" card: the floating button that sends the sticker, and
-/// what this computer does when the sticker arrives. Shown only to users of
-/// the ZenTao the feature is offered for.
+/// Settings' "Thầy vô" card, in three tabs so none reads as one long list:
+/// "Official" (the team group), "Demo" (a chat of your own) and "Floating
+/// button". Shown only to
+/// users of the ZenTao the feature is offered for.
 class PanicSwitchSettingsCard extends ConsumerWidget {
   const PanicSwitchSettingsCard({super.key});
 
@@ -39,7 +39,6 @@ class PanicSwitchSettingsCard extends ConsumerWidget {
     }
     final config = loaded.asData?.value;
     if (config == null) return const SizedBox.shrink();
-    final canRaise = ref.watch(appSwitcherProvider).canRaiseApps;
     final chats =
         ref.watch(
           panicChatsProvider((
@@ -47,118 +46,119 @@ class PanicSwitchSettingsCard extends ConsumerWidget {
             selfTitle: l.panicSwitchSelfChat,
           )),
         ) ??
-        const [];
-    String? titleOf(String? gid) =>
-        chats.where((c) => c.chat.gid == gid).firstOrNull?.title;
-    final team = titleOf(config.chatGid);
-    final listening = titleOf(config.receiveChatGid);
-    void save(PanicSwitchConfig Function(PanicSwitchConfig) change) =>
-        savePanicSwitch(context, ref, change);
+        const <PanicChat>[];
+    final team = chats
+        .where((c) => c.chat.gid == config.chatGid)
+        .firstOrNull
+        ?.title;
+    final summary = team == null
+        ? l.panicSwitchNoGroup
+        : config.anySender
+        ? l.panicSwitchSummaryAnyone(team)
+        : l.panicSwitchSummary(team, config.allowedSenderIds.length);
 
     return AppExpandableCard(
       icon: LucideIcons.siren300,
       title: l.panicSwitchTitle,
-      summary: config.testMode
-          ? l.panicSwitchSummaryTestMode
-          : listening == null
-          ? l.panicSwitchNoGroup
-          : config.anySender
-          ? l.panicSwitchSummaryAnyone(listening)
-          : l.panicSwitchSummary(listening, config.allowedSenderIds.length),
+      summary: !config.enabled
+          ? l.panicSwitchSummaryOff
+          : config.demoMode
+          ? l.panicSwitchSummaryWithDemo(summary)
+          : summary,
       sections: [
         AppExpandableCardSection(
-          title: l.panicSwitchOverlayLabel,
-          hint: l.panicSwitchOverlayHint,
-          trailing: Switch(
-            value: config.overlayVisible,
-            onChanged: (v) => save((c) => c.copyWith(overlayVisible: v)),
-          ),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchGroupLabel,
-          hint: l.panicSwitchTeamGroupHint,
-          trailing: Text(team ?? l.panicSwitchNoGroup),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchTestModeLabel,
-          hint: l.panicSwitchTestModeHint,
-          trailing: Switch(
-            value: config.testMode,
-            onChanged: (v) => save((c) => c.copyWith(testMode: v)),
-          ),
-        ),
-        if (config.testMode)
-          AppExpandableCardSection(
-            title: l.panicSwitchTestChatLabel,
-            hint: l.panicSwitchTestChatHint,
-            child: PanicChatPicker(
-              chats: chats,
-              value: config.testChatGid,
-              // Senders allowed in one chat mean nothing in another.
-              onChanged: (p) => save(
-                (c) => c.testChatGid == p.chat.gid
-                    ? c
-                    : c.copyWith(
-                        testChatGid: p.chat.gid,
-                        testChatIsSelf: p.chat.isMyCloud,
-                        allowedSenderIds: const [],
-                      ),
-              ),
-            ),
-          ),
-        AppExpandableCardSection(
-          title: l.panicSwitchReceiveLabel,
-          hint: l.panicSwitchReceiveHint,
+          title: l.panicSwitchEnabledLabel,
+          hint: l.panicSwitchEnabledHint,
           trailing: Switch(
             value: config.enabled,
-            onChanged: (v) => save((c) => c.copyWith(enabled: v)),
+            onChanged: (v) =>
+                savePanicSwitch(context, ref, (c) => c.copyWith(enabled: v)),
           ),
         ),
-        AppExpandableCardSection(
-          title: l.panicSwitchSendersLabel,
-          hint: l.panicSwitchSendersHint,
-          child: PanicSenderList(accountId: account.id, config: config),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchTargetLabel,
-          hint: !canRaise
-              ? '${l.panicSwitchTargetHint} ${l.panicSwitchWaylandNote}'
-              : l.panicSwitchTargetHint,
-          child: PanicTargetAppPicker(config: config),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchHideLabel,
-          hint: l.panicSwitchHideHint,
-          child: PanicHiddenAppsPicker(config: config),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchTryLabel,
-          hint: l.panicSwitchTryHint,
-          trailing: const PanicTryButton(),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchHideSelfLabel,
-          hint: l.panicSwitchHideSelfHint,
-          trailing: Switch(
-            value: config.hideSelf,
-            onChanged: (v) => save((c) => c.copyWith(hideSelf: v)),
+        if (config.enabled)
+          _ModeTabs(
+            config: config,
+            accountId: account.id,
+            team: team ?? l.panicSwitchTeamFallback,
+            chats: chats,
+            canRaise: ref.watch(appSwitcherProvider).canRaiseApps,
           ),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchDebounceLabel,
-          hint: l.panicSwitchDebounceHint,
-          trailing: AppSegmentedTabs(
-            tabs: [
-              for (final s in _debounceChoices)
-                AppSegmentedTab(
-                  label: l.panicSwitchSeconds(s),
-                  active: config.debounceSeconds == s,
-                  onTap: () => save((c) => c.copyWith(debounceSeconds: s)),
-                ),
-            ],
-          ),
-        ),
       ],
     );
   }
 }
+
+/// The tabs and the open one's settings.
+class _ModeTabs extends StatefulWidget {
+  const _ModeTabs({
+    required this.config,
+    required this.accountId,
+    required this.team,
+    required this.chats,
+    required this.canRaise,
+  });
+
+  final PanicSwitchConfig config;
+  final String accountId;
+  final String team;
+  final List<PanicChat> chats;
+  final bool canRaise;
+
+  @override
+  State<_ModeTabs> createState() => _ModeTabsState();
+}
+
+class _ModeTabsState extends State<_ModeTabs> {
+  var _tab = _Tab.release;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    final s = context.spacing;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: context.colors.border)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.all(s.xl2),
+            child: AppSegmentedTabs(
+              tabs: [
+                for (final tab in _Tab.values)
+                  AppSegmentedTab(
+                    label: switch (tab) {
+                      _Tab.release => l.panicSwitchTabRelease,
+                      _Tab.demo =>
+                        widget.config.demoMode
+                            ? l.panicSwitchTabDemoOn
+                            : l.panicSwitchTabDemo,
+                      _Tab.button => l.panicSwitchTabButton,
+                    },
+                    active: _tab == tab,
+                    onTap: () => setState(() => _tab = tab),
+                  ),
+              ],
+            ),
+          ),
+          switch (_tab) {
+            _Tab.release => PanicReleaseTab(
+              config: widget.config,
+              accountId: widget.accountId,
+              team: widget.team,
+              canRaise: widget.canRaise,
+            ),
+            _Tab.demo => PanicDemoTab(
+              config: widget.config,
+              chats: widget.chats,
+            ),
+            _Tab.button => PanicButtonTab(config: widget.config),
+          },
+        ],
+      ),
+    );
+  }
+}
+
+enum _Tab { release, demo, button }

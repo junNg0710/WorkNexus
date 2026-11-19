@@ -23,11 +23,19 @@ final class PanicSwitchChannel {
     case "activate":
       guard let id = args?["id"] as? String else { return result(Self.badArgs) }
       Self.activate(bundleId: id, result: result)
-    case "hide":
+    case "appIcon":
       guard let id = args?["id"] as? String else { return result(Self.badArgs) }
-      for app in NSRunningApplication.runningApplications(withBundleIdentifier: id) {
+      result(Self.iconPng(bundleId: id).map { FlutterStandardTypedData(bytes: $0) })
+    case "hideOthers":
+      // Every app with a Dock icon but WorkNexus and the ones kept.
+      let keep = Set((args?["keep"] as? [String]) ?? [])
+      let me = NSRunningApplication.current.processIdentifier
+      for app in NSWorkspace.shared.runningApplications
+      where app.activationPolicy == .regular && app.processIdentifier != me {
+        if let id = app.bundleIdentifier, keep.contains(id) { continue }
         app.hide()
       }
+      result(nil)
       result(nil)
     case "hideSelf":
       NSApp.hide(nil)
@@ -37,11 +45,18 @@ final class PanicSwitchChannel {
         let image = NSImage(data: data)
       else { return result(Self.badArgs) }
       if overlay == nil {
-        overlay = PanicOverlayPanel { [weak self] in
-          self?.channel.invokeMethod("overlayTriggered", arguments: nil)
+        overlay = PanicOverlayPanel { [weak self] demo in
+          self?.channel.invokeMethod(
+            "overlayTriggered", arguments: demo ? "demo" : "release")
         }
       }
-      overlay?.show(image: image)
+      overlay?.show(
+        image: image,
+        width: CGFloat((args?["size"] as? NSNumber)?.doubleValue ?? 120),
+        opacity: CGFloat((args?["opacity"] as? NSNumber)?.doubleValue ?? 1),
+        gesture: args?["gesture"] as? String ?? "triple",
+        demoLabel: args?["demoLabel"] as? String
+      )
       result(nil)
     case "hideOverlay":
       overlay?.orderOut(nil)
@@ -49,6 +64,26 @@ final class PanicSwitchChannel {
     default:
       result(FlutterMethodNotImplemented)
     }
+  }
+
+  /// [bundleId]'s icon as a 64×64 PNG (32 points at 2×); nil when the app
+  /// is not installed.
+  private static func iconPng(bundleId: String) -> Data? {
+    guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) else {
+      return nil
+    }
+    let icon = NSWorkspace.shared.icon(forFile: url.path)
+    let side = 64
+    guard let rep = NSBitmapImageRep(
+      bitmapDataPlanes: nil, pixelsWide: side, pixelsHigh: side, bitsPerSample: 8,
+      samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
+      bytesPerRow: 0, bitsPerPixel: 0)
+    else { return nil }
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    icon.draw(in: NSRect(x: 0, y: 0, width: side, height: side))
+    NSGraphicsContext.restoreGraphicsState()
+    return rep.representation(using: .png, properties: [:])
   }
 
   private static let badArgs = FlutterError(code: "bad_args", message: "Missing argument", details: nil)
