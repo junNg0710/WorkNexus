@@ -82,67 +82,64 @@ void main() {
   });
 
   group('ChromiumCookieReader', () {
-    test(
-      'reads and decrypts a profile, asking the keychain once',
-      () async {
-        final profile = Directory(
-          '${tmp.path}/Library/Application Support/Google/Chrome/Default',
-        )..createSync(recursive: true);
-        File('${profile.parent.path}/Local State').writeAsStringSync(
-          jsonEncode({
-            'profile': {
-              'info_cache': {
-                'Default': {'name': 'Work'},
-              },
+    test('reads and decrypts a profile, asking the keychain once', () async {
+      final profile = Directory(
+        '${tmp.path}/Library/Application Support/Google/Chrome/Default',
+      )..createSync(recursive: true);
+      File('${profile.parent.path}/Local State').writeAsStringSync(
+        jsonEncode({
+          'profile': {
+            'info_cache': {
+              'Default': {'name': 'Work'},
             },
-          }),
-        );
-        final db = sqlite3.open('${profile.path}/Cookies');
-        db
-          ..execute('CREATE TABLE meta (key TEXT, value TEXT)')
-          ..execute("INSERT INTO meta VALUES ('version', '23')")
-          ..execute(
-            'CREATE TABLE cookies (host_key TEXT, name TEXT, value TEXT, '
-            'encrypted_value BLOB, path TEXT, expires_utc INTEGER, '
-            'is_secure INTEGER, is_httponly INTEGER, samesite INTEGER)',
-          );
-        db.execute('INSERT INTO cookies VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-          '.work.io',
-          'sid',
-          '',
-          _chromiumEncrypt('pw', utf8.encode('abc')),
-          '/',
-          13400000000000000,
-          1,
-          1,
-          1,
-        ]);
-        db.close();
-        var asked = 0;
-        final reader = ChromiumCookieReader(
-          home: tmp.path,
-          run: (cmd, args, _) async {
-            asked++;
-            return ProcessResult(0, 0, 'pw\n', '');
           },
+        }),
+      );
+      final db = sqlite3.open('${profile.path}/Cookies');
+      db
+        ..execute('CREATE TABLE meta (key TEXT, value TEXT)')
+        ..execute("INSERT INTO meta VALUES ('version', '23')")
+        ..execute(
+          'CREATE TABLE cookies (host_key TEXT, name TEXT, value TEXT, '
+          'encrypted_value BLOB, path TEXT, expires_utc INTEGER, '
+          'is_secure INTEGER, is_httponly INTEGER, samesite INTEGER)',
         );
+      db.execute('INSERT INTO cookies VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+        '.work.io',
+        'sid',
+        '',
+        _chromiumEncrypt('pw', utf8.encode('abc')),
+        '/',
+        13400000000000000,
+        1,
+        1,
+        1,
+      ]);
+      db.close();
+      var asked = 0;
+      final reader = ChromiumCookieReader(
+        environment: {'HOME': tmp.path},
+        os: 'macos',
+        run: (cmd, args, _) async {
+          asked++;
+          return ProcessResult(0, 0, 'pw\n', '');
+        },
+      );
 
-        final profiles = await reader.profiles(CookieBrowser.chrome);
-        final cookies = await reader.read(
-          CookieBrowser.chrome,
-          profiles.single.path,
-        );
-        await reader.read(CookieBrowser.chrome, profiles.single.path);
+      final profiles = await reader.profiles(CookieBrowser.chrome);
+      final cookies = await reader.read(
+        CookieBrowser.chrome,
+        profiles.single.path,
+      );
+      await reader.read(CookieBrowser.chrome, profiles.single.path);
 
-        expect(profiles.single.name, 'Work');
-        expect(cookies.single.value, 'abc');
-        expect(cookies.single.httpOnly, isTrue);
-        expect(cookies.single.sameSite, CookieSameSite.lax);
-        expect(cookies.single.expires?.year, 2025);
-        expect(asked, 1);
-      },
-      skip: !Platform.isMacOS,
-    );
+      expect(profiles.single.name, 'Work');
+      expect(cookies.single.value, 'abc');
+      expect(cookies.single.httpOnly, isTrue);
+      expect(cookies.single.sameSite, CookieSameSite.lax);
+      expect(cookies.single.expires?.year, 2025);
+      expect(asked, 1);
+    }, skip: !Platform.isMacOS);
 
     test('a refused keychain is a KeychainDeniedException', () async {
       final profile = Directory(
@@ -150,7 +147,8 @@ void main() {
       )..createSync(recursive: true);
       File('${profile.path}/Cookies').writeAsStringSync('');
       final reader = ChromiumCookieReader(
-        home: tmp.path,
+        environment: {'HOME': tmp.path},
+        os: 'macos',
         run: (_, _, _) async => ProcessResult(0, 51, '', 'denied'),
       );
 
@@ -169,7 +167,8 @@ void main() {
         File('${profile.path}/Cookies').writeAsStringSync('');
         Duration? waited;
         final reader = ChromiumCookieReader(
-          home: tmp.path,
+          environment: {'HOME': tmp.path},
+          os: 'macos',
           keychainTimeout: const Duration(seconds: 5),
           run: (_, _, timeout) {
             waited = timeout;
@@ -244,7 +243,7 @@ Path=/abs/work
           '1800000000, 1, 1, 2)',
         )
         ..close();
-      final reader = FirefoxCookieReader(root: tmp.path);
+      final reader = FirefoxCookieReader(roots: [tmp.path]);
 
       final profile = (await reader.profiles()).single;
       final cookie = (await reader.read(profile.path)).single;

@@ -1517,6 +1517,8 @@
   "chatNotificationsOn": "Mute new message notifications",
   "chatNotificationsOff": "Turn on new message notifications",
   "chatInfo": "Chat info",
+  "chatShowInfo": "Show chat info",
+  "chatHideInfo": "Hide chat info",
   "chatClosePanel": "Close",
   "chatPinnedBarTitle": "Message",
   "chatMorePins": "+{count} pinned",
@@ -2996,6 +2998,23 @@
   "miniAppCookiesOpenPrivacy": "Open Privacy settings",
   "miniAppCookiesReadFailed": "Could not read this browser's cookies.",
   "miniAppCookiesRetry": "Try again",
+  "miniAppCookiesLookupFailed": "Could not look for browsers on this device.",
+  "miniAppCookiesBrowserBusy": "{browser} is running and keeps its cookies locked. Quit {browser}, then try again.",
+  "@miniAppCookiesBrowserBusy": {
+    "placeholders": {
+      "browser": {
+        "type": "String"
+      }
+    }
+  },
+  "miniAppCookiesAppBound": "{browser} encrypts its cookies so that only {browser} can read them. Import from another browser, such as Firefox.",
+  "@miniAppCookiesAppBound": {
+    "placeholders": {
+      "browser": {
+        "type": "String"
+      }
+    }
+  },
   "miniAppCookiesExpiredTooltip": "Sign-in cookies expired: import them again from {browser}",
   "@miniAppCookiesExpiredTooltip": {
     "placeholders": {
@@ -3187,5 +3206,8 @@
   "@updateDownloadingPercent": {"placeholders": {"percent": {"type": "int"}}},
   "panicSwitchSummaryOff": "Off on this computer",
   "whatsNewTitle": "What's new in {version}",
-  "@whatsNewTitle": {"placeholders": {"version": {"type": "String"}}}
+  "@whatsNewTitle": {"placeholders": {"version": {"type": "String"}}},
+  "miniAppCookiesBrowserUnsupported": "{browser} \u2014 not supported on Windows",
+  "@miniAppCookiesBrowserUnsupported": {"placeholders": {"browser": {"type": "String"}}},
+  "miniAppCookiesOnlyChrome": "Only Chrome was found, and importing from Chrome is not supported on Windows: Chrome encrypts its cookies so that only Chrome can read them. Sign in to the site in Edge or Firefox, then import from there."
 }

@@ -1085,6 +1085,8 @@
   "chatNotificationsOn": "Tắt thông báo tin nhắn mới",
   "chatNotificationsOff": "Bật thông báo tin nhắn mới",
   "chatInfo": "Thông tin cuộc trò chuyện",
+  "chatShowInfo": "Hiện thông tin cuộc trò chuyện",
+  "chatHideInfo": "Ẩn thông tin cuộc trò chuyện",
   "chatClosePanel": "Đóng",
   "chatPinnedBarTitle": "Tin nhắn",
   "chatMorePins": "+{count} ghim",
@@ -1918,6 +1920,9 @@
   "miniAppCookiesOpenPrivacy": "Mở cài đặt Quyền riêng tư",
   "miniAppCookiesReadFailed": "Không đọc được cookie của trình duyệt này.",
   "miniAppCookiesRetry": "Thử lại",
+  "miniAppCookiesLookupFailed": "Không dò được các trình duyệt trên máy.",
+  "miniAppCookiesBrowserBusy": "{browser} đang mở và khoá file cookie. Hãy thoát {browser} rồi thử lại.",
+  "miniAppCookiesAppBound": "{browser} mã hoá cookie để chỉ {browser} đọc được. Hãy nhập từ trình duyệt khác, ví dụ Firefox.",
   "miniAppCookiesExpiredTooltip": "Cookie đăng nhập đã hết hạn: nhập lại từ {browser}",
   "translatedVia": "Đã dịch · qua {model}",
   "translatedViaDefault": "Đã dịch · qua model mặc định của OpenCode",
@@ -2027,5 +2032,7 @@
   "settingsGeneral": "Chung",
   "updateDownloadingPercent": "Đang tải bản cập nhật… {percent}%",
   "panicSwitchSummaryOff": "Đang tắt trên máy này",
-  "whatsNewTitle": "Có gì mới trong {version}"
+  "whatsNewTitle": "Có gì mới trong {version}",
+  "miniAppCookiesBrowserUnsupported": "{browser} — không hỗ trợ trên Windows",
+  "miniAppCookiesOnlyChrome": "Chỉ tìm thấy Chrome, mà Windows không hỗ trợ import từ Chrome: Chrome mã hoá cookie để chỉ chính Chrome đọc được. Hãy đăng nhập trang đó bằng Edge hoặc Firefox rồi import từ trình duyệt đó."
 }

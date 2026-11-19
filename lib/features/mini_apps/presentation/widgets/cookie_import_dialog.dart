@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -14,7 +15,9 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/cookie_source.dart';
 import '../providers/cookie_import_controller.dart';
 import '../util/cookie_browser_name.dart';
+import '../util/cookie_import_support.dart';
 import 'cookie_import_feedback.dart';
+import 'cookie_notes.dart';
 import 'cookie_site_picker.dart';
 
 /// Imports cookies from a browser: pick the browser profile, then the sites
@@ -82,9 +85,10 @@ class _CookieImportDialogState extends ConsumerState<CookieImportDialog> {
     final l = AppL10n.of(context);
     final sources = ref.watch(cookieSourcesProvider);
     final list = sources.asData?.value ?? const <CookieSource>[];
+    final usable = list.where(cookieImportSupported).toList();
     final source =
         _source ??
-        (list.contains(widget.source) ? widget.source : list.firstOrNull);
+        (usable.contains(widget.source) ? widget.source : usable.firstOrNull);
     final sites = source == null
         ? null
         : ref.watch(cookieSitesProvider(source));
@@ -133,20 +137,42 @@ class _CookieImportDialogState extends ConsumerState<CookieImportDialog> {
           children: [
             if (sources.isLoading)
               const _Spinner()
+            else if (sources.hasError && list.isEmpty)
+              CookieErrorNote(
+                message: l.miniAppCookiesLookupFailed,
+                onRetry: () => ref.invalidate(cookieSourcesProvider),
+              )
             else if (source == null)
-              _Note(l.miniAppCookiesNoBrowser)
+              CookieNote(
+                list.isEmpty
+                    ? l.miniAppCookiesNoBrowser
+                    : l.miniAppCookiesOnlyChrome,
+              )
             else ...[
               _SourcePicker(sources: list, value: source, onChanged: _choose),
               if (sites == null || sites.isLoading) ...[
-                if (source.browser.isChromium)
-                  _Note(
+                // Only macOS asks before giving out a Chromium cookie key.
+                if (source.browser.isChromium &&
+                    defaultTargetPlatform == TargetPlatform.macOS)
+                  CookieNote(
                     l.miniAppCookiesKeychainHint(
                       cookieBrowserName(source.browser),
                     ),
                   ),
                 const _Spinner(),
               ] else if (sites.error case final Failure failure)
-                _ReadError(source: source, failure: failure)
+                CookieErrorNote(
+                  message: cookieFailureMessage(
+                    l,
+                    source,
+                    failure,
+                    otherwise: l.miniAppCookiesReadFailed,
+                  ),
+                  onRetry: () => ref.invalidate(cookieSitesProvider(source)),
+                  onOpenPrivacy: needsFullDiskAccess(source, failure)
+                      ? openFullDiskAccessSettings
+                      : null,
+                )
               else
                 Flexible(
                   child: CookieSitePicker(
@@ -174,11 +200,14 @@ class _SourcePicker extends StatelessWidget {
   final CookieSource value;
   final ValueChanged<CookieSource> onChanged;
 
-  static String _label(CookieSource source) {
+  static String _label(AppL10n l, CookieSource source) {
     final browser = cookieBrowserName(source.browser);
-    return source.profileName == browser
+    final name = source.profileName == browser
         ? browser
         : '$browser · ${source.profileName}';
+    return cookieImportSupported(source)
+        ? name
+        : l.miniAppCookiesBrowserUnsupported(name);
   }
 
   @override
@@ -195,72 +224,12 @@ class _SourcePicker extends StatelessWidget {
       AppDropdown<CookieSource>(
         value: value,
         values: sources,
-        labelOf: _label,
+        labelOf: (s) => _label(AppL10n.of(context), s),
+        enabledOf: cookieImportSupported,
         onChanged: onChanged,
       ),
     ],
   );
-}
-
-/// Why the profile's cookies could not be read, and the way past it.
-class _ReadError extends ConsumerWidget {
-  const _ReadError({required this.source, required this.failure});
-
-  final CookieSource source;
-  final Failure failure;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppL10n.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: context.spacing.md,
-      children: [
-        _Note(
-          failure is AuthFailure || failure is ExpiredFailure
-              ? cookieFailureMessage(l, source, failure)
-              : l.miniAppCookiesReadFailed,
-          error: true,
-        ),
-        Row(
-          spacing: context.spacing.md,
-          children: [
-            if (needsFullDiskAccess(source, failure))
-              AppButton.outlinedNeutral(
-                size: AppButtonSize.small,
-                icon: LucideIcons.shieldCheck300,
-                onPressed: openFullDiskAccessSettings,
-                child: Text(l.miniAppCookiesOpenPrivacy),
-              ),
-            AppButton.outlinedNeutral(
-              size: AppButtonSize.small,
-              icon: LucideIcons.refreshCw300,
-              onPressed: () => ref.invalidate(cookieSitesProvider(source)),
-              child: Text(l.miniAppCookiesRetry),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _Note extends StatelessWidget {
-  const _Note(this.text, {this.error = false});
-
-  final String text;
-  final bool error;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Text(
-      text,
-      style: context.typography.caption.copyWith(
-        color: error ? c.error : c.textSecondary,
-      ),
-    );
-  }
 }
 
 class _Spinner extends StatelessWidget {
