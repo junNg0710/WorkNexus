@@ -7,6 +7,7 @@ import FeatureChat
 import FeatureConnections
 import FeatureMiniApps
 import FeatureNotifications
+import FeaturePanicSwitch
 import FeatureTicketEditor
 import FeatureTranslation
 import FeatureWorkspaceOverview
@@ -57,8 +58,14 @@ struct HostWiring {
             else if let n = r.notifications { Task { await n.handleTap(payload: link) } }
         }
         host.revealApp = { NSApp.activate(); _ = r.platform.reopenWindow() }
-        // Three quick clicks on the pet raise the panic switch's alert (when it is on for this user).
-        host.petTripleTap = PetTripleTap(armed: { r.panic.model.overlayVisible }, run: { r.panic.model.petAlert() })
+        // Holding the pet (or three quick clicks, as chosen) raises the panic switch's alert, when it is on for this user.
+        host.petTripleTap = PetTripleTap(armed: {
+            switch r.panic.model.petGesture {
+            case .hold: .hold(seconds: Double(r.panic.model.config?.petHoldSeconds ?? PanicSwitchConstants.defaultPetHoldSeconds))
+            case .tripleClick: .tripleTap
+            case nil: nil
+            }
+        }, run: { r.panic.model.petAlert() })
         // On the Chat page the title bar searches the chats and their stored messages; a hit opens the chat (at the message).
         let chat = r.chat
         host.placeSearch = { rail in

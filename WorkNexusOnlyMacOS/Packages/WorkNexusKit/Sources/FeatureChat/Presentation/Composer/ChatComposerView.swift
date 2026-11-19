@@ -131,7 +131,8 @@ private struct ComposerInputRow: View {
                 ComposerSendButton { controller.send() }
             }
         }
-        .padding(EdgeInsets(top: theme.spacing.s8, leading: theme.spacing.s16, bottom: theme.spacing.s8, trailing: theme.spacing.s12))
+        // Clear of the content card's rounded bottom corners: the input and 👍 used to sit inside the curve.
+        .padding(EdgeInsets(top: theme.spacing.s8, leading: theme.spacing.s16, bottom: theme.spacing.s14, trailing: theme.spacing.s16))
     }
 }
 

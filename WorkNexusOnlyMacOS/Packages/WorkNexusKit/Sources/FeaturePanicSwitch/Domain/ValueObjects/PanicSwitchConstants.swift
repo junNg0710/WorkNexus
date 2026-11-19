@@ -15,6 +15,9 @@ public enum PanicSwitchConstants {
     /// switch off long after.
     public static let freshWindow: TimeInterval = 30
     public static let defaultDebounceSeconds = 60
+    /// How long the pet is held for the alert by default, and the range the user can set (macOS only).
+    public static let defaultPetHoldSeconds = 3
+    public static let petHoldRange = 1...30
     /// The debounce choices offered in Settings, in seconds (panic_switch_settings_card.dart `_debounceChoices`).
     public static let debounceChoices = [15, 30, 60, 120, 300]
 }

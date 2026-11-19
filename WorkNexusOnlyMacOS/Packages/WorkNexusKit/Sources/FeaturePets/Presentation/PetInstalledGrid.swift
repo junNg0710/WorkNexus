@@ -8,12 +8,14 @@ struct PetInstalledGrid: View {
     let library: PetLibraryModel
     let selectedId: String?
     let onSelect: (String?) -> Void
-    @State private var tbchat = PetSpriteSheet.bundled()
+    /// The built-in character's first frame, decoded once: as a `@State` initial value it was read and decoded again
+    /// (the whole sprite sheet) every time the page redrew.
+    @MainActor private static let tbchatFrame: CGImage? = PetSpriteSheet.bundled()?.frame(.idle, 0)
 
     var body: some View {
         LazyVGrid(columns: PetCardMetrics.columns, alignment: .leading, spacing: theme.spacing.s10) {
             PetCard(name: "TBChat", byline: appString("petBuiltIn", "Built in"), selected: selectedId == nil) {
-                if let frame = tbchat?.frame(.idle, 0) {
+                if let frame = Self.tbchatFrame {
                     Image(decorative: frame, scale: 1).resizable().interpolation(.high).scaledToFit()
                 }
             } action: {

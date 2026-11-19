@@ -104,9 +104,9 @@ enum L {
     static var workspaceSaveFailed: String { appString("workspaceSaveFailed", "Couldn't save the workspace.") }
     static var nameLabel: String { appString("workspaceNameLabel", "Name") }
     static var nameRequired: String { appString("workspaceNameRequired", "Enter a name") }
-    static func nameTooLong(_ max: Int) -> String { String(format: appString("workspaceNameTooLong", "Use at most %d characters"), max) }
+    static func nameTooLong(_ max: Int) -> String { appFormat("workspaceNameTooLong", "Use at most %1$@ characters", "\(max)") }
     static var codeLabel: String { appString("workspaceCodeLabel", "Badge letters") }
-    static func codeTooLong(_ max: Int) -> String { String(format: appString("workspaceCodeTooLong", "Use at most %d badge letters"), max) }
+    static func codeTooLong(_ max: Int) -> String { appFormat("workspaceCodeTooLong", "Use at most %1$@ badge letters", "\(max)") }
     static var color: String { appString("connectionsColor", "Color") }
     static var icon: String { appString("connectionsIcon", "Icon") }
     static var customIconSelected: String { appString("connectionsCustomIconSelected", "Custom icon selected") }

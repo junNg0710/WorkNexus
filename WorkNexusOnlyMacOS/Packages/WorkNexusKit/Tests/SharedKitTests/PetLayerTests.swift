@@ -111,9 +111,14 @@ final class PetLayerTests: XCTestCase {
         let screens = [CGRect(x: 0, y: 0, width: 1440, height: 900), CGRect(x: 1440, y: 0, width: 1920, height: 1080)]
         let size = CGSize(width: 96, height: 104)
         XCTAssertEqual(FloatingPetPanel.onScreen(origin: NSPoint(x: 2000, y: 500), size: size, screens: screens), NSPoint(x: 2000, y: 500))
-        // Its screen is gone: back to the bottom-right of the first one.
-        XCTAssertEqual(FloatingPetPanel.onScreen(origin: NSPoint(x: 5000, y: 500), size: size, screens: screens), NSPoint(x: 1440 - 96 - 24, y: 24))
+        // Its screen is gone (unplugged): onto the nearest one, just inside its edge.
+        XCTAssertEqual(FloatingPetPanel.onScreen(origin: NSPoint(x: 5000, y: 500), size: size, screens: screens), NSPoint(x: 3360 - 96, y: 500))
         XCTAssertEqual(FloatingPetPanel.onScreen(origin: nil, size: size, screens: screens), NSPoint(x: 1320, y: 24))
+        // Half of it under the Dock (the visible frame starts above it): lifted fully above.
+        let withDock = [CGRect(x: 0, y: 80, width: 1440, height: 790)]
+        XCTAssertEqual(FloatingPetPanel.onScreen(origin: NSPoint(x: 600, y: 30), size: size, screens: withDock), NSPoint(x: 600, y: 80))
+        // Past the right edge of a smaller screen: pulled back inside.
+        XCTAssertEqual(FloatingPetPanel.onScreen(origin: NSPoint(x: 1400, y: 300), size: size, screens: [screens[0]]), NSPoint(x: 1440 - 96, y: 300))
     }
 
     func testTheCharacterIsOnByDefaultAndOldSettingsKeepItOn() throws {

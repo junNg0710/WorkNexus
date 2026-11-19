@@ -1918,5 +1918,25 @@
   "panicSwitchPetHint": {
     "en": "Click the pet three times to send the sticker; once it is sent, your apps switch too. The pet must be shown (Settings › Pet).",
     "vi": "Bấm vào pet 3 lần để gửi sticker; gửi thành công thì máy bạn cũng chuyển app luôn. Cần bật pet (Cài đặt › Pet)."
+  },
+  "panicSwitchPetGestureHint": {
+    "en": "Hold the pet (for the seconds set below), or click it three times, to send the sticker; once it is sent, your apps switch too. The pet must be shown (Settings › Pet).",
+    "vi": "Nhấn giữ pet (số giây chọn bên dưới) hoặc bấm pet 3 lần để gửi sticker; gửi thành công thì máy bạn cũng chuyển app luôn. Cần bật pet (Cài đặt › Pet)."
+  },
+  "panicSwitchPetHold": {
+    "en": "Hold 3 seconds",
+    "vi": "Nhấn giữ 3 giây"
+  },
+  "panicSwitchPetTripleClick": {
+    "en": "Click 3 times",
+    "vi": "Bấm 3 lần"
+  },
+  "panicSwitchPetHoldFor": {
+    "en": "Hold %1$@ s",
+    "vi": "Nhấn giữ %1$@ giây"
+  },
+  "panicSwitchPetHoldSeconds": {
+    "en": "%1$@ seconds",
+    "vi": "%1$@ giây"
   }
 }

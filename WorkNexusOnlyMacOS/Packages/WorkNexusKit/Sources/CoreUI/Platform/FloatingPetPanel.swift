@@ -44,7 +44,28 @@ public final class FloatingPetPanel {
     private let defaults: UserDefaults
     static let xKey = "pet.floating.centerX", yKey = "pet.floating.bottomY"
 
-    init(defaults: UserDefaults = .standard) { self.defaults = defaults }
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        // A screen plugged in or out, or its size or Dock changed: the pet may now stand off it, or under the Dock.
+        screensObserver = NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification,
+                                                                 object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.keepOnScreen() }
+        }
+    }
+
+    private var screensObserver: NSObjectProtocol?
+
+    /// Moves a shown pet back inside the usable part of the nearest screen (no walk under way), where it then strolls.
+    private func keepOnScreen() {
+        guard isShown, petSize != .zero else { return }
+        let origin = NSPoint(x: anchor.x - petSize.width / 2, y: anchor.y)
+        let inside = Self.onScreen(origin: origin, size: petSize, screens: NSScreen.screens.map(\.visibleFrame))
+        guard inside != origin else { return }
+        walk = nil; stopTicker()
+        anchor = NSPoint(x: inside.x + petSize.width / 2, y: inside.y)
+        home = anchor
+        layout()
+    }
 
     public var isShown: Bool { panel?.isVisible == true }
 
@@ -207,13 +228,18 @@ public final class FloatingPetPanel {
     }
     static let legacyXKey = "pet.floating.x", legacyYKey = "pet.floating.y"
 
-    /// `origin` when a panel of `size` there is mostly on one of `screens`; otherwise the bottom-right corner of the first.
+    /// `origin` moved just enough for a panel of `size` to be wholly inside the usable part of the screen it is most on
+    /// (the nearest one when it is on none, after a screen was unplugged); with no `origin`, the bottom-right corner of the
+    /// first screen. `screens` are visible frames (no Dock or menu bar), so the pet never ends up under the Dock.
     static func onScreen(origin: NSPoint?, size: CGSize, screens: [CGRect]) -> NSPoint {
-        if let origin {
+        if let origin, !screens.isEmpty {
             let frame = CGRect(origin: origin, size: size)
-            if screens.contains(where: { $0.intersection(frame).width >= size.width / 2 && $0.intersection(frame).height >= size.height / 2 }) {
-                return origin
-            }
+            func overlap(_ s: CGRect) -> CGFloat { let i = s.intersection(frame); return i.isNull ? 0 : i.width * i.height }
+            func distance(_ s: CGRect) -> CGFloat { hypot(max(s.minX - frame.midX, 0, frame.midX - s.maxX), max(s.minY - frame.midY, 0, frame.midY - s.maxY)) }
+            let screen = screens.max { overlap($0) < overlap($1) }.flatMap { overlap($0) > 0 ? $0 : nil }
+                ?? screens.min { distance($0) < distance($1) }!
+            return NSPoint(x: min(max(origin.x, screen.minX), screen.maxX - size.width),
+                           y: min(max(origin.y, screen.minY), screen.maxY - size.height))
         }
         guard let screen = screens.first else { return origin ?? .zero }
         let margin: CGFloat = 24

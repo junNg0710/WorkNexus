@@ -62,7 +62,8 @@ struct ComposerToolbar: View {
                                selected: controller.markdown) { controller.markdownOverride = !controller.markdown }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, theme.spacing.s12)
+        // Lined up with the input below it.
+        .padding(.horizontal, theme.spacing.s14)
         .padding(.vertical, theme.spacing.s2)
     }
 }

@@ -6,15 +6,42 @@ import SwiftUI
 struct WindowConfigurator: NSViewRepresentable {
     var onWindow: (NSWindow) -> Void = { _ in }
 
+    func makeCoordinator() -> TrafficLightKeeper { TrafficLightKeeper() }
+
     func makeNSView(context: Context) -> NSView {
         let v = NSView()
+        let keeper = context.coordinator
         DispatchQueue.main.async {
             Self.configure(v.window)
-            if let w = v.window { onWindow(w) }
+            if let w = v.window { keeper.watch(w); onWindow(w) }
         }
         return v
     }
     func updateNSView(_ nsView: NSView, context: Context) { Self.configure(nsView.window) }
+
+    /// Puts the traffic lights back on the sidebar whenever macOS lays the title bar out again: a resize, leaving full
+    /// screen, a new screen or appearance put them back at their default place, across the sidebar's rounded corner.
+    @MainActor final class TrafficLightKeeper {
+        private var observers: [NSObjectProtocol] = []
+        private weak var window: NSWindow?
+
+        func watch(_ w: NSWindow) {
+            guard window !== w else { return }
+            observers.forEach(NotificationCenter.default.removeObserver)
+            window = w
+            let names: [Notification.Name] = [NSWindow.didResizeNotification, NSWindow.didEndLiveResizeNotification,
+                                              NSWindow.didExitFullScreenNotification, NSWindow.didChangeScreenNotification,
+                                              NSWindow.didChangeBackingPropertiesNotification, NSWindow.didBecomeKeyNotification]
+            observers = names.map { name in
+                NotificationCenter.default.addObserver(forName: name, object: w, queue: .main) { [weak w] _ in
+                    // After AppKit's own layout of the title bar for this change.
+                    DispatchQueue.main.async { MainActor.assumeIsolated { WindowConfigurator.configure(w) } }
+                }
+            }
+        }
+
+        deinit { observers.forEach(NotificationCenter.default.removeObserver) }
+    }
 
     static func configure(_ w: NSWindow?) {
         guard let w else { return }

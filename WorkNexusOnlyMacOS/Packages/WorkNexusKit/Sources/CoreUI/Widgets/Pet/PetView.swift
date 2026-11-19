@@ -117,7 +117,11 @@ public struct PetView: View {
                 }
             }
             .animation(.easeOut(duration: 0.15), value: director.bubble(hovering: hovering))
-            .onTapGesture { taps.tap(armed: tripleTap?.armed() == true, single: tapped, triple: { tripleTap?.run() }) }
+            .onTapGesture { taps.tap(armed: tripleTap?.armed() == .tripleTap, single: tapped, triple: { tripleTap?.run() }) }
+            // Pressed and held (without moving) for the hold time: the alert, when holding is the gesture chosen.
+            .simultaneousGesture(LongPressGesture(minimumDuration: tripleTap?.armed()?.holdSeconds ?? 3, maximumDistance: 6).onEnded { _ in
+                if tripleTap?.armed()?.holdSeconds != nil { tripleTap?.run() }
+            })
             .gesture(DragGesture(minimumDistance: 4, coordinateSpace: .named("petRoom"))
                 .onChanged { drag in
                     let start = dragStart ?? (director.x(at: Date()), director.y)

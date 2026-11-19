@@ -118,7 +118,7 @@ final class MiniAppBrowserModel: Identifiable {
         guard let url = unsaved else { return }
         unsaved = nil
         let id = appId, apps = apps
-        Task { _ = await apps.saveLastUrl(id: id, url: url) }
+        LastUrlWrites.enqueue { _ = await apps.saveLastUrl(id: id, url: url) }
     }
 
     /// Lets go of the web view: the page stops and its windows close. Nothing else uses the tab afterwards.
@@ -141,5 +141,18 @@ final class MiniAppBrowserModel: Identifiable {
             try? await Task.sleep(for: Self.saveDelay)
             if !Task.isCancelled { self?.flush() }
         }
+    }
+}
+
+/// The pages the mini apps reopen on are written one after another, in the order asked: switching tabs and then closing
+/// the app at once wrote the old tab's page and the new one's from two tasks, and the old one could land last — the app
+/// then reopened on the wrong page.
+@MainActor
+enum LastUrlWrites {
+    private static var last: Task<Void, Never>?
+
+    static func enqueue(_ write: @escaping @Sendable () async -> Void) {
+        let previous = last
+        last = Task { await previous?.value; await write() }
     }
 }

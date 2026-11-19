@@ -71,3 +71,25 @@ final class PanicSwitchModelTests: XCTestCase {
         m.stop()
     }
 }
+
+/// Not in the Flutter app: the pet's alert gesture — held for 3 s by default, or three clicks — kept with the settings.
+final class PanicPetGestureTests: XCTestCase {
+    func testHoldingIsTheDefaultAndTheChoiceIsKept() throws {
+        XCTAssertEqual(PanicSwitchConfigMapper.fromJSON(Data(#"{"enabled":true}"#.utf8)).petGesture, .hold, "older settings")
+        var config = PanicSwitchConfig(chatGid: "g1")
+        XCTAssertEqual(config.petGesture, .hold)
+        config.petGesture = .tripleClick
+        let back = PanicSwitchConfigMapper.fromJSON(try PanicSwitchConfigMapper.toJSON(config))
+        XCTAssertEqual(back.petGesture, .tripleClick)
+        XCTAssertEqual(back, config)
+    }
+
+    /// The hold time is the user's: 3 s by default, kept as set, and kept within 1–30 s.
+    func testTheHoldTimeIsKeptWithinItsRange() throws {
+        XCTAssertEqual(PanicSwitchConfig().petHoldSeconds, 3)
+        var config = PanicSwitchConfig(); config.petHoldSeconds = 7
+        XCTAssertEqual(PanicSwitchConfigMapper.fromJSON(try PanicSwitchConfigMapper.toJSON(config)).petHoldSeconds, 7)
+        XCTAssertEqual(PanicSwitchConfigMapper.fromJSON(Data(#"{"petHoldSeconds":120}"#.utf8)).petHoldSeconds, 30)
+        XCTAssertEqual(PanicSwitchConfigMapper.fromJSON(Data(#"{"petHoldSeconds":0}"#.utf8)).petHoldSeconds, 1)
+    }
+}

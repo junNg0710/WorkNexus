@@ -35,6 +35,10 @@ public struct PanicSwitchConfig: Hashable, Sendable {
     public var hideSelf: Bool
     /// The least time between two triggers, sending or receiving.
     public var debounceSeconds: Int
+    /// How the pet raises the alert (macOS only: the Flutter app has its floating button instead).
+    public var petGesture: PanicPetGesture = .hold
+    /// How long the pet is held for the alert, in seconds (`PanicSwitchConstants.petHoldRange`).
+    public var petHoldSeconds: Int = PanicSwitchConstants.defaultPetHoldSeconds
 
     public init(enabled: Bool = true, overlayVisible: Bool = true, chatGid: String? = nil, testMode: Bool = false,
                 testChatGid: String? = nil, testChatIsSelf: Bool = false, anySender: Bool = true, allowedSenderIds: [Int] = [],
@@ -52,4 +56,11 @@ public struct PanicSwitchConfig: Hashable, Sendable {
     public var sendsToSelf: Bool { testMode && testChatIsSelf }
     /// Where an arriving sticker sets the switch off.
     public var receiveChatGid: String? { testMode ? testChatGid : chatGid }
+}
+
+/// How the pet raises the alert: pressed and held for a few seconds (the default: hard to do by accident), or clicked
+/// three times quickly. Not in the Flutter app.
+public enum PanicPetGesture: String, Sendable, CaseIterable, Equatable {
+    case hold
+    case tripleClick
 }

@@ -28,6 +28,7 @@ public struct PanicSwitchSettingsCard: View {
 
 /// The card itself, over the loaded settings.
 private struct PanicCardSections: View {
+    @Environment(\.appTheme) private var theme
     static let icon = "light.beacon.max"
     static var title: String { appString("panicSwitchTitle", "Thầy vô (boss alert)") }
 
@@ -36,12 +37,33 @@ private struct PanicCardSections: View {
     let config: PanicSwitchConfig
     let initiallyExpanded: Bool
 
+    static func label(_ gesture: PanicPetGesture, seconds: Int) -> String {
+        switch gesture {
+        case .hold: appFormat("panicSwitchPetHoldFor", "Hold %1$@ s", "\(seconds)")
+        case .tripleClick: appString("panicSwitchPetTripleClick", "Click 3 times")
+        }
+    }
+
     var body: some View {
         let team = title(of: config.chatGid)
         AppExpandableCard(icon: Self.icon, title: Self.title, summary: summary, initiallyExpanded: initiallyExpanded) {
             AppExpandableCardSection(title: appString("panicSwitchPetLabel", "Alert from the pet"),
-                                     hint: appString("panicSwitchPetHint", "Click the pet three times to send the sticker; once it is sent, your apps switch too. The pet must be shown (Settings › Pet)."),
-                                     trailing: { PanicToggle(isOn: config.overlayVisible) { on in save { $0.overlayVisible = on } } })
+                                     hint: appString("panicSwitchPetGestureHint", "Hold the pet (for the seconds set below), or click it three times, to send the sticker; once it is sent, your apps switch too. The pet must be shown (Settings › Pet)."),
+                                     trailing: { PanicToggle(isOn: config.overlayVisible) { on in save { $0.overlayVisible = on } } }) {
+                if config.overlayVisible {
+                    HStack(spacing: theme.spacing.s12) {
+                        AppSegmentedTabs(PanicPetGesture.allCases.map { g in
+                            AppSegmentedTab(label: Self.label(g, seconds: config.petHoldSeconds), active: config.petGesture == g) {
+                                save { $0.petGesture = g }
+                            }
+                        })
+                        .fixedSize()
+                        if config.petGesture == .hold {
+                            PanicHoldStepper(seconds: config.petHoldSeconds) { s in save { $0.petHoldSeconds = s } }
+                        }
+                    }
+                }
+            }
             AppExpandableCardSection(title: appString("panicSwitchGroupLabel", "Team group"),
                                      hint: appString("panicSwitchTeamGroupHint", "Where the sticker is sent and listened for, outside test mode."),
                                      trailing: { PanicValueText(text: team ?? appString("panicSwitchNoGroup", "Team group not found")) })
@@ -142,6 +164,21 @@ private struct PanicDebounceTabs: View {
         AppSegmentedTabs(choices.map { s in
             AppSegmentedTab(label: appFormat("panicSwitchSeconds", "%1$@s", "\(s)"), active: seconds == s) { onPick(s) }
         })
+    }
+}
+
+/// How long the pet is held for the alert: 1 to 30 seconds.
+private struct PanicHoldStepper: View {
+    @Environment(\.appTheme) private var theme
+    let seconds: Int
+    let onChange: (Int) -> Void
+
+    var body: some View {
+        Stepper(value: Binding(get: { seconds }, set: onChange), in: PanicSwitchConstants.petHoldRange) {
+            Text(appFormat("panicSwitchPetHoldSeconds", "%1$@ seconds", "\(seconds)"))
+                .font(theme.typography.meta).foregroundStyle(theme.colors.tx2).monospacedDigit()
+        }
+        .fixedSize()
     }
 }
 

@@ -10,7 +10,8 @@ enum PanicSwitchConfigMapper {
             "testMode": c.testMode, "testChatGid": c.testChatGid ?? NSNull(), "testChatIsSelf": c.testChatIsSelf,
             "anySender": c.anySender, "allowedSenderIds": c.allowedSenderIds,
             "targetApp": c.targetApp.map(app) ?? NSNull(), "appsToHide": c.appsToHide.map(app),
-            "hideSelf": c.hideSelf, "debounceSeconds": c.debounceSeconds,
+            "hideSelf": c.hideSelf, "debounceSeconds": c.debounceSeconds, "petGesture": c.petGesture.rawValue,
+            "petHoldSeconds": c.petHoldSeconds,
         ]
         return try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
     }
@@ -27,7 +28,7 @@ enum PanicSwitchConfigMapper {
         let testChatGid = json["testChatGid"] as? String ?? json["testReceiveChatGid"] as? String ?? send
         let testChatIsSelf = bool(json["testChatIsSelf"])
             ?? (testChatGid != nil && testChatGid == send && (bool(json["testSendToSelf"]) == true || legacySelf))
-        return PanicSwitchConfig(
+        var config = PanicSwitchConfig(
             enabled: bool(json["enabled"]) ?? true,
             overlayVisible: bool(json["overlayVisible"]) ?? true,
             chatGid: legacySelf ? nil : json["chatGid"] as? String,
@@ -40,6 +41,10 @@ enum PanicSwitchConfigMapper {
             appsToHide: (json["appsToHide"] as? [Any] ?? []).compactMap(readApp),
             hideSelf: bool(json["hideSelf"]) ?? true,
             debounceSeconds: int(json["debounceSeconds"]) ?? PanicSwitchConstants.defaultDebounceSeconds)
+        config.petGesture = (json["petGesture"] as? String).flatMap(PanicPetGesture.init(rawValue:)) ?? .hold
+        let range = PanicSwitchConstants.petHoldRange
+        config.petHoldSeconds = min(max(int(json["petHoldSeconds"]) ?? PanicSwitchConstants.defaultPetHoldSeconds, range.lowerBound), range.upperBound)
+        return config
     }
 
     private static func app(_ a: AppRef) -> [String: String] { ["id": a.id, "name": a.name] }

@@ -1,13 +1,23 @@
 /// Not in the Flutter app.
 import SwiftUI
 
-/// What three quick clicks on the pet do (the panic switch's alert), and whether that is on right now. While it is, a
-/// single click waits a moment for the next before doing what it usually does, so the first click of three does not
-/// bring the app forward; while it is off, a click acts at once.
+/// How the pet raises the panic switch's alert.
+public enum PetAlertGesture: Equatable, Sendable {
+    /// Pressing and holding the pet (without moving it) for `seconds`.
+    case hold(seconds: Double)
+    /// Three quick clicks on the pet.
+    case tripleTap
+
+    var holdSeconds: Double? { if case .hold(let s) = self { s } else { nil } }
+}
+
+/// What the pet's alert gesture does (the panic switch's alert), and which gesture is on right now (nil: none). While
+/// three clicks are, a single click waits a moment for the next before doing what it usually does, so the first click
+/// of three does not bring the app forward; otherwise a click acts at once.
 public struct PetTripleTap {
-    public var armed: () -> Bool
+    public var armed: () -> PetAlertGesture?
     public var run: () -> Void
-    public init(armed: @escaping () -> Bool, run: @escaping () -> Void) { self.armed = armed; self.run = run }
+    public init(armed: @escaping () -> PetAlertGesture?, run: @escaping () -> Void) { self.armed = armed; self.run = run }
 }
 
 private struct PetTripleTapKey: EnvironmentKey { static let defaultValue: PetTripleTap? = nil }

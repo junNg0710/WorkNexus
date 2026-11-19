@@ -54,7 +54,10 @@ public final class PanicSwitchModel {
     /// floating button), with a chat to send to, for a user of the ZenTao the feature is offered for.
     public var overlayVisible: Bool { account != nil && config?.overlayVisible == true && config?.sendChatGid != nil }
 
-    /// Three clicks on the pet: sends the sticker and, once it is sent, switches apps here too (see
+    /// The gesture on the pet that raises the alert now; nil while the alert is off.
+    public var petGesture: PanicPetGesture? { overlayVisible ? config?.petGesture ?? .hold : nil }
+
+    /// The pet's alert gesture: sends the sticker and, once it is sent, switches apps here too (see
     /// `PanicSwitchRuntime.onAlert`).
     public func petAlert() {
         guard overlayVisible else { return }

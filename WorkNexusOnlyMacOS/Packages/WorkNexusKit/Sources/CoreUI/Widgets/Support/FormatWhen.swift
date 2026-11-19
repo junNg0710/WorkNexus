@@ -2,8 +2,12 @@ import CoreDomain
 import Foundation
 
 /// `appString` for keys with `%1$@`-style placeholders (the `.arb` placeholders become printf positionals).
+/// The catalog's placeholders are objects (`%@`): a number given for one would be read as an object pointer and crash, so
+/// with such a template every argument goes in as its text.
 public func appFormat(_ key: String, _ fallback: String, _ args: CVarArg...) -> String {
-    String(format: appString(key, fallback), arguments: args)
+    let template = appString(key, fallback)
+    let safe: [CVarArg] = template.contains("@") ? args.map { $0 is NSString || $0 is String ? $0 : "\($0)" as NSString } : args
+    return String(format: template, arguments: safe)
 }
 
 /// Ported from: lib/core/util/relative_time.dart (`formatWhen`)

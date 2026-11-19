@@ -6,9 +6,30 @@ import ObjectiveC
 /// and previews.
 /// A catalog value that is still an ICU plural (`{count, plural, ...}`; only Vietnamese is resolved at generation
 /// time) is never shown raw: the caller's fallback, which already picked the right plural form, is used instead.
+///
+/// The catalog is generated from the `.arb` files, which turns a named placeholder (`{count}`) into a positional one
+/// (`%1$@`). A caller that fills names (`.replacingOccurrences(of: "{count}", …)`, `shellString`) would then show `%1$@`
+/// raw ("Show all %1$@ lines"), so the positions are named back after the fallback's placeholders, in their order.
 public func appString(_ key: String, _ fallback: String) -> String {
     let text = AppLanguage.bundle.localizedString(forKey: key, value: fallback, table: nil)
-    return text.contains("plural,") ? fallback : text
+    return text.contains("plural,") ? fallback : namingPlaceholders(text, like: fallback)
+}
+
+/// `text` with each `%n$@` written as the n-th `{name}` of `fallback`; unchanged when `fallback` names none.
+func namingPlaceholders(_ text: String, like fallback: String) -> String {
+    guard text.contains("$@"), fallback.contains("{") else { return text }
+    var names: [String] = []
+    var rest = Substring(fallback)
+    while let open = rest.firstIndex(of: "{"), let close = rest[open...].firstIndex(of: "}") {
+        let name = rest[rest.index(after: open)..<close]
+        if !name.isEmpty, name.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "_" }), !names.contains(String(name)) {
+            names.append(String(name))
+        }
+        rest = rest[rest.index(after: close)...]
+    }
+    var out = text
+    for (i, name) in names.enumerated() { out = out.replacingOccurrences(of: "%\(i + 1)$@", with: "{\(name)}") }
+    return out
 }
 
 /// The language the UI shows. SwiftUI and `String(localized:)` follow the language the process started with; a picker that

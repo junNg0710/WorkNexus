@@ -78,12 +78,9 @@ struct PetPoster: View {
     let url: URL?
 
     var body: some View {
-        AsyncImage(url: url) { phase in
-            if let image = phase.image {
-                image.resizable().interpolation(.high).scaledToFit()
-            } else {
-                Image(systemName: "pawprint").font(.system(size: theme.sizes.icon24)).foregroundStyle(theme.colors.tx3)
-            }
+        // Fetched once, shrunk to the card's size and decoded off the main thread, kept while the app runs.
+        ThumbnailImage(url: url, maxPixels: max(PetCardMetrics.pictureWidth, PetCardMetrics.pictureHeight) * 2) {
+            Image(systemName: "pawprint").font(.system(size: theme.sizes.icon24)).foregroundStyle(theme.colors.tx3)
         }
     }
 }
