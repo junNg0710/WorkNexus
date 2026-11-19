@@ -405,3 +405,6 @@ Flutter app's, **unchanged**. It reaches the app two ways, and both are native h
 - **Sticker tags**: bundled sets read `<pack>/stickers.json` (synced from `assets/stickers` by `Scripts/sync-assets.sh`); imported Telegram sets keep each sticker's emoji in `pack.json` (`StickerFile.emoji`).
 - Not ported: 272ec042's composer-controller split (`ChatComposerFormatting`) has no Swift counterpart — the Swift controller is already split (`ChatComposerController+Ai.swift`); upstream's widget tests (chat_ai_compose_button, suggestion bars) — the use cases are unit-tested instead.
 
+
+| Presentation/Composer/ChatComposerDrafts.swift | providers/chat_composer_draft_provider.dart (each composer's unsent text, mentions and caret, plus its staged files, kept per account / chat / thread root while the app runs) |
+| Domain/UseCases/BackgroundChatFailure.swift | (Swift-only) failures of work the app starts by itself (refresh on open, mark read, paging) are logged, not toasted, when they are a lost connection |

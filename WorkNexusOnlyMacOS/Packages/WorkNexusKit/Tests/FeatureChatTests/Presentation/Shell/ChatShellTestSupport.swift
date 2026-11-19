@@ -13,6 +13,7 @@ final class ShellFakeRepository: StubChatRepository, @unchecked Sendable {
     var searchCalls: [(query: String, limit: Int?)] = []
     var markReadCalls: [String] = []
     var refreshCalls: [String] = []
+    var refreshResult: Outcome<Void> = .success(())
     var starredCalls: [(String, Bool)] = []
     var openDirectResult: Outcome<String> = .success("direct-1")
     var trustResult: Outcome<Void> = .success(())
@@ -27,7 +28,7 @@ final class ShellFakeRepository: StubChatRepository, @unchecked Sendable {
         searchCalls.append((query, limit))
         return .success(Array(searchResults.prefix(limit ?? .max)))
     }
-    override func refreshMessages(accountId: String, chatGid: String) async -> Outcome<Void> { refreshCalls.append(chatGid); return .success(()) }
+    override func refreshMessages(accountId: String, chatGid: String) async -> Outcome<Void> { refreshCalls.append(chatGid); return refreshResult }
     override func markRead(accountId: String, chatGid: String) async -> Outcome<Void> { markReadCalls.append(chatGid); return .success(()) }
     override func memberCount(accountId: String, chatGid: String) async -> Outcome<Int> { .success(7) }
     override func setChatStarred(accountId: String, chatGid: String, starred: Bool) async -> Outcome<Void> { starredCalls.append((chatGid, starred)); return .success(()) }

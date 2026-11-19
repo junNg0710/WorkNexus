@@ -56,7 +56,7 @@ extension MessageTimelineModel {
         // Nothing was cached yet: that call fetched the latest page, which is not the start of the chat.
         case .success where shown.isEmpty: break
         case .success: reachedStart = true
-        case .failure(let f): loadFailed = true; report(f.message)
+        case .failure(let f): loadFailed = true; BackgroundChatFailure.handle(f, while: "loading older messages") { report($0.message) }
         }
         loadingOlder = false
     }
@@ -92,7 +92,7 @@ extension MessageTimelineModel {
         case .success(let v):
             if let joined = v.joined { grow(to: .live(limit: joined)); return }
             newerExhausted = true
-        case .failure(let f): newerExhausted = true; report(f.message)
+        case .failure(let f): newerExhausted = true; BackgroundChatFailure.handle(f, while: "loading newer messages") { report($0.message) }
         }
         loadingNewer = false
     }

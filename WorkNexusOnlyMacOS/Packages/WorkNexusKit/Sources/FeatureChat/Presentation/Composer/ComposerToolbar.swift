@@ -30,6 +30,9 @@ struct ComposerToolButton: View {
 /// the summary, sticker suggestions) and the Markdown toggle.
 struct ComposerToolbar: View {
     @Environment(\.appTheme) private var theme
+    // Read here, not through `controller.services`: the controller is handed its services on appear and does not observe
+    // them, so the first draw (before that) left the ✨ tool out until something else redrew the toolbar.
+    @Environment(\.chatServices) private var services
     let controller: ChatComposerController
     let state: ChatThreadState
     @State private var emojiOpen = false
@@ -52,7 +55,7 @@ struct ComposerToolbar: View {
                 }
             ComposerToolButton(systemImage: "chevron.left.forwardslash.chevron.right", help: appString("chatSendCode", "Send code")) { codeOpen = true }
                 .sheet(isPresented: $codeOpen) { SendCodeDialog(controller: controller) }
-            if controller.offersAi { ChatAiComposeButton(controller: controller, state: state) }
+            if services?.ai != nil { ChatAiComposeButton(controller: controller, state: state) }
             ComposerToolButton(systemImage: "textformat", help: controller.markdown
                                ? appString("chatMarkdownOn", "Markdown on — messages are sent formatted")
                                : appString("chatMarkdownOff", "Markdown off — messages are sent as plain text"),

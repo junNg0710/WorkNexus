@@ -60,7 +60,7 @@ final class ChatThreadSession {
             let refreshed = await PerformanceLog.measure("chat: open (refresh newest messages)", slowerThan: 0.5) {
                 await RefreshChatMessages(repository)(accountId: id, chatGid: gid)
             }
-            if case .failure(let f) = refreshed { onFailure(f); return }
+            if case .failure(let f) = refreshed { BackgroundChatFailure.handle(f, while: "refreshing an opened chat", notify: onFailure); return }
             await markRead()
         })
     }
@@ -75,7 +75,9 @@ final class ChatThreadSession {
         guard !markingRead else { return }
         markingRead = true; defer { markingRead = false }
         lastUnreadMarked = state.chat.unreadCount
-        if case .failure(let f) = await MarkChatRead(repository)(accountId: state.accountId, chatGid: state.chatGid) { onFailure(f) }
+        if case .failure(let f) = await MarkChatRead(repository)(accountId: state.accountId, chatGid: state.chatGid) {
+            BackgroundChatFailure.handle(f, while: "marking a chat read", notify: onFailure)
+        }
     }
 
     func watchAttachments() async {

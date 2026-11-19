@@ -33,7 +33,7 @@ public struct ChatComposerView: View {
         }
         .onAppear { sync() }
         .onChange(of: settings) { _, _ in sync() }
-        .onDisappear { controller.stopTyping() }
+        .onDisappear { controller.keepDraft(); controller.stopTyping() }
         .task(id: state.chatGid) { await controller.loadMembers() }
         .task(id: state.chatGid) { await controller.stickerSuggestions.load(services?.stickers) }
         .task(id: state.chatGid) {
@@ -68,10 +68,11 @@ public struct ChatComposerView: View {
         .background(theme.colors.panel)
         .overlay(alignment: .top) { Rectangle().fill(theme.colors.line).frame(height: theme.borders.hairline) }
         .onChange(of: controller.model.revision) { _, _ in controller.textChanged() }
+        .onChange(of: controller.model.text) { _, _ in controller.keepDraft() }
         .onChange(of: state.pendingInsertion) { _, text in takeInsertion(text) }
         .onChange(of: state.replyDraft?.gid) { _, gid in if gid != nil { controller.model.requestFocus() } }
         // Files just added (dropped, pasted, picked): the caret goes to the input, to type what goes with them.
-        .onChange(of: state.stagedFiles.count) { old, new in if new > old { controller.model.requestFocus() } }
+        .onChange(of: state.stagedFiles.count) { old, new in controller.keepDraft(); if new > old { controller.model.requestFocus() } }
         .onAppear { takeInsertion(state.pendingInsertion) }
     }
 

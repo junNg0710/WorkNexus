@@ -34,7 +34,17 @@ final class ChatComposerController {
             send: { [weak self] chat, on in self?.sendTyping(chat, on) },
             chat: { [weak self] in self?.state.chat },
             enabled: { [weak self] in self?.settings.sendTypingStatus ?? false })
+        // What was typed or staged here before the chat was left.
+        if let kept = ChatComposerDrafts.shared.draft(draftKey) {
+            model.restore(kept)
+            if state.stagedFiles.isEmpty { state.stagedFiles = kept.staged }
+        }
     }
+
+    private var draftKey: String { ChatComposerDrafts.key(accountId: state.accountId, chatGid: state.chatGid, threadRootId: threadRootId) }
+
+    /// Keeps the draft for this chat (called as it changes and when the composer goes away; sending empties it).
+    func keepDraft() { ChatComposerDrafts.shared.save(model.draft(staged: state.stagedFiles), for: draftKey) }
 
     var markdown: Bool { markdownOverride ?? settings.sendMarkdown }
 
@@ -125,6 +135,7 @@ final class ChatComposerController {
         let text: (message: String, plain: String?)? = model.isBlank ? nil : (model.messageText, model.hasMentions ? nil : model.plainText)
         state.stagedFiles = []
         model.clear(); mentions.reset()
+        keepDraft()
         stickerSuggestions.cleared()
         typing.changed("")
         Task {

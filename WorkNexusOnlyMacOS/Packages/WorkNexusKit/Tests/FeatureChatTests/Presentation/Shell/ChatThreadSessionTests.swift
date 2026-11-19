@@ -17,6 +17,31 @@ final class ChatThreadSessionTests: XCTestCase {
         await ShellMake.expectEventually { session.memberCount == 7 }
     }
 
+    /// Offline, opening a chat used to toast "Couldn't complete that: Chat is offline" each time; the offline strip says it.
+    func testOpeningAChatOfflineShowsNoErrorButAnotherFailureDoes() async {
+        var shown: [Failure] = []
+        let repo = ShellFakeRepository(); repo.refreshResult = .failure(.network("Chat is offline"))
+        let offline = ChatThreadSession(accountId: "a", chat: ShellMake.chat("g"), selfAccount: "me", repository: repo, period: { .all },
+                                        onFailure: { shown.append($0) }, isAppActive: { true })
+        offline.open()
+        await ShellMake.expectEventually { repo.refreshCalls == ["g"] }
+        try? await Task.sleep(for: .milliseconds(50))
+        XCTAssertTrue(shown.isEmpty)
+
+        let broken = ShellFakeRepository(); broken.refreshResult = .failure(.storage("disk"))
+        let session = ChatThreadSession(accountId: "a", chat: ShellMake.chat("g"), selfAccount: "me", repository: broken, period: { .all },
+                                        onFailure: { shown.append($0) }, isAppActive: { true })
+        session.open()
+        await ShellMake.expectEventually { shown == [.storage("disk")] }
+    }
+
+    func testOnlyNetworkAndCancelledBackgroundFailuresStayQuiet() {
+        XCTAssertFalse(BackgroundChatFailure.shouldNotify(.network("Chat is offline")))
+        XCTAssertFalse(BackgroundChatFailure.shouldNotify(.cancelled("chat switched")))
+        XCTAssertTrue(BackgroundChatFailure.shouldNotify(.storage("disk")))
+        XCTAssertTrue(BackgroundChatFailure.shouldNotify(.auth("expired")))
+    }
+
     func testADirectChatHasNoMemberCount() async {
         let repo = ShellFakeRepository()
         let session = make(repo, chat: ShellMake.chat("d", type: .one2one, peer: 2))
@@ -136,5 +161,33 @@ final class ChatHistoryDownloadModelTests: XCTestCase {
         await model.ensure(searching: true)
         if case .running = model.phase {} else { XCTFail("the next search starts the download again, got \(model.phase)") }
         model.teardown()
+    }
+}
+
+@MainActor
+final class ChatComposerDraftTests: XCTestCase {
+    /// The chat pane is rebuilt for every chat: what was typed (mentions, caret) and staged comes back with the chat, and
+    /// sending forgets it.
+    func testADraftComesBackWithItsChatAndSendingForgetsIt() {
+        let state = ChatThreadState(accountId: "a", chat: ShellMake.chat("g"))
+        let first = ChatComposerController(state: state)
+        first.model.insertMention(start: 0, end: 0, id: 7, name: "An")
+        first.model.insertText("hello")
+        state.stagedFiles = [StagedFile(name: "a.png", data: Data([1]), mimeType: "image/png")]
+        first.keepDraft()
+
+        let other = ChatComposerController(state: ChatThreadState(accountId: "a", chat: ShellMake.chat("h")))
+        XCTAssertEqual(other.model.text, "", "another chat starts empty")
+        let thread = ChatComposerController(state: ChatThreadState(accountId: "a", chat: ShellMake.chat("g")), threadRootId: 9)
+        XCTAssertEqual(thread.model.text, "", "a reply thread has its own draft")
+
+        let backState = ChatThreadState(accountId: "a", chat: ShellMake.chat("g"))
+        let back = ChatComposerController(state: backState)
+        XCTAssertEqual(back.model.text, "@An hello")
+        XCTAssertEqual(back.model.messageText, "[@An](@#7) hello")
+        XCTAssertEqual(backState.stagedFiles.map(\.name), ["a.png"])
+
+        back.model.clear(); backState.stagedFiles = []; back.keepDraft()
+        XCTAssertNil(ChatComposerDrafts.shared.draft(ChatComposerDrafts.key(accountId: "a", chatGid: "g", threadRootId: nil)))
     }
 }

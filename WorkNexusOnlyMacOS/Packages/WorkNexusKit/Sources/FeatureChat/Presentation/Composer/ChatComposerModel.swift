@@ -117,6 +117,19 @@ final class ChatComposerModel {
         revision += 1
     }
 
+    /// What to keep when the composer goes away (`ChatComposerDrafts`); `staged` is the caller's.
+    func draft(staged: [StagedFile]) -> ChatComposerDraft {
+        ChatComposerDraft(text: text, mentions: mentions, selection: selection, staged: staged)
+    }
+
+    /// Puts a kept draft back (a fresh composer, so there is no undo history to forget).
+    func restore(_ draft: ChatComposerDraft) {
+        text = draft.text; mentions = draft.mentions
+        let len = (draft.text as NSString).length
+        selection = NSRange(location: min(draft.selection.location, len), length: min(draft.selection.length, max(0, len - draft.selection.location)))
+        revision += 1
+    }
+
     /// Empties the composer (after sending), history too.
     func clear() {
         text = ""; mentions = []; selection = NSRange(location: 0, length: 0)
