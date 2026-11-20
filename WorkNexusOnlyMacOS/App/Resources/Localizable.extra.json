@@ -1975,6 +1975,18 @@
     "en": "Add a note — type @ to mention someone",
     "vi": "Thêm ghi chú — gõ @ để nhắc tên"
   },
+  "detailShowLess": {
+    "en": "Show less",
+    "vi": "Thu gọn"
+  },
+  "detailShowMore": {
+    "en": "Show more",
+    "vi": "Xem thêm"
+  },
+  "leaderBulkChangePerson": {
+    "en": "Change",
+    "vi": "Đổi"
+  },
   "leaderBulkHideSkipped": {
     "en": "Hide the skipped tickets",
     "vi": "Ẩn các ticket bị bỏ qua"
@@ -1982,6 +1994,14 @@
   "leaderBulkHoursLeft": {
     "en": "Hours left, for the %1$@ tasks that have none",
     "vi": "Số giờ còn lại, cho %1$@ task chưa có"
+  },
+  "leaderBulkNoteAll": {
+    "en": "Note for every ticket",
+    "vi": "Ghi chú cho mọi ticket"
+  },
+  "leaderBulkNoteOne": {
+    "en": "Note for this ticket",
+    "vi": "Ghi chú cho ticket này"
   },
   "leaderBulkNotOnTeam": {
     "en": "%1$@ not on their team",
@@ -2018,6 +2038,10 @@
   "leaderBulkSkippedCount": {
     "en": "· %1$@ skipped",
     "vi": "· %1$@ bỏ qua"
+  },
+  "leaderBulkTickets": {
+    "en": "Tickets · %1$@",
+    "vi": "Ticket · %1$@"
   },
   "leaderBulkUndo": {
     "en": "Undo",
@@ -2086,6 +2110,10 @@
   "leaderUnpinTeam": {
     "en": "Unpin “%1$@”",
     "vi": "Bỏ ghim “%1$@”"
+  },
+  "tipBulkHoursOne": {
+    "en": "Hours left for this task; empty keeps what it has",
+    "vi": "Số giờ còn lại cho task này; để trống thì giữ nguyên"
   },
   "tipBulkNotOnTeam": {
     "en": "Not on the team of any picked ticket: ZenTao would refuse it",

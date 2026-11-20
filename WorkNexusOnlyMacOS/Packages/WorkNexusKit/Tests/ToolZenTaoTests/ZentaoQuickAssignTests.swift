@@ -45,6 +45,15 @@ final class ZentaoQuickAssignTests: XCTestCase {
         XCTAssertEqual(env.adapter.assigned.map(\.left), [3])
     }
 
+    /// Undo sends each task the hours its own row gave it, ahead of the shared ones.
+    func testUndoGivesEachTaskItsOwnHoursBack() async {
+        let env = BoardsEnv(section: ZentaoSection.tasks, members: members)
+        let before = [task("1", assignee: "an", left: 0), task("2", assignee: "an", left: 0)]
+        await ZentaoBulkModel().undo(before: before, succeeded: ["zt1:task:1", "zt1:task:2"], left: 3, hours: ["zt1:task:1": 7],
+                                     state: env.state, bugs: false, toasts: nil)
+        XCTAssertEqual(env.adapter.assigned.map(\.left), [7, 3])
+    }
+
     func testQuickAssignHandsOverWhatChangesAndRemembersThePerson() async {
         let env = BoardsEnv(section: ZentaoSection.tasks, members: members)
         let tickets = [task("1", assignee: "an"), task("2", assignee: "binh"), task("3", assignee: "an")]

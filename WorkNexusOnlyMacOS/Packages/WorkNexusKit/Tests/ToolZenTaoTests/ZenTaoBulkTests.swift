@@ -47,6 +47,37 @@ final class ZenTaoBulkTests: XCTestCase {
         XCTAssertEqual(ops.lefts, ["1": 2, "2": -1])
     }
 
+    /// A ticket's own note and hours win over the shared ones; the shared hours go only to tasks that have none.
+    func testATicketsOwnNoteAndHoursWinOverTheSharedOnes() async {
+        let ops = Ops()
+        let action = ZenTaoBulkAction.assign(login: "binh", comment: "for sprint 12", left: 2,
+                                             details: ["1": ZenTaoAssignDetail(comment: "urgent", left: 6), "3": ZenTaoAssignDetail(left: 1)])
+        let tickets = [task("1", left: 0), task("2", left: 0), task("3", left: 5), task("4", left: 5), bug("5")]
+        let plan = PlanBulkAction()(tickets, action)
+        XCTAssertEqual(plan.tickets.map(\.id), ["1", "2", "3", "4", "5"])
+        _ = await RunZenTaoBulkAction(ops: ops)(plan, action)
+        // 1 its own, 2 the shared (it has none), 3 its own over its 5 h, 4 keeps its own 5 h, a bug sends none.
+        XCTAssertEqual(ops.lefts, ["1": 6, "2": 2, "3": 1, "4": -1, "5": -1])
+        XCTAssertEqual(ops.calls, ["assign binh (urgent):1", "assign binh (for sprint 12):2", "assign binh (for sprint 12):3",
+                                   "assign binh (for sprint 12):4", "assign binh (for sprint 12):5"])
+    }
+
+    /// A task with no hours left is not skipped when its own row gives some, even with no shared hours.
+    func testATicketsOwnHoursAreEnoughForATaskThatHasNone() {
+        let tickets = [task("1", left: 0), task("2", left: 0)]
+        let plan = PlanBulkAction()(tickets, .assign(login: "binh", comment: nil, details: ["1": ZenTaoAssignDetail(left: 3)]))
+        XCTAssertEqual(plan.tickets.map(\.id), ["1"])
+        XCTAssertEqual(plan.skipped(.needsHours).map(\.id), ["2"])
+        // A note alone does not give hours.
+        let noted = PlanBulkAction()(tickets, .assign(login: "binh", comment: nil, details: ["2": ZenTaoAssignDetail(comment: "x")]))
+        XCTAssertEqual(noted.skipped(.needsHours).map(\.id), ["1", "2"])
+    }
+
+    func testAssignmentIsNoneForOtherActions() {
+        XCTAssertNil(ZenTaoBulkAction.close.assignment(for: task("1")))
+        XCTAssertNil(ZenTaoBulkAction.priority(1).assignment(for: task("1")))
+    }
+
     func testPriorityLeavesOnlyOpenTicketsThatChange() {
         // ZenTao 1..4 is urgent..low.
         let plan = PlanBulkAction()([task("1", pri: .urgent), task("2", pri: .low), task("3", status: "done", pri: .low), bug("4")], .priority(1))

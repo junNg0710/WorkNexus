@@ -15,7 +15,7 @@ final class ZentaoLeaderRenderTests: XCTestCase {
 
     private func render<V: View>(_ name: String, _ view: V, size: CGSize, dark: Bool = false) async throws {
         try FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
-        var settings = AppSettings(); if dark { settings.variant = .dark }
+        var settings = AppSettings(); if dark { settings.variant = .dark; settings.themeFollowsSystem = false }
         let theme = AppTheme(settings: settings)
         let host = NSHostingView(rootView: view.environment(\.appTheme, theme).frame(width: size.width, height: size.height)
             .background(theme.colors.bg).environment(\.colorScheme, theme.colorScheme))
@@ -155,6 +155,10 @@ final class ZentaoLeaderRenderTests: XCTestCase {
             try await render("bulk-assign\(dark ? "-dark" : "")", AppDialogFrameHost {
                 ZentaoBulkAssignDialog(deps: env.deps, state: env.state, bugs: false, model: ZentaoBulkModel(), onClose: {})
             }, size: CGSize(width: 760, height: 860), dark: dark)
+            // A person picked: their own box above, each ticket's row, the summary.
+            try await render("bulk-assign-picked\(dark ? "-dark" : "")", AppDialogFrameHost {
+                ZentaoBulkAssignDialog(deps: env.deps, state: env.state, bugs: false, model: ZentaoBulkModel(), initialLogin: "luci", onClose: {})
+            }, size: CGSize(width: 760, height: 1100), dark: dark)
         }
     }
 

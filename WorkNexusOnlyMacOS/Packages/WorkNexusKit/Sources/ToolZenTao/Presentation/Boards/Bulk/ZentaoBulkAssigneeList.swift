@@ -67,3 +67,64 @@ private struct ZentaoBulkAssigneeRow: View {
         .help(off ? appString("tipBulkNotOnTeam", "Not on the team of any picked ticket: ZenTao would refuse it") : "")
     }
 }
+
+/// Who the tickets go to: the person picked, in a box of their own with a way to change them; until then (or while
+/// changing), the search over the list of people. Picking someone clears the search, so they stay in view.
+struct ZentaoBulkAssigneePicker: View {
+    @Environment(\.appTheme) private var theme
+    let accountId: String; let people: [ZenTaoBulkAssignee]; let ticketCount: Int
+    @Binding var picked: String?; @Binding var filter: String
+    @State private var changing = false
+
+    private var shown: [ZenTaoBulkAssignee] {
+        let q = filter.trimmingCharacters(in: .whitespaces)
+        return q.isEmpty ? people : people.filter { $0.name.localizedCaseInsensitiveContains(q) || $0.login.localizedCaseInsensitiveContains(q) }
+    }
+
+    var body: some View {
+        let chosen = picked.flatMap { login in people.first { $0.login == login } }
+        VStack(alignment: .leading, spacing: theme.spacing.s8) {
+            if let chosen, !changing {
+                ZentaoBulkPickedPerson(accountId: accountId, person: chosen, ticketCount: ticketCount) { changing = true }
+            } else {
+                AppSearchField(text: $filter, hint: appString("searchUsers", "Search users…"), autofocus: changing)
+                ZentaoBulkAssigneeList(accountId: accountId, people: shown, picked: picked, ticketCount: ticketCount) { login in
+                    picked = login; filter = ""; changing = false
+                }
+            }
+        }
+    }
+}
+
+/// The person picked, with their load, on an accent card; "Change" opens the search again.
+private struct ZentaoBulkPickedPerson: View {
+    @Environment(\.appTheme) private var theme
+    let accountId: String; let person: ZenTaoBulkAssignee; let ticketCount: Int; let onChange: () -> Void
+
+    var body: some View {
+        let c = theme.colors
+        HStack(spacing: theme.spacing.s10) {
+            ZentaoPersonAvatar(accountId: accountId, name: person.name, diameter: theme.sizes.control32)
+            VStack(alignment: .leading, spacing: theme.spacing.s2) {
+                Text(person.name).font(theme.typography.bodyStrong).foregroundStyle(c.tx).lineLimit(1)
+                HStack(spacing: theme.spacing.s6) {
+                    Text(verbatim: person.login)
+                    Text(verbatim: "·")
+                    Text(appFormat("leaderOpenCount", "%1$@ open", "\(person.open)"))
+                    if person.overdue > 0 {
+                        Text(appFormat("leaderOverdueCount", "%1$@ overdue", "\(person.overdue)")).foregroundStyle(c.red)
+                    }
+                    if person.cannotTake > 0 {
+                        Text(appFormat("leaderBulkNotOnTeam", "%1$@ not on their team", "\(person.cannotTake)")).foregroundStyle(c.amber)
+                    }
+                }
+                .font(theme.typography.meta).foregroundStyle(c.tx2).lineLimit(1)
+            }
+            Spacer(minLength: theme.spacing.s8)
+            AppButton(appString("leaderBulkChangePerson", "Change"), systemImage: "arrow.left.arrow.right", kind: .ghost, action: onChange)
+        }
+        .padding(theme.spacing.s10)
+        .background(c.sel, in: RoundedRectangle(cornerRadius: theme.radii.md))
+        .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(c.accent, lineWidth: theme.borders.hairline))
+    }
+}

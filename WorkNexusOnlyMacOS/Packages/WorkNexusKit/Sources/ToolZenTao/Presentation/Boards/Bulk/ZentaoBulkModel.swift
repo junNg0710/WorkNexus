@@ -26,7 +26,7 @@ final class ZentaoBulkModel {
     func run(_ action: ZenTaoBulkAction, plan: ZenTaoBulkPlan, state: ZentaoUIState, bugs: Bool, toasts: AppToastController?) async {
         guard progress == nil, !plan.isEmpty else { return }
         let board = bugs ? state.bugBoard : state.taskBoard
-        if case .assign(let login, _, _) = action, let accountId = plan.tickets.first?.accountId { state.rememberAssignee(login, accountId: accountId) }
+        if case .assign(let login, _, _, _) = action, let accountId = plan.tickets.first?.accountId { state.rememberAssignee(login, accountId: accountId) }
         let result = await drive([(action, plan)], state: state, board: board)
         // What the action covered leaves the pick; what failed or never ran stays, to be retried; other picks stay.
         let covered = Set(plan.tickets.map(\.id) + plan.skipped.map(\.ticket.id))
@@ -36,10 +36,12 @@ final class ZentaoBulkModel {
         if !plan.skipped.isEmpty { line += " " + appFormat("leaderBulkSkippedCount", "· %1$@ skipped", "\(plan.skipped.count)") }
         // Handing work out by mistake is easy to undo: the toast carries the way back.
         var undo: (label: String, run: @MainActor () -> Void)?
-        if case .assign(_, _, let left) = action, !result.succeeded.isEmpty {
+        if case .assign = action, !result.succeeded.isEmpty {
             let before = plan.tickets, succeeded = result.succeeded
+            // The hours each task was given go back with it: ZenTao wants them again.
+            let hours = Dictionary(before.compactMap { t in action.assignment(for: t)?.left.map { (t.id, $0) } }, uniquingKeysWith: { a, _ in a })
             undo = (appString("leaderBulkUndo", "Undo"), { [weak self] in
-                Task { await self?.undo(before: before, succeeded: succeeded, left: left, state: state, bugs: bugs, toasts: toasts) }
+                Task { await self?.undo(before: before, succeeded: succeeded, hours: hours, state: state, bugs: bugs, toasts: toasts) }
             })
         }
         toasts?.show(line, kind: result.isClean ? .success : .error, action: undo)
@@ -73,9 +75,10 @@ final class ZentaoBulkModel {
         return .done
     }
 
-    /// Gives the `succeeded` tickets of an assign back to their holders in `before` (the tickets as they were). `left`: the
-    /// hours the assign gave the tasks that had none (ZenTao wants them again on the way back).
-    func undo(before: [Ticket], succeeded: [String], left: Double? = nil, state: ZentaoUIState, bugs: Bool, toasts: AppToastController?) async {
+    /// Gives the `succeeded` tickets of an assign back to their holders in `before` (the tickets as they were). `left` /
+    /// `hours` (by ticket id): the hours the assign gave the tasks (ZenTao wants them again on the way back).
+    func undo(before: [Ticket], succeeded: [String], left: Double? = nil, hours: [String: Double] = [:], state: ZentaoUIState, bugs: Bool,
+              toasts: AppToastController?) async {
         guard progress == nil else { return }
         let plan = PlanBulkUndo()(before: before, succeeded: succeeded)
         let none = plan.cannotUndo.isEmpty ? "" : " " + appFormat("leaderBulkUndoNobody", "· %1$@ had nobody before", "\(plan.cannotUndo.count)")
@@ -84,7 +87,10 @@ final class ZentaoBulkModel {
             return
         }
         // Each former holder's tickets as they are: they are not "unchanged", whatever the store still says.
-        let batches = plan.steps.map { (ZenTaoBulkAction.assign(login: $0.login, comment: nil, left: left), ZenTaoBulkPlan(tickets: $0.tickets, skipped: [])) }
+        let batches = plan.steps.map { step in
+            let details = Dictionary(step.tickets.compactMap { t in hours[t.id].map { (t.id, ZenTaoAssignDetail(left: $0)) } }, uniquingKeysWith: { a, _ in a })
+            return (ZenTaoBulkAction.assign(login: step.login, comment: nil, left: left, details: details), ZenTaoBulkPlan(tickets: step.tickets, skipped: []))
+        }
         let result = await drive(batches, state: state, board: bugs ? state.bugBoard : state.taskBoard)
         let line = appFormat("leaderBulkUndone", "Undo: %1$@ back, %2$@ failed", "\(result.succeeded.count)", "\(result.failed.count)") + none
         toasts?.show(line, kind: result.failed.isEmpty && result.notRun.isEmpty ? .success : .error)

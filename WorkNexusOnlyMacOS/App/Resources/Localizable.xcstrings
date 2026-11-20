@@ -36296,6 +36296,57 @@
         }
       }
     },
+    "detailShowLess": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show less"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thu gọn"
+          }
+        }
+      }
+    },
+    "detailShowMore": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show more"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xem thêm"
+          }
+        }
+      }
+    },
+    "leaderBulkChangePerson": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đổi"
+          }
+        }
+      }
+    },
     "leaderBulkHideSkipped": {
       "extractionState": "manual",
       "localizations": {
@@ -36326,6 +36377,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Số giờ còn lại, cho %1$@ task chưa có"
+          }
+        }
+      }
+    },
+    "leaderBulkNoteAll": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note for every ticket"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghi chú cho mọi ticket"
+          }
+        }
+      }
+    },
+    "leaderBulkNoteOne": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note for this ticket"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghi chú cho ticket này"
           }
         }
       }
@@ -36479,6 +36564,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "· %1$@ bỏ qua"
+          }
+        }
+      }
+    },
+    "leaderBulkTickets": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tickets · %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket · %1$@"
           }
         }
       }
@@ -36768,6 +36870,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bỏ ghim “%1$@”"
+          }
+        }
+      }
+    },
+    "tipBulkHoursOne": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hours left for this task; empty keeps what it has"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Số giờ còn lại cho task này; để trống thì giữ nguyên"
           }
         }
       }
