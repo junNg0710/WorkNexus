@@ -87,36 +87,11 @@ void main() {
       'Theme',
       'Surface',
       'Density',
-      'Detail layout',
       'Company tint',
       'Font',
     ]) {
       expect(find.text(label), findsOneWidget);
     }
-  });
-
-  testWidgets('detail layout toggle updates settings and keeps panel open', (
-    tester,
-  ) async {
-    final container = await pumpTitleBar(tester);
-    await openQuickSettings(tester);
-
-    expect(
-      container.read(appSettingsProvider).detailLayout,
-      DetailLayout.twoPane,
-    );
-
-    await tester.tap(find.text('Document'));
-    await tester.pumpAndSettle();
-
-    expect(
-      container.read(appSettingsProvider).detailLayout,
-      DetailLayout.document,
-    );
-    expect(
-      find.byKey(const ValueKey<String>('quick-settings-panel')),
-      findsOneWidget,
-    );
   });
 
   testWidgets('quick settings slides over the right edge', (tester) async {
@@ -493,7 +468,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Settings'), findsOneWidget);
+    // The Settings place opens on its General page (updates, storage).
+    expect(find.text('General'), findsOneWidget);
     expect(find.text('APPEARANCE'), findsNothing);
   });
 }
