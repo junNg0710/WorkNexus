@@ -40,14 +40,48 @@ extension ZenTaoClient {
         return try responseMap(res.data)
     }
 
+    /// Every department as one flat list. Most servers send a flat list (each with its `parent`); some send a tree whose
+    /// departments carry their sub-departments in `children`, or a map keyed by id: those are flattened too, a child
+    /// taking the department it sits in as its parent when it does not say.
     func departments() async throws -> [JSON] {
         let res = try await getV1("/departments")
         try ensureOk(res)
         var decoded = res.data
         if let s = decoded as? String { decoded = try jsonDecode(s) }
-        let items: Any? = (decoded as? [Any]) ?? asMap(decoded)?["departments"]
-        guard let list = items as? [Any] else { throw ZenTaoError.format("ZenTao departments response is not a list") }
-        return list.compactMap(asMap)
+        let items: Any? = (decoded as? [Any]) ?? asMap(decoded)?["departments"] ?? asMap(decoded).map { Array($0.values) }
+        guard let list = items as? [Any] ?? asMap(items).map({ Array($0.values) }) else {
+            throw ZenTaoError.format("ZenTao departments response is not a list")
+        }
+        return Self.flattenDepartments(list, parent: nil)
+    }
+
+    static func flattenDepartments(_ items: [Any], parent: Any?) -> [JSON] {
+        var out: [JSON] = []
+        for raw in items {
+            guard var d = asMap(raw) else { continue }
+            let children = (d["children"] as? [Any]) ?? asMap(d["children"]).map { Array($0.values) } ?? []
+            d["children"] = nil
+            if let parent, (zentaoInt(d["parent"]) ?? 0) == 0 { d["parent"] = parent }
+            out.append(d)
+            out += flattenDepartments(children, parent: d["id"])
+        }
+        return out
+    }
+
+    /// Every user the account may see, page by page. A server may cap a page below `pageSize`, so reading goes on until
+    /// the total it gives is reached or a page brings nobody new (a page past the end repeats the first, or is empty);
+    /// `until` stops it as soon as one user read matches.
+    func allUsers(pageSize: Int = 1000, maxPages: Int = 50, until: ((ZenTaoUser) -> Bool)? = nil) async throws -> [ZenTaoUser] {
+        var out: [ZenTaoUser] = []
+        var seen: Set<String> = []
+        for page in 1...maxPages {
+            let res = try await users(limit: pageSize, page: page)
+            let fresh = res.users.filter { seen.insert($0.account ?? $0.id ?? "").inserted }
+            out += fresh
+            if fresh.isEmpty || fresh.contains(where: { until?($0) ?? false }) { break }
+            if let total = res.total, out.count >= total { break }
+        }
+        return out
     }
 
     /// Updates the signed-in user through ZenTao REST v1 (`PUT /users/{id}`).

@@ -4,7 +4,7 @@ import Foundation
 /// A person's work across every execution and product, for a team leader. Not in the Flutter app.
 extension ZenTaoProviderAdapter {
     /// Most pages of the user list read to find someone (of `userPageSize` each).
-    static let userPages = 20
+    static let userPages = 50
     static let userPageSize = 1000
 
     /// The numeric id of ZenTao user `login` (case aside, as ZenTao signs in). The signed-in user's comes from their own
@@ -18,19 +18,14 @@ extension ZenTaoProviderAdapter {
                 return own.id
             }
             if !lock.withLock({ userIdsLoaded }) {
-                var page = 1
-                while page <= Self.userPages {
-                    let res = try await client.users(limit: Self.userPageSize, page: page)
-                    lock.withLock {
-                        for u in res.users {
-                            if let account = u.account, let id = u.id { userIds[account.lowercased()] = id; userLogins[account.lowercased()] = account }
-                        }
+                let users = try await client.allUsers(pageSize: Self.userPageSize, maxPages: Self.userPages,
+                                                      until: { $0.account?.lowercased() == key })
+                lock.withLock {
+                    for u in users {
+                        if let account = u.account, let id = u.id { userIds[account.lowercased()] = id; userLogins[account.lowercased()] = account }
                     }
-                    let more = res.total.map { page * Self.userPageSize < $0 } ?? (res.users.count >= Self.userPageSize)
-                    if !more || lock.withLock({ userIds[key] }) != nil { break }
-                    page += 1
+                    userIdsLoaded = true
                 }
-                lock.withLock { userIdsLoaded = true }
             }
             guard let id = lock.withLock({ userIds[key] }) else {
                 throw ZenTaoError.http(status: nil, message: "ZenTao has no user \(login)", hasResponse: false)

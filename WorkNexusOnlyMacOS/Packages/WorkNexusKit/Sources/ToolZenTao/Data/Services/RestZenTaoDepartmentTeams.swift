@@ -7,7 +7,7 @@ import Foundation
 public struct RestZenTaoDepartmentTeams: ZenTaoDepartmentTeamSource {
     private let clients: ZenTaoClientProvider
     /// Most pages of the user list read (of `pageSize` each).
-    static let pages = 20
+    static let pages = 50
     static let pageSize = 1000
 
     public init(clients: ZenTaoClientProvider) { self.clients = clients }
@@ -20,19 +20,15 @@ public struct RestZenTaoDepartmentTeams: ZenTaoDepartmentTeamSource {
                 let name = (str(d["name"]) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                 return ZenTaoDepartment(id: id, name: name, parentId: zentaoInt(d["parent"]) ?? 0, path: name, order: zentaoInt(d["order"]) ?? 0)
             }
-            var users: [ZenTaoDepartmentUser] = []
-            var page = 1
-            while page <= Self.pages {
-                let res = try await client.users(limit: Self.pageSize, page: page)
-                users += res.users.compactMap { u in
-                    guard let login = u.account, !login.isEmpty else { return nil }
-                    return ZenTaoDepartmentUser(login: login, name: u.realname ?? login, dept: u.dept ?? 0)
-                }
-                let more = res.total.map { page * Self.pageSize < $0 } ?? (res.users.count >= Self.pageSize)
-                if !more { break }
-                page += 1
+            let users = try await client.allUsers(pageSize: Self.pageSize, maxPages: Self.pages).compactMap { u -> ZenTaoDepartmentUser? in
+                guard let login = u.account, !login.isEmpty else { return nil }
+                return ZenTaoDepartmentUser(login: login, name: u.realname ?? login, dept: u.dept ?? 0)
             }
-            return .success(BuildDepartmentTeams()(accountId: accountId, departments: departments, users: users))
+            let teams = BuildDepartmentTeams()(accountId: accountId, departments: departments, users: users)
+            // What was read, for when a team is missing: departments, people and how many of them say where they sit.
+            Diagnostics.info("zentao", "Department teams: \(departments.count) departments, \(users.count) people "
+                             + "(\(users.filter { $0.dept > 0 }.count) with a department), \(teams.count) teams")
+            return .success(teams)
         } catch let f as Failure { return .failure(f) }
         catch let e as ZenTaoError {
             if case .format = e { return .failure(.parse("ZenTao sent unreadable departments")) }

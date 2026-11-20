@@ -194,3 +194,44 @@ final class ZenTaoPersonMapperTests: XCTestCase {
         XCTAssertNotNil(zenTaoPersonDate("2026-11-20 15:20:00"))
     }
 }
+
+/// Reading ZenTao's whole organisation: every page of users, every level of departments.
+final class ZenTaoOrganisationReadTests: XCTestCase {
+    func testAServerThatCapsAPageIsReadToTheEnd() async throws {
+        // 250 people, the server hands out 100 a page whatever is asked.
+        let server = StubServer { req in
+            .tokenOr(req) {
+                guard req.path.hasSuffix("/api.php/v1/users") else { return .json([:]) }
+                let page = Int(req.query("page") ?? "1") ?? 1
+                let ids = (page - 1) * 100..<min(page * 100, 250)
+                return .json(["total": 250, "users": ids.map { ["id": $0, "account": "u\($0)", "dept": $0 < 100 ? 2 : 5] as JSON }])
+            }
+        }
+        let users = try await makeClient(server).allUsers()
+        XCTAssertEqual(users.count, 250)
+        XCTAssertEqual(Set(users.compactMap(\.account)).count, 250)
+    }
+
+    func testWithoutATotalReadingStopsAtAPageWithNobodyNew() async throws {
+        let server = StubServer { req in
+            .tokenOr(req) {
+                guard req.path.hasSuffix("/api.php/v1/users") else { return .json([:]) }
+                // A page past the end answers the first page again.
+                let page = Int(req.query("page") ?? "1") ?? 1
+                return .json(["users": page == 2 ? [["id": 9, "account": "vn"] as JSON] : [["id": 1, "account": "hk"] as JSON]])
+            }
+        }
+        let users = try await makeClient(server).allUsers()
+        XCTAssertEqual(users.compactMap(\.account), ["hk", "vn"])
+    }
+
+    func testNestedDepartmentsAreFlattenedWithTheirParent() {
+        let tree: [Any] = [["id": 1, "name": "HK"] as JSON,
+                           ["id": 3, "name": "VN", "children": [["id": 5, "name": "Flutter VN"] as JSON,
+                                                               ["id": 6, "name": "Go VN", "parent": 3, "children": [["id": 9, "name": "Go VN 2"] as JSON]] as JSON]] as JSON]
+        let flat = ZenTaoClient.flattenDepartments(tree, parent: nil)
+        XCTAssertEqual(flat.compactMap { zentaoInt($0["id"]) }, [1, 3, 5, 6, 9])
+        XCTAssertEqual(flat.map { zentaoInt($0["parent"]) ?? 0 }, [0, 0, 3, 3, 6])
+        XCTAssertTrue(flat.allSatisfy { $0["children"] == nil })
+    }
+}
