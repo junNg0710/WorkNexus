@@ -12,7 +12,7 @@ public struct AppMenuButton<Label: View>: View {
     let items: () -> [AppNativeMenu.Item]
     let help: String?
     let label: Label
-    @State private var anchor = MenuAnchor()
+    @State private var anchor = AppMenuAnchor()
 
     public init(help: String? = nil, items: @escaping () -> [AppNativeMenu.Item], @ViewBuilder label: () -> Label) {
         self.items = items; self.help = help; self.label = label()
@@ -20,23 +20,37 @@ public struct AppMenuButton<Label: View>: View {
 
     public var body: some View {
         Button {
-            let list = items()
-            if let view = anchor.view { AppNativeMenu.popUp(list, under: view) } else { AppNativeMenu.popUp(list) }
+            AppNativeMenu.popUp(items(), under: anchor)
         } label: { label.contentShape(Rectangle()) }
         .buttonStyle(.plain)
-        .background(MenuAnchorView(anchor: anchor))
+        .appMenuAnchor(anchor)
         .help(help ?? "")
         .accessibilityAddTraits(.isButton)
     }
 }
 
-/// Where the menu is shown from: the AppKit view behind the button.
-@MainActor final class MenuAnchor {
+/// Where a button's menu is shown from: the AppKit view behind it (`appMenuAnchor`). A menu opened under the pointer
+/// instead covered the button that opened it and put its first item right under the click, so a "…" button seemed hard
+/// to press - a click that landed a hair later picked that item or closed the menu.
+@MainActor public final class AppMenuAnchor {
     weak var view: NSView?
+    public init() {}
+}
+
+public extension View {
+    /// Marks this view as where `anchor`'s menu opens: just under it (`AppNativeMenu.popUp(_:under:)`).
+    func appMenuAnchor(_ anchor: AppMenuAnchor) -> some View { background(MenuAnchorView(anchor: anchor)) }
+}
+
+public extension AppNativeMenu {
+    /// Shows the menu just under the view `anchor` marks; under the pointer only when that view is not there.
+    @MainActor static func popUp(_ items: [Item], under anchor: AppMenuAnchor) {
+        if let view = anchor.view { popUp(items, under: view) } else { popUp(items) }
+    }
 }
 
 private struct MenuAnchorView: NSViewRepresentable {
-    let anchor: MenuAnchor
+    let anchor: AppMenuAnchor
     func makeNSView(context: Context) -> NSView {
         let v = FlippedView()
         anchor.view = v

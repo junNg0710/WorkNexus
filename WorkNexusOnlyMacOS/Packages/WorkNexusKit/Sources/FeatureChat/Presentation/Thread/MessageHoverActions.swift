@@ -116,15 +116,17 @@ private struct ReactButton: View {
 private struct MoreActionsMenu: View {
     let actions: [MessageAction]
     @Binding var open: Bool
+    @State private var anchor = AppMenuAnchor()
 
     var body: some View {
         RoundActionButton(icon: "ellipsis", help: L.moreActions) {
             open = true
             AppNativeMenu.popUp(actions.map { a in
                 AppNativeMenu.Item(a.title, icon: a.icon, destructive: a.destructive, dividerBefore: a.sectionStart || a.destructive, action: a.run)
-            })
+            }, under: anchor)
             open = false
         }
+        .appMenuAnchor(anchor)
     }
 }
 

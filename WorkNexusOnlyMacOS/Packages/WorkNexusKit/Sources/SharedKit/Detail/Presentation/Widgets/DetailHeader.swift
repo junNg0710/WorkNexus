@@ -50,7 +50,7 @@ struct DetailHeaderTopBar: View {
             WorkspaceBadge(wsColor, ws?.shortCode ?? "?", iconKey: ws?.iconKey)
             Text(ws?.isPersonal == true ? appString("personal", "Personal") : (ws?.name ?? "")).font(theme.typography.meta)
                 .foregroundStyle(c.tx2).lineLimit(1)
-            Text("/").font(theme.typography.meta).foregroundStyle(c.tx3)
+            Text(verbatim: "/").font(theme.typography.meta).foregroundStyle(c.tx3)
             Text(ticketRef(ticket.providerType, ticket.externalKey, ticket.externalType)).font(theme.typography.mono).foregroundStyle(c.tx3)
             Spacer(minLength: theme.spacing.s8)
             if let route = controller.extensions.route(for: ticket) {
@@ -78,6 +78,7 @@ struct DetailHeaderMoreButton: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.toasts) private var toasts
     let ticket: Ticket; let model: TicketDetailModel
+    @State private var anchor = AppMenuAnchor()
 
     private func copy(_ text: String, _ done: String) {
         NSPasteboard.general.clearContents(); NSPasteboard.general.setString(text, forType: .string)
@@ -85,7 +86,7 @@ struct DetailHeaderMoreButton: View {
     }
 
     /// A button like its neighbours (the whole square takes the click; a SwiftUI menu took it only on the dots), opening a
-    /// native menu under the pointer.
+    /// native menu just under itself.
     var body: some View {
         AppIconButton("ellipsis", help: appString("more", "More"), outlined: true) {
             AppNativeMenu.popUp([
@@ -93,8 +94,9 @@ struct DetailHeaderMoreButton: View {
                 AppNativeMenu.Item(appString("copyTitle", "Copy title"), icon: "doc.on.doc") {
                     copy(ticketTitleWithRef(ticket), appString("titleCopied", "Title copied"))
                 },
-            ])
+            ], under: anchor)
         }
+        .appMenuAnchor(anchor)
     }
 }
 
@@ -103,7 +105,7 @@ struct DetailHeaderTitle: View {
     @Environment(\.appTheme) private var theme
     let ticket: Ticket
     var body: some View {
-        (Text(ticketShortRef(ticket.providerType, ticket.externalKey)).foregroundColor(theme.colors.tx3) + Text(" \(ticket.title)").foregroundColor(theme.colors.tx))
+        (Text(ticketShortRef(ticket.providerType, ticket.externalKey)).foregroundColor(theme.colors.tx3) + Text(verbatim: " \(ticket.title)").foregroundColor(theme.colors.tx))
             .font(theme.typography.title).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
     }
 }
