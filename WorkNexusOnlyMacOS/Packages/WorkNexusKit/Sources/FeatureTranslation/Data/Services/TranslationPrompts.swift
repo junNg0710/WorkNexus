@@ -8,6 +8,8 @@ func ticketPrompt(_ s: TicketSource, _ languageName: String) -> String {
         + "Preserve code, identifiers, file paths, URLs and Markdown. "
         // A ZenTao body is HTML: its tags are the layout (lists, bold, images) and must come back as they went.
         + "If the body is HTML, keep every tag and attribute exactly as it is and translate only the text between the tags. "
+        // Seen with a Chinese ticket: the model polished the Chinese instead of translating it.
+        + "The source may be Chinese or another language: write the title and body in \(languageName), never in the source language. "
         + "Return ONLY a JSON object with keys \"title\" and \"body\".\n"
         + "Title: <<<\(s.title)>>>\nBody: <<<\(s.body)>>>"
 }
@@ -15,6 +17,7 @@ func ticketPrompt(_ s: TicketSource, _ languageName: String) -> String {
 func textPrompt(_ text: String, _ languageName: String) -> String {
     "Translate this chat message into natural \(languageName). "
         + "Preserve code, identifiers, URLs, emoji, @mentions and Markdown. "
+        + "Write it in \(languageName) whatever language it is in. "
         + "Return ONLY the translation, with no preface or quotes.\n"
         + "Message: <<<\(text)>>>"
 }

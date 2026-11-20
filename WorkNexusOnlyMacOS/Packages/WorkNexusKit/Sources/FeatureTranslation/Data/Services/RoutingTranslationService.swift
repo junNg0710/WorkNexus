@@ -39,8 +39,23 @@ public final class RoutingTranslationService: TranslationService, @unchecked Sen
 
     public func contentHash(_ source: TicketSource) -> String { openCode.contentHash(source) }
 
+    /// A reply still in the source's CJK script is asked for once more (the model answers differently each time); a second
+    /// one like it is a failure, never a record that would show as translated.
     public func translate(ticketId: String, source: TicketSource, sourceHash: String, targetLang: String,
                           model: String?) async -> Outcome<TranslationRecord> {
+        for attempt in 1...2 {
+            let result = await translateOnce(ticketId: ticketId, source: source, sourceHash: sourceHash, targetLang: targetLang, model: model)
+            guard case .success(let record) = result, IsUntranslated()(record) else { return result }
+            if attempt == 2 {
+                let name = translationLanguage(for: targetLang).englishName
+                return .failure(.parse("The model answered in the ticket's own language instead of \(name). Try again, or pick another model."))
+            }
+        }
+        return .failure(.cancelled("unreachable"))
+    }
+
+    private func translateOnce(ticketId: String, source: TicketSource, sourceHash: String, targetLang: String,
+                               model: String?) async -> Outcome<TranslationRecord> {
         let b = await backend(.translation, model)
         return await tracked(ticketId, b) {
             switch b {
