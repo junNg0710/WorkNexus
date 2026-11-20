@@ -4,7 +4,8 @@ import CoreUI
 import SwiftUI
 
 /// Picks one or more chats of `accountId` (those the user may post in) and sends them `text` - a ticket's "#12 Title" and
-/// link - so it can be passed on without opening the chat and pasting it.
+/// link - so it can be passed on without opening the chat and pasting it, after a note typed as in the chat (`@` mentions
+/// the people of the picked chats).
 public struct ChatShareDialog: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.toasts) private var toasts
@@ -19,6 +20,7 @@ public struct ChatShareDialog: View {
     @State private var selected: [String] = []
     @State private var busy = false
     @State private var error: String?
+    @State private var note = ChatShareNoteModel()
 
     public init(accountId: String, services: ChatServices, text: String, onClose: @escaping () -> Void) {
         self.accountId = accountId; self.services = services; self.text = text; self.onClose = onClose
@@ -41,6 +43,7 @@ public struct ChatShareDialog: View {
                         }
                     }
                 }
+                ChatShareNote(note: note, users: users, selfUserId: selfUserId) { if !selected.isEmpty && !busy { Task { await share() } } }
                 if let error { Text(error).font(theme.typography.caption).foregroundStyle(theme.colors.red) }
             }
             // A fixed height: searching must not make the dialog grow and shrink.
@@ -51,6 +54,27 @@ public struct ChatShareDialog: View {
             AppButton(label, kind: .primary) { Task { await share() } }.disabled(selected.isEmpty || busy)
         }
         .task { await watch() }
+        // Who `@` suggests: the people of the chats picked (everyone known until one is).
+        .task(id: PeopleKey(selected: selected, known: users.count)) { await loadPeople() }
+    }
+
+    private struct PeopleKey: Equatable { var selected: [String]; var known: Int }
+
+    private func loadPeople() async {
+        let picked = conversations.filter { selected.contains($0.gid) }
+        guard !picked.isEmpty else {
+            note.setPeople(users.keys.sorted { (users[$0]?.realname ?? "") < (users[$1]?.realname ?? "") }, hasGroup: false)
+            note.refresh(users: users, selfUserId: selfUserId); return
+        }
+        var ids: [Int] = [], seen = Set<Int>()
+        func add(_ id: Int) { if seen.insert(id).inserted { ids.append(id) } }
+        for chat in picked {
+            if chat.type == .one2one { chat.peerUserId.map(add); continue }
+            if case .success(let members) = await services.chat.members(accountId: accountId, chatGid: chat.gid) { members.forEach(add) }
+        }
+        guard !Task.isCancelled else { return }
+        note.setPeople(ids, hasGroup: picked.contains { $0.type != .one2one })
+        note.refresh(users: users, selfUserId: selfUserId)
     }
 
     private var label: String {
@@ -71,7 +95,7 @@ public struct ChatShareDialog: View {
     private func share() async {
         busy = true; error = nil
         let count = selected.count
-        switch await ShareTextToChats(services.chat)(accountId: accountId, chatGids: selected, text: text) {
+        switch await ShareTextToChats(services.chat)(accountId: accountId, chatGids: selected, text: text, note: note.text.messageText) {
         case .success:
             toasts?.show(count == 1 ? shellString("chatSharedOne", "Sent") : shellString("chatShared", "Sent to {count} chats", ["count": "\(count)"]))
             onClose()

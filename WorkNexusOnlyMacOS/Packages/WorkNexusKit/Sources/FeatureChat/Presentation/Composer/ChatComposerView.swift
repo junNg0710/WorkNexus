@@ -120,12 +120,12 @@ private struct ComposerInputRow: View {
             .background(theme.colors.card, in: RoundedRectangle(cornerRadius: theme.radii.lg))
             .overlay(RoundedRectangle(cornerRadius: theme.radii.lg).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
             .overlay(alignment: .top) {
-                ChatMentionList(mentions: controller.mentions, state: state) { controller.pick($0) }
+                ChatMentionList(mentions: controller.mentions) { controller.pick($0) }
                     .alignmentGuide(.top) { $0[.bottom] }
                     .offset(y: -theme.spacing.s4)
             }
             if model.isBlank && state.stagedFiles.isEmpty {
-                Button(action: controller.sendLike) { Text("👍").font(.system(size: 26)).frame(width: theme.sizes.control36, height: theme.sizes.control36) }
+                Button(action: controller.sendLike) { Text(verbatim: "👍").font(.system(size: 26)).frame(width: theme.sizes.control36, height: theme.sizes.control36) }
                     .buttonStyle(.plain).help(appString("chatSendLike", "Send a like"))
             } else {
                 ComposerSendButton { controller.send() }

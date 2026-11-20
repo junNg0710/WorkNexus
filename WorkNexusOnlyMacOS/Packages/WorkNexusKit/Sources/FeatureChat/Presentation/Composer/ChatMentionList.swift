@@ -6,7 +6,6 @@ import SwiftUI
 struct ChatMentionList: View {
     @Environment(\.appTheme) private var theme
     let mentions: MentionAutocomplete
-    let state: ChatThreadState
     let onPick: (MentionCandidate) -> Void
 
     var body: some View {

@@ -1970,5 +1970,9 @@
   "panicSwitchPetGestureTabHint": {
     "en": "For Official. Demo: right-click the pet and pick \"Demo\".",
     "vi": "Dùng cho Chính thức. Demo: bấm chuột phải vào pet rồi chọn \"Demo\"."
+  },
+  "chatShareNoteHint": {
+    "en": "Add a note — type @ to mention someone",
+    "vi": "Thêm ghi chú — gõ @ để nhắc tên"
   }
 }

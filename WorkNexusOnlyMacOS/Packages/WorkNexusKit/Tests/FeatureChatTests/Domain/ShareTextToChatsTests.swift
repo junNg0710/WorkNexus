@@ -30,4 +30,14 @@ final class ShareTextToChatsTests: XCTestCase {
         guard case .failure = await ShareTextToChats(repo)(accountId: "a", chatGids: ["g2"], text: "  ") else { return XCTFail() }
         XCTAssertTrue(repo.sent.isEmpty)
     }
+
+    /// A note goes first, a blank line before the ticket, its mentions as the chat writes them.
+    func testANoteGoesAboveTheSharedTextWithItsMentions() async {
+        let repo = Repo()
+        let note = "  [@Thinh](@#12) xem giúp anh task này nhé \n"
+        _ = await ShareTextToChats(repo)(accountId: "a", chatGids: ["g1"], text: "#14655 Update UI\nhttps://zt/task-view-14655.html", note: note)
+        XCTAssertEqual(repo.sent.first?.1, "[@Thinh](@#12) xem giúp anh task này nhé\n\n#14655 Update UI\nhttps://zt/task-view-14655.html")
+        _ = await ShareTextToChats(repo)(accountId: "a", chatGids: ["g2"], text: "#1 A", note: "   ")
+        XCTAssertEqual(repo.sent.last?.1, "#1 A", "a blank note adds nothing")
+    }
 }

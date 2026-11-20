@@ -14723,6 +14723,40 @@
         }
       }
     },
+    "chatShowInfo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show chat info"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện thông tin cuộc trò chuyện"
+          }
+        }
+      }
+    },
+    "chatHideInfo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide chat info"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ẩn thông tin cuộc trò chuyện"
+          }
+        }
+      }
+    },
     "chatClosePanel": {
       "extractionState": "manual",
       "localizations": {
@@ -25654,6 +25688,57 @@
         }
       }
     },
+    "miniAppCookiesLookupFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not look for browsers on this device."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không dò được các trình duyệt trên máy."
+          }
+        }
+      }
+    },
+    "miniAppCookiesBrowserBusy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is running and keeps its cookies locked. Quit %1$@, then try again."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ đang mở và khoá file cookie. Hãy thoát %1$@ rồi thử lại."
+          }
+        }
+      }
+    },
+    "miniAppCookiesAppBound": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ encrypts its cookies so that only %1$@ can read them. Import from another browser, such as Firefox."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mã hoá cookie để chỉ %1$@ đọc được. Hãy nhập từ trình duyệt khác, ví dụ Firefox."
+          }
+        }
+      }
+    },
     "miniAppCookiesExpiredTooltip": {
       "extractionState": "manual",
       "localizations": {
@@ -27524,6 +27609,40 @@
         }
       }
     },
+    "miniAppCookiesBrowserUnsupported": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ — not supported on Windows"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ — không hỗ trợ trên Windows"
+          }
+        }
+      }
+    },
+    "miniAppCookiesOnlyChrome": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only Chrome was found, and importing from Chrome is not supported on Windows: Chrome encrypts its cookies so that only Chrome can read them. Sign in to the site in Edge or Firefox, then import from there."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chỉ tìm thấy Chrome, mà Windows không hỗ trợ import từ Chrome: Chrome mã hoá cookie để chỉ chính Chrome đọc được. Hãy đăng nhập trang đó bằng Edge hoặc Firefox rồi import từ trình duyệt đó."
+          }
+        }
+      }
+    },
     "accentColor": {
       "extractionState": "manual",
       "localizations": {
@@ -27881,23 +28000,6 @@
         }
       }
     },
-    "chatHideInfo": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide chat info"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ẩn thông tin chat"
-          }
-        }
-      }
-    },
     "chatHideList": {
       "extractionState": "manual",
       "localizations": {
@@ -28098,23 +28200,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cho người khác thấy khi tôi đang gõ"
-          }
-        }
-      }
-    },
-    "chatShowInfo": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show chat info"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hiện thông tin chat"
           }
         }
       }
@@ -35901,6 +35986,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dùng cho Chính thức. Demo: bấm chuột phải vào pet rồi chọn \"Demo\"."
+          }
+        }
+      }
+    },
+    "chatShareNoteHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a note — type @ to mention someone"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm ghi chú — gõ @ để nhắc tên"
           }
         }
       }
