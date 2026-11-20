@@ -14,6 +14,8 @@ final class FakeXxdHttp: XxdHttpClient, @unchecked Sendable {
     var downloadBytes = Data([1, 2, 3])
     var uploadResult: Outcome<(id: Int, time: Int)> = .success((id: 7, time: 1_700_000_000_000))
     var uploads: [(chatGid: String, fileName: String, size: Int)] = []
+    /// Keeps an upload going until it is cancelled (it then fails as cancelled, as the real transport does).
+    var holdUploads = false
     private let lock = NSLock()
 
     init(_ fallback: Outcome<XxdServerInfo>) { self.fallback = fallback }
@@ -34,6 +36,11 @@ final class FakeXxdHttp: XxdHttpClient, @unchecked Sendable {
                 serverName: String, pinnedFingerprint: String?, onProgress: (@Sendable (Double) -> Void)?,
                 cancel: ChatCancelToken?) async -> Outcome<(id: Int, time: Int)> {
         uploads.append((chatGid, fileName, bytes.count))
+        if holdUploads, let cancel {
+            onProgress?(0.5)
+            await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in cancel.onCancel { done.resume() } }
+            return .failure(.cancelled("Upload cancelled"))
+        }
         onProgress?(1)
         return uploadResult
     }

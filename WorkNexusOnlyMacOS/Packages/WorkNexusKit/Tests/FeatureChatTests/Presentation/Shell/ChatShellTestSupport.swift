@@ -35,6 +35,11 @@ final class ShellFakeRepository: StubChatRepository, @unchecked Sendable {
     override func openDirectChat(accountId: String, userId: Int) async -> Outcome<String> { openDirectResult }
     override func trustCertificate(accountId: String, fingerprint: String) async -> Outcome<Void> { trusted.append(fingerprint); return trustResult }
     override func timelineExtent(accountId: String, chatGid: String) async -> Outcome<ChatTimelineExtent> { extent }
+    /// The files sent, as "<chat>/<name>".
+    var sentFiles: [String] = []
+    override func sendFile(accountId: String, chatGid: String, name: String, bytes: Data, mimeType: String?, replyToId: Int?) async -> Outcome<Void> {
+        sentFiles.append("\(chatGid)/\(name)"); return .success(())
+    }
 }
 
 enum ShellMake {

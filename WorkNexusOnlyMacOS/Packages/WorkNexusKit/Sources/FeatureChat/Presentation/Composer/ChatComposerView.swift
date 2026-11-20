@@ -108,6 +108,7 @@ private struct ComposerInputRow: View {
                     model: model, font: font, textColor: NSColor(theme.colors.tx), accent: NSColor(theme.colors.accent),
                     revision: model.revision, focusTick: model.focusTick, resetUndoTick: model.resetUndoTick,
                     onKey: { controller.handle($0) }, onPaste: { controller.pasteAttachments() },
+                    onDropFiles: { controller.dropAttachments($0) },
                     onChange: { controller.textChanged() }, contentHeight: $height)
                 if model.text.isEmpty {
                     Text(hint ?? appString("chatComposerHint", "Message — Enter to send, Shift+Enter for a new line"))

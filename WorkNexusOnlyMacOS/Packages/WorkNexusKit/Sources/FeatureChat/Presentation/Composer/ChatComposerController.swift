@@ -186,6 +186,15 @@ final class ChatComposerController {
         return true
     }
 
+    /// Files or a picture dropped on the input: staged as a paste of them is (true); false when there is nothing to stage
+    /// (only folders) or the chat takes nothing.
+    func dropAttachments(_ pasteboard: NSPasteboard) -> Bool {
+        guard CanSendToChat()(state.chat, selfUserId: state.selfUserId, selfAccount: state.selfAccount), !state.isSelecting,
+              let items = PasteboardKit(pasteboard: pasteboard).readAttachments(), !items.isEmpty else { return false }
+        stage(items.map { StagedFile(name: $0.name, data: $0.data, mimeType: ChatStaging.mimeType(forName: $0.name)) })
+        return true
+    }
+
     func pickFiles(imagesOnly: Bool) {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true

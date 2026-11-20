@@ -193,6 +193,7 @@ final class CompositionRoot {
             DemoSeed.applyEnvironment(shell: shell)
             ChatSwitchBench.start(chat: chat)
             PlaceSwitchBench.start(shell: shell, services: services)
+            DragViewsProbe.start()
             return
         }
         await coordinator.purgeAttachmentCache()

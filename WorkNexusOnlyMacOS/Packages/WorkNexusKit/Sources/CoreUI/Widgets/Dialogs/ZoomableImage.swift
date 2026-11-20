@@ -150,7 +150,7 @@ private struct ZoomablePicture: View {
 private struct AnimatedImageView: NSViewRepresentable {
     let image: NSImage
     func makeNSView(context: Context) -> NSImageView {
-        let v = NSImageView()
+        let v = NoDropImageView()
         v.imageScaling = .scaleProportionallyUpOrDown
         v.animates = true
         v.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)

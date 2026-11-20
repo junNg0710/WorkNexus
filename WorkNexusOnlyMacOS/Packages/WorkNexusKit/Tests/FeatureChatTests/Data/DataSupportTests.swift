@@ -124,6 +124,23 @@ final class DataSupportTests: RepositoryTestCase {
         http.uploads.removeAll()
     }
 
+    /// "Cancel sending" on a file still going up: the message goes away and nothing reaches the chat.
+    func testCancellingAnUploadRemovesTheMessageAndSendsNothing() async throws {
+        try await connectAndWait()
+        try await Task.sleep(nanoseconds: 50_000_000)
+        http.holdUploads = true
+        let repo = repo!
+        let sending = Task { await repo.sendFile(accountId: acc, chatGid: "g1", name: "notes.txt", bytes: Data("notes".utf8), mimeType: nil, replyToId: nil) }
+        let pending = try await eventually(repo.watchMessages(accountId: acc, chatGid: "g1")) { $0.contains { $0.isMine && $0.sendState == .pending } }
+        let gid = try XCTUnwrap(pending.first { $0.isMine && $0.sendState == .pending }?.gid)
+        let cancelled = await repo.cancelUpload(accountId: acc, messageGid: gid)
+        XCTAssertNotNil(cancelled.value)
+        let sent = await sending.value
+        XCTAssertNotNil(sent.value)
+        _ = try await eventually(repo.watchMessages(accountId: acc, chatGid: "g1")) { !$0.contains { $0.gid == gid } }
+        XCTAssertTrue(server.requests("messagesend").isEmpty)
+    }
+
     func testRetractSendsDeletedRowAndKeepsReactionEmoji() async throws {
         try await connectAndWait()
         server.current.push(["method": "messagesend", "result": "success", "data": [

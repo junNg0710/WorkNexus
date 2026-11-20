@@ -96,7 +96,7 @@ struct AnimatedImage: NSViewRepresentable {
     var animated: Bool
 
     func makeNSView(context: Context) -> NSImageView {
-        let v = NSImageView()
+        let v = NoDropImageView()
         v.imageScaling = .scaleProportionallyUpOrDown
         v.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         v.setContentCompressionResistancePriority(.defaultLow, for: .vertical)

@@ -9,6 +9,8 @@ enum ComposerKeyEvent { case enter, tab, up, down, escape, toggleMarkdown }
 final class ComposerNSTextView: NSTextView {
     var onKey: ((ComposerKeyEvent) -> Bool)?
     var onPaste: (() -> Bool)?
+    /// Files (or pictures) dropped on the input: staged, as a drop next to it is. Without it they went in as their paths.
+    var onDropFiles: ((NSPasteboard) -> Bool)?
     /// Whether the clipboard holds files or an image (replaced in tests, which must not touch the user's clipboard).
     var clipboardHasAttachments: () -> Bool = { CoreUI.clipboardHasAttachments() }
 
@@ -32,6 +34,37 @@ final class ComposerNSTextView: NSTextView {
         case 7: return flags.contains(.command) && flags.contains(.shift) ? .toggleMarkdown : nil   // X
         default: return nil
         }
+    }
+
+    // MARK: drops
+    //
+    // Unregistering the text view's drag types once (as it used to) did not last: NSTextView registers them again, and
+    // then took a dropped file as text, its path typed into the message. So the input takes drags itself: a file or a
+    // picture is staged; dragged text is inserted as before.
+
+    /// Files or a picture, as a paste would stage them (dragged text with a picture of itself stays text).
+    static func carriesFiles(_ pasteboard: NSPasteboard) -> Bool { PasteboardKit(pasteboard: pasteboard).hasAttachments() }
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        Self.carriesFiles(sender.draggingPasteboard) ? .copy : super.draggingEntered(sender)
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        Self.carriesFiles(sender.draggingPasteboard) ? .copy : super.draggingUpdated(sender)
+    }
+
+    override func prepareForDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        Self.carriesFiles(sender.draggingPasteboard) ? true : super.prepareForDragOperation(sender)
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        guard Self.carriesFiles(sender.draggingPasteboard) else { return super.performDragOperation(sender) }
+        return onDropFiles?(sender.draggingPasteboard) ?? false
+    }
+
+    override func concludeDragOperation(_ sender: NSDraggingInfo?) {
+        if let sender, Self.carriesFiles(sender.draggingPasteboard) { return }
+        super.concludeDragOperation(sender)
     }
 
     /// Attachments on the clipboard are staged; plain text is inserted without its formatting.
@@ -64,6 +97,8 @@ struct ChatComposerTextView: NSViewRepresentable {
     var resetUndoTick: Int
     var onKey: (ComposerKeyEvent) -> Bool
     var onPaste: () -> Bool
+    /// Files or pictures dropped on the input (see `ComposerNSTextView.onDropFiles`).
+    var onDropFiles: (NSPasteboard) -> Bool = { _ in false }
     var onChange: () -> Void
     @Binding var contentHeight: CGFloat
 
@@ -83,8 +118,7 @@ struct ChatComposerTextView: NSViewRepresentable {
         tv.isAutomaticQuoteSubstitutionEnabled = false
         tv.isAutomaticDashSubstitutionEnabled = false
         tv.isAutomaticTextReplacementEnabled = false
-        // Files dropped on the composer are handled by SwiftUI (staged), not pasted as paths.
-        tv.unregisterDraggedTypes()
+        // Files dropped on the input are staged (`ComposerNSTextView.performDragOperation`), not typed in as paths.
         let scroll = NSScrollView()
         scroll.documentView = tv
         scroll.drawsBackground = false
@@ -100,6 +134,7 @@ struct ChatComposerTextView: NSViewRepresentable {
         c.parent = self
         tv.onKey = onKey
         tv.onPaste = onPaste
+        tv.onDropFiles = onDropFiles
         if tv.font != font { tv.font = font }
         tv.textColor = textColor
         if tv.string != model.text, !tv.hasMarkedText() {
