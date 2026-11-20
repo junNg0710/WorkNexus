@@ -13,7 +13,7 @@ enum ZentaoTableColumns {
          TicketTableColumn(id: "pri", label: "\(appString("severity", "Severity")) / \(appString("priority", "Priority"))", width: 110, sortField: .severity) {
              AnyView(ZentaoSeverityPriorityCell(ticket: $0))
          },
-         TicketTableColumn(id: "status", label: appString("status", "Status"), width: 130, sortField: .status) { t in
+         TicketTableColumn(id: "status", label: appString("status", "Status"), width: 160, sortField: .status) { t in
              let (label, color) = ZentaoColumnVisual.bug(zentaoBugColumnFor(t), palette)
              return AnyView(TableStatusCell(label, color))
          },
@@ -38,6 +38,22 @@ enum ZentaoTableColumns {
          TicketTableColumn(id: "hours", label: appString("tableColumnHours", "Left / est."), width: 90, sortField: .left) { AnyView(ZentaoHoursCell(ticket: $0)) },
          TicketTableColumn(id: "due", label: appString("tableColumnDue", "Due"), width: 100, sortField: .deadline) { AnyView(ZentaoDueCell(ticket: $0)) }]
     }
+
+    /// `columns` without those that would be empty on every row (no bug resolved yet, nothing with a deadline, no
+    /// sprint named): their room goes to the titles, which were cut short beside columns of blanks.
+    @MainActor static func withoutEmpty(_ columns: [TicketTableColumn], rows: [Ticket]) -> [TicketTableColumn] {
+        columns.filter { column in
+            guard let filled = optional[column.id] else { return true }
+            return rows.contains(where: filled)
+        }
+    }
+
+    /// The columns that may be left out, with what makes a row fill them.
+    @MainActor private static let optional: [String: (Ticket) -> Bool] = [
+        "resolution": { if case .zentaoBug(let b)? = $0.providerEntity { zentaoResolutionLabel(b.resolution) != nil } else { false } },
+        "due": { ZentaoFormatters.extractDeadline($0) != nil },
+        "sprint": { if case .zentaoTask(let e)? = $0.providerEntity { e.executionName != nil } else { false } },
+    ]
 
     private static func idColumn() -> TicketTableColumn {
         TicketTableColumn(id: "id", label: appString("tableColumnId", "ID"), width: 80, sortField: .id) { AnyView(TableIdCell($0)) }

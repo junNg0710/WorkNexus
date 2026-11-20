@@ -74,6 +74,15 @@ final class RailPaneToggleTests: XCTestCase {
         XCTAssertFalse(s.currentPaneFolded)
     }
 
+    /// The chat's accounts are switched at the top of its own list: no column beside it, however many accounts there are.
+    func testTheChatHasNoPaneOfItsOwn() {
+        let s = shell()
+        s.nav.select(.chat)
+        XCTAssertFalse(ToolPaneHost.isVisible(s))
+        s.nav.select(.workspace)
+        XCTAssertTrue(ToolPaneHost.isVisible(s))
+    }
+
     func testEachPlaceFoldsOnItsOwnAndASectionHasItsOwnPane() {
         let s = shell()
         s.nav.select(.workspace)

@@ -11,14 +11,14 @@ struct ChatListTabs: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: theme.spacing.s6) {
-                    ForEach(ChatListTab.allCases, id: \.self) { tab in
-                        ChatTabChip(label: Self.label(tab), selected: tab == model.tab, unread: model.unread(tab)) { model.tab = tab }
-                    }
-                }
-                .padding(.leading, theme.spacing.s12)
+            // All four tabs show whole: roomy when they fit, tighter when unread badges crowd the row (the last tab used to
+            // be cut off there, with nothing saying the row scrolled). Scrolling is only for a list narrower still.
+            ViewThatFits(in: .horizontal) {
+                ChatTabRow(model: model, compact: false)
+                ChatTabRow(model: model, compact: true)
+                ScrollView(.horizontal, showsIndicators: false) { ChatTabRow(model: model, compact: true) }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             // A hairline keeps the scrolled-under tabs from running into the filter.
             Rectangle().fill(theme.colors.line).frame(width: theme.borders.hairline, height: theme.sizes.icon16)
                 .padding(.horizontal, theme.spacing.s6)
@@ -37,6 +37,22 @@ struct ChatListTabs: View {
     }
 }
 
+/// The four tabs in a row; `compact` draws them closer together.
+private struct ChatTabRow: View {
+    @Environment(\.appTheme) private var theme
+    let model: ChatShellModel
+    let compact: Bool
+
+    var body: some View {
+        HStack(spacing: compact ? theme.spacing.s2 : theme.spacing.s6) {
+            ForEach(ChatListTab.allCases, id: \.self) { tab in
+                ChatTabChip(label: ChatListTabs.label(tab), selected: tab == model.tab, unread: model.unread(tab), compact: compact) { model.tab = tab }
+            }
+        }
+        .padding(.leading, theme.spacing.s12)
+    }
+}
+
 /// A filter chip of the chat's tab rows: tinted when selected, with an unread badge after the label.
 /// Ported from: lib/features/chat/presentation/widgets/chat_tab_chip.dart
 struct ChatTabChip: View {
@@ -46,6 +62,8 @@ struct ChatTabChip: View {
     var unread = 0
     /// An SF Symbol before the label (a category chip's folder).
     var icon: String?
+    /// Less room around the label, for a crowded row.
+    var compact = false
     let onTap: () -> Void
 
     var body: some View {
@@ -59,7 +77,7 @@ struct ChatTabChip: View {
                     .foregroundStyle(selected ? theme.colors.accent : theme.colors.tx2)
                 AppCountBadge(unread)
             }
-            .padding(.horizontal, theme.spacing.s12)
+            .padding(.horizontal, compact ? theme.spacing.s8 : theme.spacing.s12)
         }
         .fixedSize()
     }

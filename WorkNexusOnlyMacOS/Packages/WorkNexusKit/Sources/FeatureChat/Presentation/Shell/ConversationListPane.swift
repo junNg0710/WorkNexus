@@ -11,6 +11,7 @@ struct ConversationListPane: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            ChatAccountSwitchRow(compact: compact)
             HStack(spacing: theme.spacing.s8) {
                 ChatSelfAvatarButton(model: model)
                 AppSearchField(text: Binding(get: { model.searchText }, set: { model.setSearch($0) }),

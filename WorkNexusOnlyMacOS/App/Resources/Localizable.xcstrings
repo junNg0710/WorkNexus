@@ -36296,6 +36296,23 @@
         }
       }
     },
+    "chatSwitchAccount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch chat account"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đổi tài khoản chat"
+          }
+        }
+      }
+    },
     "detailShowLess": {
       "extractionState": "manual",
       "localizations": {

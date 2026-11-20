@@ -9,6 +9,8 @@ import SwiftUI
 struct ZentaoQuickChips: View {
     @Environment(\.appTheme) private var theme
     let state: ZentaoUIState; let bugs: Bool
+    /// False lays the chips out at their own width, for the row shared with the people (`ZentaoLeaderBar`).
+    var scrolls = true
 
     /// Which chips make sense on the board: bugs have no estimate and rarely a deadline to plan the week by.
     private var chips: [ZenTaoQuickFilter] {
@@ -54,7 +56,7 @@ struct ZentaoQuickChips: View {
     var body: some View {
         let leader = state.leader(bugs: bugs)
         let counts = state.quickCounts(bugs: bugs)
-        ScrollView(.horizontal, showsIndicators: false) {
+        LeaderChipRow(scrolls: scrolls, divided: false) {
             HStack(spacing: theme.spacing.s6) {
                 ForEach(chips.filter { (counts[$0] ?? 0) > 0 || leader.quick.contains($0) }, id: \.self) { chip in
                     FilterOptionChip(FilterChipOption(label: Self.label(chip), active: leader.quick.contains(chip),

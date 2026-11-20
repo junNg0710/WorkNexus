@@ -14,7 +14,11 @@ final class ChatShellSmokeTests: XCTestCase {
         let events = ChatShellEvents()
         // `WN_SHELL_WIDTH` renders a wider window (how the thread fills a large screen).
         let width = ProcessInfo.processInfo.environment["WN_SHELL_WIDTH"].flatMap(Double.init).map { CGFloat($0) } ?? 1400
-        let root = ChatRootView(account: account, events: events).chatServices(ChatServices(chat: repo)).frame(width: width, height: 800)
+        // Two accounts to switch between, the other with unread messages: the switch shows at the top of the list.
+        let accounts = ChatAccountChoices(choices: [.init(id: "a", name: "me", unread: 2), .init(id: "b", name: "an.nguyen", unread: 5)],
+                                          currentId: "a", pick: { _ in })
+        let root = ChatRootView(account: account, events: events).chatServices(ChatServices(chat: repo)).chatAccountChoices(accounts)
+            .frame(width: width, height: 800)
         let host = NSHostingView(rootView: root)
         host.frame = NSRect(x: 0, y: 0, width: width, height: 800)
         let window = NSWindow(contentRect: host.frame, styleMask: [.titled], backing: .buffered, defer: false)

@@ -17,7 +17,7 @@ struct ZentaoBugTableView: View {
         } else {
             VStack(spacing: 0) {
                 ZentaoListCaption(text: appFormat("dashboardBugCount", rows.count == 1 ? "%1$@ bug" : "%1$@ bugs", "\(rows.count)"))
-                TicketTable(id: "zentao.bugs", columns: ZentaoTableColumns.bugs(palette: theme.colors), rows: rows,
+                TicketTable(id: "zentao.bugs", columns: ZentaoTableColumns.withoutEmpty(ZentaoTableColumns.bugs(palette: theme.colors), rows: rows), rows: rows,
                             controller: state.bugBoard, sort: state.bugSort,
                             onSort: { state.bugSort = state.bugSort.toggled($0); state.refreshFetchSorts() }) {
                     if let pending = table.pending, let column = ZenTaoBugColumn.allCases.first(where: {
@@ -43,7 +43,7 @@ struct ZentaoTaskTableView: View {
         } else {
             VStack(spacing: 0) {
                 ZentaoListCaption(text: appFormat("dashboardTaskCount", rows.count == 1 ? "%1$@ task" : "%1$@ tasks", "\(rows.count)"))
-                TicketTable(id: "zentao.tasks", columns: ZentaoTableColumns.tasks(palette: theme.colors), rows: rows,
+                TicketTable(id: "zentao.tasks", columns: ZentaoTableColumns.withoutEmpty(ZentaoTableColumns.tasks(palette: theme.colors), rows: rows), rows: rows,
                             controller: state.taskBoard, sort: state.taskSort,
                             onSort: { state.taskSort = state.taskSort.toggled($0); state.refreshFetchSorts() }) {
                     if let pending = table.pending {

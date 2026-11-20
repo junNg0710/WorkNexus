@@ -4,8 +4,8 @@ import CoreUI
 import SwiftUI
 
 /// Ported from: app/shell/tool_pane_host (300pt nav pane) + collapsible_pane.dart. Workspace → its own sections; account →
-/// the tool's pane; chat → the account list (several ZenTao accounts only, the chat view has its own conversation list);
-/// settings → sections.
+/// the tool's pane; settings → sections. Chat has none: its view has its own conversation list, and with several ZenTao
+/// accounts the switch between them sits at the top of that list (the Flutter app gives them this whole column).
 ///
 /// Kept alive per place like the viewport's sections: the last 5 panes stay mounted, so going to Bugs and back to Docs finds
 /// the column as it was left (scroll, filter, open branches). A second click on the place's rail button folds its pane away
@@ -14,10 +14,10 @@ struct ToolPaneHost: View {
     @Environment(\.appTheme) private var theme
     let model: ShellModel
 
-    /// Whether the pane takes any room: a mini app replaces it, a lone chat account has nothing to pick, and a folded one is away.
+    /// Whether the pane takes any room: a mini app replaces it, the chat has none, and a folded one is away.
     static func isVisible(_ model: ShellModel) -> Bool {
         if model.miniAppOnScreen { return false }
-        if model.nav.state.rail == .chat, model.chatAccounts.count <= 1 { return false }
+        if model.nav.state.rail == .chat { return false }
         return !model.currentPaneFolded
     }
 
@@ -40,7 +40,7 @@ struct ToolPaneHost: View {
         switch model.nav.state.rail {
         case .workspace: Place(key: "workspace", view: AnyView(WorkspacePane(model: model)))
         case .settings: Place(key: "settings", view: AnyView(SettingsPane(model: model)))
-        case .chat: Place(key: "chat", view: AnyView(ChatAccountsPane(model: model)))
+        case .chat: Place(key: "chat", view: AnyView(EmptyView()))
         case .account(let id): accountPlace(id)
         }
     }
@@ -84,24 +84,6 @@ private struct SettingsPane: View {
                 ForEach(ShellSections.settings.filter { model.host.settingsSectionVisible($0.id) }, id: \.id) { r in
                     ScopeRow(title: appString(r.key, r.fallback), systemImage: r.icon, selected: model.nav.state.settingsSection == r.id) {
                         model.nav.setSettingsSection(r.id)
-                    }
-                }
-            }.padding(.top, theme.spacing.s8)
-            Spacer()
-        }
-    }
-}
-
-private struct ChatAccountsPane: View {
-    @Environment(\.appTheme) private var theme
-    let model: ShellModel
-    var body: some View {
-        ToolPaneScaffold(title: appString("chat", "Chat")) {
-            VStack(spacing: theme.spacing.s2) {
-                ForEach(model.chatAccounts) { a in
-                    ScopeRow(title: a.handle, systemImage: "bubble.left.and.bubble.right", selected: model.chatAccount?.id == a.id,
-                             trailing: model.host.chatUnread(a.id) > 0 ? "\(model.host.chatUnread(a.id))" : nil) {
-                        model.chatAccountId = a.id
                     }
                 }
             }.padding(.top, theme.spacing.s8)

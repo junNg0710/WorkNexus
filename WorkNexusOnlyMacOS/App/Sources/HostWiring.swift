@@ -27,7 +27,7 @@ struct HostWiring {
         var host = ShellHost()
         host.chatUnread = { r.chat.unread.counts[$0] ?? 0 }
         host.chatTotalUnread = { r.chat.unread.total }
-        host.chatView = { AnyView(ChatRootView(account: $0, events: r.chat.events)) }
+        host.chatView = { AnyView(ChatRootView(account: $0, events: r.chat.events).modifier(ChatAccountsFromShell(root: r))) }
         host.workspacePage = { section in
             switch section {
             case "settings": AnyView(WorkspaceSettingsPage(shell: shell, connections: r.connections))
@@ -179,4 +179,17 @@ struct RootEnvironment: ViewModifier {
 
 extension View {
     func rootEnvironment(_ root: CompositionRoot, theme: AppTheme) -> some View { modifier(RootEnvironment(root: root, theme: theme)) }
+}
+
+/// Tells the chat which accounts it can switch between (several ZenTao accounts each log into their own chat): the
+/// switch sits at the top of the chat list.
+private struct ChatAccountsFromShell: ViewModifier {
+    let root: CompositionRoot
+
+    func body(content: Content) -> some View {
+        let shell = root.shell, accounts = shell.chatAccounts
+        content.chatAccountChoices(accounts.count > 1 ? ChatAccountChoices(
+            choices: accounts.map { .init(id: $0.id, name: $0.handle, unread: root.chat.unread.counts[$0.id] ?? 0) },
+            currentId: shell.chatAccount?.id, pick: { shell.chatAccountId = $0 }) : nil)
+    }
 }

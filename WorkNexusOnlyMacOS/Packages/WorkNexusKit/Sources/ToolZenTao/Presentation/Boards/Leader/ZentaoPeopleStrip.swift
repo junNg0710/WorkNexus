@@ -10,6 +10,9 @@ import SwiftUI
 struct ZentaoPeopleStrip: View {
     @Environment(\.appTheme) private var theme
     let state: ZentaoUIState; let bugs: Bool
+    /// False lays the chips out at their own width, with a divider after them: one part of a row shared with the
+    /// one-click filters (`ZentaoLeaderBar`), which is used only when everything fits.
+    var scrolls = true
 
     var body: some View {
         let leader = state.leader(bugs: bugs)
@@ -25,10 +28,10 @@ struct ZentaoPeopleStrip: View {
             HStack(spacing: theme.spacing.s6) {
                 ForEach(0..<6, id: \.self) { i in SkeletonBox(width: [72, 132, 118, 150, 104, 126][i], height: theme.sizes.control32 - theme.spacing.s4, radius: theme.radii.pill) }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: scrolls ? .infinity : nil, alignment: .leading)
         } else if rows.count > 1 || !leader.people.isEmpty {
             let total = rows.reduce(0) { $0 + $1.open }
-            ScrollView(.horizontal, showsIndicators: false) {
+            LeaderChipRow(scrolls: scrolls, divided: true) {
                 HStack(spacing: theme.spacing.s6) {
                     PersonChipBody(name: appString("leaderEveryone", "Everyone"), count: total, overdue: 0, accountId: nil, login: "",
                                    active: leader.people.isEmpty,

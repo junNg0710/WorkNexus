@@ -69,7 +69,7 @@ private struct ZentaoModuleHeader: View {
             ScopeGroupHeader(title: appString("zentaoModulesGroup", "Modules"))
             if reloading {
                 ProgressView().controlSize(.small).frame(width: theme.sizes.icon24, height: theme.sizes.icon24)
-            } else {
+            } else if canAdd {
                 ZentaoModuleHeaderButton(systemImage: "arrow.clockwise", help: appString("zentaoReloadModules", "Read the modules again"),
                                          action: onReload)
             }

@@ -43,8 +43,16 @@ public struct ZentaoBugSections: View {
         if hasExplicitPriority(ticket) { v[appString("priority", "Priority")] = AnyView(PriorityTag(ticket.providerType, ticket.priority)) }
         // A bug that keeps coming back is worth noticing.
         v[appString("fieldReopened", "Reopened")] = AnyView(ZentaoReopenedText(count: reopened))
+        if let product = zentaoLinkId(bug.product) {
+            // The bug often carries only its product's id; the products the app already listed name it.
+            let known = state.products[ticket.accountId]?.value?.first { $0.id == product }?.name
+            v[appString("fieldProduct", "Product")] = AnyView(ZentaoDetailValueText(text: zentaoNameOr(bug.productName ?? known, product)))
+        }
         if let module = zentaoLinkId(bug.module), let product = zentaoLinkId(bug.product) {
-            v[appString("fieldModule", "Module")] = AnyView(ZentaoBugModuleName(deps: deps, accountId: ticket.accountId, productId: product, moduleId: module))
+            // The side panel's module list, when it is this product's, names the module at once (and without the network).
+            let listed = state.moduleNames["b:\(ticket.accountId):\(product)"]?.value?.first { $0.id == module }?.path
+            v[appString("fieldModule", "Module")] = AnyView(ZentaoBugModuleName(deps: deps, accountId: ticket.accountId, productId: product,
+                                                                              moduleId: module, known: listed))
         }
         if let id = zentaoLinkId(bug.execution) {
             let e = ProviderExecution(id: id, name: zentaoNameOr(bug.executionName, id), projectId: zentaoLinkId(bug.project) ?? "0", accountId: ticket.accountId)
@@ -70,15 +78,26 @@ private struct ZentaoReopenedText: View {
     }
 }
 
+/// A plain value of the fields card, drawn as its own rows are.
+struct ZentaoDetailValueText: View {
+    @Environment(\.appTheme) private var theme
+    let text: String
+    var body: some View {
+        Text(text).font(theme.typography.paragraph).foregroundStyle(theme.colors.tx).multilineTextAlignment(.trailing)
+    }
+}
+
 /// A bug's module by its path ("Livestream/Share"). ZenTao gives the bug only the module id, so the id shows until the
 /// product's module names load, and stays when they cannot.
 struct ZentaoBugModuleName: View {
     @Environment(\.appTheme) private var theme
     let deps: ZentaoDependencies; let accountId: String; let productId: String; let moduleId: String
+    /// Its path when the caller already has it.
+    var known: String?
     @State private var names: [String: String] = [:]
 
     var body: some View {
-        Text(names[moduleId] ?? moduleId).font(theme.typography.paragraph).foregroundStyle(theme.colors.tx).multilineTextAlignment(.trailing)
+        Text(names[moduleId] ?? known ?? moduleId).font(theme.typography.paragraph).foregroundStyle(theme.colors.tx).multilineTextAlignment(.trailing)
             .task(id: "\(accountId):\(productId)") { names = await ZentaoModuleNames.bugModules(deps, accountId: accountId, productId: productId) }
     }
 }

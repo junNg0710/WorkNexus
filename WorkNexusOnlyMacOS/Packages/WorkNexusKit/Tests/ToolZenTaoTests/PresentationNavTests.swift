@@ -198,6 +198,22 @@ final class PresentationNavTests: XCTestCase {
 
     // MARK: Render
 
+    /// The module tree with its heading's buttons, and the line a new module is typed on.
+    func testTheModuleTreeRendersWithItsAddRow() throws {
+        let env = BoardsEnv(section: ZentaoSection.tasks)
+        env.state.openExecution(env.execution("e1"))
+        env.state.moduleNames["t:zt1:e1"] = .loaded([ZentaoModulePath(id: "3", path: "Chat"), ZentaoModulePath(id: "4", path: "Chat/Share"),
+                                                     ZentaoModulePath(id: "5", path: "Speech To Text")])
+        let tree = VStack(alignment: .leading, spacing: 0) {
+            ZentaoModuleTreeSection(state: env.state, bugs: false)
+            ZentaoModuleAddRow(state: env.state, bugs: false, parentId: nil, depth: 0) {}
+            ZentaoModuleAddRow(state: env.state, bugs: false, parentId: "3", depth: 1) {}
+        }
+        .padding(8).frame(maxHeight: .infinity, alignment: .top)
+        try render("module-tree", tree, size: CGSize(width: 300, height: 380))
+        try render("module-tree-dark", tree, size: CGSize(width: 300, height: 380), dark: true)
+    }
+
     private let outDir = URL(fileURLWithPath: "/tmp/wn-zt-nav-render")
 
     private func render<V: View>(_ name: String, _ view: V, size: CGSize, dark: Bool = false) throws {
