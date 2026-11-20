@@ -5,6 +5,8 @@ import SwiftUI
 
 /// Ported from: lib/shared/detail/presentation/widgets/{timeline_item,timeline_headline,comment_tile}.dart
 public let kTimelineGutter: CGFloat = 24
+/// How tall a comment or note shows before "Show more" (about five lines of body text).
+let kNoteCollapsedHeight: CGFloat = 112
 
 /// One entry of the timeline: a marker in the gutter, a vertical rail joining neighbours, and the content.
 public struct TimelineItem<Marker: View, Content: View>: View {
@@ -118,7 +120,7 @@ public struct CommentTile: View {
         TimelineItem(isFirst: isFirst, isLast: isLast) { TimelineAvatar(name: comment.authorName) } content: {
             VStack(alignment: .leading, spacing: theme.spacing.s6) {
                 TimelineHeadline(actor: comment.authorName, action: appString("commentedAction", "commented"), at: comment.createdAt, dateFormat: dateFormat)
-                NoteCard { RichBodyText(comment.body, html: html, height: 1.55, images: images) }
+                NoteCard { CollapsibleBlock(collapsedHeight: kNoteCollapsedHeight) { RichBodyText(comment.body, html: html, height: 1.55, images: images) } }
             }
         }
     }
@@ -150,7 +152,12 @@ public struct ActivityRow: View {
             VStack(alignment: .leading, spacing: theme.spacing.s6) {
                 TimelineHeadline(actor: event.actor, action: event.action, at: event.at, compact: true, dateFormat: dateFormat)
                 if !note.isEmpty {
-                    NoteCard { Text(note).font(theme.typography.body).foregroundStyle(theme.colors.tx).lineSpacing(4).textSelection(.enabled) }
+                    NoteCard {
+                        CollapsibleBlock(collapsedHeight: kNoteCollapsedHeight) {
+                            Text(note).font(theme.typography.body).foregroundStyle(theme.colors.tx).lineSpacing(4).textSelection(.enabled)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
                 }
                 if !event.attachments.isEmpty {
                     FlowLayout(spacing: theme.spacing.s4) {

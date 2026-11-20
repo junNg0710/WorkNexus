@@ -163,4 +163,18 @@ final class RenderSmokeTests: XCTestCase {
                                AnyView(SidebarStatusRow(label: "Loading…", loading: true)), AnyView(SidebarStatusRow(label: "Failed", isError: true) {})]
         try render("shell-pane", ScopeListBody(quickScopeRows: [rows[0]], pinnedRows: [rows[1]], allRows: Array(rows[2...])).frame(width: 300), size: CGSize(width: 300, height: 360))
     }
+
+    /// A long note folds to a few lines with "Show more"; a short one shows whole.
+    func testLongNotesFoldWithShowMore() throws {
+        let long = (1...12).map { "Line \($0): help process the problem, jump position → lib/features/wallet/red_packet/im/presentation/detail/page/transfer_detail_page.dart 543" }
+            .joined(separator: "\n")
+        let at = Date(timeIntervalSince1970: 1_790_000_000)
+        let view = VStack(alignment: .leading, spacing: 0) {
+            ActivityRow(ActivityEvent(id: "1", ticketId: "t", actor: "Dante-HK-Flutter", action: "assigned to Long-VN-Flutter", at: at, detail: long), isFirst: true)
+            ActivityRow(ActivityEvent(id: "2", ticketId: "t", actor: "Domi-HK-Test", action: "activated", at: at, detail: "2026.10.1 15:00 New package testing still has issues"))
+            CommentTile(Comment(id: "c", ticketId: "t", authorName: "Ryan", body: long, createdAt: at), isLast: true)
+        }
+        .padding(20)
+        try render("timeline-long-notes", view, size: CGSize(width: 620, height: 640))
+    }
 }

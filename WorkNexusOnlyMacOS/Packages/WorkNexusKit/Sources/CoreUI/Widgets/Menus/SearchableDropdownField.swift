@@ -11,6 +11,8 @@ public struct SearchableDropdownField<T: Hashable>: View {
     @State private var query = ""
     @State private var highlighted = 0
     @State private var fieldWidth: CGFloat = 260
+    /// One option row as drawn, measured: the list's height is worked out from it.
+    @State private var rowHeight: CGFloat = 30
     let items: [T]; let value: T?; let onChanged: (T) -> Void; let labelOf: (T) -> String
     let searchTextOf: ((T) -> String)?
     let hintText: String; let searchHint: String; let emptyLabel: String
@@ -60,6 +62,12 @@ public struct SearchableDropdownField<T: Hashable>: View {
 
     private func pick(_ item: T) { open = false; onChanged(item) }
 
+    /// The list keeps the height of every item (up to `maxListHeight`) while a search narrows it: the popover would
+    /// otherwise shrink to the matches and stay small once the search is cleared.
+    private var listHeight: CGFloat {
+        min(maxListHeight, CGFloat(max(items.count, 1)) * rowHeight + theme.spacing.s4 * 2)
+    }
+
     private var popover: some View {
         let list = filtered
         return VStack(spacing: 0) {
@@ -70,6 +78,7 @@ public struct SearchableDropdownField<T: Hashable>: View {
             Divider().overlay(theme.colors.line)
             if list.isEmpty {
                 Text(emptyLabel).font(theme.typography.body).foregroundStyle(theme.colors.tx3).padding(theme.spacing.s16)
+                    .frame(maxWidth: .infinity, minHeight: listHeight, alignment: .top)
             } else {
                 ScrollViewReader { proxy in
                     ScrollView {
@@ -78,10 +87,13 @@ public struct SearchableDropdownField<T: Hashable>: View {
                                 DropdownOptionRow(label: labelOf(item), image: imageOf?(item), selected: item == value,
                                                   highlighted: i == highlighted, lines: labelMaxLines) { pick(item) }
                                     .id(i)
+                                    .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { h in
+                                        if i == 0, h > 0, abs(h - rowHeight) >= 1 { rowHeight = h }
+                                    }
                             }
                         }.padding(theme.spacing.s4)
                     }
-                    .frame(maxHeight: maxListHeight)
+                    .frame(height: listHeight)
                     .onChange(of: highlighted) { _, new in proxy.scrollTo(new) }
                 }
             }
