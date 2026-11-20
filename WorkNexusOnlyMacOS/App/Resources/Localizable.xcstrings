@@ -37043,6 +37043,159 @@
           }
         }
       }
+    },
+    "zentaoAddModule": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a module"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm module"
+          }
+        }
+      }
+    },
+    "zentaoAddModuleInside": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a module inside…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm module con…"
+          }
+        }
+      }
+    },
+    "zentaoModuleAddHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return adds it to ZenTao, Esc cancels"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter để thêm vào ZenTao, Esc để huỷ"
+          }
+        }
+      }
+    },
+    "zentaoModuleExists": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A module with this name is already there"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã có module trùng tên"
+          }
+        }
+      }
+    },
+    "zentaoModuleNameEmpty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A module needs a name"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Module cần có tên"
+          }
+        }
+      }
+    },
+    "zentaoModuleNameHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Module name"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tên module"
+          }
+        }
+      }
+    },
+    "zentaoModuleNameSlash": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A module name cannot contain a slash"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tên module không được chứa dấu /"
+          }
+        }
+      }
+    },
+    "zentaoModuleNameTooLong": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A module name can be %1$@ characters at most"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tên module tối đa %1$@ ký tự"
+          }
+        }
+      }
+    },
+    "zentaoReloadModules": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the modules again"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tải lại danh sách module"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

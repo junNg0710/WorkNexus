@@ -74,6 +74,8 @@ public final class ZentaoUIState {
     public internal(set) var executions: [String: ZentaoLoad<[ProviderExecution]>] = [:]
     /// Module id + path in ZenTao's order, per `b:account:product` / `t:account:execution`.
     public internal(set) var moduleNames: [String: ZentaoLoad<[ZentaoModulePath]>] = [:]
+    /// The module lists (by the same keys) being read again while the old one stays on screen.
+    var reloadingModules: Set<String> = []
     /// The people of each board's product / execution or team (the facet catalog's choices, the people strip), kept apart:
     /// the Bugs board, mounted behind Tasks, must not swap its product's people into the team Tasks shows.
     var taskMembers: [ProviderUser] = []

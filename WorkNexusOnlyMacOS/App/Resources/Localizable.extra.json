@@ -2150,5 +2150,41 @@
   "tipSelectModeDone": {
     "en": "Stop picking and drop the selection (Esc)",
     "vi": "Thoát chế độ chọn và bỏ chọn (Esc)"
+  },
+  "zentaoAddModule": {
+    "en": "Add a module",
+    "vi": "Thêm module"
+  },
+  "zentaoAddModuleInside": {
+    "en": "Add a module inside…",
+    "vi": "Thêm module con…"
+  },
+  "zentaoModuleAddHint": {
+    "en": "Return adds it to ZenTao, Esc cancels",
+    "vi": "Enter để thêm vào ZenTao, Esc để huỷ"
+  },
+  "zentaoModuleExists": {
+    "en": "A module with this name is already there",
+    "vi": "Đã có module trùng tên"
+  },
+  "zentaoModuleNameEmpty": {
+    "en": "A module needs a name",
+    "vi": "Module cần có tên"
+  },
+  "zentaoModuleNameHint": {
+    "en": "Module name",
+    "vi": "Tên module"
+  },
+  "zentaoModuleNameSlash": {
+    "en": "A module name cannot contain a slash",
+    "vi": "Tên module không được chứa dấu /"
+  },
+  "zentaoModuleNameTooLong": {
+    "en": "A module name can be %1$@ characters at most",
+    "vi": "Tên module tối đa %1$@ ký tự"
+  },
+  "zentaoReloadModules": {
+    "en": "Read the modules again",
+    "vi": "Tải lại danh sách module"
   }
 }

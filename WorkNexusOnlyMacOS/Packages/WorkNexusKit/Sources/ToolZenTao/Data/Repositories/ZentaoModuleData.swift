@@ -23,6 +23,7 @@ import Foundation
 ///   close, task actions with `ZenTaoTaskActionInput`; needs a `ZenTaoOptimisticRunner` from the sync layer).
 /// - `ZenTaoTicketEditor` <- `ZenTaoTicketEditorService(clients:tickets:)` (bug / task forms, options, save, image upload).
 /// - `ZenTaoTeamMembers` <- `ClassicZenTaoTeamMembers(clients:)`.
+/// - `ZenTaoModuleEditor` <- `ClassicZenTaoModuleEditor(clients:)` (adds a module to a board's tree).
 /// - `ZenTaoTodos` <- `ZenTaoTodoService(clients:)` (a personal todo, e.g. made from a chat message).
 /// - `ZenTaoTicketService` / `ZenTaoViewPages` / `ZenTaoTaskBugs` <- `ZenTaoTicketServiceImpl(accounts:adapters:tickets:cache:)`.
 /// - `ZenTaoProfileRepository` <- `GRDBZenTaoProfileRepository`; `ZenTaoDocRepository` <- `GRDBZenTaoDocRepository`;
@@ -57,6 +58,7 @@ public struct ZentaoModuleData: Sendable {
         public let recentAssignees: ZenTaoRecentAssigneesStore
         public let departmentTeams: ZenTaoDepartmentTeamSource
         public let pinnedTeams: ZenTaoPinnedTeamsStore
+        public let modules: ZenTaoModuleEditor
     }
 
     /// Wires the Data layer over `db` and the core services. `runner` is the sync layer's optimistic-action runner
@@ -89,7 +91,8 @@ public struct ZentaoModuleData: Sendable {
             boardScopes: UserDefaultsZenTaoBoardScopes(),
             recentAssignees: UserDefaultsZenTaoRecentAssignees(),
             departmentTeams: RestZenTaoDepartmentTeams(clients: pool),
-            pinnedTeams: UserDefaultsZenTaoPinnedTeams())
+            pinnedTeams: UserDefaultsZenTaoPinnedTeams(),
+            modules: ClassicZenTaoModuleEditor(clients: pool))
     }
 
     /// The document export use case with the real HTML-to-Markdown converter.

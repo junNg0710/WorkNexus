@@ -40,6 +40,8 @@ struct ZentaoBoardToolbar: View {
             BoardRefreshButton(loading: state.team(bugs: bugs)?.isLoading ?? (bugs ? state.bugSlice.isLoading : state.taskSlice.isLoading)) {
                 if state.team(bugs: bugs) != nil { state.loadTeam(bugs: bugs, only: nil) }
                 else if bugs { state.reopenBugStreams() } else { state.reopenTaskStreams() }
+                // Modules made on ZenTao's site since the list was read come in with the same refresh.
+                state.reloadModuleNames(bugs: bugs)
             }
         } below: {
             VStack(alignment: .leading, spacing: 0) {

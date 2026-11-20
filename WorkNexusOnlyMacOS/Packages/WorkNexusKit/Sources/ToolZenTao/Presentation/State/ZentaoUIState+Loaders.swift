@@ -53,7 +53,7 @@ extension ZentaoUIState {
 
     // MARK: Module names
 
-    private func moduleKey(_ bugs: Bool) -> (key: String, accountId: String, id: String)? {
+    func moduleKey(_ bugs: Bool) -> (key: String, accountId: String, id: String)? {
         if bugs, let p = product { return ("b:\(p.accountId):\(p.productId)", p.accountId, p.productId) }
         if !bugs, let e = execution { return ("t:\(e.accountId):\(e.executionId)", e.accountId, e.executionId) }
         return nil

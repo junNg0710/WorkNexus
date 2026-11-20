@@ -65,7 +65,8 @@ struct BoardsEnv {
 
     init(section: SectionID = ZentaoSection.bugs, tickets: [Ticket] = [], members: [ProviderUser] = [],
          teamGroups: ZenTaoTeamGroupRepository = NoTeamGroups(), boardScopes: ZenTaoBoardScopeStore = BoardsEnv.onTheirScope(),
-         departmentTeams: ZenTaoDepartmentTeamSource = NoDepartmentTeams(), pinnedTeams: ZenTaoPinnedTeamsStore = InMemoryPinnedTeams()) {
+         departmentTeams: ZenTaoDepartmentTeamSource = NoDepartmentTeams(), pinnedTeams: ZenTaoPinnedTeamsStore = InMemoryPinnedTeams(),
+         moduleEditor: ZenTaoModuleEditor = NoZenTaoModuleEditor()) {
         let store = self.store, pages = self.pages, adapter = self.adapter
         store.accounts["zt1"] = Account(id: "zt1", workspaceId: "w1", providerType: .zentao, handle: "thanh", baseUrl: "https://zentao.example.com")
         for t in tickets { store.tickets[t.id] = t }
@@ -80,7 +81,7 @@ struct BoardsEnv {
         deps = ZentaoDependencies(services: services, nav: nav, registry: { ToolRegistry() }, tickets: pages, viewPages: pages, taskBugs: pages,
                                   editor: DetailFakeEditor(), teamMembers: DetailFakeTeam(members: members), workflow: workflow, docs: docs,
                                   exportDoc: ExportZenTaoDoc(docs), teamGroups: teamGroups, boardScopes: boardScopes,
-                                  departmentTeams: departmentTeams, pinnedTeams: pinnedTeams)
+                                  departmentTeams: departmentTeams, pinnedTeams: pinnedTeams, moduleEditor: moduleEditor)
         state = ZentaoUIState(deps: deps)
         state.start()
     }
