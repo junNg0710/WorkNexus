@@ -36823,6 +36823,40 @@
         }
       }
     },
+    "leaderFewerPeople": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show fewer"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thu gọn"
+          }
+        }
+      }
+    },
+    "leaderMorePeople": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%1$@ more"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%1$@ người nữa"
+          }
+        }
+      }
+    },
     "leaderOnlyMe": {
       "extractionState": "manual",
       "localizations": {
@@ -36989,6 +37023,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bỏ chọn tất cả mục này"
+          }
+        }
+      }
+    },
+    "tipMorePeople": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show everyone on the board"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện tất cả mọi người trên board"
           }
         }
       }

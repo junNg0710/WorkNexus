@@ -7,12 +7,26 @@ import SwiftUI
 
 /// One chip per person on the board with what they hold (open tickets, a red dot when something is overdue); click to
 /// see only their work, ⌘-click to add or remove people. "Everyone" clears the pick.
+///
+/// The chips wrap onto more rows instead of running off the side (the last one used to be cut, with nothing saying the
+/// row scrolled). A big team shows its first `collapsedCount` people and "+N more", so the board keeps its height.
 struct ZentaoPeopleStrip: View {
     @Environment(\.appTheme) private var theme
     let state: ZentaoUIState; let bugs: Bool
     /// False lays the chips out at their own width, with a divider after them: one part of a row shared with the
     /// one-click filters (`ZentaoLeaderBar`), which is used only when everything fits.
     var scrolls = true
+    /// Everyone is listed, not only the first `collapsedCount`.
+    @State private var expanded = false
+
+    /// How many people a big team shows before "+N more": about two rows of chips.
+    static let collapsedCount = 12
+
+    /// The people shown while collapsed: the first `limit`, and whoever is picked beyond them (a pick must stay in sight).
+    static func collapsed(_ rows: [ZenTaoWorkload], picked: Set<String>, limit: Int = collapsedCount) -> [ZenTaoWorkload] {
+        guard rows.count > limit + 1 else { return rows }
+        return Array(rows.prefix(limit)) + rows.dropFirst(limit).filter { picked.contains($0.login) }
+    }
 
     var body: some View {
         let leader = state.leader(bugs: bugs)
@@ -31,26 +45,31 @@ struct ZentaoPeopleStrip: View {
             .frame(maxWidth: scrolls ? .infinity : nil, alignment: .leading)
         } else if rows.count > 1 || !leader.people.isEmpty {
             let total = rows.reduce(0) { $0 + $1.open }
-            LeaderChipRow(scrolls: scrolls, divided: true) {
-                HStack(spacing: theme.spacing.s6) {
-                    PersonChipBody(name: appString("leaderEveryone", "Everyone"), count: total, overdue: 0, accountId: nil, login: "",
-                                   active: leader.people.isEmpty,
-                                   help: appString("tipEveryone", "Show everyone's tickets. The number is how many are still open")) {
-                        state.updateLeader(bugs: bugs) { $0.people = [] }
-                    }
-                    ForEach(rows) { row in
-                        PersonChipBody(name: row.isUnassigned ? appString("unassigned", "Unassigned") : (state.memberNames[row.login] ?? row.login),
-                                       count: row.open, overdue: row.overdue, accountId: state.place.accountId, login: row.login,
-                                       active: leader.people.contains(row.login), pinned: pinned.contains(row.login),
-                                       help: Self.help(row, bugs: bugs)) {
-                            let add = NSEvent.modifierFlags.contains(.command)
-                            state.updateLeader(bugs: bugs) { f in
-                                if add { f = f.toggled(person: row.login) }
-                                else { f.people = f.people == [row.login] ? [] : [row.login] }
-                            }
+            let shown = expanded ? rows : Self.collapsed(rows, picked: Set(leader.people))
+            LeaderChipRow(wraps: scrolls, divided: true) {
+                PersonChipBody(name: appString("leaderEveryone", "Everyone"), count: total, overdue: 0, accountId: nil, login: "",
+                               active: leader.people.isEmpty,
+                               help: appString("tipEveryone", "Show everyone's tickets. The number is how many are still open")) {
+                    state.updateLeader(bugs: bugs) { $0.people = [] }
+                }
+                ForEach(shown) { row in
+                    PersonChipBody(name: row.isUnassigned ? appString("unassigned", "Unassigned") : (state.memberNames[row.login] ?? row.login),
+                                   count: row.open, overdue: row.overdue, accountId: state.place.accountId, login: row.login,
+                                   active: leader.people.contains(row.login), pinned: pinned.contains(row.login),
+                                   help: Self.help(row, bugs: bugs)) {
+                        let add = NSEvent.modifierFlags.contains(.command)
+                        state.updateLeader(bugs: bugs) { f in
+                            if add { f = f.toggled(person: row.login) }
+                            else { f.people = f.people == [row.login] ? [] : [row.login] }
                         }
-                        .modifier(PersonChipArranging(state: state, login: row.login, pinned: pinned.contains(row.login), bugs: bugs))
                     }
+                    .modifier(PersonChipArranging(state: state, login: row.login, pinned: pinned.contains(row.login), bugs: bugs))
+                }
+                if shown.count < rows.count {
+                    MorePeopleChip(label: appFormat("leaderMorePeople", "+%1$@ more", "\(rows.count - shown.count)"),
+                                   help: appString("tipMorePeople", "Show everyone on the board")) { expanded = true }
+                } else if expanded, rows.count > Self.collapsedCount + 1 {
+                    MorePeopleChip(label: appString("leaderFewerPeople", "Show fewer"), help: nil) { expanded = false }
                 }
             }
         }
@@ -63,6 +82,22 @@ struct ZentaoPeopleStrip: View {
         if !bugs, row.hoursLeft > 0 { parts.append(appFormat("taskHoursLeft", "%1$@ h left", zentaoHoursText(row.hoursLeft))) }
         if !row.isUnassigned { parts.append(appString("tipPersonArrange", "Drag onto another person to move them; right-click to pin")) }
         return parts.joined(separator: " · ")
+    }
+}
+
+/// "+8 more" / "Show fewer" at the end of a big team's chips.
+private struct MorePeopleChip: View {
+    @Environment(\.appTheme) private var theme
+    let label: String; let help: String?; let onTap: () -> Void
+
+    var body: some View {
+        let height = theme.sizes.control32 - theme.spacing.s4
+        HoverSurface(onTap: onTap, height: height, cornerRadius: height / 2) {
+            Text(label).font(theme.typography.metaStrong).foregroundStyle(theme.colors.accent).lineLimit(1)
+                .padding(.horizontal, theme.spacing.s10)
+        }
+        .fixedSize()
+        .help(help ?? "")
     }
 }
 

@@ -2099,6 +2099,14 @@
     "en": "%1$@ tickets",
     "vi": "%1$@ ticket"
   },
+  "leaderFewerPeople": {
+    "en": "Show fewer",
+    "vi": "Thu gọn"
+  },
+  "leaderMorePeople": {
+    "en": "+%1$@ more",
+    "vi": "+%1$@ người nữa"
+  },
   "leaderOnlyMe": {
     "en": "Only me",
     "vi": "Chỉ mình tôi"
@@ -2138,6 +2146,10 @@
   "tipDeselectAll": {
     "en": "Drop all of these from the selection",
     "vi": "Bỏ chọn tất cả mục này"
+  },
+  "tipMorePeople": {
+    "en": "Show everyone on the board",
+    "vi": "Hiện tất cả mọi người trên board"
   },
   "tipQuickAssign": {
     "en": "Give every selected ticket to a pinned or recent person, or pick someone else",

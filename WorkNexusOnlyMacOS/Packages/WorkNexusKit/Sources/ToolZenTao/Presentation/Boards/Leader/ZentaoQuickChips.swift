@@ -56,20 +56,18 @@ struct ZentaoQuickChips: View {
     var body: some View {
         let leader = state.leader(bugs: bugs)
         let counts = state.quickCounts(bugs: bugs)
-        LeaderChipRow(scrolls: scrolls, divided: false) {
-            HStack(spacing: theme.spacing.s6) {
-                ForEach(chips.filter { (counts[$0] ?? 0) > 0 || leader.quick.contains($0) }, id: \.self) { chip in
-                    FilterOptionChip(FilterChipOption(label: Self.label(chip), active: leader.quick.contains(chip),
-                                                      onTap: { state.updateLeader(bugs: bugs) { $0 = $0.toggled(chip) } },
-                                                      dotColor: dot(chip), count: counts[chip] ?? 0,
-                                                      help: Self.help(chip) + " " + appString("tipChipSuffix", "The number is how many it would keep; click again to turn it off.")))
+        LeaderChipRow(wraps: scrolls, divided: false) {
+            ForEach(chips.filter { (counts[$0] ?? 0) > 0 || leader.quick.contains($0) }, id: \.self) { chip in
+                FilterOptionChip(FilterChipOption(label: Self.label(chip), active: leader.quick.contains(chip),
+                                                  onTap: { state.updateLeader(bugs: bugs) { $0 = $0.toggled(chip) } },
+                                                  dotColor: dot(chip), count: counts[chip] ?? 0,
+                                                  help: Self.help(chip) + " " + appString("tipChipSuffix", "The number is how many it would keep; click again to turn it off.")))
+            }
+            if leader.isActive {
+                AppButton(appString("clearAllFilters", "Clear all filters"), kind: .ghost) {
+                    state.setLeader(ZenTaoLeaderFilter(), bugs: bugs)
                 }
-                if leader.isActive {
-                    AppButton(appString("clearAllFilters", "Clear all filters"), kind: .ghost) {
-                        state.setLeader(ZenTaoLeaderFilter(), bugs: bugs)
-                    }
-                    .help(appString("tipClearLeader", "Turn off the picked people, the chips and the typed filter"))
-                }
+                .help(appString("tipClearLeader", "Turn off the picked people, the chips and the typed filter"))
             }
         }
     }

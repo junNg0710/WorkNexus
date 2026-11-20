@@ -74,6 +74,28 @@ final class ZentaoLeaderRenderTests: XCTestCase {
         ZentaoModule(env.deps, state: env.state).buildSection(account: env.store.accounts["zt1"]!, location: env.nav.location(for: "zt1"))
     }
 
+    /// A big team: the chips wrap onto more rows, and past `collapsedCount` people the rest wait behind "+N more".
+    func testABigTeamWrapsAndFoldsItsPeople() async throws {
+        let people = (1...18).map { ProviderUser(account: "dev\($0)", displayName: "Dev\($0)-VN-Flutter") }
+        let all = people.enumerated().map { i, p in task("\(i + 1)", "doing", who: p.account, due: i % 3 == 0 ? -1 : 3) }
+        let env = BoardsEnv(section: ZentaoSection.tasks, tickets: all, members: people)
+        env.pages.script = ["doing": all]
+        env.state.openExecution(env.execution("e1", "Sprint 12"))
+        await env.wait { env.state.taskBoard.scoped.count == all.count }
+        env.state.loadBoardMembers(bugs: false)
+        await env.wait { env.state.boardMembers(bugs: false).count == 18 }
+        try await render("big-team", section(env), size: CGSize(width: 1000, height: 560))
+
+        let rows = env.state.workload(bugs: false)
+        XCTAssertEqual(rows.count, 18)
+        XCTAssertEqual(ZentaoPeopleStrip.collapsed(rows, picked: []).count, ZentaoPeopleStrip.collapsedCount)
+        // Someone picked beyond the fold stays in sight.
+        let last = rows[17].login
+        XCTAssertEqual(ZentaoPeopleStrip.collapsed(rows, picked: [last]).map(\.login).last, last)
+        // One person over the limit is shown rather than hidden behind "+1 more".
+        XCTAssertEqual(ZentaoPeopleStrip.collapsed(Array(rows.prefix(13)), picked: []).count, 13)
+    }
+
     func testLeaderBarOnTheTaskBoard() async throws {
         let env = await env()
         try await render("tasks", section(env), size: CGSize(width: 1500, height: 640))

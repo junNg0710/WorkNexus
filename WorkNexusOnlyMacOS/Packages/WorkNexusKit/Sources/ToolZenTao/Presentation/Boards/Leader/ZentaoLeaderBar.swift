@@ -17,7 +17,7 @@ struct ZentaoLeaderBar: View {
 
     var body: some View {
         // One row when the people, the one-click filters and the keyword fit side by side - the usual case, and a row of
-        // the board's height won back; two rows (each scrolling sideways) for a big team or a narrow window.
+        // the board's height won back. Otherwise the people take rows of their own, wrapping, over the filters.
         ViewThatFits(in: .horizontal) {
             HStack(spacing: theme.spacing.s8) {
                 ZentaoPeopleStrip(state: state, bugs: bugs, scrolls: false)
@@ -27,9 +27,8 @@ struct ZentaoLeaderBar: View {
             }
             VStack(alignment: .leading, spacing: theme.spacing.s6) {
                 ZentaoPeopleStrip(state: state, bugs: bugs)
-                HStack(spacing: theme.spacing.s8) {
-                    ZentaoQuickChips(state: state, bugs: bugs)
-                    Spacer(minLength: 0)
+                HStack(alignment: .top, spacing: theme.spacing.s8) {
+                    ZentaoQuickChips(state: state, bugs: bugs).frame(maxWidth: .infinity, alignment: .leading)
                     ZentaoLeaderTrailing(state: state, bugs: bugs, keyword: keyword)
                 }
             }
@@ -56,20 +55,20 @@ private struct ZentaoLeaderTrailing: View {
     }
 }
 
-/// A row of chips: scrolling sideways in a row of its own, or at its own width (with a divider after it when `divided`)
-/// as part of a shared row.
+/// A run of chips: wrapping onto as many rows as it needs when it has a row of its own (`wraps`), or on one line at its
+/// own width (with a divider after it when `divided`) as part of a shared row.
 struct LeaderChipRow<Content: View>: View {
     @Environment(\.appTheme) private var theme
-    let scrolls: Bool
+    let wraps: Bool
     let divided: Bool
     @ViewBuilder let content: Content
 
     var body: some View {
-        if scrolls {
-            ScrollView(.horizontal, showsIndicators: false) { content }
+        if wraps {
+            FlowLayout(spacing: theme.spacing.s6) { content }
         } else {
             HStack(spacing: theme.spacing.s8) {
-                content
+                HStack(spacing: theme.spacing.s6) { content }
                 if divided { Rectangle().fill(theme.colors.line).frame(width: theme.borders.hairline, height: theme.sizes.icon16) }
             }
             .fixedSize()
