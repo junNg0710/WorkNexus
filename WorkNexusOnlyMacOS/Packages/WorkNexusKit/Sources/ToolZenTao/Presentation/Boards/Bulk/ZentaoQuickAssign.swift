@@ -16,7 +16,8 @@ struct ZentaoQuickAssignButton: View {
 
     var body: some View {
         let quick = state.quickAssignees
-        let label = appString("leaderBulkAssign", "Assign…")
+        // No "…" on the bar: it read as text cut short.
+        let label = appString("assign", "Assign")
         if quick.isEmpty {
             AppButton(label, systemImage: "person.badge.plus", kind: .ghost, action: onOther).disabled(!enabled)
                 .help(appString("tipBulkAssign", "Give every selected ticket to one person"))

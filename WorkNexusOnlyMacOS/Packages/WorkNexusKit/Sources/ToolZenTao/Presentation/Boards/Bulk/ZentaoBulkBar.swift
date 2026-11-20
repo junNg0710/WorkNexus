@@ -87,9 +87,9 @@ struct ZentaoBulkBar: View {
         ZentaoQuickAssignButton(state: state, enabled: !targets.isEmpty, onPick: { login in
             Task { if await model.quickAssign(login, tickets: targets, state: state, bugs: bugs, toasts: toasts) == .needsHours { askHours(login) } }
         }, onOther: { dialog = .assign })
-        AppButton(appString("leaderBulkPriority", "Priority…"), systemImage: "flag", kind: .ghost) { dialog = .priority }.disabled(targets.isEmpty)
+        AppButton(appString("priority", "Priority"), systemImage: "flag", kind: .ghost) { dialog = .priority }.disabled(targets.isEmpty)
             .help(appString("tipBulkPriority", "Set the priority of every selected ticket"))
-        AppButton(appString("leaderBulkClose", "Close…"), systemImage: "checkmark.circle", kind: .ghost) { dialog = .close }.disabled(targets.isEmpty)
+        AppButton(appString("leaderBulkCloseName", "Close"), systemImage: "checkmark.circle", kind: .ghost) { dialog = .close }.disabled(targets.isEmpty)
             .help(appString("tipBulkClose", "Close the selected tickets ZenTao lets be closed (a resolved bug, a finished or cancelled task); the others are skipped"))
         Divider().frame(height: theme.sizes.icon14)
         AppButton(appString("leaderSelectAll", "Select all shown"), kind: .ghost) { state.selectAllShown(bugs: bugs) }
