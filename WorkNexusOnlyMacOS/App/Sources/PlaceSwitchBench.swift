@@ -17,6 +17,9 @@ enum PlaceSwitchBench {
         let pause = env["WN_DEMO_PLACE_CYCLE_SECONDS"].flatMap(Double.init) ?? 3
         guard !places.isEmpty else { return }
         let frames = FrameGaps()
+        // `WN_DEMO_MOUSE=1`: mouse moves sweep across the window 60 times a second, sent to the window itself (the real
+        // pointer does not move), as a hand resting on the mouse makes them.
+        if env["WN_DEMO_MOUSE"] == "1" { MouseSweep.start() }
         // `WN_DEMO_TICKET_CHURN=<n>`: rewrites n tickets every half second, as a sync does, so the switches are measured
         // while the ticket list keeps changing.
         if let churn = env["WN_DEMO_TICKET_CHURN"].flatMap(Int.init), churn > 0 {
@@ -40,6 +43,8 @@ enum PlaceSwitchBench {
             var i = 0
             while !Task.isCancelled {
                 let p = places[i % places.count]
+                // Kept on top (without taking the keyboard): a covered window draws nothing and would measure nothing.
+                NSApp.windows.first(where: { $0.canBecomeMain })?.orderFrontRegardless()
                 switch p.first {
                 case "chat": shell.nav.select(.chat)
                 case "account" where p.count > 1:
@@ -47,9 +52,9 @@ enum PlaceSwitchBench {
                     if p.count > 2 { shell.nav.setSection(SectionID(p[2]), accountId: p[1]) }
                 default: break
                 }
-                frames.reset()
+                frames.reset(); _ = MainCPU.take()
                 try? await Task.sleep(for: .seconds(1))
-                print("BENCH place \(i) \(p.joined(separator: ":")): \(frames.summary)")
+                print("BENCH place \(i) \(p.joined(separator: ":")): \(frames.summary), main cpu \(MainCPU.take()) ms")
                 fflush(stdout)
                 i += 1
                 try? await Task.sleep(for: .seconds(max(0, pause - 1)))
@@ -58,3 +63,39 @@ enum PlaceSwitchBench {
         #endif
     }
 }
+
+#if DEBUG
+/// The main thread's CPU time since the last call, in ms (read on the main thread).
+@MainActor
+enum MainCPU {
+    private static var last: Double = 0
+    static func take() -> Int {
+        var t = timespec(); clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t)
+        let now = Double(t.tv_sec) * 1000 + Double(t.tv_nsec) / 1_000_000
+        defer { last = now }
+        return Int(now - last)
+    }
+}
+
+/// Synthetic mouse moves over the main window, for measuring what hovering costs.
+@MainActor
+enum MouseSweep {
+    private static var timer: Timer?
+    private static var step = 0
+    static func start() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60, repeats: true) { _ in
+            MainActor.assumeIsolated {
+                guard let w = NSApp.windows.first(where: { $0.canBecomeMain && $0.isVisible }), let view = w.contentView else { return }
+                step += 1
+                let size = view.bounds.size
+                let x = 80 + CGFloat(step * 7 % Int(max(size.width - 160, 1)))
+                let y = 80 + CGFloat(step * 3 % Int(max(size.height - 160, 1)))
+                guard let e = NSEvent.mouseEvent(with: .mouseMoved, location: NSPoint(x: x, y: y), modifierFlags: [],
+                                                 timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: w.windowNumber,
+                                                 context: nil, eventNumber: 0, clickCount: 0, pressure: 0) else { return }
+                w.sendEvent(e)
+            }
+        }
+    }
+}
+#endif

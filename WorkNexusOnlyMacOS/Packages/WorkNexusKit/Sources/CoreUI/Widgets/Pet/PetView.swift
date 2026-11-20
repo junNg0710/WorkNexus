@@ -2,8 +2,8 @@ import AppKit
 import SwiftUI
 
 /// The character standing in a room. The sprite is one layer showing a cell of the sheet (`PetSpriteLayer`): a new frame
-/// only moves the cell, nothing is cut or scaled again. While it walks its place is read from the director at the
-/// display's rate (`TimelineView(.animation)`), so it glides; standing still nothing runs but the slow frame clock - and
+/// only moves the cell, nothing is cut or scaled again. While it walks its place is read from the director 30 times a
+/// second (`TimelineView(.animation)`), so it glides; standing still nothing runs but the slow frame clock - and
 /// that stops too while the window cannot be seen. Only the character itself takes the pointer (a click pokes it, a drag
 /// moves it), so what is under the rest of the room stays usable. Not in the Flutter app.
 public struct PetView: View {
@@ -15,6 +15,8 @@ public struct PetView: View {
     var width: CGFloat = PetView.defaultWidth
     /// How wide the pet is drawn in the window.
     public static let defaultWidth: CGFloat = 84
+    /// How often a walking pet's place is redrawn.
+    public static let walkFrameInterval: TimeInterval = 1.0 / 30
     /// Whether a sheet that can look turns its head toward the pointer while it idles.
     var followsCursor = false
     /// Whether the frame clock stops while the app's window cannot be seen (not for a pet that floats on its own).
@@ -47,7 +49,9 @@ public struct PetView: View {
         GeometryReader { geo in
             let freeW = max(geo.size.width - width, 1), freeH = max(geo.size.height - height, 1)
             // Paused while it stands: the timeline then asks for no frames at all.
-            TimelineView(.animation(paused: director.walk == nil)) { timeline in
+            // At most 30 times a second: the steps glide just as well, and a slower Mac (or a 120 Hz screen) does not spend
+            // a frame's work on the pet every refresh.
+            TimelineView(.animation(minimumInterval: PetView.walkFrameInterval, paused: director.walk == nil)) { timeline in
                 let left = CGFloat(director.x(at: timeline.date)) * freeW
                 sprite(freeW: freeW, freeH: freeH, bubbleShift: Self.bubbleShift(petLeft: left, petWidth: width, roomWidth: geo.size.width))
                     .offset(x: left, y: CGFloat(director.y) * freeH)

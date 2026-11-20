@@ -3,7 +3,10 @@ import SwiftUI
 /// Ported from: lib/core/widgets/app_segmented_tabs.dart
 /// One segment of `AppSegmentedTabs`.
 public struct AppSegmentedTab: Identifiable {
-    public let id = UUID()
+    /// The label: the same tab keeps its identity across redraws. (A fresh id on every build made the toolbar tear
+    /// down and rebuild each segment - its text, hover state and tooltip - whenever its owner redrew, many times a
+    /// second on a busy board, and very visibly on a slower Mac.)
+    public var id: String { label }
     public var label: String
     public var active: Bool
     public var onTap: () -> Void
@@ -31,7 +34,7 @@ public struct AppSegmentedTabs: View {
     public init(_ tabs: [AppSegmentedTab], iconOnly: Bool = false) { self.tabs = tabs; self.iconOnly = iconOnly }
 
     public var body: some View {
-        HStack(spacing: 0) { ForEach(tabs) { SegmentView(tab: $0, iconOnly: iconOnly) } }
+        HStack(spacing: 0) { ForEach(Array(tabs.enumerated()), id: \.offset) { SegmentView(tab: $0.element, iconOnly: iconOnly) } }
             .padding(theme.spacing.s2).frame(height: theme.sizes.control32)
             .appGlass(in: RoundedRectangle(cornerRadius: theme.radii.md, style: .continuous), fallback: theme.colors.panel2)
     }

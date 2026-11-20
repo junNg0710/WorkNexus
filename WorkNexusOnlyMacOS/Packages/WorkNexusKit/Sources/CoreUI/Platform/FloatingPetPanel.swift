@@ -284,6 +284,10 @@ final class DisplayTicker: NSObject {
         self.tick = tick
         super.init()
         link = view.displayLink(target: self, selector: #selector(fire))
+        // The panel follows its walk 30 times a second, not at the screen's rate (up to 120 Hz): moving a window costs
+        // the main thread a layout each time, which a slower Mac feels.
+        let rate = Float(1 / PetView.walkFrameInterval)
+        link?.preferredFrameRateRange = CAFrameRateRange(minimum: rate / 2, maximum: rate, preferred: rate)
         link?.add(to: .main, forMode: .common)
     }
 

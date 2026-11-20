@@ -3,7 +3,8 @@ import SwiftUI
 /// Ported from: lib/core/widgets/app_date_picker_panel.dart
 /// A one-tap pick above the calendar ("Today", "Now"…).
 public struct AppDateQuickPick: Identifiable {
-    public let id = UUID()
+    /// The label: the same pick keeps its identity across redraws.
+    public var id: String { label }
     public var label: String
     public var value: Date
     public init(label: String, value: Date) { self.label = label; self.value = value }

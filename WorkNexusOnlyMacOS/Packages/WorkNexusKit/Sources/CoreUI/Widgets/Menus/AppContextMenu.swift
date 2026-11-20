@@ -4,7 +4,8 @@ import SwiftUI
 /// Ported from: lib/core/widgets/app_context_menu.dart
 /// One row of an app menu.
 public struct AppMenuEntry: Identifiable {
-    public let id = UUID()
+    /// The label: the same row keeps its identity across redraws (a fresh id each build rebuilt every row).
+    public var id: String { label }
     /// SF Symbol; left out for a plain-text pick (a view: All, Related to me…).
     public var icon: String?
     public var label: String
@@ -33,7 +34,7 @@ public struct AppMenuPanel: View {
     public var body: some View {
         AppPopupCard(padding: theme.spacing.s4) {
             VStack(alignment: .leading, spacing: 0) {
-                ForEach(Array(entries.enumerated()), id: \.element.id) { i, e in
+                ForEach(Array(entries.enumerated()), id: \.offset) { i, e in
                     if i > 0, e.dividerBefore {
                         Rectangle().fill(theme.colors.line).frame(height: theme.borders.hairline)
                             .padding(.horizontal, theme.spacing.s8).padding(.vertical, theme.spacing.s4)
