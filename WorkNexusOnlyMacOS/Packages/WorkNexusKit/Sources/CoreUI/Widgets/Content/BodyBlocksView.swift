@@ -60,6 +60,9 @@ struct BodyBlockView: View {
                 // comment overflowed its card and was drawn over the rows above and below it.
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                // The pointing hand over its links (a ZenTao description or comment), as the Markdown bodies have.
+                .linkPointer(s, font: theme.typography.nsFont(size: size, weight: level > 0 ? .semibold : .regular),
+                             lineSpacing: max(lineHeight - 1.2, 0) * fontSize)
         case .image(let url, _, let width):
             if let loader = images.loader {
                 InlineImage(url: url, loader: loader, fallbackUrl: images.fallbackUrl, onOpenImage: images.onOpenImage, width: width.map { CGFloat($0) })
@@ -114,6 +117,7 @@ private struct TableCell: View {
     let text: AttributedString; let head: Bool; let fontSize: CGFloat; let ink: Color
     var body: some View {
         Text(text).font(theme.typography.font(size: fontSize, weight: head ? .semibold : .regular)).foregroundStyle(ink)
+            .linkPointer(text, font: theme.typography.nsFont(size: fontSize, weight: head ? .semibold : .regular))
             .padding(.horizontal, theme.spacing.s10).padding(.vertical, theme.spacing.s6)
             .frame(minWidth: 60, maxWidth: .infinity, alignment: .leading)
             .background(head ? theme.colors.panel2 : .clear)
