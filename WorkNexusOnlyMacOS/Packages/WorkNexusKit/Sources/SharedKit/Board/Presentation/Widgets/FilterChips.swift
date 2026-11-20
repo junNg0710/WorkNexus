@@ -43,7 +43,7 @@ public struct FilterOptionChip: View {
             HStack(spacing: theme.spacing.s4) {
                 if let dot = option.dotColor { Circle().fill(dot).frame(width: theme.spacing.s6, height: theme.spacing.s6) }
                 Text(option.label).font(theme.typography.metaStrong).foregroundStyle(option.active ? c.tx : c.tx2).lineLimit(1)
-                if let n = option.count { Text("\(n)").font(theme.typography.meta).foregroundStyle(c.tx3) }
+                if let n = option.count { Text(verbatim: "\(n)").font(theme.typography.meta).foregroundStyle(c.tx3) }
             }
             .padding(.horizontal, theme.spacing.s12)
         }

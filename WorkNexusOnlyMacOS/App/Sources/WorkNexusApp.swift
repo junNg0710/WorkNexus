@@ -19,7 +19,7 @@ struct WorkNexusApp: App {
                 if let root {
                     RootView(root: root).onAppear { appDelegate.attach(root) }
                 } else {
-                    Text("Could not open the database.").padding()
+                    Text(verbatim: "Could not open the database.").padding()
                 }
             }
             .frame(minWidth: 680, minHeight: 480)

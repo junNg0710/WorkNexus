@@ -40,7 +40,7 @@ struct ChatImageViewerBar: View {
             if actions.pictureTools {
                 AppIconButton("minus.magnifyingglass", help: appString("chatZoomOut", "Zoom out")) { actions.onZoom(1 / 1.25) }
                 Button(action: actions.onFit) {
-                    Text("\(Int((zoom * 100).rounded()))%").font(theme.typography.metaStrong).monospacedDigit().foregroundStyle(theme.colors.tx2)
+                    Text(verbatim: "\(Int((zoom * 100).rounded()))%").font(theme.typography.metaStrong).monospacedDigit().foregroundStyle(theme.colors.tx2)
                         .frame(minWidth: 44)
                 }
                 .buttonStyle(.plain).help(appString("chatZoomFit", "Fit to screen"))

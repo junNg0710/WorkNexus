@@ -73,7 +73,7 @@ struct ChatFileRow: View {
                 .clipShape(RoundedRectangle(cornerRadius: theme.radii.md))
                 VStack(alignment: .leading, spacing: theme.spacing.s2) {
                     Text(file.name).font(theme.typography.body).foregroundStyle(theme.colors.tx).lineLimit(1)
-                    Text("\(ChatShellLabels.fileSize(file.size)) · \(message.sentAt.formatted(date: .numeric, time: .omitted))")
+                    Text(verbatim: "\(ChatShellLabels.fileSize(file.size)) · \(message.sentAt.formatted(date: .numeric, time: .omitted))")
                         .font(theme.typography.caption).foregroundStyle(theme.colors.tx2)
                 }
                 Spacer(minLength: 0)

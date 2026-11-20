@@ -41,7 +41,7 @@ private struct DashboardExecutionRow: View {
             HStack(spacing: theme.spacing.s8) {
                 ExecutionProgressBar(value: value)
                 if let percent {
-                    Text("\(Int(percent.rounded()))%").font(t.label).monospacedDigit().foregroundStyle(c.tx2)
+                    Text(verbatim: "\(Int(percent.rounded()))%").font(t.label).monospacedDigit().foregroundStyle(c.tx2)
                         .frame(minWidth: OverviewLayout.percentColumn, alignment: .trailing)
                 }
             }

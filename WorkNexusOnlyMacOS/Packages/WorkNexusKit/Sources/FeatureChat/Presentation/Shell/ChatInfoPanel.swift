@@ -154,7 +154,7 @@ private struct ChatPanelLink: View {
                 Image(systemName: icon).font(.system(size: theme.sizes.icon16)).foregroundStyle(theme.colors.accent).frame(width: theme.sizes.icon20)
                 Text(label).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx)
                 Spacer(minLength: 0)
-                if let count { Text("\(count)").font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx2) }
+                if let count { Text(verbatim: "\(count)").font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx2) }
                 Image(systemName: "chevron.right").font(.system(size: theme.sizes.icon14)).foregroundStyle(theme.colors.tx3)
             }
             .padding(.horizontal, theme.spacing.s12).padding(.vertical, theme.spacing.s10)

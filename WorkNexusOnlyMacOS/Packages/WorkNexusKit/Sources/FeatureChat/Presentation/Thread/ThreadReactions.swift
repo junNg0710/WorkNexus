@@ -55,7 +55,7 @@ private struct ReactionChip: View {
             HStack(spacing: theme.spacing.s4) {
                 Text(reaction.emoji).font(theme.typography.body)
                 if reaction.count > 1 {
-                    Text("\(reaction.count)").font(theme.typography.label).foregroundStyle(mine ? theme.colors.accent : theme.colors.tx2)
+                    Text(verbatim: "\(reaction.count)").font(theme.typography.label).foregroundStyle(mine ? theme.colors.accent : theme.colors.tx2)
                 }
             }
             .padding(.horizontal, theme.spacing.s8).padding(.vertical, theme.spacing.s4)

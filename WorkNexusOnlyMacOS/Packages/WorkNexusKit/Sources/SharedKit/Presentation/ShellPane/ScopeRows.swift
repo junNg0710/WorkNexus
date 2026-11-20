@@ -27,7 +27,7 @@ public struct ScopeQuickRow: View {
                 }
                 Text(label).font(theme.typography.meta.weight(selected ? .semibold : .regular)).foregroundStyle(selected ? c.accent : c.tx).lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                if let count { Text("\(count)").font(theme.typography.mono).foregroundStyle(selected ? c.accent : c.tx3) }
+                if let count { Text(verbatim: "\(count)").font(theme.typography.mono).foregroundStyle(selected ? c.accent : c.tx3) }
             }
             .padding(.horizontal, theme.spacing.s6)
         }
@@ -71,7 +71,7 @@ public struct ScopeEntryRow: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                if let count { Text("\(count)").font(theme.typography.mono).foregroundStyle(selected ? c.accent : c.tx3) }
+                if let count { Text(verbatim: "\(count)").font(theme.typography.mono).foregroundStyle(selected ? c.accent : c.tx3) }
                 if let onPinToggle {
                     SidebarPinButton(pinned: isPinned, tooltip: isPinned ? appString("unpinProject", "Unpin") : appString("pinProject", "Pin"), onTap: onPinToggle)
                 }

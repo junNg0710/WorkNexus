@@ -29,7 +29,7 @@ struct ZentaoSubtaskRow: View {
                         else { Color.clear.frame(width: toggleSlot, height: 0) }
                     }
                 }
-                Text("#\(task.id)").font(theme.typography.mono).foregroundStyle(c.tx2)
+                Text(verbatim: "#\(task.id)").font(theme.typography.mono).foregroundStyle(c.tx2)
                 Text(task.title).font(theme.typography.metaStrong).foregroundStyle(c.accent).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
                 if let a = task.assignee { Text(a).font(theme.typography.caption).foregroundStyle(c.tx2) }
                 TintedPill(statusLabel(task.status), tint: c.statusColor(task.status))

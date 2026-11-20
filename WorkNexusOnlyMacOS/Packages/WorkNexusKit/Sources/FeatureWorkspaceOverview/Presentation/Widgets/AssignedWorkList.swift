@@ -53,7 +53,7 @@ private struct AssignedWorkHeader: View {
             Text(OL.assignedToYou).font(t.bodyStrong).foregroundStyle(c.tx).lineLimit(1).layoutPriority(1)
             Text(OL.fromAllTools).font(t.caption).foregroundStyle(c.tx3).lineLimit(1)
             Spacer(minLength: theme.spacing.s6)
-            Text("\(count)").font(t.caption.weight(.semibold)).foregroundStyle(c.tx2)
+            Text(verbatim: "\(count)").font(t.caption.weight(.semibold)).foregroundStyle(c.tx2)
                 .padding(.horizontal, theme.spacing.s6).padding(.vertical, theme.spacing.s2)
                 .background(c.panel2, in: Capsule())
         }

@@ -85,5 +85,5 @@ private struct GithubDetailBullet: View {
     @Environment(\.appTheme) private var theme
     let text: String
     init(_ text: String) { self.text = text }
-    var body: some View { Text("• \(text)").font(theme.typography.paragraph).foregroundStyle(theme.colors.tx2) }
+    var body: some View { Text(verbatim: "• \(text)").font(theme.typography.paragraph).foregroundStyle(theme.colors.tx2) }
 }

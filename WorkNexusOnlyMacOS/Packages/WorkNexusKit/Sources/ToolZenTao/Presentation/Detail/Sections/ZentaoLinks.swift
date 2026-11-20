@@ -78,7 +78,7 @@ public struct ZentaoParentTaskLink: View {
             HStack(spacing: theme.spacing.s6) {
                 Image(systemName: "arrow.triangle.branch").font(.system(size: theme.sizes.icon16)).foregroundStyle(c.accent)
                 Text(appString("parentTask", "Parent task")).font(theme.typography.meta).foregroundStyle(c.tx2)
-                Text("#\(parentId)").font(theme.typography.mono).foregroundStyle(c.accent)
+                Text(verbatim: "#\(parentId)").font(theme.typography.mono).foregroundStyle(c.accent)
                 if let name { Text(name).font(theme.typography.metaStrong).foregroundStyle(c.accent).lineLimit(1) }
                 if opening { ProgressView().controlSize(.mini) }
                 else { Image(systemName: "chevron.right").font(.system(size: theme.sizes.icon12)).foregroundStyle(c.accent) }

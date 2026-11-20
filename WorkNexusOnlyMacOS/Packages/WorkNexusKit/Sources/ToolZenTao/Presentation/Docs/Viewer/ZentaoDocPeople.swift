@@ -38,7 +38,7 @@ struct ZentaoDocPeople: View {
                         Text(people[0].displayName).font(theme.typography.paragraph.weight(.semibold)).foregroundStyle(c.tx).lineLimit(1)
                             .padding(.trailing, theme.spacing.s4)
                     } else if people.count > Self.maxFaces {
-                        Text("+\(people.count - Self.maxFaces)").font(theme.typography.paragraph).foregroundStyle(c.tx2)
+                        Text(verbatim: "+\(people.count - Self.maxFaces)").font(theme.typography.paragraph).foregroundStyle(c.tx2)
                             .padding(.trailing, theme.spacing.s4)
                     }
                     Text(action).font(theme.typography.paragraph).foregroundStyle(c.tx2).lineLimit(1)

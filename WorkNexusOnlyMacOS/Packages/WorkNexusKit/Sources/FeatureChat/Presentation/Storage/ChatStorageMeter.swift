@@ -21,7 +21,7 @@ struct ChatStorageMeter: View {
         VStack(alignment: .leading, spacing: theme.spacing.s12) {
             HStack(alignment: .firstTextBaseline, spacing: theme.spacing.s6) {
                 Text(ChatShellLabels.fileSize(used)).font(theme.typography.title).foregroundStyle(near ? theme.colors.amber : theme.colors.tx)
-                Text("/ \(ChatShellLabels.fileSize(limitBytes))").font(theme.typography.body).foregroundStyle(theme.colors.tx2)
+                Text(verbatim: "/ \(ChatShellLabels.fileSize(limitBytes))").font(theme.typography.body).foregroundStyle(theme.colors.tx2)
                 Spacer(minLength: 0)
                 Text(ChatStorageLogic.percent(ratio)).font(theme.typography.bodyStrong).foregroundStyle(near ? theme.colors.amber : theme.colors.tx2)
             }

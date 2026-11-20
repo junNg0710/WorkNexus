@@ -13,7 +13,7 @@ struct ReplyDraftBanner: View {
         HStack(spacing: theme.spacing.s8) {
             RoundedRectangle(cornerRadius: theme.radii.xs).fill(theme.colors.accent).frame(width: theme.borders.thick)
             VStack(alignment: .leading, spacing: theme.spacing.s2) {
-                Text("\(appString("chatReplyingTo", "Replying to")) \(senderName)")
+                Text(verbatim: "\(appString("chatReplyingTo", "Replying to")) \(senderName)")
                     .font(theme.typography.label).foregroundStyle(theme.colors.accent).lineLimit(1)
                 Text(preview).font(theme.typography.meta).foregroundStyle(theme.colors.tx2).lineLimit(1)
             }

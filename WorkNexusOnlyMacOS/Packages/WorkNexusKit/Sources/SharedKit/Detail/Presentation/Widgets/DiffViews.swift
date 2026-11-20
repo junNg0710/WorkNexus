@@ -110,8 +110,8 @@ private struct ChangedFileRow: View {
                 HStack(spacing: theme.spacing.s8) {
                     Text(glyph).font(theme.typography.metaStrong).foregroundStyle(color)
                     Text(file.path).font(theme.typography.mono).foregroundStyle(c.tx).frame(maxWidth: .infinity, alignment: .leading)
-                    if file.additions > 0 { Text("+\(file.additions)").font(theme.typography.metaStrong).foregroundStyle(c.green) }
-                    if file.deletions > 0 { Text("−\(file.deletions)").font(theme.typography.metaStrong).foregroundStyle(c.red) }
+                    if file.additions > 0 { Text(verbatim: "+\(file.additions)").font(theme.typography.metaStrong).foregroundStyle(c.green) }
+                    if file.deletions > 0 { Text(verbatim: "−\(file.deletions)").font(theme.typography.metaStrong).foregroundStyle(c.red) }
                     if hasDiff { Image(systemName: open ? "chevron.up" : "chevron.down").font(.system(size: theme.sizes.icon14)).foregroundStyle(c.tx3) }
                 }
                 .padding(.vertical, theme.spacing.s4)

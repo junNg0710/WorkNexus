@@ -45,9 +45,9 @@ struct ChatCardLine: View {
 
     var body: some View {
         let meta = ChatColor.readable(ink.meta, on: ink.quoteSurface, towards: ink.text).color
-        var line = Text("")
+        var line = Text(verbatim: "")
         for (i, part) in parts.enumerated() {
-            if i > 0 { line = line + Text(" · ").foregroundStyle(meta) }
+            if i > 0 { line = line + Text(verbatim: " · ").foregroundStyle(meta) }
             switch part {
             case .plain(let s): line = line + Text(s).foregroundStyle(meta)
             case .strong(let s, let c):

@@ -49,7 +49,7 @@ struct GitlabMrMergePanel: View {
                     }
                     Text(appString("mergeDetails", "Merge details")).font(theme.typography.label).foregroundStyle(c.tx)
                     if behind > 0 { GitlabMrDetailBullet { Text(commitsBehindText(behind)) } }
-                    if let s = entity.sourceBranch, !s.isEmpty, let t = entity.targetBranch, !t.isEmpty { GitlabMrDetailBullet { Text("\(s) → \(t)") } }
+                    if let s = entity.sourceBranch, !s.isEmpty, let t = entity.targetBranch, !t.isEmpty { GitlabMrDetailBullet { Text(verbatim: "\(s) → \(t)") } }
                     if !status.isEmpty { GitlabMrDetailBullet { Text(statusLine) } }
                 }))
             // A refresh that changed the MR's own settings (e.g. edited on the web) wins over the local toggles.

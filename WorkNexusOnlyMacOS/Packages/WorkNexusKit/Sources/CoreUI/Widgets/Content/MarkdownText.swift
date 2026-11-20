@@ -45,7 +45,7 @@ public struct MarkdownText: View {
     public var body: some View {
         let blocks = Self.blocks(for: data)
         if blocks.isEmpty {
-            Text("—").font(theme.typography.font(size: fontSize)).foregroundStyle(theme.colors.tx3)
+            Text(verbatim: "—").font(theme.typography.font(size: fontSize)).foregroundStyle(theme.colors.tx3)
         } else {
             BodyLinkScope(linkColor: linkColor, onLinkTap: onLinkTap, linkStyle: linkStyle) {
                 if selectsAcross {

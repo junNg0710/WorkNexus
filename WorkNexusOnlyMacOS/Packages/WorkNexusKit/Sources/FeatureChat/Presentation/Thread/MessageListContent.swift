@@ -29,7 +29,9 @@ struct MessageListContent: View {
             if stage.showsList {
                 // Only the messages fade in as a chat opens: the header, input and panels look alike from chat to chat, and
                 // fading them reads as a flicker. Only the opacity animates, never the rows coming in.
-                MessageListScroll(ctx: ThreadContext(model: model, actions: actions), showSenders: showSenders, stage: stage)
+                // An island: the list's content size changes with every row measured, which must not re-measure the chat
+                // around it on every frame of a scroll.
+                LayoutIsland { MessageListScroll(ctx: ThreadContext(model: model, actions: actions), showSenders: showSenders, stage: stage) }
                     .animation(reduceMotion ? nil : .easeOut(duration: theme.motion.base)) { $0.opacity(stage.isVisible ? 1 : 0) }
             }
             if stage.showsList && model.rows.isEmpty && !model.loadFailed {

@@ -87,7 +87,7 @@ private struct PersonRow: View {
                                verified: chatRoleRank(of: user.role).map { ChatVerifiedBadge(rank: $0, role: user.role ?? "") })
                 VStack(alignment: .leading, spacing: 0) {
                     Text(ChatPeople.name(user)).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx).lineLimit(1)
-                    Text("@" + user.account + (user.role.flatMap { $0.isEmpty ? nil : " · " + ChatShellLabels.roleLabel($0, serverNames: roleNames) } ?? ""))
+                    Text(verbatim: "@" + user.account + (user.role.flatMap { $0.isEmpty ? nil : " · " + ChatShellLabels.roleLabel($0, serverNames: roleNames) } ?? ""))
                         .font(theme.typography.caption).foregroundStyle(theme.colors.tx2).lineLimit(1)
                 }
                 Spacer(minLength: 0)

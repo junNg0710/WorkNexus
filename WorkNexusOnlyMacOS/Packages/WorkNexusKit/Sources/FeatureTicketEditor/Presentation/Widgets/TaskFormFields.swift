@@ -13,7 +13,7 @@ struct TaskTimeframeInput: View {
     var body: some View {
         HStack(spacing: theme.spacing.s4) {
             EditorDateInput(value: estStarted, onChanged: onEstStartedChanged)
-            Text("-").font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx3)
+            Text(verbatim: "-").font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx3)
             EditorDateInput(value: deadline, onChanged: onDeadlineChanged)
         }
     }

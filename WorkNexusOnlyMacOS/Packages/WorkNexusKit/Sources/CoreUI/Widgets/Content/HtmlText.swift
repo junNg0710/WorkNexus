@@ -18,7 +18,7 @@ public struct HtmlText: View {
 
     public var body: some View {
         if html.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            Text("—").font(theme.typography.font(size: fontSize)).foregroundStyle(theme.colors.tx3)
+            Text(verbatim: "—").font(theme.typography.font(size: fontSize)).foregroundStyle(theme.colors.tx3)
         } else {
             BodyLinkScope(linkColor: nil, onLinkTap: onLinkTap) {
                 BodyBlocksView(blocks: HtmlBlocks.parse(html), fontSize: fontSize, lineHeight: height, ink: theme.colors.tx, images: images)

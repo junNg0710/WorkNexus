@@ -37,7 +37,7 @@ private struct GitlabKeyCell: View {
     let ticket: Ticket
     let prefix: String
     var body: some View {
-        Text("\(prefix)\(ticket.externalKey)").font(theme.typography.mono.weight(.semibold)).foregroundStyle(theme.colors.tx2)
+        Text(verbatim: "\(prefix)\(ticket.externalKey)").font(theme.typography.mono.weight(.semibold)).foregroundStyle(theme.colors.tx2)
     }
 }
 

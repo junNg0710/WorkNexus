@@ -104,7 +104,7 @@ struct BreadcrumbSegment: View {
     let link: (() -> Void)?
 
     var body: some View {
-        Text("/").font(theme.typography.caption).foregroundStyle(theme.colors.tx3).padding(.horizontal, theme.spacing.s4)
+        Text(verbatim: "/").font(theme.typography.caption).foregroundStyle(theme.colors.tx3).padding(.horizontal, theme.spacing.s4)
         if let link {
             HoverSurface(onTap: link, cornerRadius: theme.radii.sm) {
                 Text(title).font(theme.typography.body).foregroundStyle(theme.colors.tx2)

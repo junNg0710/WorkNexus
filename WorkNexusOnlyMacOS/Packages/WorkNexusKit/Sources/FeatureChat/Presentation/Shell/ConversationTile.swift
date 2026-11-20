@@ -79,7 +79,7 @@ struct ConversationPreviewLine: View {
                     Text(typing).font(theme.typography.meta).foregroundStyle(theme.colors.accent).lineLimit(1)
                 }
             } else {
-                (Text(lastSender.map { "\($0): " } ?? "").foregroundColor(unread ? theme.colors.tx : theme.colors.tx2)
+                (Text(verbatim: lastSender.map { "\($0): " } ?? "").foregroundColor(unread ? theme.colors.tx : theme.colors.tx2)
                     + Text(chat.lastMessage.map { ChatShellLabels.preview($0, reactions: reactions) } ?? ""))
                     .font(theme.typography.meta).foregroundStyle(unread ? theme.colors.tx : theme.colors.tx2).lineLimit(1)
             }

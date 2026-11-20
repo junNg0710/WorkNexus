@@ -26,7 +26,7 @@ struct MessageFooterView: View {
                     Button(action: onOpenReplies) {
                         HStack(spacing: theme.spacing.s2) {
                             Image(systemName: "arrowshape.turn.up.left").font(.system(size: size))
-                            Text("\(replies)").font(font)
+                            Text(verbatim: "\(replies)").font(font)
                         }
                     }
                     .buttonStyle(.plain).help(L.replies(replies)).pointerStyle(.link)

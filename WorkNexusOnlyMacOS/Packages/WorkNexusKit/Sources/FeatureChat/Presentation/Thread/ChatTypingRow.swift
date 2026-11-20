@@ -72,7 +72,7 @@ private struct TypingOthers: View {
                 }
             }
             .frame(width: step * CGFloat(max(0, faces.count - 1)) + face + ring * 2, height: face + ring * 2, alignment: .leading)
-            if rest > 0 { Text("+\(rest)").font(theme.typography.caption).foregroundStyle(theme.colors.tx2) }
+            if rest > 0 { Text(verbatim: "+\(rest)").font(theme.typography.caption).foregroundStyle(theme.colors.tx2) }
         }
     }
 }

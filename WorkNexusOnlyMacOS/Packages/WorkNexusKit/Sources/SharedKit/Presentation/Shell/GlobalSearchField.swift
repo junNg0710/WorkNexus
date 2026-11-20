@@ -35,7 +35,7 @@ struct GlobalSearchField: View {
                 .onKeyPress(.upArrow) { move(-1) }
                 .onKeyPress(.escape) { clear(); focused = false; return .handled }
             if text.isEmpty {
-                Text("⌘K").font(theme.typography.caption).foregroundStyle(c.tx3)
+                Text(verbatim: "⌘K").font(theme.typography.caption).foregroundStyle(c.tx3)
             } else {
                 Button(action: clear) { Image(systemName: "xmark.circle.fill").foregroundStyle(c.tx3) }.buttonStyle(.plain)
             }

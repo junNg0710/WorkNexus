@@ -58,7 +58,7 @@ struct GitlabMrDetailBullet<Content: View>: View {
     init(@ViewBuilder _ content: () -> Content) { self.content = content() }
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: theme.spacing.s6) {
-            Text("•")
+            Text(verbatim: "•")
             content.frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.top, theme.spacing.s4)

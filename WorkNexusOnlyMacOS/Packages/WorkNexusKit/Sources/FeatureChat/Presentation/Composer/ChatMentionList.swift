@@ -47,7 +47,7 @@ private struct MentionRow: View {
                         .frame(width: theme.sizes.control32, height: theme.sizes.control32).background(theme.colors.violet, in: Circle())
                 }
                 if candidate.userId == nil {
-                    (Text(appString("chatMentionAll", "Notify everyone")) + Text("  ·  @All").foregroundStyle(theme.colors.accent))
+                    (Text(appString("chatMentionAll", "Notify everyone")) + Text(verbatim: "  ·  @All").foregroundStyle(theme.colors.accent))
                         .font(theme.typography.body).foregroundStyle(theme.colors.tx).lineLimit(1)
                 } else {
                     Text(candidate.name).font(theme.typography.body).foregroundStyle(theme.colors.tx).lineLimit(1)

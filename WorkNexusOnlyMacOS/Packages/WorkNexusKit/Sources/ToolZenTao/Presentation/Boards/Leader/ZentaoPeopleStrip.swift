@@ -78,7 +78,7 @@ private struct PersonChipBody: View {
                 else if login.isEmpty, accountId != nil { Image(systemName: "person.fill.questionmark").font(.system(size: theme.sizes.icon12)).foregroundStyle(c.tx3) }
                 if pinned { Image(systemName: "pin.fill").font(.system(size: theme.sizes.icon12 - 2)).foregroundStyle(c.accent).rotationEffect(.degrees(30)) }
                 Text(name).font(theme.typography.metaStrong).foregroundStyle(active ? c.tx : c.tx2).lineLimit(1)
-                Text("\(count)").font(theme.typography.meta).foregroundStyle(c.tx3)
+                Text(verbatim: "\(count)").font(theme.typography.meta).foregroundStyle(c.tx3)
                 if overdue > 0 { Circle().fill(c.red).frame(width: theme.spacing.s6, height: theme.spacing.s6) }
             }
             .padding(.horizontal, theme.spacing.s10)

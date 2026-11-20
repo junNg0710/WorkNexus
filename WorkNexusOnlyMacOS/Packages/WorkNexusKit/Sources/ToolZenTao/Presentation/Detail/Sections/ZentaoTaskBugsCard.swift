@@ -72,7 +72,7 @@ private struct ZentaoRelatedBugRow: View {
         let c = theme.colors
         HoverSurface(onTap: onTap, cornerRadius: theme.radii.sm) {
             HStack(alignment: .top, spacing: theme.spacing.s10) {
-                Text("#\(bug.externalKey)").font(theme.typography.mono).foregroundStyle(c.tx2)
+                Text(verbatim: "#\(bug.externalKey)").font(theme.typography.mono).foregroundStyle(c.tx2)
                 Text(bug.title).font(theme.typography.meta).foregroundStyle(c.accent).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
                 TintedPill(statusLabel(bug.status), tint: c.statusColor(bug.status))
             }

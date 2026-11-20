@@ -43,7 +43,7 @@ private struct ZentaoDocChangeRow: View {
                     Text(line).font(mono).foregroundStyle(c.green).lineLimit(Self.lines)
                 }
             } else {
-                (Text(shown(change.from)).strikethrough().foregroundColor(c.red) + Text("  →  ").foregroundColor(c.tx3)
+                (Text(shown(change.from)).strikethrough().foregroundColor(c.red) + Text(verbatim: "  →  ").foregroundColor(c.tx3)
                     + Text(shown(change.to)).foregroundColor(c.green))
                     .font(theme.typography.paragraph).lineLimit(Self.lines * 2)
             }

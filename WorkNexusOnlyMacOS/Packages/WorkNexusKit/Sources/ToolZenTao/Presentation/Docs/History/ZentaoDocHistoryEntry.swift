@@ -15,14 +15,14 @@ struct ZentaoDocHistoryEntry: View {
         HStack(alignment: .top, spacing: theme.spacing.s10) {
             // The numbered dot, on a line joining it to the next entry.
             VStack(spacing: 0) {
-                Text("\(number)").font(theme.typography.caption).foregroundStyle(c.tx2)
+                Text(verbatim: "\(number)").font(theme.typography.caption).foregroundStyle(c.tx2)
                     .frame(width: dot, height: dot).background(c.card, in: Circle()).overlay(Circle().stroke(c.line))
                 if !last { Rectangle().fill(c.line).frame(width: theme.borders.hairline).frame(maxHeight: .infinity) }
             }
             .frame(width: dot)
             VStack(alignment: .leading, spacing: theme.spacing.s6) {
                 // Who did what, then when.
-                (Text(Self.sentence(entry, plain: theme, name: c)) + Text(date.map { "  \($0)" } ?? "")
+                (Text(Self.sentence(entry, plain: theme, name: c)) + Text(verbatim: date.map { "  \($0)" } ?? "")
                     .font(theme.typography.caption).foregroundStyle(c.tx3))
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if open && !entry.changes.isEmpty { ZentaoDocHistoryChanges(changes: entry.changes) }

@@ -39,7 +39,7 @@ struct ChatMessageCard<Trailing: View>: View {
                         "time": message.sentAt.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute()),
                     ]))
                     if let onViewOriginal {
-                        Text("|")
+                        Text(verbatim: "|")
                         Button(action: onViewOriginal) {
                             Text(shellString("chatViewOriginal", "View original message")).foregroundStyle(theme.colors.accent).font(theme.typography.metaStrong)
                         }

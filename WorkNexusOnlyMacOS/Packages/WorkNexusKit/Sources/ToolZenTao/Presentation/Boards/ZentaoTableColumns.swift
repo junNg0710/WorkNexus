@@ -86,7 +86,7 @@ struct ZentaoHoursCell: View {
     let ticket: Ticket
     var body: some View {
         if case .zentaoTask(let t)? = ticket.providerEntity, t.left != nil || t.estimate != nil {
-            Text("\(zentaoHoursText(t.left ?? 0)) / \(zentaoHoursText(t.estimate ?? 0)) h").font(theme.typography.mono)
+            Text(verbatim: "\(zentaoHoursText(t.left ?? 0)) / \(zentaoHoursText(t.estimate ?? 0)) h").font(theme.typography.mono)
                 .foregroundStyle(theme.colors.tx2).lineLimit(1)
         }
     }

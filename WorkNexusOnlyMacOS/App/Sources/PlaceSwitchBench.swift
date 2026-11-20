@@ -12,6 +12,7 @@ enum PlaceSwitchBench {
     static func start(shell: ShellModel, services: AppServices) {
         #if DEBUG
         let env = ProcessInfo.processInfo.environment
+        ChatScrollBench.start()
         guard let spec = env["WN_DEMO_PLACE_CYCLE"] else { return }
         let places = spec.split(separator: ",").map { $0.split(separator: ":").map(String.init) }
         let pause = env["WN_DEMO_PLACE_CYCLE_SECONDS"].flatMap(Double.init) ?? 3
@@ -95,6 +96,92 @@ enum MouseSweep {
                                                  context: nil, eventNumber: 0, clickCount: 0, pressure: 0) else { return }
                 w.sendEvent(e)
             }
+        }
+    }
+}
+#endif
+
+#if DEBUG
+/// `WN_DEMO_CHAT_SCROLL=<points per second>` (with `WN_DEMO_CHAT_CYCLE` opening a long chat): the message list scrolls up
+/// for three seconds, then down for three, again and again, at that speed (600 is a slow read, 3000 a flick), stepped by
+/// the display link as a real scroll is. Each second it prints the frames drawn, the late ones and the main thread's CPU
+/// time - the cost of scrolling a chat, measured without a hand on the mouse.
+@MainActor
+final class ChatScrollBench: NSObject {
+    static let shared = ChatScrollBench()
+    private var link: CADisplayLink?
+    private var speed: CGFloat = 0
+    private var began: CFTimeInterval = 0
+    private var last: CFTimeInterval = 0
+    private var second = 0
+    private var gaps: [CFTimeInterval] = []
+    private weak var found: NSScrollView?
+    private var carry: CGFloat = 0
+
+    static func start() {
+        guard let speed = ProcessInfo.processInfo.environment["WN_DEMO_CHAT_SCROLL"].flatMap(Double.init), speed > 0 else { return }
+        shared.speed = CGFloat(speed)
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(7))
+            shared.census()
+            guard let screen = NSScreen.main else { return }
+            let l = screen.displayLink(target: shared, selector: #selector(step(_:)))
+            l.add(to: .main, forMode: .common)
+            shared.link = l
+        }
+    }
+
+    /// How many AppKit views the main window holds, by class: AppKit walks them all on every layout pass.
+    private func census() {
+        guard let root = NSApp.windows.first(where: { $0.canBecomeMain })?.contentView else { return }
+        var count: [String: Int] = [:], total = 0
+        func walk(_ v: NSView) { total += 1; count[String(describing: type(of: v)), default: 0] += 1; v.subviews.forEach(walk) }
+        walk(root)
+        let top = count.sorted { $0.value > $1.value }.prefix(12).map { "\($0.key)=\($0.value)" }.joined(separator: ", ")
+        print("BENCH views \(total): \(top)"); fflush(stdout)
+    }
+
+    /// The tallest vertical scroll view in the main window: the message list.
+    private var list: NSScrollView? {
+        guard let root = NSApp.windows.first(where: { $0.canBecomeMain })?.contentView else { return nil }
+        var best: NSScrollView?
+        func walk(_ v: NSView) {
+            if let s = v as? NSScrollView, let doc = s.documentView, doc.frame.height > s.contentView.bounds.height * 2,
+               doc.frame.height > (best?.documentView?.frame.height ?? 0) { best = s }
+            v.subviews.forEach(walk)
+        }
+        walk(root)
+        return best
+    }
+
+    @objc private func step(_ link: CADisplayLink) {
+        let now = link.timestamp
+        if began == 0 { began = now; last = now; _ = MainCPU.take(); return }
+        let dt = now - last
+        gaps.append(dt); last = now
+        if found == nil { found = list; NSApp.windows.first(where: { $0.canBecomeMain })?.orderFrontRegardless() }
+        if let s = found {
+            let up = Int((now - began) / 3) % 2 == 0
+            // A real wheel event, handled as one from the mouse is (setting the clip view's origin instead was undone by
+            // the scroll view's own state): pixels, positive scrolls toward older messages.
+            carry += (up ? 1 : -1) * speed * CGFloat(dt)
+            let whole = carry.rounded(.towardZero); carry -= whole
+            if whole != 0, let cg = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1, wheel1: Int32(whole), wheel2: 0, wheel3: 0),
+               let event = NSEvent(cgEvent: cg) {
+                s.scrollWheel(with: event)
+            }
+        }
+        let s = Int(now - began)
+        if s > second {
+            second = s
+            let frame = link.duration > 0 ? link.duration : 1.0 / 60
+            let late = gaps.map { $0 - frame }
+            let worst = Int(((late.max() ?? 0) * 1000).rounded())
+            let over33 = late.filter { $0 >= 0.017 }.count, over50 = late.filter { $0 >= 0.05 }.count
+            let y = Int(found?.contentView.bounds.origin.y ?? -1), h = Int(found?.documentView?.frame.height ?? -1)
+            print("BENCH scroll \(s): \(gaps.count) frames, \(over33) late ≥17 ms, \(over50) late ≥50 ms, worst \(worst) ms, main cpu \(MainCPU.take()) ms, y \(y) of \(h)")
+            fflush(stdout)
+            gaps = []
         }
     }
 }

@@ -30,7 +30,7 @@ struct ChatVideoControls: View {
                 Spacer(minLength: 0)
                 AppMenuButton(help: shellString("chatSpeed", "Speed"), items: {
                     ChatVideoPlayer.speeds.map { s in AppNativeMenu.Item("\(speed(s))x", checked: s == player.speed) { player.setSpeed(s) } }
-                }) { Text("\(speed(player.speed))x").font(theme.typography.label).foregroundStyle(ink) }
+                }) { Text(verbatim: "\(speed(player.speed))x").font(theme.typography.label).foregroundStyle(ink) }
                     .fixedSize()
                     .padding(.horizontal, theme.spacing.s8)
                 ControlButton(icon: "repeat", help: shellString("chatLoop", "Loop"), selected: player.isLooping) { player.isLooping.toggle() }

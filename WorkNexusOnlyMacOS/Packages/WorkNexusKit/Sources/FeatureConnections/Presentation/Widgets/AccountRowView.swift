@@ -29,7 +29,7 @@ struct AccountRowView: View {
                 HStack(spacing: s.s8) {
                     Text(account.handle).font(theme.typography.mono.weight(.semibold)).foregroundStyle(c.tx).lineLimit(1)
                     Text(account.providerType.displayName).font(theme.typography.caption).foregroundStyle(c.tx3)
-                    if let version { Text("v\(version)").font(theme.typography.caption).foregroundStyle(c.tx3) }
+                    if let version { Text(verbatim: "v\(version)").font(theme.typography.caption).foregroundStyle(c.tx3) }
                 }
                 if let url = Self.serverUrl(account.baseUrl) {
                     Text(url).font(theme.typography.mono).foregroundStyle(c.tx3).lineLimit(1).help(url)

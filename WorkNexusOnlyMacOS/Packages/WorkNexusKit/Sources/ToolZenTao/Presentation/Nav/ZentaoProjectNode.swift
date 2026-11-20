@@ -38,7 +38,7 @@ struct ZentaoProjectNode: View {
                     Image(systemName: "folder").font(.system(size: theme.sizes.icon14)).foregroundStyle(c.tx2)
                     Text(choice.project.name).font(theme.typography.meta).foregroundStyle(c.tx).lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    if choice.openCount > 0 { Text("\(choice.openCount)").font(theme.typography.mono.weight(.semibold)).foregroundStyle(c.tx3) }
+                    if choice.openCount > 0 { Text(verbatim: "\(choice.openCount)").font(theme.typography.mono.weight(.semibold)).foregroundStyle(c.tx3) }
                     ZentaoKindTag(text: appString("project", "Project"))
                 }
                 .padding(.horizontal, theme.spacing.s4).padding(.vertical, theme.spacing.s6)

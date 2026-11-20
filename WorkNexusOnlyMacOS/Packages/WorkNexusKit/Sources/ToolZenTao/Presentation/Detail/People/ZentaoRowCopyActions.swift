@@ -117,7 +117,7 @@ public struct ZentaoCardParentLine: View {
             let name = parent.name ?? syncedName
             HStack(spacing: theme.spacing.s4) {
                 Image(systemName: "arrow.turn.left.up").font(.system(size: theme.sizes.icon12)).foregroundStyle(c.tx3)
-                Text("#\(parent.id)").font(theme.typography.mono).foregroundStyle(c.tx3)
+                Text(verbatim: "#\(parent.id)").font(theme.typography.mono).foregroundStyle(c.tx3)
                 if let name { Text(name).font(theme.typography.caption).foregroundStyle(c.tx3).lineLimit(1) }
             }
             .help([appString("parentTask", "Parent task"), "#\(parent.id)", name].compactMap { $0 }.joined(separator: " "))

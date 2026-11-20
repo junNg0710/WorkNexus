@@ -45,13 +45,16 @@ private struct ListBody: View {
             AppStateView(.empty(model.isSearching ? shellString("chatNoMatches", "No chat matches")
                                 : shellString("chatNoConversations", "No conversations yet")))
         } else {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(listed) { item in ConversationRow(model: model, item: item, compact: compact).id(item.id) }
+            // An island, as the message list is: scrolling the chats must not re-measure the pane around them.
+            LayoutIsland {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(listed) { item in ConversationRow(model: model, item: item, compact: compact).id(item.id) }
+                        }
                     }
+                    .onChange(of: model.highlightedGid) { _, gid in if let gid { proxy.scrollTo(gid) } }
                 }
-                .onChange(of: model.highlightedGid) { _, gid in if let gid { proxy.scrollTo(gid) } }
             }
         }
     }

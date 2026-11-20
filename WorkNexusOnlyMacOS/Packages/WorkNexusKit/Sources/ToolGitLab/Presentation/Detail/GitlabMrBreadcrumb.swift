@@ -33,7 +33,7 @@ struct GitlabMrBreadcrumb: View {
                 Text(label).font(theme.typography.paragraph).foregroundStyle(c.tx2).lineLimit(1)
             }
             Image(systemName: "chevron.right").font(.system(size: theme.sizes.icon12)).foregroundStyle(c.tx3)
-            Text("!\(reference)").font(theme.typography.paragraph).foregroundStyle(c.tx2)
+            Text(verbatim: "!\(reference)").font(theme.typography.paragraph).foregroundStyle(c.tx2)
         }
     }
 }

@@ -57,7 +57,7 @@ struct ZentaoCardTopLine: View {
     let ticket: Ticket
     var body: some View {
         HStack(spacing: theme.spacing.s6) {
-            Text("#\(ticket.externalKey)").font(theme.typography.mono).foregroundStyle(theme.colors.tx3)
+            Text(verbatim: "#\(ticket.externalKey)").font(theme.typography.mono).foregroundStyle(theme.colors.tx3)
             if let s = ticket.severity {
                 SeverityTag(s).help(appFormat("tipSeverity", "Severity: %1$@", zentaoSeverityLabel(s) ?? "\(s)"))
             }

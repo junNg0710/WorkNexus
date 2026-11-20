@@ -110,7 +110,7 @@ private struct BulletSection: View {
             SummarySection(title: title, systemImage: systemImage) {
                 ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                     HStack(alignment: .firstTextBaseline, spacing: theme.spacing.s6) {
-                        Text("•").foregroundStyle(theme.colors.tx3)
+                        Text(verbatim: "•").foregroundStyle(theme.colors.tx3)
                         Text(line).foregroundStyle(theme.colors.tx)
                     }
                     .font(theme.typography.paragraph)

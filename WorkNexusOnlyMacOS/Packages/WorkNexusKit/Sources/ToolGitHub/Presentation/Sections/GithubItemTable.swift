@@ -34,7 +34,7 @@ private struct GithubKeyCell: View {
     @Environment(\.appTheme) private var theme
     let ticket: Ticket
     var body: some View {
-        Text("#\(ticket.externalKey)").font(theme.typography.mono.weight(.semibold)).foregroundStyle(theme.colors.tx2)
+        Text(verbatim: "#\(ticket.externalKey)").font(theme.typography.mono.weight(.semibold)).foregroundStyle(theme.colors.tx2)
     }
 }
 

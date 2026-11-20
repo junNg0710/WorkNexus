@@ -61,7 +61,7 @@ public struct ContextualSearchField: View {
                 .onKeyPress(.upArrow) { if !results.isEmpty { highlight = (highlight - 1 + results.count) % results.count }; return .handled }
                 .onKeyPress(.escape) { if text.isEmpty { focused = false } else { text = "" }; showing = false; return .handled }
             if text.isEmpty {
-                Text("⌘K").font(theme.typography.mono).foregroundStyle(c.tx3)
+                Text(verbatim: "⌘K").font(theme.typography.mono).foregroundStyle(c.tx3)
                     .padding(.horizontal, theme.spacing.s4)
                     .background(c.panel2, in: RoundedRectangle(cornerRadius: theme.radii.xs))
             } else {

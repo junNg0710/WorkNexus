@@ -70,7 +70,8 @@ extension DemoSeed {
             shell.nav.select(.account(p[1]))
             if p.count > 2 { shell.nav.setSection(SectionID(p[2]), accountId: p[1]) }
         case "editor": shell.nav.select(.workspace); shell.nav.openEditor(p.count > 1 && p[1] == "task" ? .newTask(accountId: "demo-zt") : .newBug(accountId: "demo-zt"))
-        case "ticket" where p.count > 1: shell.nav.select(.workspace); shell.nav.openTicket(p[1])
+        // A ticket id holds colons of its own (`account:task:12`): everything after "ticket:" is the id.
+        case "ticket" where p.count > 1: shell.nav.select(.workspace); shell.nav.openTicket(p[1...].joined(separator: ":"))
         case "connect": shell.connectRequested = true
         case "quicksettings": shell.quickSettingsOpen = true
         default: break

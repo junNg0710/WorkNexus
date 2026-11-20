@@ -120,7 +120,7 @@ struct ZentaoBulkFailuresDialog: View {
             VStack(alignment: .leading, spacing: theme.spacing.s8) {
                 ForEach(items) { t in
                     VStack(alignment: .leading, spacing: theme.spacing.s2) {
-                        Text("#\(t.externalKey) \(t.title)").font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx).lineLimit(1)
+                        Text(verbatim: "#\(t.externalKey) \(t.title)").font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx).lineLimit(1)
                         Text(failures?.messages[t.id] ?? "").font(theme.typography.meta).foregroundStyle(theme.colors.red)
                     }
                 }

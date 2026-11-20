@@ -17,7 +17,7 @@ struct ZentaoSwitcherButton<Popover: View>: View {
             HStack(spacing: theme.spacing.s4) {
                 Image(systemName: "folder").font(.system(size: theme.sizes.icon14)).foregroundStyle(c.accent)
                 Text(kind).font(theme.typography.meta).foregroundStyle(c.tx2)
-                Text("›").font(theme.typography.meta).foregroundStyle(c.tx3)
+                Text(verbatim: "›").font(theme.typography.meta).foregroundStyle(c.tx3)
                 Text(title).font(theme.typography.metaStrong).foregroundStyle(c.tx).lineLimit(1)
                     .frame(maxWidth: theme.sizes.detailPanel / 2)
                 Image(systemName: "chevron.down").font(.system(size: theme.sizes.icon12)).foregroundStyle(c.tx2)

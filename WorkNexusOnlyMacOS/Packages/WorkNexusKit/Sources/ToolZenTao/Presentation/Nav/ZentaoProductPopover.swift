@@ -78,7 +78,7 @@ struct ZentaoProductNode: View {
                     .foregroundStyle(selected ? c.accent : c.tx).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
                 if pinned { ZentaoPinMark() }
                 if choice.openCount > 0 {
-                    Text("\(choice.openCount)").font(theme.typography.mono.weight(.semibold)).foregroundStyle(selected ? c.accent : c.tx3)
+                    Text(verbatim: "\(choice.openCount)").font(theme.typography.mono.weight(.semibold)).foregroundStyle(selected ? c.accent : c.tx3)
                 }
                 ZentaoKindTag(text: appString("fieldProduct", "Product"), highlighted: selected)
             }

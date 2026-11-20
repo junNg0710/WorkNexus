@@ -38,7 +38,7 @@ private struct VideoTimeLabel: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 0.25, paused: !model.isPlaying)) { _ in
             let _ = model.positionVersion
-            Text("\(formatVideoTime(model.currentSeconds)) / \(formatVideoTime(model.duration))")
+            Text(verbatim: "\(formatVideoTime(model.currentSeconds)) / \(formatVideoTime(model.duration))")
                 .font(theme.typography.mono).foregroundStyle(theme.colors.tx2).monospacedDigit().lineLimit(1).fixedSize()
         }
     }

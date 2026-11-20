@@ -35,7 +35,7 @@ private struct MetricTile: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacing.s2) {
-            Text("\(count)").font(theme.typography.title.weight(.bold)).foregroundStyle(theme.colors.tx)
+            Text(verbatim: "\(count)").font(theme.typography.title.weight(.bold)).foregroundStyle(theme.colors.tx)
             Text(label).font(theme.typography.caption).foregroundStyle(theme.colors.tx2).lineLimit(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

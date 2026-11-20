@@ -63,7 +63,7 @@ private struct ActivityText: View {
         VStack(alignment: .leading, spacing: theme.spacing.s2) {
             HStack(alignment: .top, spacing: theme.spacing.s8) {
                 (Text(activity.actor).font(t.label).foregroundStyle(c.tx)
-                    + Text(" \(activity.action) ").font(t.meta).foregroundStyle(c.tx2)
+                    + Text(verbatim: " \(activity.action) ").font(t.meta).foregroundStyle(c.tx2)
                     + Text(ref).font(t.mono).foregroundStyle(c.tx3))
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text(shortWhen(activity.date)).font(t.caption).foregroundStyle(c.tx3)

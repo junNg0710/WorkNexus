@@ -52,7 +52,7 @@ public struct PagedColumnCount: View {
     public var body: some View {
         HStack(spacing: theme.spacing.s2) {
             AppCountBadge(count)
-            if more { Text("+").font(theme.typography.mono.weight(.semibold)).foregroundStyle(theme.colors.tx3) }
+            if more { Text(verbatim: "+").font(theme.typography.mono.weight(.semibold)).foregroundStyle(theme.colors.tx3) }
         }
     }
 }

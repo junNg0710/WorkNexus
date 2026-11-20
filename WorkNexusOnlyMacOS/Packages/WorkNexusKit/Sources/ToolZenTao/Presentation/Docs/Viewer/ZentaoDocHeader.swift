@@ -33,7 +33,7 @@ struct ZentaoDocHeader: View {
                 ZentaoFlow(spacing: theme.spacing.s12, lineSpacing: theme.spacing.s4) {
                     ForEach(Array(facts.enumerated()), id: \.offset) { i, fact in
                         HStack(spacing: theme.spacing.s12) {
-                            if i > 0 { Text("·") }
+                            if i > 0 { Text(verbatim: "·") }
                             fact
                         }
                     }
@@ -54,7 +54,7 @@ struct ZentaoDocHeader: View {
             out.append(AnyView(Text(appFormat("docsEditedOn", "Edited %1$@", day(edited)))))
         }
         if let views = doc.views {
-            out.append(AnyView(HStack(spacing: theme.spacing.s4) { Image(systemName: "eye"); Text("\(views)") }
+            out.append(AnyView(HStack(spacing: theme.spacing.s4) { Image(systemName: "eye"); Text(verbatim: "\(views)") }
                 .help(appFormat("docsViews", "%1$@ views", "\(views)"))))
         }
         return out

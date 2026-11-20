@@ -45,7 +45,7 @@ public struct TimelineHeadline: View {
 
     private var line: Text {
         let c = theme.colors
-        var t = Text(actor).font(compact ? theme.typography.paragraph : theme.typography.body).foregroundColor(c.tx).fontWeight(.medium) + Text(" ")
+        var t = Text(actor).font(compact ? theme.typography.paragraph : theme.typography.body).foregroundColor(c.tx).fontWeight(.medium) + Text(verbatim: " ")
         for p in activityActionParts(action) {
             switch p.kind {
             case .plain: t = t + Text(p.text).foregroundColor(c.tx2)

@@ -13,7 +13,7 @@ struct ZentaoDocFiles: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacing.s6) {
-            Text("\(appString("attachments", "Attachments")) · \(files.count)".uppercased())
+            Text(verbatim: "\(appString("attachments", "Attachments")) · \(files.count)".uppercased())
                 .font(theme.typography.label).foregroundStyle(theme.colors.tx3)
                 .padding(.bottom, theme.spacing.s2)
             ForEach(Array(files.enumerated()), id: \.element.id) { i, file in

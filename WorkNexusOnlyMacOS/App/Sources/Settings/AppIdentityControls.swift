@@ -24,7 +24,7 @@ struct AppIdentityControls: View {
                 HStack {
                     TextField(AppIdentity.appName, text: $name).textFieldStyle(.plain).font(theme.typography.body)
                         .focused($nameFocused).onSubmit(commitName)
-                    Text("\(name.count)/\(AppNameService.maxLength)").font(theme.typography.caption).foregroundStyle(theme.colors.tx3)
+                    Text(verbatim: "\(name.count)/\(AppNameService.maxLength)").font(theme.typography.caption).foregroundStyle(theme.colors.tx3)
                 }
                 .padding(.horizontal, theme.spacing.s10).frame(height: theme.sizes.control36)
                 .background(theme.colors.panel2, in: RoundedRectangle(cornerRadius: theme.radii.md))

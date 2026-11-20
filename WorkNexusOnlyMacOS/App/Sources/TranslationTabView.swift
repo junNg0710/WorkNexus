@@ -50,7 +50,7 @@ struct TranslationTabView: View {
                     if state == .done {
                         HStack(spacing: theme.spacing.s6) {
                             Circle().fill(theme.colors.green).frame(width: theme.spacing.s6, height: theme.spacing.s6)
-                            Text("\(appString("translated", "Translated")) · via \(Self.via(record))").font(theme.typography.caption).foregroundStyle(theme.colors.tx3)
+                            Text(verbatim: "\(appString("translated", "Translated")) · via \(Self.via(record))").font(theme.typography.caption).foregroundStyle(theme.colors.tx3)
                         }
                         .padding(.top, theme.spacing.s16)
                     }

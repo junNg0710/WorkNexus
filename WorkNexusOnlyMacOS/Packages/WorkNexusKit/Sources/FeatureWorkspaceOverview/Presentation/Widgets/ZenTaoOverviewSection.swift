@@ -34,7 +34,7 @@ private struct ZenTaoSectionHeading: View {
     var body: some View {
         HStack(spacing: theme.spacing.s10) {
             BrandLogoBadge(account.providerType, size: theme.sizes.control32)
-            Text("\(account.providerType.displayName) · \(account.handle)")
+            Text(verbatim: "\(account.providerType.displayName) · \(account.handle)")
                 .font(theme.typography.titleSm).foregroundStyle(theme.colors.tx).lineLimit(1)
             Spacer(minLength: theme.spacing.s12)
             DashboardSyncStatus(model: model, account: account, fetchedAt: model.dashboard(account.id)?.fetchedAt)

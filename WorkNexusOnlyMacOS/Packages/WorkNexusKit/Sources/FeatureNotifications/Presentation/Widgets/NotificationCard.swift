@@ -54,8 +54,8 @@ private struct NotificationTicketLine: View {
 
     var body: some View {
         let title = notification.objectTitle ?? ""
-        let number = notification.objectId.map { Text("#\($0)  ").font(theme.typography.mono).foregroundStyle(theme.colors.tx3) }
-        (number ?? Text("")) + Text(title).font(theme.typography.paragraph).foregroundStyle(theme.colors.tx2)
+        let number = notification.objectId.map { Text(verbatim: "#\($0)  ").font(theme.typography.mono).foregroundStyle(theme.colors.tx3) }
+        (number ?? Text(verbatim: "")) + Text(title).font(theme.typography.paragraph).foregroundStyle(theme.colors.tx2)
     }
 }
 

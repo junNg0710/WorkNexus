@@ -51,4 +51,23 @@ final class ImportRulesTests: XCTestCase {
             XCTAssertLessThanOrEqual(lines, limit, "\(f.path) has \(lines) lines (limit \(limit))")
         }
     }
+
+    /// A `Text("…")` written with a string literal is a `LocalizedStringKey`: SwiftUI looks it up in the string table, and
+    /// with the app's own `\.locale` in the environment that lookup re-reads the whole table (2,000+ strings) every time
+    /// the text is resolved — on every card, badge and chat row that had one. UI strings go through `appString` (a
+    /// `String`, shown as is); a symbol or an interpolation is written `Text(verbatim:)`.
+    func testNoTextIsBuiltFromAStringLiteral() throws {
+        let literal = try NSRegularExpression(pattern: #"(?<![A-Za-z_.])Text\(""#)
+        let app = sourcesRoot.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("App/Sources")
+        let appFiles = (FileManager.default.enumerator(at: app, includingPropertiesForKeys: nil)?.allObjects as? [URL] ?? []).filter { $0.pathExtension == "swift" }
+        for f in swiftFiles() + appFiles {
+            let text = try String(contentsOf: f, encoding: .utf8)
+            for (i, line) in text.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
+                let l = String(line)
+                guard !l.trimmingCharacters(in: .whitespaces).hasPrefix("//") else { continue }
+                XCTAssertNil(literal.firstMatch(in: l, range: NSRange(location: 0, length: (l as NSString).length)),
+                             "\(f.lastPathComponent):\(i + 1) builds a Text from a string literal; use Text(verbatim:) or appString")
+            }
+        }
+    }
 }

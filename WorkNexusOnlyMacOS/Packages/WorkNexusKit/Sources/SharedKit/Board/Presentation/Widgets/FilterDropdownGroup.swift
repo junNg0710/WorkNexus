@@ -62,7 +62,7 @@ private struct FilterOptionRow: View {
                 if let dot = option.dotColor { Circle().fill(dot).frame(width: theme.spacing.s6, height: theme.spacing.s6) }
                 Text(option.label).font(theme.typography.meta).foregroundStyle(option.active ? c.tx : c.tx2).lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                if let n = option.count { Text("\(n)").font(theme.typography.meta).foregroundStyle(c.tx3) }
+                if let n = option.count { Text(verbatim: "\(n)").font(theme.typography.meta).foregroundStyle(c.tx3) }
             }
             .padding(.horizontal, theme.spacing.s6)
         }

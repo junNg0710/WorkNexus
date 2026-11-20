@@ -16,7 +16,7 @@ struct EditorField<Content: View>: View {
         VStack(alignment: .leading, spacing: theme.spacing.s4) {
             HStack(spacing: 0) {
                 Text(label).foregroundStyle(theme.colors.tx2)
-                if required { Text(" *").foregroundStyle(theme.colors.red) }
+                if required { Text(verbatim: " *").foregroundStyle(theme.colors.red) }
             }
             .font(theme.typography.metaStrong)
             content
