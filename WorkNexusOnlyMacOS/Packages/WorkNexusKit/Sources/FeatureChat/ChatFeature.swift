@@ -62,7 +62,8 @@ public enum ChatFeature {
                                     setReplyRole: (@Sendable (ChatReplyRole) -> Void)? = nil,
                                     translations: MessageTranslationRepository? = nil,
                                     ticketLookup: (@Sendable (String) async -> Ticket?)? = nil, mergeRequests: MergeRequestLinkService? = nil,
-                                    showChat: (@Sendable (String, String) -> Void)? = nil, openTicket: (@Sendable (Ticket) -> Void)? = nil) -> ChatServices {
+                                    showChat: (@Sendable (String, String) -> Void)? = nil, openTicket: (@Sendable (Ticket) -> Void)? = nil,
+                                    people: PersonDirectory? = nil, watchTickets: (@Sendable () -> AsyncStream<[Ticket]>)? = nil) -> ChatServices {
         let base = PlatformPaths.applicationSupport().appendingPathComponent("chat", isDirectory: true)
         let converter = ImageStickerConverter()
         let stickers = LocalStickerRepository(bundleRoot: bundledStickers, directory: base.appendingPathComponent("stickers", isDirectory: true), converter: converter)
@@ -75,6 +76,7 @@ public enum ChatFeature {
             showChat: showChat, openTicket: openTicket)
         services.ai = ai; services.ensureAiReady = ensureAiReady; services.aiLanguages = aiLanguages; services.setStickerSuggestions = setStickerSuggestions
         services.setReplyRole = setReplyRole
+        services.people = people; services.watchTickets = watchTickets
         return services
     }
 

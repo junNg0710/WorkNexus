@@ -60,6 +60,45 @@ final class ChatRenderSmokeTests: XCTestCase {
         return m
     }
 
+    private struct People: PersonDirectory {
+        func lookup(accountId: String, userId: Int) async -> Outcome<PersonProfile> {
+            .success(PersonProfile(department: "VN > Product Manager VN", email: "binh@example.com", mobile: "+84 90 123 4567",
+                                   joined: Date(timeIntervalSince1970: 1_778_544_000), lastLogin: Date(timeIntervalSince1970: 1_779_268_800),
+                                   wechat: "binh.ng"))
+        }
+    }
+
+    private final class SharedRepo: StubChatRepository, @unchecked Sendable {
+        override func watchConversations(accountId: String) -> AsyncStream<[ChatConversation]> {
+            AsyncStream { $0.yield(RenderData.chats); $0.finish() }
+        }
+        override func members(accountId: String, chatGid: String) async -> Outcome<[Int]> { .success(chatGid == "g" ? [1, 2] : [1, 3]) }
+    }
+
+    /// The profile popup: banner, contact and work from ZenTao, a group in common and open work that folds after four.
+    func testProfileDialogWithWorkGroupsAndTickets() async throws {
+        let repo = SharedRepo(), m = ChatShellModel(accountId: "a", selfAccount: "me", repository: repo)
+        m.apply(users: RenderData.users); m.apply(selfUserId: 1); m.apply(conversations: RenderData.chats)
+        let titles = ["[Admin Web] [Token List]: Duplicated rows", "[Admin Web] [Symbol Name] Too long", "Daily Report"]
+        var tickets: [Ticket] = []
+        for i in 1...7 {
+            let status: UnifiedStatus = i % 2 == 0 ? .inprogress : .inbox
+            tickets.append(Ticket(id: "t\(i)", accountId: "a", projectId: "p", providerType: .zentao, externalKey: "\(7500 + i)",
+                                  title: titles[i % 3], body: "", priority: .medium, status: status, providerStatus: "active",
+                                  sourceHash: "h", externalType: i == 3 ? "Task" : "Bug", assignee: "bình nguyen",
+                                  updatedAt: Date(timeIntervalSince1970: Double(i))))
+        }
+        let all = tickets
+        var services = ChatServices(chat: repo)
+        services.people = People()
+        services.watchTickets = { AsyncStream { $0.yield(all) } }
+        for dark in [false, true] {
+            let view = ChatUserProfileDialog(model: m, userId: 2).environment(\.chatServices, services).padding(20)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            try await render(view, "profile-dialog\(dark ? "-dark" : "")", width: 560, height: 1200, settle: 20, dark: dark)
+        }
+    }
+
     func testForwardDialog() async throws {
         let repo = Repo(), m = model(repo)
         let message = Make.message("m1", chat: "g", sender: 2, content: .text("Release notes are **ready**, please review before Friday"), mine: false, serverId: 5)

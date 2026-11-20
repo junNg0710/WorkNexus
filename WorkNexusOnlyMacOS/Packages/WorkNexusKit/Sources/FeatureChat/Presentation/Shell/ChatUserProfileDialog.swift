@@ -2,17 +2,20 @@ import CoreDomain
 import CoreUI
 import SwiftUI
 
-/// A user's profile: picture, name, account and presence, role, contacts, and the actions — message them, or for yourself
-/// change your picture / open your full profile.
+/// A user's profile: a banner in their colour with their picture, name, handle, presence and role; then Contact and Work
+/// (chat's record completed by their ZenTao profile), the groups you share and their open bugs and tasks; and the actions —
+/// message them, or for yourself change your picture / open your full profile.
 /// Ported from: lib/features/chat/presentation/widgets/chat_user_profile_dialog.dart
 struct ChatUserProfileDialog: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.chatServices) private var services
     let model: ChatShellModel
     let userId: Int
     @State private var busy = false
     @State private var uploadStatus: (text: String, isError: Bool)?
     /// A picture picked for the avatar, waiting for its crop.
     @State private var cropping: Data?
+    @State private var person = ChatProfileModel()
 
     var body: some View {
         if let cropping {
@@ -24,32 +27,35 @@ struct ChatUserProfileDialog: View {
     }
 
     private var profile: some View {
-        let users = model.users, user = users[userId], isSelf = userId == model.selfUserId
-        return AppDialogFrame(title: shellString("chatUserProfile", "Profile"), maxWidth: theme.sizes.dialogSm, onClose: { model.profileUserId = nil }) {
+        let user = model.users[userId], isSelf = userId == model.selfUserId
+        return VStack(spacing: 0) {
             FitOrScroll(maxHeight: theme.sizes.dialogLg) {
-                VStack(spacing: theme.spacing.s8) {
-                    ChatAvatarView(userId: userId, users: users, diameter: theme.sizes.control36 * 2)
-                    Text(ChatShellLabels.userName(users, userId)).font(theme.typography.titleSm).foregroundStyle(theme.colors.tx).textSelection(.enabled)
-                    if let user {
-                        Text(([("@" + user.account)] + (user.status.map { [ChatShellLabels.presenceLabel(ChatPresence.from(status: $0))] } ?? [])).joined(separator: "  ·  "))
-                            .font(theme.typography.meta).foregroundStyle(theme.colors.tx2)
-                        if let role = user.role, !role.isEmpty {
-                            TintedPill(ChatShellLabels.roleLabel(role, serverNames: model.roleNames), tint: theme.colors.accent)
-                        }
-                        VStack(alignment: .leading, spacing: theme.spacing.s12) {
-                            if let v = user.email { ChatDetailRow(icon: "envelope", label: shellString("chatEmail", "Email"), value: v) }
-                            if let v = user.mobile { ChatDetailRow(icon: "iphone", label: shellString("chatMobile", "Mobile"), value: v) }
-                            if let v = user.phone { ChatDetailRow(icon: "phone", label: shellString("chatPhone", "Phone"), value: v) }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading).padding(.top, theme.spacing.s8)
+                VStack(spacing: 0) {
+                    ChatProfileHeader(model: model, userId: userId)
+                    if let uploadStatus { AppInlineNote(uploadStatus.text, isError: uploadStatus.isError).padding(.top, theme.spacing.s12) }
+                    VStack(alignment: .leading, spacing: 0) {
+                        ChatProfileDetails(user: user, profile: person.profile)
+                        if let groups = person.groups { ChatProfileGroups(model: model, groups: groups) }
+                        ChatProfileTickets(model: model, tickets: person.tickets)
                     }
-                    if let uploadStatus { AppInlineNote(uploadStatus.text, isError: uploadStatus.isError) }
-                    Actions(model: model, userId: userId, isSelf: isSelf, busy: $busy, onPicked: { cropping = $0 })
-                        .padding(.top, theme.spacing.s16)
+                    .padding(.horizontal, theme.spacing.s24).padding(.bottom, theme.spacing.s24)
                 }
-                .padding(.horizontal, theme.spacing.s24).padding(.bottom, theme.spacing.s24)
             }
+            Divider().overlay(theme.colors.line)
+            Actions(model: model, userId: userId, isSelf: isSelf, busy: $busy, onPicked: { cropping = $0 })
+                .padding(.horizontal, theme.spacing.s24).padding(.vertical, theme.spacing.s16)
         }
+        .frame(maxWidth: theme.sizes.dialogMd)
+        .overlay(alignment: .topTrailing) {
+            AppIconButton("xmark", help: appString("close", "Close")) { model.profileUserId = nil }.padding(theme.spacing.s12)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: theme.radii.xl, style: .continuous))
+        .appGlass(in: RoundedRectangle(cornerRadius: theme.radii.xl, style: .continuous), fallback: theme.colors.panel)
+        .shadow(color: theme.colors.scrim.opacity(0.25), radius: theme.spacing.s24, y: theme.spacing.s8)
+        .onExitCommand { model.profileUserId = nil }
+        .accessibilityLabel(shellString("chatUserProfile", "Profile"))
+        .task(id: userId) { await person.load(services: services, accountId: model.accountId, userId: userId, isSelf: isSelf) }
+        .task(id: user?.account) { await person.watchTickets(services: services, accountId: model.accountId, handle: user?.account) }
     }
 }
 
@@ -74,7 +80,7 @@ private struct Actions: View {
     let onPicked: (Data) -> Void
 
     var body: some View {
-        VStack(spacing: theme.spacing.s8) {
+        HStack(spacing: theme.spacing.s8) {
             if isSelf {
                 if let open = model.events.onViewProfile {
                     AppButton(shellString("chatViewFullProfile", "View profile"), systemImage: "person") { model.profileUserId = nil; open(model.accountId) }

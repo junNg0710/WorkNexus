@@ -36,6 +36,10 @@ public struct ChatServices: Sendable {
     public var showChat: (@Sendable (_ accountId: String, _ chatGid: String) -> Void)?
     /// Opens a ticket inside the app.
     public var openTicket: (@Sendable (Ticket) -> Void)?
+    /// A colleague's tracker profile (department, contacts, join date) for the profile popup; nil leaves those parts out.
+    public var people: PersonDirectory?
+    /// The synced tickets, for a person's open work in the profile popup; nil leaves it out.
+    public var watchTickets: (@Sendable () -> AsyncStream<[Ticket]>)?
     public var openURL: @Sendable (URL) -> Void
 
     public init(chat: ChatRepository, stickers: StickerRepository? = nil, wallpapers: WallpaperRepository? = nil,

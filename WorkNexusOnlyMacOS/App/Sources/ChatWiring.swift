@@ -59,7 +59,10 @@ final class ChatWiring {
             mergeRequests: MergeRequestLinkFetcher(workspaces: appServices.workspaces, tickets: tickets, credentials: appServices.credentials,
                                                    sync: appServices.sync),
             showChat: { accountId, gid in relay.call(accountId, gid) },
-            openTicket: { ticket in Task { @MainActor in nav.openTicket(ticket.id) } })
+            openTicket: { ticket in Task { @MainActor in nav.openTicket(ticket.id) } },
+            // The profile popup: a colleague's ZenTao profile, and their open synced bugs and tasks.
+            people: ZentaoModuleData.personDirectory(sync: appServices.sync, workspaces: appServices.workspaces),
+            watchTickets: { tickets.watchTickets() })
         relay.handler = { [weak self] accountId, gid in Task { @MainActor in self?.show(accountId: accountId, chatGid: gid) } }
         events.onViewProfile = { _ in nav.setWorkspaceSection("integrations") }
         events.onOpenStorage = { nav.select(.settings); nav.setSettingsSection("cache") }
