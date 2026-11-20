@@ -1,5 +1,6 @@
 import CoreDomain
 import Foundation
+import ImageIO
 
 /// Authenticated asset bytes (inline images, attachments, stream requests). Ported from zentao_client.dart.
 extension ZenTaoClient {
@@ -45,6 +46,7 @@ extension ZenTaoClient {
     private func authedBytes(_ url: String, imageOnly: Bool) async throws -> Data? {
         guard let (resolved, onServer) = resolve(url) else { return nil }
 
+        var refused = ""
         func attempt(_ token: String) async throws -> Data? {
             var request = ZenTaoRequest(url: onServer ? withSession(resolved, token) : resolved)
             request.followRedirects = false
@@ -52,7 +54,10 @@ extension ZenTaoClient {
             if onServer { request.headers = ["Cookie": "zentaosid=\(token)", "Token": token] }
             let res = try await perform(request)
             let data = res.data as? Data ?? res.rawData
-            if res.status == 200, !data.isEmpty, !imageOnly || res.contentType.lowercased().hasPrefix("image") { return data }
+            // An image is told by its bytes, not only its declared type: ZenTao serves some uploads as
+            // `application/octet-stream`, and those showed as broken images. A login page (HTML) is never one.
+            if res.status == 200, !data.isEmpty, !imageOnly || res.contentType.lowercased().hasPrefix("image") || Self.isImage(data) { return data }
+            refused = "HTTP \(res.status), \(res.contentType.isEmpty ? "no type" : res.contentType), \(data.count) bytes"
             return nil
         }
 
@@ -63,6 +68,16 @@ extension ZenTaoClient {
             try await authenticate()                                          // session presumed dead
             bytes = try await attempt(try await ensureToken())
         }
+        if bytes == nil {
+            // Which asset (its path only: the query carries the session) and how ZenTao answered, to trace a broken image.
+            Diagnostics.info("zentao", "\(imageOnly ? "Image" : "File") \(resolved.path) not loaded: \(refused)")
+        }
         return bytes
+    }
+
+    /// Whether `data` is a picture ImageIO can read (PNG, JPEG, GIF, WebP, HEIC, TIFF, BMP…).
+    static func isImage(_ data: Data) -> Bool {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return false }
+        return CGImageSourceGetType(source) != nil && CGImageSourceGetCount(source) > 0
     }
 }

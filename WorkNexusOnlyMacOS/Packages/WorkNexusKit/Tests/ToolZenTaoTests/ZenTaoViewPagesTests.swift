@@ -253,6 +253,39 @@ final class ZenTaoViewPagesTests: XCTestCase {
         XCTAssertNil(notImage)
     }
 
+    /// A real 1x1 PNG, for checks that read the bytes as a picture.
+    private static let onePixelPng = Data(base64Encoded:
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")!
+
+    /// Some uploads come back as `application/octet-stream`: a picture is told by its bytes, so it still shows.
+    func testAnImageServedWithoutAnImageTypeIsTakenByItsBytes() async throws {
+        let png = Self.onePixelPng
+        let server = StubServer { req in
+            .tokenOr(req) { req.path.contains("file-read-34105") ? .bytes(png, contentType: "application/octet-stream") : .json([:]) }
+        }
+        let image = try await makeClient(server).fetchBytes("/file-read-34105.png")
+        XCTAssertEqual(image, png)
+        XCTAssertTrue(ZenTaoClient.isImage(png))
+    }
+
+    func testALoginPageOrARedirectIsNeverAnImage() async throws {
+        let server = StubServer { req in
+            .tokenOr(req) {
+                if req.path.contains("file-read-7") { return .html("<html><body>Please log in</body></html>") }
+                if req.path.contains("file-read-8") { return .bytes(Data("<html>login</html>".utf8), contentType: "application/octet-stream") }
+                return .redirect(to: "/user-login.html")
+            }
+        }
+        let client = makeClient(server)
+        let html = try await client.fetchBytes("/file-read-7.png")
+        let disguised = try await client.fetchBytes("/file-read-8.png")
+        let moved = try await client.fetchBytes("/file-read-9.png")
+        XCTAssertNil(html)
+        XCTAssertNil(disguised)   // not a picture whatever its type says
+        XCTAssertNil(moved)
+        XCTAssertFalse(ZenTaoClient.isImage(Data("<html>login</html>".utf8)))
+    }
+
     func testDownloadBytesRecoversFromADeadSessionWithAFreshLogin() async throws {
         var logins = 0
         let server = StubServer { req in

@@ -183,3 +183,16 @@ final class UnreadBadgeTests: XCTestCase {
 
     func testCopyLinkFeedbackLastsAboutASecondAndAHalf() { XCTAssertEqual(CopyLinkFeedback.duration, 1.5, accuracy: 0.001) }
 }
+
+/// Bytes fetched for an inline image are drawn when they hold a picture, and only then.
+@MainActor
+final class InlineImageDecodeTests: XCTestCase {
+    func testAPictureDecodesAndTextDoesNot() throws {
+        let png = try XCTUnwrap(Data(base64Encoded:
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="))
+        let image = try XCTUnwrap(decodeInlineImage(png))
+        XCTAssertEqual(image.size, NSSize(width: 1, height: 1))
+        XCTAssertNil(decodeInlineImage(Data("<html>login</html>".utf8)))
+        XCTAssertNil(decodeInlineImage(Data()))
+    }
+}

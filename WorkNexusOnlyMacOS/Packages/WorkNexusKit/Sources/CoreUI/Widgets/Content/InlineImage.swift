@@ -1,4 +1,5 @@
 import AppKit
+import ImageIO
 import SwiftUI
 
 /// Ported from: lib/core/widgets/inline_image.dart
@@ -40,12 +41,21 @@ public struct InlineImage: View {
         }
         .task(id: url) {
             phase = .loading
-            if let data = await loader(url), let img = NSImage(data: data) { phase = .loaded(data, img) } else { phase = .failed }
+            if let data = await loader(url), let img = decodeInlineImage(data) { phase = .loaded(data, img) } else { phase = .failed }
         }
         .sheet(item: $viewer) { req in
             ImageViewerDialog(data: req.data, externalUrl: req.externalUrl, onOpenExternally: req.onOpenExternally) { viewer = nil }
         }
     }
+}
+
+/// The picture in `data`: AppKit's own reading, else the first frame ImageIO can decode (some formats AppKit turns down
+/// still read there), so bytes that were fetched are not shown as a broken image.
+func decodeInlineImage(_ data: Data) -> NSImage? {
+    if let image = NSImage(data: data), image.isValid { return image }
+    guard let source = CGImageSourceCreateWithData(data as CFData, nil), CGImageSourceGetCount(source) > 0,
+          let frame = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
+    return NSImage(cgImage: frame, size: NSSize(width: frame.width, height: frame.height))
 }
 
 /// The loading / broken placeholder box of an inline image.
