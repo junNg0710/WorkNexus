@@ -40,9 +40,10 @@ extension ZenTaoClient {
         return try responseMap(res.data)
     }
 
-    /// Every department as one flat list. Most servers send a flat list (each with its `parent`); some send a tree whose
-    /// departments carry their sub-departments in `children`, or a map keyed by id: those are flattened too, a child
-    /// taking the department it sits in as its parent when it does not say.
+    /// Every department as one flat list. Some servers send a flat list (each with its `parent`); others a tree whose
+    /// departments carry their sub-departments in `items` (ZenTao's own `GET /departments`: "VN" holds "Flutter VN"…) or
+    /// `children`, or a map keyed by id: those are flattened too, a child taking the department it sits in as its parent
+    /// when it does not say.
     func departments() async throws -> [JSON] {
         let res = try await getV1("/departments")
         try ensureOk(res)
@@ -59,8 +60,11 @@ extension ZenTaoClient {
         var out: [JSON] = []
         for raw in items {
             guard var d = asMap(raw) else { continue }
-            let children = (d["children"] as? [Any]) ?? asMap(d["children"]).map { Array($0.values) } ?? []
-            d["children"] = nil
+            var children: [Any] = []
+            for key in ["items", "children"] {
+                children += (d[key] as? [Any]) ?? asMap(d[key]).map { Array($0.values) } ?? []
+                d[key] = nil
+            }
             if let parent, (zentaoInt(d["parent"]) ?? 0) == 0 { d["parent"] = parent }
             out.append(d)
             out += flattenDepartments(children, parent: d["id"])

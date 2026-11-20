@@ -225,6 +225,23 @@ final class ZenTaoOrganisationReadTests: XCTestCase {
         XCTAssertEqual(users.compactMap(\.account), ["hk", "vn"])
     }
 
+    /// ZenTao's own reply: the sub-departments of "VN" sit in its `items`.
+    func testSubDepartmentsInItemsAreRead() {
+        let tree: [Any] = [["id": 1, "name": "Project Leader HK", "parent": 0] as JSON,
+                           ["id": 21, "name": "VN", "parent": 0, "items": [["id": 13, "name": "Flutter VN", "parent": 21] as JSON,
+                                                                           ["id": 14, "name": "Go VN", "parent": 21] as JSON]] as JSON]
+        let flat = ZenTaoClient.flattenDepartments(tree, parent: nil)
+        XCTAssertEqual(flat.compactMap { str($0["name"]) }, ["Project Leader HK", "VN", "Flutter VN", "Go VN"])
+        XCTAssertTrue(flat.allSatisfy { $0["items"] == nil })
+        XCTAssertEqual(zenTaoDepartmentPath(13, flat), "VN > Flutter VN")
+        let teams = BuildDepartmentTeams()(accountId: "zt",
+            departments: flat.map { ZenTaoDepartment(id: zentaoInt($0["id"]) ?? 0, name: str($0["name"]) ?? "", parentId: zentaoInt($0["parent"]) ?? 0, path: "") },
+            users: [ZenTaoDepartmentUser(login: "junng", name: "JunNg", dept: 13), ZenTaoDepartmentUser(login: "go", name: "Go", dept: 14),
+                    ZenTaoDepartmentUser(login: "pl", name: "PL", dept: 1)])
+        XCTAssertEqual(teams.map(\.group.name), ["Project Leader HK", "VN", "Flutter VN", "Go VN"])
+        XCTAssertEqual(teams.first { $0.group.name == "VN" }?.group.members.count, 2)   // all of VN
+    }
+
     func testNestedDepartmentsAreFlattenedWithTheirParent() {
         let tree: [Any] = [["id": 1, "name": "HK"] as JSON,
                            ["id": 3, "name": "VN", "children": [["id": 5, "name": "Flutter VN"] as JSON,

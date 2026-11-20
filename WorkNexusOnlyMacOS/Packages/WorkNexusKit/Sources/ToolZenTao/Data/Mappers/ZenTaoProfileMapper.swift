@@ -59,7 +59,8 @@ func mapZenTaoDepartments(_ json: [JSON]) -> [ZenTaoDepartment] {
 func zenTaoDepartmentPath(_ id: Int, _ departments: [JSON]) -> String? {
     if id <= 0 { return nil }
     var byId: [Int: JSON] = [:]
-    for d in departments { if let i = Int(str(d["id"]) ?? "") { byId[i] = d } }
+    // A cached reply may still be ZenTao's tree (sub-departments in `items`).
+    for d in ZenTaoClient.flattenDepartments(departments, parent: nil) { if let i = Int(str(d["id"]) ?? "") { byId[i] = d } }
     var names: [String] = []
     var seen = Set<Int>()
     var current = id
