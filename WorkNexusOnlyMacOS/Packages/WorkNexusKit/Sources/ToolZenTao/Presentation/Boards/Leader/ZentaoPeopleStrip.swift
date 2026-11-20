@@ -46,7 +46,7 @@ struct ZentaoPeopleStrip: View {
                                 else { f.people = f.people == [row.login] ? [] : [row.login] }
                             }
                         }
-                        .modifier(PersonChipArranging(state: state, login: row.login, pinned: pinned.contains(row.login)))
+                        .modifier(PersonChipArranging(state: state, login: row.login, pinned: pinned.contains(row.login), bugs: bugs))
                     }
                 }
             }
@@ -89,10 +89,11 @@ private struct PersonChipBody: View {
 }
 
 /// A person's chip can be pinned to the front (right-click) and dragged onto another to move it there. "Unassigned" and
-/// "Everyone" stay where they are.
+/// "Everyone" stay where they are. Cards dropped on a chip are assigned to that person (the whole pick when the card is
+/// part of it).
 private struct PersonChipArranging: ViewModifier {
     @Environment(\.appTheme) private var theme
-    let state: ZentaoUIState; let login: String; let pinned: Bool
+    let state: ZentaoUIState; let login: String; let pinned: Bool; let bugs: Bool
     @State private var over = false
     static let prefix = "zentao-person:"
 
@@ -107,21 +108,41 @@ private struct PersonChipArranging: ViewModifier {
                               systemImage: pinned ? "pin.slash" : "pin")
                     }
                 }
-                .draggable(Self.prefix + login)
+                .onDrag {
+                    let payload = Self.prefix + login
+                    DispatchQueue.main.async { state.draggingTickets = false }
+                    return NSItemProvider(object: payload as NSString)
+                }
                 .dropDestination(for: String.self) { items, _ in
-                    guard let item = items.first, item.hasPrefix(Self.prefix) else { return false }
+                    guard let item = items.first else { return false }
+                    guard item.hasPrefix(Self.prefix) else { return assign(item) }
                     let moved = String(item.dropFirst(Self.prefix.count))
                     guard moved != login else { return false }
                     withAnimation(.easeOut(duration: theme.motion.fast)) { state.movePerson(moved, before: login) }
                     return true
                 } isTargeted: { over = $0 }
+                .overlay {
+                    // Cards over a person: they go to them.
+                    if over && state.draggingTickets {
+                        Capsule().stroke(theme.colors.accent, lineWidth: theme.borders.thick)
+                    }
+                }
                 .overlay(alignment: .leading) {
                     // Where the dragged person will land: just before this one.
-                    if over {
+                    if over && !state.draggingTickets {
                         Capsule().fill(theme.colors.accent).frame(width: theme.borders.thick * 2)
                             .padding(.vertical, theme.spacing.s2).offset(x: -theme.spacing.s4)
                     }
                 }
         }
+    }
+
+    /// A card dropped here: it, or the pick it belongs to, goes to this person (the board's bulk bar runs it).
+    private func assign(_ ticketId: String) -> Bool {
+        state.draggingTickets = false
+        let board = bugs ? state.bugBoard : state.taskBoard
+        guard board.scoped.contains(where: { $0.id == ticketId }) else { return false }
+        state.bulkDrop = ZentaoBulkDrop(bugs: bugs, login: login, ids: DroppedTicketIds()(dropped: ticketId, picked: board.selectedIds))
+        return true
     }
 }

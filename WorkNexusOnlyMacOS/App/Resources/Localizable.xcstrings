@@ -36126,6 +36126,23 @@
         }
       }
     },
+    "leaderBulkSkippedCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %1$@ skipped"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %1$@ bỏ qua"
+          }
+        }
+      }
+    },
     "leaderBulkUndo": {
       "extractionState": "manual",
       "localizations": {
@@ -36194,6 +36211,23 @@
         }
       }
     },
+    "leaderDragCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tickets"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ticket"
+          }
+        }
+      }
+    },
     "leaderOnlyMe": {
       "extractionState": "manual",
       "localizations": {
@@ -36207,6 +36241,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chỉ mình tôi"
+          }
+        }
+      }
+    },
+    "leaderQuickAssignNothing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to give %1$@: those tickets are theirs already, closed, or not on their team"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có gì để giao cho %1$@: các ticket đó đã là của họ, đã đóng, hoặc họ không thuộc nhóm"
+          }
+        }
+      }
+    },
+    "leaderQuickAssignOther": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Someone else…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Người khác…"
           }
         }
       }
@@ -36275,6 +36343,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bỏ chọn tất cả mục này"
+          }
+        }
+      }
+    },
+    "tipQuickAssign": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give every selected ticket to a pinned or recent person, or pick someone else"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giao mọi ticket đã chọn cho người đã ghim hoặc vừa giao gần đây, hoặc chọn người khác"
           }
         }
       }

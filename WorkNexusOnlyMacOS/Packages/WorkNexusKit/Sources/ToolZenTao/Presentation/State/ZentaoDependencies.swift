@@ -31,17 +31,21 @@ public struct ZentaoDependencies {
     public let pinnedPeople: ZenTaoPinnedPeopleStore
     /// What each account's boards were last scoped to (Only me, a team, or the execution / product).
     public let boardScopes: ZenTaoBoardScopeStore
+    /// The people each account handed tickets to lately (the quick Assign menu).
+    public let recentAssignees: ZenTaoRecentAssigneesStore
 
     public init(services: AppServices, nav: AppNavController, registry: @escaping @MainActor () -> ToolRegistry,
                 tickets: ZenTaoTicketService, viewPages: ZenTaoViewPages, taskBugs: ZenTaoTaskBugs,
                 editor: ZenTaoTicketEditor, teamMembers: ZenTaoTeamMembers, workflow: ZenTaoWorkflowService,
                 docs: ZenTaoDocRepository, exportDoc: ExportZenTaoDoc, teamGroups: ZenTaoTeamGroupRepository = NoTeamGroups(),
                 pinnedPeople: ZenTaoPinnedPeopleStore = InMemoryPinnedPeople(),
-                boardScopes: ZenTaoBoardScopeStore = InMemoryBoardScopes()) {
+                boardScopes: ZenTaoBoardScopeStore = InMemoryBoardScopes(),
+                recentAssignees: ZenTaoRecentAssigneesStore = InMemoryRecentAssignees()) {
         self.services = services; self.nav = nav; self.registry = registry; self.tickets = tickets
         self.viewPages = viewPages; self.taskBugs = taskBugs; self.editor = editor; self.teamMembers = teamMembers
         self.workflow = workflow; self.docs = docs; self.exportDoc = exportDoc; self.teamGroups = teamGroups
         self.pinnedPeople = pinnedPeople; self.boardScopes = boardScopes
+        self.recentAssignees = recentAssignees
     }
 
     /// The usual composition: `wiring` from `ZentaoModuleData.wire(...)`, `workflow` from
@@ -51,7 +55,8 @@ public struct ZentaoDependencies {
         self.init(services: services, nav: nav, registry: registry, tickets: wiring.tickets, viewPages: wiring.tickets,
                   taskBugs: wiring.tickets, editor: wiring.editor, teamMembers: wiring.teamMembers, workflow: workflow,
                   docs: wiring.docs, exportDoc: ZentaoModuleData.exportDoc(wiring.docs), teamGroups: wiring.teamGroups,
-                  pinnedPeople: wiring.pinnedPeople, boardScopes: wiring.boardScopes)
+                  pinnedPeople: wiring.pinnedPeople, boardScopes: wiring.boardScopes,
+                  recentAssignees: wiring.recentAssignees)
     }
 
     /// Opens ZenTao ticket `type` (`task`, `story`, `bug`) `id` linked from `from` in the detail panel, on `from`'s

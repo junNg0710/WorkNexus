@@ -54,6 +54,12 @@ struct ZentaoBulkBar: View {
             }
         }
         .onChange(of: model.failures == nil) { _, none in if !none { dialog = .failures } }
+        .onChange(of: state.bulkDrop) { _, drop in
+            guard let drop, drop.bugs == bugs else { return }
+            state.bulkDrop = nil
+            let tickets = state.shownTickets(bugs: bugs).filter { drop.ids.contains($0.id) }
+            Task { await model.quickAssign(drop.login, tickets: tickets, state: state, bugs: bugs, toasts: toasts) }
+        }
         .onChange(of: state.bulkRequest) { _, request in
             guard let request, request.bugs == bugs else { return }
             dialog = request.dialog
@@ -64,8 +70,9 @@ struct ZentaoBulkBar: View {
     @ViewBuilder private func actions(_ targets: [Ticket]) -> some View {
         Text(appFormat("leaderSelected", "%1$@ selected", "\(targets.count)")).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx)
         Divider().frame(height: theme.sizes.icon14)
-        AppButton(appString("leaderBulkAssign", "Assign…"), systemImage: "person.badge.plus", kind: .ghost) { dialog = .assign }.disabled(targets.isEmpty)
-            .help(appString("tipBulkAssign", "Give every selected ticket to one person"))
+        ZentaoQuickAssignButton(state: state, enabled: !targets.isEmpty, onPick: { login in
+            Task { await model.quickAssign(login, tickets: targets, state: state, bugs: bugs, toasts: toasts) }
+        }, onOther: { dialog = .assign })
         AppButton(appString("leaderBulkPriority", "Priority…"), systemImage: "flag", kind: .ghost) { dialog = .priority }.disabled(targets.isEmpty)
             .help(appString("tipBulkPriority", "Set the priority of every selected ticket"))
         AppButton(appString("leaderBulkClose", "Close…"), systemImage: "checkmark.circle", kind: .ghost) { dialog = .close }.disabled(targets.isEmpty)

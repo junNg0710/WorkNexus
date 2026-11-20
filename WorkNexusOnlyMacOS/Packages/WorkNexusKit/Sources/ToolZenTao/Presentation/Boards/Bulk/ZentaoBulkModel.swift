@@ -26,11 +26,14 @@ final class ZentaoBulkModel {
     func run(_ action: ZenTaoBulkAction, plan: ZenTaoBulkPlan, state: ZentaoUIState, bugs: Bool, toasts: AppToastController?) async {
         guard progress == nil, !plan.isEmpty else { return }
         let board = bugs ? state.bugBoard : state.taskBoard
+        if case .assign(let login, _) = action, let accountId = plan.tickets.first?.accountId { state.rememberAssignee(login, accountId: accountId) }
         let result = await drive([(action, plan)], state: state, board: board)
-        // What went through leaves the pick; what failed or never ran stays, to be retried.
-        board.select(result.failed.map(\.ticketId) + result.notRun)
+        // What the action covered leaves the pick; what failed or never ran stays, to be retried; other picks stay.
+        let covered = Set(plan.tickets.map(\.id) + plan.skipped.map(\.ticket.id))
+        board.select(board.selectedIds.subtracting(covered).union(result.failed.map(\.ticketId) + result.notRun))
         var line = appFormat("leaderBulkDone", "%1$@: %2$@ done, %3$@ failed", Self.name(action), "\(result.succeeded.count)", "\(result.failed.count)")
         if !result.notRun.isEmpty { line += " " + appFormat("leaderBulkNotRun", "· %1$@ not run", "\(result.notRun.count)") }
+        if !plan.skipped.isEmpty { line += " " + appFormat("leaderBulkSkippedCount", "· %1$@ skipped", "\(plan.skipped.count)") }
         // Handing work out by mistake is easy to undo: the toast carries the way back.
         var undo: (label: String, run: @MainActor () -> Void)?
         if case .assign = action, !result.succeeded.isEmpty {
@@ -45,6 +48,22 @@ final class ZentaoBulkModel {
             failures = Failures(action: action, tickets: plan.tickets.filter { failed.contains($0.id) },
                                 messages: Dictionary(result.failed.map { ($0.ticketId, $0.message) }, uniquingKeysWith: { a, _ in a }))
         }
+    }
+
+    /// Hands `tickets` to `login` in one go (the quick Assign menu, cards dropped on a person): the people of their teams
+    /// are read first so a ticket the person cannot take is skipped, not refused by ZenTao.
+    func quickAssign(_ login: String, tickets: [Ticket], state: ZentaoUIState, bugs: Bool, toasts: AppToastController?) async {
+        guard progress == nil, !tickets.isEmpty else { return }
+        let teams = (try? await state.bulkAssignSource(tickets).get()).map { ZenTaoAssignTeams(members: $0.teams.mapValues { Set($0.map(\.account)) }) }
+        let action = ZenTaoBulkAction.assign(login: login, comment: nil)
+        let plan = PlanBulkAction()(tickets, action, canTake: teams.map { t in { t.canTake($0, $1) } })
+        guard !plan.isEmpty else {
+            let name = state.memberNames[login] ?? login
+            toasts?.show(appFormat("leaderQuickAssignNothing", "Nothing to give %1$@: those tickets are theirs already, closed, or not on their team", name),
+                         kind: .warning)
+            return
+        }
+        await run(action, plan: plan, state: state, bugs: bugs, toasts: toasts)
     }
 
     /// Gives the `succeeded` tickets of an assign back to their holders in `before` (the tickets as they were).

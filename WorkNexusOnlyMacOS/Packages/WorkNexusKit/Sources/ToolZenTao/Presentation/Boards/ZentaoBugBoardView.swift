@@ -57,7 +57,7 @@ struct ZentaoBugBoardView: View {
             .frame(maxHeight: .infinity, alignment: .top)
         }
         // A drag has no end callback: the pointer moving over the board again (hover is not reported during a drag) ends it.
-        .onContinuousHover { _ in if dragging != nil { dragging = nil } }
+        .onContinuousHover { _ in if dragging != nil { dragging = nil; state.draggingTickets = false } }
         .appDialog(item: $askNonFix) { ticket in
             ZentaoNonFixResolutionDialog(onPick: { resolution in askNonFix = nil; run(.resolve(resolution), ticket) },
                                          onClose: { askNonFix = nil })
@@ -92,9 +92,8 @@ struct ZentaoBugColumn: View {
                         ZentaoBoardCard(controller: state.bugBoard, ticket: t, among: order)
                             .opacity(dragging == t.id ? 0.35 : 1)
                             // The data closure runs as the drag lifts the card (`.draggable` evaluates its closures while
-                            // rendering): that is the moment to dim the one left behind.
-                            .onDrag({ DispatchQueue.main.async { dragging = t.id }; return NSItemProvider(object: t.id as NSString) },
-                                    preview: { TicketCardDragPreview { ZentaoBoardCard(controller: state.bugBoard, ticket: t) } })
+                            // rendering): that is the moment to dim the one left behind. A person chip takes it too.
+                            .modifier(ZentaoTicketDrag(state: state, controller: state.bugBoard, ticket: t, onLift: { dragging = t.id }))
                     }
                     if more { ZentaoBugColumnFooter(state: state, column: column.column, visible: visible) }
                 }

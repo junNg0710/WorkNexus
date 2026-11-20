@@ -2003,6 +2003,10 @@
     "en": "%1$@ skipped: not on the ticket's execution or product team",
     "vi": "%1$@ bỏ qua: người nhận không thuộc nhóm execution hoặc product của ticket"
   },
+  "leaderBulkSkippedCount": {
+    "en": "· %1$@ skipped",
+    "vi": "· %1$@ bỏ qua"
+  },
   "leaderBulkUndo": {
     "en": "Undo",
     "vi": "Hoàn tác"
@@ -2019,9 +2023,21 @@
     "en": "Nothing to undo: those tickets had nobody before",
     "vi": "Không có gì để hoàn tác: các ticket đó trước đó chưa có ai nhận"
   },
+  "leaderDragCount": {
+    "en": "%1$@ tickets",
+    "vi": "%1$@ ticket"
+  },
   "leaderOnlyMe": {
     "en": "Only me",
     "vi": "Chỉ mình tôi"
+  },
+  "leaderQuickAssignNothing": {
+    "en": "Nothing to give %1$@: those tickets are theirs already, closed, or not on their team",
+    "vi": "Không có gì để giao cho %1$@: các ticket đó đã là của họ, đã đóng, hoặc họ không thuộc nhóm"
+  },
+  "leaderQuickAssignOther": {
+    "en": "Someone else…",
+    "vi": "Người khác…"
   },
   "leaderSelectDone": {
     "en": "Done",
@@ -2038,6 +2054,10 @@
   "tipDeselectAll": {
     "en": "Drop all of these from the selection",
     "vi": "Bỏ chọn tất cả mục này"
+  },
+  "tipQuickAssign": {
+    "en": "Give every selected ticket to a pinned or recent person, or pick someone else",
+    "vi": "Giao mọi ticket đã chọn cho người đã ghim hoặc vừa giao gần đây, hoặc chọn người khác"
   },
   "tipSelectAllHere": {
     "en": "Select all of these",

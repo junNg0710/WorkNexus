@@ -58,20 +58,20 @@ struct BoardsEnv {
     let store = DetailFakeStore()
     let pages = FakeViewPages()
     let workflow = DetailFakeWorkflow()
+    let adapter = DetailFakeAdapter()
     let nav: AppNavController
     let deps: ZentaoDependencies
     let state: ZentaoUIState
 
     init(section: SectionID = ZentaoSection.bugs, tickets: [Ticket] = [], members: [ProviderUser] = [],
          teamGroups: ZenTaoTeamGroupRepository = NoTeamGroups(), boardScopes: ZenTaoBoardScopeStore = BoardsEnv.onTheirScope()) {
-        let store = self.store, pages = self.pages
+        let store = self.store, pages = self.pages, adapter = self.adapter
         store.accounts["zt1"] = Account(id: "zt1", workspaceId: "w1", providerType: .zentao, handle: "thanh", baseUrl: "https://zentao.example.com")
         for t in tickets { store.tickets[t.id] = t }
         let nav = AppNavController { _ in section }
         nav.select(.account("zt1"))
         nav.setSection(section, accountId: "zt1")
         self.nav = nav
-        let adapter = DetailFakeAdapter()
         let sync = DetailFakeSync(adapter: adapter)
         let services = AppServices(tickets: store, workspaces: store, comments: store, activity: store, syncStatus: store, settings: store,
                                    credentials: store, sync: sync, ticketDetail: sync, adapters: DetailFakeRegistry())

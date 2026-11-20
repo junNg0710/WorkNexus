@@ -40,6 +40,10 @@ public final class ZentaoUIState {
     var observedTeamAccounts: Set<String> = []
     /// A bulk dialog asked for from a card's menu; the bar of the board it names opens it and clears this.
     var bulkRequest: ZentaoBulkRequest?
+    /// Cards dropped on a person of the people strip; the bar of the board it names assigns them and clears this.
+    var bulkDrop: ZentaoBulkDrop?
+    /// A card is being dragged (not a person chip): a person chip under it reads as "assign to", not "move before".
+    var draggingTickets = false
     /// Boards (`"bugs"` / `"tasks"`) whose views the leader asked to load whole, so the counts cover everything.
     public internal(set) var loadingEverything: Set<String> = []
     public var hideEmptyModules = false

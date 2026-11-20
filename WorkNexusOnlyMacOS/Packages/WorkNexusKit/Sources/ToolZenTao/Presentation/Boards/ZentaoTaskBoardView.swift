@@ -34,7 +34,11 @@ struct ZentaoTaskColumn: View {
             ZentaoColumnSelectAll(controller: state.taskBoard, tickets: column.tickets)
         } content: {
             let order = column.tickets.map(\.id)
-            ForEach(column.tickets) { ZentaoBoardCard(controller: state.taskBoard, ticket: $0, among: order) }
+            ForEach(column.tickets) { t in
+                // Dragged onto a person of the people strip, it (and the pick it is part of) goes to them.
+                ZentaoBoardCard(controller: state.taskBoard, ticket: t, among: order)
+                    .modifier(ZentaoTicketDrag(state: state, controller: state.taskBoard, ticket: t))
+            }
             if more { ZentaoTaskColumnFooter(state: state, column: column.column, visible: column.tickets.count) }
         }
     }
