@@ -6,7 +6,8 @@ import SwiftUI
 
 /// Ported from: lib/shared/detail/presentation/widgets/{detail_header,detail_header_top_bar,detail_header_title,detail_back_button,
 /// detail_header_more_button}.dart
-/// Top of the detail panel: breadcrumb (workspace / ref) with back, edit, copy-link, open-in-browser, more and close; the title;
+/// Top of the detail panel: breadcrumb (workspace / ref) with back, edit, copy-link, copy-title, share, open-in-browser, refresh
+/// and close (each its own button: the "…" menu that held copy-title and refresh is gone); the title;
 /// the people (assigned to / opened by) and the tool's action buttons; the tool's header extras above the title.
 public struct DetailHeader: View {
     @Environment(\.appTheme) private var theme
@@ -59,6 +60,9 @@ struct DetailHeaderTopBar: View {
             if !url.isEmpty {
                 // Its own button, as on a merge request's header: the link is what gets pasted into chat all day.
                 CopyLinkButton(url: url)
+            }
+            DetailCopyTitleButton(ticket: ticket)
+            if !url.isEmpty {
                 if let share = controller.extensions.shareToChat {
                     // Pass the ticket on in chat without leaving it: pick the chats, it sends "#12 Title" and the link.
                     AppIconButton("paperplane", help: appString("shareInChat", "Share in chat"), outlined: true) { sharing = true }
@@ -68,38 +72,22 @@ struct DetailHeaderTopBar: View {
                     if let open = controller.extensions.openLink { open(url) } else { openLinkExternally(url, inApp: false) }
                 }
             }
-            DetailHeaderMoreButton(ticket: ticket, model: model)
+            AppIconButton("arrow.triangle.2.circlepath", help: appString("refresh", "Refresh"), outlined: true) { model.refresh(ticket) }
             AppIconButton("xmark", help: appString("close", "Close"), outlined: true, action: onClose)
         }
     }
 }
 
-struct DetailHeaderMoreButton: View {
-    @Environment(\.appTheme) private var theme
+/// Copies "#12 Title" (the ref and the title), with a toast saying so.
+struct DetailCopyTitleButton: View {
     @Environment(\.toasts) private var toasts
-    let ticket: Ticket; let model: TicketDetailModel
-    @State private var anchor = AppMenuAnchor()
+    let ticket: Ticket
 
-    private func copy(_ text: String, _ done: String) {
-        NSPasteboard.general.clearContents(); NSPasteboard.general.setString(text, forType: .string)
-        toasts?.show(done)
-    }
-
-    private func items() -> [AppNativeMenu.Item] {
-        [
-            AppNativeMenu.Item(appString("refresh", "Refresh"), icon: "arrow.triangle.2.circlepath") { model.refresh(ticket) },
-            AppNativeMenu.Item(appString("copyTitle", "Copy title"), icon: "doc.on.doc") {
-                copy(ticketTitleWithRef(ticket), appString("titleCopied", "Title copied"))
-            },
-        ]
-    }
-
-    /// A button like its neighbours (the whole square takes the click; a SwiftUI menu took it only on the dots), opening a
-    /// native menu just under itself on the press.
     var body: some View {
-        let help = appString("more", "More")
-        AppIconButton("ellipsis", help: help, outlined: true) { AppNativeMenu.popUp(items(), under: anchor) }
-            .appMenu(anchor, help: help, items: items)
+        AppIconButton("doc.on.doc", help: appString("copyTitle", "Copy title"), outlined: true) {
+            NSPasteboard.general.clearContents(); NSPasteboard.general.setString(ticketTitleWithRef(ticket), forType: .string)
+            toasts?.show(appString("titleCopied", "Title copied"))
+        }
     }
 }
 
