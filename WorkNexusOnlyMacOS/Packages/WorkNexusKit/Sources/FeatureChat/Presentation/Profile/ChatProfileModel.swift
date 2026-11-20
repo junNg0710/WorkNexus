@@ -45,7 +45,8 @@ final class ChatProfileModel {
     func watchTickets(services: ChatServices?, accountId: String, handle: String?) async {
         guard let watch = services?.watchTickets, let handle, !handle.isEmpty else { return }
         for await all in watch() {
-            let next = ListPersonTickets()(all, accountId: accountId, handle: handle)
+            // Off the main thread: the whole ticket table is gone through on every write.
+            let next = await Task.detached(priority: .utility) { ListPersonTickets()(all, accountId: accountId, handle: handle) }.value
             if next != tickets { tickets = next }
         }
     }

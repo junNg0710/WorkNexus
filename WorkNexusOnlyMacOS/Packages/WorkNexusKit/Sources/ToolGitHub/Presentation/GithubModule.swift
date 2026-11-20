@@ -67,12 +67,14 @@ public final class GithubModule: ToolModule {
 
     public func metrics(account: Account) -> AsyncStream<ToolMetrics?> {
         let stream = ctx.services.tickets.watchTickets(), accountId = account.id
+        let pulls = appString("githubPullRequests", "Pull Requests"), issues = appString("githubIssues", "Issues")
         return AsyncStream { continuation in
-            let task = Task {
+            // Counted off the main thread: every ticket write re-counts the whole table.
+            let task = Task.detached(priority: .utility) {
                 for await tickets in stream {
                     let m = ComputeGitHubMetrics()(tickets: tickets, accountId: accountId)
-                    continuation.yield(ToolMetrics(primaryCount: m.primaryCount, primaryLabel: appString("githubPullRequests", "Pull Requests"),
-                                                   secondaryCount: m.secondaryCount, secondaryLabel: appString("githubIssues", "Issues")))
+                    continuation.yield(ToolMetrics(primaryCount: m.primaryCount, primaryLabel: pulls,
+                                                   secondaryCount: m.secondaryCount, secondaryLabel: issues))
                 }
                 continuation.finish()
             }

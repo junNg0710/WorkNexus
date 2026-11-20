@@ -87,7 +87,9 @@ public final class ZentaoModule: ToolModule {
     public func metrics(account: Account) -> AsyncStream<ToolMetrics?> {
         let tickets = dependencies.services.tickets.watchTickets()
         return AsyncStream { out in
-            let task = Task {
+            // Off the main thread: every ticket write re-counts the whole table, which made the app stutter wherever the
+            // user was (scrolling a chat) while a sync ran.
+            let task = Task.detached(priority: .utility) {
                 for await list in tickets { out.yield(ComputeZentaoMetrics()(tickets: list, account: account)) }
                 out.finish()
             }

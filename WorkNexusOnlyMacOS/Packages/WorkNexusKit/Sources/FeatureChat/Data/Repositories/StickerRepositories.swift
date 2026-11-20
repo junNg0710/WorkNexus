@@ -19,6 +19,12 @@ final class LocalStickerRepository: StickerRepository, @unchecked Sendable {
     /// A bundled set's tags, beside its images.
     private static let tagsFile = "stickers.json"
     private var fm: FileManager { .default }
+    private let lock = NSLock()
+    /// The bundled sets, read once: they ship with the app. Every chat opened asked for them again (its composer suggests
+    /// stickers), which listed the folders and parsed their tags each time.
+    private var bundledCache: [ChatSticker]?
+    /// The imported packs and the user's own stickers, until one is added or removed.
+    private var ownCache: [ChatSticker]?
 
     init(bundleRoot: URL?, directory: URL, converter: StickerConverter? = nil) {
         self.bundleRoot = bundleRoot; self.directory = directory; self.converter = converter
@@ -28,7 +34,15 @@ final class LocalStickerRepository: StickerRepository, @unchecked Sendable {
     private var packsDir: URL { directory.appendingPathComponent("packs", isDirectory: true) }
     private func packDir(_ pack: String) -> URL { packsDir.appendingPathComponent(safeName(pack), isDirectory: true) }
 
-    func stickers() async -> Outcome<[ChatSticker]> { .success(bundled() + imported() + custom()) }
+    func stickers() async -> Outcome<[ChatSticker]> {
+        let (shipped, own) = lock.withLock { (bundledCache, ownCache) }
+        let bundled = shipped ?? self.bundled(), mine = own ?? (imported() + custom())
+        lock.withLock { bundledCache = bundled; if ownCache == nil { ownCache = mine } }
+        return .success(bundled + mine)
+    }
+
+    /// The user's stickers changed on disk: read them again next time.
+    private func forgetOwn() { lock.withLock { ownCache = nil } }
 
     private func bundled() -> [ChatSticker] {
         guard let root = bundleRoot else { return [] }
@@ -100,6 +114,7 @@ final class LocalStickerRepository: StickerRepository, @unchecked Sendable {
             let safe = safeName(fileName)
             let file = directory.appendingPathComponent("\(Int(Date().timeIntervalSince1970 * 1000))_\(isImagePath(safe) ? safe : safe + ".png")")
             try data.write(to: file, options: .atomic)
+            forgetOwn()
             return .success(customSticker(file))
         } catch { return .failure(.storage("Could not keep the sticker: \(error.localizedDescription)")) }
     }
@@ -107,6 +122,7 @@ final class LocalStickerRepository: StickerRepository, @unchecked Sendable {
     func remove(_ sticker: ChatSticker) async -> Outcome<Void> {
         guard sticker.custom else { return .failure(.unexpected("Bundled stickers stay")) }
         try? fm.removeItem(atPath: sticker.location)
+        forgetOwn()
         return .success(())
     }
 
@@ -128,11 +144,12 @@ final class LocalStickerRepository: StickerRepository, @unchecked Sendable {
             try Data(meta.serialized().utf8).write(to: staging.appendingPathComponent(Self.packMeta))
             try? fm.removeItem(at: target)
             try fm.moveItem(at: staging, to: target)
+            forgetOwn()
             return .success(())
         } catch { return .failure(.storage("Could not keep the sticker set: \(error.localizedDescription)")) }
     }
 
-    func removePack(_ pack: String) async -> Outcome<Void> { try? fm.removeItem(at: packDir(pack)); return .success(()) }
+    func removePack(_ pack: String) async -> Outcome<Void> { try? fm.removeItem(at: packDir(pack)); forgetOwn(); return .success(()) }
 
     func lastPack() async -> Outcome<String?> { .success(try? String(contentsOf: directory.appendingPathComponent(Self.lastPackName), encoding: .utf8)) }
 

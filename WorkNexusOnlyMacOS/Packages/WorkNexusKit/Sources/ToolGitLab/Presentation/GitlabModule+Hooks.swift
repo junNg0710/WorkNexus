@@ -25,8 +25,8 @@ extension GitlabModule {
         return AsyncStream { continuation in
             let task = Task { @MainActor in
                 let feed = GitlabMetricsFeed(accountId: accountId, projects: { model.projects.count }) { continuation.yield($0) }
-                let loader = Task { @MainActor in await model.load(); feed.emit() }
-                for await tickets in stream { feed.tickets = tickets; feed.emit() }
+                let loader = Task { @MainActor in await model.load(); await feed.emit() }
+                for await tickets in stream { feed.tickets = tickets; await feed.emit() }
                 loader.cancel()
                 continuation.finish()
             }
@@ -47,8 +47,10 @@ final class GitlabMetricsFeed {
         self.accountId = accountId; self.projects = projects; self.yield = yield
     }
 
-    func emit() {
-        let m = ComputeGitLabMetrics()(tickets: tickets, projectCount: projects(), accountId: accountId)
+    /// Counts off the main thread (every ticket write re-counts the whole table), then yields here.
+    func emit() async {
+        let tickets = tickets, count = projects(), accountId = accountId
+        let m = await Task.detached(priority: .utility) { ComputeGitLabMetrics()(tickets: tickets, projectCount: count, accountId: accountId) }.value
         yield(ToolMetrics(primaryCount: m.primaryCount, primaryLabel: appString("allProjects", "All projects"),
                           secondaryCount: m.secondaryCount, secondaryLabel: appString("gitlabMergeRequests", "Merge Requests")))
     }

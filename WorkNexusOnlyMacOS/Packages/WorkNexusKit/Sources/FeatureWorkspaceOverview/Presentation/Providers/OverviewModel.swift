@@ -73,7 +73,7 @@ public final class OverviewModel {
             },
             Task { [weak self] in
                 guard let s = self?.repository.watchTickets() else { return }
-                for await v in s { self?.setTickets(v) }
+                for await v in s { await self?.receiveTickets(v) }
             },
             Task { [weak self] in
                 guard let s = self?.repository.watchDateFormat() else { return }
@@ -95,6 +95,16 @@ public final class OverviewModel {
     }
     func setAccounts(_ v: [Account]) { allAccounts = v; recompute() }
     func setTickets(_ v: [Ticket]) { tickets = v; recompute() }
+
+    /// The tickets from the store: the assigned work is listed off the main thread (every ticket write lists the whole
+    /// table again), then both land together.
+    func receiveTickets(_ v: [Ticket]) async {
+        let accounts = accounts
+        let work = await Task.detached(priority: .utility) { ListAssignedWork()(tickets: v, accounts: accounts) }.value
+        tickets = v
+        // The accounts changed meanwhile: list again, for them.
+        if accounts == self.accounts { assignedWork = work } else { recompute() }
+    }
 
     private func recompute() {
         accounts = workspace.map { ws in allAccounts.filter { $0.workspaceId == ws.id } } ?? allAccounts

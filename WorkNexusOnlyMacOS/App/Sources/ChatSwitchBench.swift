@@ -24,8 +24,10 @@ enum ChatSwitchBench {
                 // The first opens the Chat place on the account; then only the chat changes, as a click in the list does.
                 if i == 0 { chat.show(accountId: accountId, chatGid: gids[0]) } else { chat.events.open(chatGid: gids[i % gids.count]) }
                 frames.reset()
+                _ = MainCPU.take()
                 try? await Task.sleep(for: .seconds(1))
-                print("BENCH switch \(i) to \(gids[i % gids.count].prefix(8)): \(frames.summary)")
+                // The main thread's CPU time is steadier than frame gaps on a loaded machine: it is the work the switch cost.
+                print("BENCH switch \(i) to \(gids[i % gids.count].prefix(8)): main \(MainCPU.take()) ms, \(frames.summary)")
                 fflush(stdout)
                 i += 1
                 try? await Task.sleep(for: .seconds(max(0, pause - 1)))

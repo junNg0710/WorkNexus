@@ -37,7 +37,12 @@ public final class DetailController {
         tasks = [
             Task { [weak self] in
                 guard let s = self?.services.tickets.watchTickets() else { return }
-                for await v in s { self?.tickets = index(v, \.id) }
+                // Indexed off the main thread: every ticket write rebuilt this dictionary of the whole table on it,
+                // whatever the user was doing.
+                for await v in s {
+                    let byId = await Task.detached(priority: .utility) { Dictionary(v.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a }) }.value
+                    self?.tickets = byId
+                }
             },
             Task { [weak self] in
                 guard let s = self?.services.workspaces.watchAccounts() else { return }
