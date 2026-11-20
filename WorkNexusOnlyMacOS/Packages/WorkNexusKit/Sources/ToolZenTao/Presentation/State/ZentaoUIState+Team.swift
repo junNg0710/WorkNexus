@@ -28,7 +28,7 @@ extension ZentaoUIState {
                         let added = Set(fresh.members.map(\.login)).subtracting(scope.logins)
                         scope.group = fresh
                         setTeam(scope, bugs: bugs)
-                        boardMembers = fresh.members.map { ProviderUser(account: $0.login, displayName: $0.name) }
+                        setBoardMembers(fresh.members.map { ProviderUser(account: $0.login, displayName: $0.name) }, bugs: bugs)
                         if !added.isEmpty { loadTeam(bugs: bugs, only: added) } else { rescope() }
                     } else if known.contains(scope.group.id) {
                         // The group was there and is gone: deleted. (One never seen is just not stored yet.)
@@ -48,12 +48,12 @@ extension ZentaoUIState {
     /// `remember`: kept as the board's scope for the next launch (the user picked it).
     public func openTeam(_ group: ZenTaoTeamGroup, bugs: Bool, remember: Bool = true) {
         if remember { deps.boardScopes.setChoice(group.isOnlyMe ? .onlyMe : .team(id: group.id), accountId: group.accountId, bugs: bugs) }
-        teamGeneration += 1   // reads of a team shown before are dropped
+        bumpTeamGeneration(bugs: bugs)   // reads of a team shown before are dropped
         var scope = ZentaoTeamScope(group: group)
         for m in group.members { scope.loads[m.login] = .loading }
         setTeam(scope, bugs: bugs)
-        boardMembers = group.members.map { ProviderUser(account: $0.login, displayName: $0.name) }
-        membersFor = "team:\(group.id)"
+        setBoardMembers(group.members.map { ProviderUser(account: $0.login, displayName: $0.name) }, bugs: bugs)
+        setMembersFor("team:\(group.id)", bugs: bugs)
         (bugs ? bugBoard : taskBoard).clearSelection()
         rescope()
         loadTeam(bugs: bugs, only: nil)
@@ -63,9 +63,9 @@ extension ZentaoUIState {
     public func closeTeam(bugs: Bool, remember: Bool = true) {
         guard let open = team(bugs: bugs) else { return }
         if remember { deps.boardScopes.setChoice(.scope, accountId: open.accountId, bugs: bugs) }
-        teamGeneration += 1
+        bumpTeamGeneration(bugs: bugs)
         setTeam(nil, bugs: bugs)
-        membersFor = nil
+        setMembersFor(nil, bugs: bugs)
         (bugs ? bugBoard : taskBoard).clearSelection()
         rescope()
         loadBoardMembers(bugs: bugs)
@@ -74,7 +74,7 @@ extension ZentaoUIState {
     /// Reads the work of the team's people (`only` those logins, else all) three at a time; each one's read is kept as it ends.
     public func loadTeam(bugs: Bool, only: Set<String>?) {
         guard let scope = team(bugs: bugs) else { return }
-        let generation = teamGeneration, accountId = scope.accountId
+        let generation = teamGeneration(bugs: bugs), accountId = scope.accountId
         let logins = scope.logins.filter { only?.contains($0) ?? true }
         for l in logins { updateTeam(bugs: bugs) { $0.loads[l] = .loading } }
         let pages = deps.viewPages
@@ -92,7 +92,7 @@ extension ZentaoUIState {
 
     private func read(_ login: String, accountId: String, bugs: Bool, generation: Int, pages: ZenTaoViewPages) async {
         let result = await pages.syncAssignedWork(accountId: accountId, login: login, bugs: bugs, cap: Self.teamReadCap, cancel: nil)
-        guard generation == teamGeneration else { return }   // the team changed meanwhile
+        guard generation == teamGeneration(bugs: bugs) else { return }   // the team changed meanwhile
         updateTeam(bugs: bugs) { scope in
             switch result {
             case .success(let work):
@@ -113,6 +113,11 @@ extension ZentaoUIState {
         let members = scope.group.members
         change(&scope)
         setTeam(scope, bugs: bugs)
-        if scope.group.members != members { boardMembers = scope.group.members.map { ProviderUser(account: $0.login, displayName: $0.name) } }
+        if scope.group.members != members {
+            setBoardMembers(scope.group.members.map { ProviderUser(account: $0.login, displayName: $0.name) }, bugs: bugs)
+        }
     }
+
+    private func teamGeneration(bugs: Bool) -> Int { bugs ? bugTeamGeneration : taskTeamGeneration }
+    private func bumpTeamGeneration(bugs: Bool) { if bugs { bugTeamGeneration += 1 } else { taskTeamGeneration += 1 } }
 }

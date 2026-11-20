@@ -74,7 +74,7 @@ extension ZentaoUIState {
     /// The inputs of a board's derived values. Reading them here is also what makes a view depend on them.
     func cacheKey(bugs: Bool) -> ZentaoBoardCache.Key {
         ZentaoBoardCache.Key(revision: (bugs ? bugBoard : taskBoard).revision, leader: leader(bugs: bugs), names: memberNames,
-                             sort: deps.nav.boardSort, includeClosed: bugs && bugTab == .all, roster: boardMembers.map(\.account),
+                             sort: deps.nav.boardSort, includeClosed: bugs && bugTab == .all, roster: boardMembers(bugs: bugs).map(\.account),
                              day: Int(Date().timeIntervalSince1970 / 86_400))
     }
 }

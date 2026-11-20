@@ -90,18 +90,27 @@ extension ZentaoUIState {
     /// Loads the people of the open board's product / execution (for the assignee / opener facet choices).
     public func loadBoardMembers(bugs: Bool) {
         // A team brings its own people (`openTeam`).
-        guard team(bugs: bugs) == nil, let (key, accountId, id) = moduleKey(bugs), membersFor != key else { return }
-        membersFor = key
+        guard team(bugs: bugs) == nil, let (key, accountId, id) = moduleKey(bugs), membersFor(bugs: bugs) != key else { return }
+        setMembersFor(key, bugs: bugs)
         Task {
             let r = bugs ? await deps.teamMembers.productMembers(accountId: accountId, productId: id)
                          : await deps.teamMembers.executionMembers(accountId: accountId, executionId: id)
-            if membersFor == key { boardMembers = r.value ?? [] }
+            if membersFor(bugs: bugs) == key { setBoardMembers(r.value ?? [], bugs: bugs) }
         }
     }
 
+    /// The people of the Bugs (`bugs`) or Tasks board.
+    public func boardMembers(bugs: Bool) -> [ProviderUser] { bugs ? bugMembers : taskMembers }
+
+    func setBoardMembers(_ people: [ProviderUser], bugs: Bool) { if bugs { bugMembers = people } else { taskMembers = people } }
+
+    func membersFor(bugs: Bool) -> String? { bugs ? bugMembersFor : taskMembersFor }
+
+    func setMembersFor(_ key: String?, bugs: Bool) { if bugs { bugMembersFor = key } else { taskMembersFor = key } }
+
     /// Every choice the bug board (`bugs`) or task board can be filtered by.
     public func facetCatalog(bugs: Bool) -> BoardFacetCatalog {
-        BuildZenTaoFacetCatalog()(ZenTaoFacetCatalogInput(bugs: bugs, members: boardMembers,
+        BuildZenTaoFacetCatalog()(ZenTaoFacetCatalogInput(bugs: bugs, members: boardMembers(bugs: bugs),
                                                            modules: orderedModules(bugs: bugs)))
     }
 

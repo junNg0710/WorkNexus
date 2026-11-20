@@ -35,7 +35,8 @@ extension ZentaoUIState {
 
     /// Login -> the name the person goes by, from the people of the open board.
     public var memberNames: [String: String] {
-        Dictionary(boardMembers.map { ($0.account, $0.displayName) }, uniquingKeysWith: { a, _ in a })
+        // Names only: either board's people may name someone, so both are read.
+        Dictionary((taskMembers + bugMembers).map { ($0.account, $0.displayName) }, uniquingKeysWith: { a, _ in a })
     }
 
     /// The board's tickets after its own filters but before the leader's: what the people strip and chips count.
@@ -58,7 +59,7 @@ extension ZentaoUIState {
     /// person can be swapped for another). Members of the board are listed even when they hold nothing.
     public func workload(bugs: Bool) -> [ZenTaoWorkload] {
         (bugs ? bugCache : taskCache).workload(cacheKey(bugs: bugs)) {
-            SummarizeWorkload()(narrowed(bugs: bugs) { $0.people = [] }, roster: boardMembers.map(\.account))
+            SummarizeWorkload()(narrowed(bugs: bugs) { $0.people = [] }, roster: boardMembers(bugs: bugs).map(\.account))
         }
     }
 

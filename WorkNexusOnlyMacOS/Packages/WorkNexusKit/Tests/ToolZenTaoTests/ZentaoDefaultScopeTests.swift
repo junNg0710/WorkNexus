@@ -62,7 +62,7 @@ final class ZentaoDefaultScopeTests: XCTestCase {
         env.state.applyDefaultScope(account: account(env), bugs: false)
         await env.wait { env.state.taskTeam?.isLoading == false }
         XCTAssertEqual(env.state.taskTeam?.logins, ["Thanh"])
-        XCTAssertEqual(env.state.boardMembers.map(\.account), ["Thanh"])
+        XCTAssertEqual(env.state.boardMembers(bugs: false).map(\.account), ["Thanh"])
         XCTAssertNotNil(env.state.taskTeam?.loads["Thanh"])
     }
 

@@ -36,7 +36,9 @@ public final class ZentaoUIState {
     /// The team a board shows instead of one execution / product, with what was read of each person.
     public internal(set) var taskTeam: ZentaoTeamScope?
     public internal(set) var bugTeam: ZentaoTeamScope?
-    var teamGeneration = 0
+    /// Bumped when a board's team changes, so reads of the team shown before are dropped (one per board).
+    var taskTeamGeneration = 0
+    var bugTeamGeneration = 0
     /// `accountId|tasks` / `accountId|bugs` boards that were opened on their remembered scope this session.
     var appliedDefaultScopes: Set<String> = []
     /// Bumped when the pinned people change, so the people strip reads them again.
@@ -72,9 +74,13 @@ public final class ZentaoUIState {
     public internal(set) var executions: [String: ZentaoLoad<[ProviderExecution]>] = [:]
     /// Module id + path in ZenTao's order, per `b:account:product` / `t:account:execution`.
     public internal(set) var moduleNames: [String: ZentaoLoad<[ZentaoModulePath]>] = [:]
-    /// The people of the open board's product / execution (the facet catalog's assignee / opener choices).
-    public internal(set) var boardMembers: [ProviderUser] = []
-    var membersFor: String?
+    /// The people of each board's product / execution or team (the facet catalog's choices, the people strip), kept apart:
+    /// the Bugs board, mounted behind Tasks, must not swap its product's people into the team Tasks shows.
+    var taskMembers: [ProviderUser] = []
+    var bugMembers: [ProviderUser] = []
+    /// What each board's people were read for (`t:…` / `b:…`, or `team:<id>`).
+    var taskMembersFor: String?
+    var bugMembersFor: String?
     var observing = false
 
     public init(deps: ZentaoDependencies) {

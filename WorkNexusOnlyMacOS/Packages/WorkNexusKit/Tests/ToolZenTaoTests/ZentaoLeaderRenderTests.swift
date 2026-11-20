@@ -66,7 +66,7 @@ final class ZentaoLeaderRenderTests: XCTestCase {
         env.state.openExecution(env.execution("e1", "Sprint 12"))
         await env.wait { env.state.taskBoard.scoped.count == all.count }
         env.state.loadBoardMembers(bugs: false)
-        await env.wait { env.state.boardMembers.count == 4 }
+        await env.wait { env.state.boardMembers(bugs: false).count == 4 }
         return env
     }
 

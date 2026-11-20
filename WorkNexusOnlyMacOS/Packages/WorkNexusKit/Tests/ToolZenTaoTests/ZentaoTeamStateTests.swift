@@ -49,7 +49,7 @@ final class ZentaoTeamStateTests: XCTestCase {
         await env.wait { env.state.taskTeam?.isLoading == false }
         // The tasks of two executions, and not the bug or the task nobody on the team holds.
         XCTAssertEqual(Set(env.state.taskBoard.scoped.map(\.externalKey)), ["1", "2", "4"])
-        XCTAssertEqual(env.state.boardMembers.map(\.displayName), ["An Nguyen", "Binh Tran"])
+        XCTAssertEqual(env.state.boardMembers(bugs: false).map(\.displayName), ["An Nguyen", "Binh Tran"])
         XCTAssertEqual(env.state.taskTeam?.loads["an"], .loaded(count: 3, total: 3, truncated: false))
         XCTAssertEqual(env.pages.personCalls.sorted(), ["an|false", "binh|false"])
         // The leader bar counts the people of the team, the idle ones too.
@@ -81,6 +81,25 @@ final class ZentaoTeamStateTests: XCTestCase {
         XCTAssertTrue(env.state.taskBoard.scoped.isEmpty)
     }
 
+    /// The Bugs board, mounted behind Tasks, reads its product's people: they must not show on the team Tasks has open.
+    func testTheOtherBoardsPeopleStayOffATeamsStrip() async {
+        let tickets = [boardTask("1", execution: "e1", assignee: "an")]
+        let product = [ProviderUser(account: "andy-hk", displayName: "Andy-HK-Flutter"), ProviderUser(account: "an", displayName: "An Nguyen")]
+        let env = BoardsEnv(section: ZentaoSection.tasks, tickets: tickets, members: product)
+        env.pages.personWork = ["an": ZenTaoPersonWork(ids: [id("1")], total: 1, truncated: false)]
+        await env.wait { env.state.taskBoard.tickets.count == 1 }
+        env.state.openTeam(group([an]), bugs: false)
+        env.state.openProduct(env.product())
+        env.state.loadBoardMembers(bugs: true)
+        await env.wait { env.state.boardMembers(bugs: true).count == 2 }
+        await env.wait { env.state.taskTeam?.isLoading == false }
+        XCTAssertEqual(env.state.boardMembers(bugs: false).map(\.account), ["an"])
+        XCTAssertEqual(env.state.workload(bugs: false).map(\.login), ["an"])
+        // Opening a team on Bugs does not drop the reads of the team Tasks shows.
+        env.state.openTeam(group([binh]), bugs: true)
+        XCTAssertEqual(env.state.taskTeam?.loads["an"], .loaded(count: 1, total: 1, truncated: false))
+    }
+
     func testPickingAnExecutionLeavesTheTeam() async {
         let env = await env()
         env.state.openTeam(group([an]), bugs: false)
@@ -88,7 +107,7 @@ final class ZentaoTeamStateTests: XCTestCase {
         XCTAssertNotNil(env.state.taskTeam)
         env.state.openExecution(env.execution("e1", "Sprint 1"))
         XCTAssertNil(env.state.taskTeam)
-        XCTAssertTrue(env.state.boardMembers.isEmpty || env.state.membersFor != "team:g1")
+        XCTAssertTrue(env.state.boardMembers(bugs: false).isEmpty || env.state.taskMembersFor != "team:g1")
     }
 
     /// The store's stream is what feeds the board; a ticket reassigned since it was read must not stay in the team's view.
@@ -116,7 +135,7 @@ final class ZentaoTeamStateTests: XCTestCase {
         await env.wait { env.state.taskTeam?.group.members.count == 2 && env.state.taskTeam?.isLoading == false }
         XCTAssertEqual(Set(env.state.taskBoard.scoped.map(\.externalKey)), ["1", "2", "4"])
         XCTAssertEqual(env.pages.personCalls.filter { $0 == "an|false" }.count, 1)
-        XCTAssertEqual(env.state.boardMembers.count, 2)
+        XCTAssertEqual(env.state.boardMembers(bugs: false).count, 2)
 
         _ = await groups.delete(id: "g1")
         await env.wait { env.state.taskTeam == nil }
