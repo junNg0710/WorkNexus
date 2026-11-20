@@ -39,8 +39,10 @@ public struct ZenTaoDepartment: Hashable, Sendable, Identifiable {
     public var name: String
     public var parentId: Int
     public var path: String
-    public init(id: Int, name: String, parentId: Int, path: String) {
-        self.id = id; self.name = name; self.parentId = parentId; self.path = path
+    /// ZenTao's own order among siblings.
+    public var order: Int
+    public init(id: Int, name: String, parentId: Int, path: String, order: Int = 0) {
+        self.id = id; self.name = name; self.parentId = parentId; self.path = path; self.order = order
     }
 }
 

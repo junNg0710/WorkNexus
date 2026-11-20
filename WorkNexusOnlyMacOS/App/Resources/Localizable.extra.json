@@ -1979,9 +1979,17 @@
     "en": "Hide the skipped tickets",
     "vi": "Ẩn các ticket bị bỏ qua"
   },
+  "leaderBulkHoursLeft": {
+    "en": "Hours left, for the %1$@ tasks that have none",
+    "vi": "Số giờ còn lại, cho %1$@ task chưa có"
+  },
   "leaderBulkNotOnTeam": {
     "en": "%1$@ not on their team",
     "vi": "%1$@ không thuộc nhóm của họ"
+  },
+  "leaderBulkReasonNeedsHours": {
+    "en": "needs hours left",
+    "vi": "cần số giờ còn lại"
   },
   "leaderBulkReasonNotAllowed": {
     "en": "ZenTao does not allow it in its state",
@@ -1998,6 +2006,10 @@
   "leaderBulkShowSkipped": {
     "en": "Show the skipped tickets",
     "vi": "Xem các ticket bị bỏ qua"
+  },
+  "leaderBulkSkipNeedsHours": {
+    "en": "%1$@ skipped: tasks with no hours left, until you type them above",
+    "vi": "%1$@ bỏ qua: task chưa có số giờ còn lại, cho tới khi bạn nhập ở trên"
   },
   "leaderBulkSkipNotMember": {
     "en": "%1$@ skipped: not on the ticket's execution or product team",
@@ -2023,6 +2035,26 @@
     "en": "Nothing to undo: those tickets had nobody before",
     "vi": "Không có gì để hoàn tác: các ticket đó trước đó chưa có ai nhận"
   },
+  "leaderDepartmentAll": {
+    "en": "All of %1$@ · %2$@",
+    "vi": "Toàn bộ %1$@ · %2$@"
+  },
+  "leaderDepartmentTeams": {
+    "en": "ZenTao teams",
+    "vi": "Team trên ZenTao"
+  },
+  "leaderDepartmentTeamsFailed": {
+    "en": "Couldn't read ZenTao's departments",
+    "vi": "Không đọc được danh sách phòng ban trên ZenTao"
+  },
+  "leaderDepartmentTeamsLoading": {
+    "en": "Reading ZenTao's departments…",
+    "vi": "Đang đọc danh sách phòng ban trên ZenTao…"
+  },
+  "leaderDepartmentTeamsNone": {
+    "en": "No departments with people",
+    "vi": "Không có phòng ban nào có người"
+  },
   "leaderDragCount": {
     "en": "%1$@ tickets",
     "vi": "%1$@ ticket"
@@ -2030,6 +2062,10 @@
   "leaderOnlyMe": {
     "en": "Only me",
     "vi": "Chỉ mình tôi"
+  },
+  "leaderPinTeam": {
+    "en": "Pin “%1$@” to the top",
+    "vi": "Ghim “%1$@” lên đầu"
   },
   "leaderQuickAssignNothing": {
     "en": "Nothing to give %1$@: those tickets are theirs already, closed, or not on their team",
@@ -2046,6 +2082,10 @@
   "leaderSelectMode": {
     "en": "Select",
     "vi": "Chọn"
+  },
+  "leaderUnpinTeam": {
+    "en": "Unpin “%1$@”",
+    "vi": "Bỏ ghim “%1$@”"
   },
   "tipBulkNotOnTeam": {
     "en": "Not on the team of any picked ticket: ZenTao would refuse it",

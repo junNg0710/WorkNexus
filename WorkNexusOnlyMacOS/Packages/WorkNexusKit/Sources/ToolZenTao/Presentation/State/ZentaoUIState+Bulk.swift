@@ -18,8 +18,8 @@ extension ZentaoUIState {
 
     func bulkOps() -> ZentaoBulkOps {
         let deps = deps
-        return ZentaoBulkOps(workflow: deps.workflow, editor: deps.editor, assigner: { ticket, login, comment in
-            await ZentaoAssignAction.run(deps: deps, ticket: ticket, assignee: login, comment: comment, left: nil)
+        return ZentaoBulkOps(workflow: deps.workflow, editor: deps.editor, assigner: { ticket, login, comment, left in
+            await ZentaoAssignAction.run(deps: deps, ticket: ticket, assignee: login, comment: comment, left: left)
         })
     }
 }

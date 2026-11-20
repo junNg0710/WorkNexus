@@ -13,15 +13,19 @@ extension ZenTaoProviderAdapter {
         await zenGuard {
             let key = login.trimmingCharacters(in: .whitespaces).lowercased()
             if let known = lock.withLock({ userIds[key] }) { return known }
-            if key == client.account.lowercased(), let id = try? await ownUserId() {
-                lock.withLock { userIds[key] = id }
-                return id
+            if key == client.account.lowercased(), let own = try? await ownUser() {
+                lock.withLock { userIds[key] = own.id; if let account = own.account { userLogins[key] = account } }
+                return own.id
             }
             if !lock.withLock({ userIdsLoaded }) {
                 var page = 1
                 while page <= Self.userPages {
                     let res = try await client.users(limit: Self.userPageSize, page: page)
-                    lock.withLock { for u in res.users { if let account = u.account, let id = u.id { userIds[account.lowercased()] = id } } }
+                    lock.withLock {
+                        for u in res.users {
+                            if let account = u.account, let id = u.id { userIds[account.lowercased()] = id; userLogins[account.lowercased()] = account }
+                        }
+                    }
                     let more = res.total.map { page * Self.userPageSize < $0 } ?? (res.users.count >= Self.userPageSize)
                     if !more || lock.withLock({ userIds[key] }) != nil { break }
                     page += 1
@@ -35,10 +39,16 @@ extension ZenTaoProviderAdapter {
         }
     }
 
-    /// The signed-in user's id, from their profile (`GET /user`).
-    private func ownUserId() async throws -> String? {
+    /// The signed-in user's id and login, from their profile (`GET /user`).
+    private func ownUser() async throws -> (id: String, account: String?)? {
         let profile = asMap(try await client.userInfo()["profile"])
-        return zentaoInt(profile?["id"]).map(String.init)
+        guard let id = zentaoInt(profile?["id"]).map(String.init) else { return nil }
+        return (id, profile?["account"] as? String)
+    }
+
+    /// `login` as ZenTao writes it, once `userId(of:)` has found them; nil before, or when ZenTao did not say.
+    public func zenTaoLogin(of login: String) -> String? {
+        lock.withLock { userLogins[login.trimmingCharacters(in: .whitespaces).lowercased()] }
     }
 
     /// One page (1-based) of what is assigned to user `userId`: tasks of every execution, or bugs of every product.

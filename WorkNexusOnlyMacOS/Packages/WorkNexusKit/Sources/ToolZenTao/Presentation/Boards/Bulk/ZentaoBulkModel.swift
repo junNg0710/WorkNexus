@@ -26,7 +26,7 @@ final class ZentaoBulkModel {
     func run(_ action: ZenTaoBulkAction, plan: ZenTaoBulkPlan, state: ZentaoUIState, bugs: Bool, toasts: AppToastController?) async {
         guard progress == nil, !plan.isEmpty else { return }
         let board = bugs ? state.bugBoard : state.taskBoard
-        if case .assign(let login, _) = action, let accountId = plan.tickets.first?.accountId { state.rememberAssignee(login, accountId: accountId) }
+        if case .assign(let login, _, _) = action, let accountId = plan.tickets.first?.accountId { state.rememberAssignee(login, accountId: accountId) }
         let result = await drive([(action, plan)], state: state, board: board)
         // What the action covered leaves the pick; what failed or never ran stays, to be retried; other picks stay.
         let covered = Set(plan.tickets.map(\.id) + plan.skipped.map(\.ticket.id))
@@ -36,10 +36,10 @@ final class ZentaoBulkModel {
         if !plan.skipped.isEmpty { line += " " + appFormat("leaderBulkSkippedCount", "· %1$@ skipped", "\(plan.skipped.count)") }
         // Handing work out by mistake is easy to undo: the toast carries the way back.
         var undo: (label: String, run: @MainActor () -> Void)?
-        if case .assign = action, !result.succeeded.isEmpty {
+        if case .assign(_, _, let left) = action, !result.succeeded.isEmpty {
             let before = plan.tickets, succeeded = result.succeeded
             undo = (appString("leaderBulkUndo", "Undo"), { [weak self] in
-                Task { await self?.undo(before: before, succeeded: succeeded, state: state, bugs: bugs, toasts: toasts) }
+                Task { await self?.undo(before: before, succeeded: succeeded, left: left, state: state, bugs: bugs, toasts: toasts) }
             })
         }
         toasts?.show(line, kind: result.isClean ? .success : .error, action: undo)
@@ -50,24 +50,32 @@ final class ZentaoBulkModel {
         }
     }
 
+    /// What a one-click assign did: ran (or had nothing to do), or found tasks that need hours left typed in first.
+    enum QuickOutcome: Equatable { case done, needsHours }
+
     /// Hands `tickets` to `login` in one go (the quick Assign menu, cards dropped on a person): the people of their teams
-    /// are read first so a ticket the person cannot take is skipped, not refused by ZenTao.
-    func quickAssign(_ login: String, tickets: [Ticket], state: ZentaoUIState, bugs: Bool, toasts: AppToastController?) async {
-        guard progress == nil, !tickets.isEmpty else { return }
+    /// are read first so a ticket the person cannot take is skipped, not refused by ZenTao. A task with no hours left
+    /// cannot go in one click (ZenTao wants them): nothing runs, and the caller opens the dialog that asks.
+    @discardableResult
+    func quickAssign(_ login: String, tickets: [Ticket], state: ZentaoUIState, bugs: Bool, toasts: AppToastController?) async -> QuickOutcome {
+        guard progress == nil, !tickets.isEmpty else { return .done }
         let teams = (try? await state.bulkAssignSource(tickets).get()).map { ZenTaoAssignTeams(members: $0.teams.mapValues { Set($0.map(\.account)) }) }
         let action = ZenTaoBulkAction.assign(login: login, comment: nil)
         let plan = PlanBulkAction()(tickets, action, canTake: teams.map { t in { t.canTake($0, $1) } })
+        if !plan.skipped(.needsHours).isEmpty { return .needsHours }
         guard !plan.isEmpty else {
             let name = state.memberNames[login] ?? login
             toasts?.show(appFormat("leaderQuickAssignNothing", "Nothing to give %1$@: those tickets are theirs already, closed, or not on their team", name),
                          kind: .warning)
-            return
+            return .done
         }
         await run(action, plan: plan, state: state, bugs: bugs, toasts: toasts)
+        return .done
     }
 
-    /// Gives the `succeeded` tickets of an assign back to their holders in `before` (the tickets as they were).
-    func undo(before: [Ticket], succeeded: [String], state: ZentaoUIState, bugs: Bool, toasts: AppToastController?) async {
+    /// Gives the `succeeded` tickets of an assign back to their holders in `before` (the tickets as they were). `left`: the
+    /// hours the assign gave the tasks that had none (ZenTao wants them again on the way back).
+    func undo(before: [Ticket], succeeded: [String], left: Double? = nil, state: ZentaoUIState, bugs: Bool, toasts: AppToastController?) async {
         guard progress == nil else { return }
         let plan = PlanBulkUndo()(before: before, succeeded: succeeded)
         let none = plan.cannotUndo.isEmpty ? "" : " " + appFormat("leaderBulkUndoNobody", "· %1$@ had nobody before", "\(plan.cannotUndo.count)")
@@ -76,7 +84,7 @@ final class ZentaoBulkModel {
             return
         }
         // Each former holder's tickets as they are: they are not "unchanged", whatever the store still says.
-        let batches = plan.steps.map { (ZenTaoBulkAction.assign(login: $0.login, comment: nil), ZenTaoBulkPlan(tickets: $0.tickets, skipped: [])) }
+        let batches = plan.steps.map { (ZenTaoBulkAction.assign(login: $0.login, comment: nil, left: left), ZenTaoBulkPlan(tickets: $0.tickets, skipped: [])) }
         let result = await drive(batches, state: state, board: bugs ? state.bugBoard : state.taskBoard)
         let line = appFormat("leaderBulkUndone", "Undo: %1$@ back, %2$@ failed", "\(result.succeeded.count)", "\(result.failed.count)") + none
         toasts?.show(line, kind: result.failed.isEmpty && result.notRun.isEmpty ? .success : .error)

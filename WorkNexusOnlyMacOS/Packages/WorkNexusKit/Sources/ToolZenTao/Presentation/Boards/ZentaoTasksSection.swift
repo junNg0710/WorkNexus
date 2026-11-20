@@ -50,7 +50,9 @@ public struct ZentaoTasksSection: View {
         .environment(\.zentaoState, state)
         .overlay { ZentaoBulkBar(deps: deps, state: state, bugs: false) }
         // Their own work at first, then whatever they last chose (re-run once the saved groups are read).
-        .task(id: "\(account.id)|\(state.teamGroups[account.id] == nil)") { state.applyDefaultScope(account: account, bugs: false) }
+        .task(id: "\(account.id)|\(state.teamGroups[account.id] == nil)|\(state.departmentTeams[account.id]?.isLoading ?? true)") {
+            state.applyDefaultScope(account: account, bugs: false)
+        }
         .task(id: loadSignature) {
             state.keepTaskBoardScope(account: account, location: location)
             state.loadBoardMembers(bugs: false); state.loadModuleNames(bugs: false)

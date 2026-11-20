@@ -34,6 +34,8 @@ extension ZenTaoTicketServiceImpl {
         case .failure(let f): return .failure(f)
         case .success(let id): userId = id
         }
+        // How ZenTao writes the login ("JunNg" for a "junng" typed at sign-in): the tickets carry that one.
+        let real = adapter.zenTaoLogin(of: login).flatMap { $0 == login ? nil : $0 }
         let limit = 100
         var ids: [String] = []
         var seen = Set<String>()
@@ -51,8 +53,8 @@ extension ZenTaoTicketServiceImpl {
                 var added = 0
                 for t in v.tickets where seen.insert(t.id).inserted { ids.append(t.id); added += 1 }
                 // A page past the end answers the first again, so the total ends the read, and so does a page with nothing new.
-                if !v.hasMore || added == 0 { return .success(ZenTaoPersonWork(ids: ids, total: total, truncated: false)) }
-                if ids.count >= cap { return .success(ZenTaoPersonWork(ids: Array(ids.prefix(cap)), total: total, truncated: true)) }
+                if !v.hasMore || added == 0 { return .success(ZenTaoPersonWork(ids: ids, total: total, truncated: false, login: real)) }
+                if ids.count >= cap { return .success(ZenTaoPersonWork(ids: Array(ids.prefix(cap)), total: total, truncated: true, login: real)) }
             }
             page += 1
         }

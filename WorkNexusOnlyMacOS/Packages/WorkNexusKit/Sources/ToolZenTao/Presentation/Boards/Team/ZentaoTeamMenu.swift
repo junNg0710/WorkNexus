@@ -9,8 +9,9 @@ struct ZentaoTeamEdit: Identifiable {
     var id: String { group?.id ?? "new" }
 }
 
-/// In the board header, beside the execution (product) switcher: show a saved team group's work across every execution
-/// (product) instead of one of them, and create, edit or delete groups.
+/// In the board header, beside the execution (product) switcher: show a team's work across every execution (product)
+/// instead of one of them - Only me, a saved group or one of ZenTao's departments - pin teams to the top, and create,
+/// edit or delete groups (`ZentaoTeamMenuItems`).
 struct ZentaoTeamMenu: View {
     @Environment(\.appTheme) private var theme
     let deps: ZentaoDependencies; let state: ZentaoUIState; let account: Account; let bugs: Bool
@@ -21,7 +22,7 @@ struct ZentaoTeamMenu: View {
         let current = state.team(bugs: bugs)?.group
         AppMenuButton(help: appString("leaderTeamHelp", "Follow a group of people across every execution"), items: menuItems) {
             HStack(spacing: theme.spacing.s4) {
-                Image(systemName: current?.isOnlyMe == true ? "person.fill" : "person.3.fill").font(.system(size: theme.sizes.icon12))
+                Image(systemName: current?.isOnlyMe == true ? "person.fill" : (current?.isDepartment == true ? "building.2.fill" : "person.3.fill")).font(.system(size: theme.sizes.icon12))
                 Text(current.map(Self.label) ?? appString("leaderTeam", "Team")).font(theme.typography.metaStrong).lineLimit(1)
                     .frame(maxWidth: theme.sizes.detailPanel / 3)
             }
@@ -30,7 +31,7 @@ struct ZentaoTeamMenu: View {
             .background(current == nil ? theme.colors.panel2 : theme.colors.sel, in: RoundedRectangle(cornerRadius: theme.radii.sm))
         }
         .fixedSize()
-        .task(id: account.id) { state.loadTeamGroups(account.id) }
+        .task(id: account.id) { state.loadTeamGroups(account.id); state.loadDepartmentTeams(account.id) }
         .appDialog(item: $dialog) { edit in
             ZentaoTeamGroupDialog(deps: deps, state: state, account: account, bugs: bugs, editing: edit.group, onClose: { dialog = nil })
         }
@@ -46,33 +47,8 @@ struct ZentaoTeamMenu: View {
         group.isOnlyMe ? appString("leaderOnlyMe", "Only me") : group.name
     }
 
-    /// The menu, read when the button is pressed: back to the execution (product), the groups (the open one checked),
-    /// then new / edit / delete.
     private func menuItems() -> [AppNativeMenu.Item] {
-        let groups = state.teamGroups[account.id] ?? []
-        let current = state.team(bugs: bugs)?.group
-        var out: [AppNativeMenu.Item] = []
-        if current != nil {
-            out.append(.init(bugs ? appString("leaderBackToProduct", "Back to the product") : appString("leaderBackToExecution", "Back to the execution"),
-                             icon: "arrow.uturn.backward") { state.closeTeam(bugs: bugs) })
-        }
-        // Every account has its own work, saved or not.
-        if !account.handle.trimmingCharacters(in: .whitespaces).isEmpty {
-            let me = ZenTaoTeamGroup.onlyMe(accountId: account.id, login: account.handle)
-            out.append(.init(Self.label(me), icon: "person.fill", dividerBefore: current != nil, checked: current?.isOnlyMe == true) {
-                state.openTeam(me, bugs: bugs)
-            })
-        }
-        for g in groups {
-            out.append(.init("\(g.name) · \(g.members.count)", icon: "person.3", dividerBefore: g.id == groups.first?.id,
-                             checked: g.id == current?.id) { state.openTeam(g, bugs: bugs) })
-        }
-        out.append(.init(appString("leaderNewGroup", "New team group…"), icon: "plus", dividerBefore: true) { dialog = ZentaoTeamEdit(group: nil) })
-        // "Only me" is not a saved group: nothing to edit or delete.
-        if let current, !current.isOnlyMe {
-            out.append(.init(appString("leaderEditGroup", "Edit this group…"), icon: "pencil") { dialog = ZentaoTeamEdit(group: current) })
-            out.append(.init(appString("leaderDeleteGroup", "Delete this group"), icon: "trash", destructive: true) { confirmDelete = true })
-        }
-        return out
+        ZentaoTeamMenuItems(state: state, account: account, bugs: bugs, onNew: { dialog = ZentaoTeamEdit(group: nil) },
+                            onEdit: { dialog = ZentaoTeamEdit(group: $0) }, onDelete: { confirmDelete = true }).items
     }
 }

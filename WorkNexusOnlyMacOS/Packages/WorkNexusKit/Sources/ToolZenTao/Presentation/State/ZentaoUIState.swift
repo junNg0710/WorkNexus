@@ -29,6 +29,10 @@ public final class ZentaoUIState {
     public internal(set) var leaders: [String: ZenTaoLeaderFilter] = [:]
     /// The team groups saved for each account (watched from the store once an account's board opens).
     public internal(set) var teamGroups: [String: [ZenTaoTeamGroup]] = [:]
+    /// The teams ZenTao's departments give each account (read once an account's board opens).
+    public internal(set) var departmentTeams: [String: ZentaoLoad<[ZenTaoDepartmentTeam]>] = [:]
+    /// Bumped when the pinned teams change, so the Team menu reads them again.
+    var pinnedTeamsRevision = 0
     /// The team a board shows instead of one execution / product, with what was read of each person.
     public internal(set) var taskTeam: ZentaoTeamScope?
     public internal(set) var bugTeam: ZentaoTeamScope?

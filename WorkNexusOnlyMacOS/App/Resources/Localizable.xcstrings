@@ -5305,19 +5305,19 @@
         }
       }
     },
-    "detailLayout": {
+    "layoutDocument": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Detail layout"
+            "value": "Document layout"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bố cục chi tiết"
+            "value": "Bố cục tài liệu"
           }
         }
       }
@@ -5328,30 +5328,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Two pane"
+            "value": "Two-pane layout"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hai cột"
-          }
-        }
-      }
-    },
-    "layoutDocument": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Document"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tài liệu"
+            "value": "Bố cục hai cột"
           }
         }
       }
@@ -20537,6 +20520,74 @@
         }
       }
     },
+    "sendToChat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send to chat"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gửi vào chat"
+          }
+        }
+      }
+    },
+    "sendToChatNoteHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a message (optional)"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm tin nhắn (không bắt buộc)"
+          }
+        }
+      }
+    },
+    "sendToChatTo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{count, plural, =0{Send} =1{Send} other{Send to {count} chats}}"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gửi tới %1$@ cuộc trò chuyện"
+          }
+        }
+      }
+    },
+    "sentToChat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{count, plural, =1{Sent to chat} other{Sent to {count} chats}}"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã gửi tới %1$@ cuộc trò chuyện"
+          }
+        }
+      }
+    },
     "chatForward": {
       "extractionState": "manual",
       "localizations": {
@@ -26453,6 +26504,23 @@
         }
       }
     },
+    "chatAutoReplySuggestionsSetting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto-suggest replies"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tự gợi ý trả lời"
+          }
+        }
+      }
+    },
     "chatAiSummaryLanguage": {
       "extractionState": "manual",
       "localizations": {
@@ -27639,6 +27707,227 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chỉ tìm thấy Chrome, mà Windows không hỗ trợ import từ Chrome: Chrome mã hoá cookie để chỉ chính Chrome đọc được. Hãy đăng nhập trang đó bằng Edge hoặc Firefox rồi import từ trình duyệt đó."
+          }
+        }
+      }
+    },
+    "chatProfileContact": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liên hệ"
+          }
+        }
+      }
+    },
+    "chatProfileOrganisation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Work"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Công việc"
+          }
+        }
+      }
+    },
+    "chatProfileSharedGroups": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groups in common"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhóm chung"
+          }
+        }
+      }
+    },
+    "chatProfileOpenWork": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open work"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Việc đang mở"
+          }
+        }
+      }
+    },
+    "chatProfileAssigned": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Được giao"
+          }
+        }
+      }
+    },
+    "chatProfileReported": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reported"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã tạo"
+          }
+        }
+      }
+    },
+    "chatProfileMore": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%1$@ more"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%1$@ nữa"
+          }
+        }
+      }
+    },
+    "chatProfileLoadFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't load this right now"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện chưa tải được"
+          }
+        }
+      }
+    },
+    "chatProfileNoGroups": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No groups in common"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có nhóm chung"
+          }
+        }
+      }
+    },
+    "chatProfileCopy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sao chép %1$@"
+          }
+        }
+      }
+    },
+    "chatProfileOpenGroup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở %1$@"
+          }
+        }
+      }
+    },
+    "chatProfileMembers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{count, plural, =1{1 member} other{{count} members}}"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ thành viên"
+          }
+        }
+      }
+    },
+    "chatProfileShowLess": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show less"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thu gọn"
           }
         }
       }
@@ -36024,6 +36313,23 @@
         }
       }
     },
+    "leaderBulkHoursLeft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hours left, for the %1$@ tasks that have none"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Số giờ còn lại, cho %1$@ task chưa có"
+          }
+        }
+      }
+    },
     "leaderBulkNotOnTeam": {
       "extractionState": "manual",
       "localizations": {
@@ -36037,6 +36343,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ không thuộc nhóm của họ"
+          }
+        }
+      }
+    },
+    "leaderBulkReasonNeedsHours": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "needs hours left"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cần số giờ còn lại"
           }
         }
       }
@@ -36105,6 +36428,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Xem các ticket bị bỏ qua"
+          }
+        }
+      }
+    },
+    "leaderBulkSkipNeedsHours": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ skipped: tasks with no hours left, until you type them above"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ bỏ qua: task chưa có số giờ còn lại, cho tới khi bạn nhập ở trên"
           }
         }
       }
@@ -36211,6 +36551,91 @@
         }
       }
     },
+    "leaderDepartmentAll": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All of %1$@ · %2$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toàn bộ %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "leaderDepartmentTeams": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZenTao teams"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Team trên ZenTao"
+          }
+        }
+      }
+    },
+    "leaderDepartmentTeamsFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't read ZenTao's departments"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không đọc được danh sách phòng ban trên ZenTao"
+          }
+        }
+      }
+    },
+    "leaderDepartmentTeamsLoading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading ZenTao's departments…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang đọc danh sách phòng ban trên ZenTao…"
+          }
+        }
+      }
+    },
+    "leaderDepartmentTeamsNone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No departments with people"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có phòng ban nào có người"
+          }
+        }
+      }
+    },
     "leaderDragCount": {
       "extractionState": "manual",
       "localizations": {
@@ -36241,6 +36666,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chỉ mình tôi"
+          }
+        }
+      }
+    },
+    "leaderPinTeam": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin “%1$@” to the top"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghim “%1$@” lên đầu"
           }
         }
       }
@@ -36309,6 +36751,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chọn"
+          }
+        }
+      }
+    },
+    "leaderUnpinTeam": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpin “%1$@”"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bỏ ghim “%1$@”"
           }
         }
       }

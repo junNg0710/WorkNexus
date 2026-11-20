@@ -154,6 +154,8 @@ struct ZenTaoUser {
     var id: String?
     var account: String?
     var realname: String?
+    /// The department the user sits in (0 or nil: none).
+    var dept: Int? = nil
 }
 
 struct ZenTaoUsersResponse {
@@ -164,7 +166,8 @@ struct ZenTaoUsersResponse {
         total = zentaoInt(json["total"])
         users = (json["users"] as? [Any] ?? []).compactMap { raw -> ZenTaoUser? in
             guard let m = asMap(raw) else { return nil }
-            return ZenTaoUser(id: zentaoInt(m["id"]).map(String.init), account: m["account"] as? String, realname: m["realname"] as? String)
+            return ZenTaoUser(id: zentaoInt(m["id"]).map(String.init), account: m["account"] as? String, realname: m["realname"] as? String,
+                              dept: zentaoInt(m["dept"]))
         }
     }
 }

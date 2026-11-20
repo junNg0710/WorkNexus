@@ -21,6 +21,8 @@ public final class ZenTaoProviderAdapter: ZenTaoMessagesAdapter, @unchecked Send
     private var detailMemo: [String: (serial: Int, task: Task<ZenTaoEntity, Error>)] = [:]
     /// Login -> numeric user id, read once from `GET /users` (the person pages take the id).
     var userIds: [String: String] = [:]
+    /// Login as typed (lowercased) -> the login as ZenTao writes it ("junng" -> "JunNg").
+    var userLogins: [String: String] = [:]
     var userIdsLoaded = false
     private var serial = 0
 

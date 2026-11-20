@@ -24,9 +24,30 @@ final class ZentaoQuickAssignTests: XCTestCase {
 
     private let members = [ProviderUser(account: "an", displayName: "An"), ProviderUser(account: "binh", displayName: "Binh")]
 
+    /// A task with hours left on record (one without cannot be assigned in one click).
+    private func task(_ key: String, assignee: String, left: Double? = 4) -> Ticket {
+        var t = boardTask(key, assignee: assignee)
+        t.providerEntity = .zentaoTask(ZenTaoTaskEntity(execution: "e1", left: left))
+        return t
+    }
+
+    func testATaskWithNoHoursLeftSendsTheLeaderToTheDialog() async {
+        let env = BoardsEnv(section: ZentaoSection.tasks, members: members)
+        let outcome = await ZentaoBulkModel().quickAssign("binh", tickets: [task("1", assignee: "an", left: 0)], state: env.state, bugs: false, toasts: nil)
+        XCTAssertEqual(outcome, .needsHours)
+        XCTAssertTrue(env.adapter.assigned.isEmpty)
+    }
+
+    func testUndoGivesBackTheHoursTheAssignNeeded() async {
+        let env = BoardsEnv(section: ZentaoSection.tasks, members: members)
+        let before = [task("1", assignee: "an", left: 0)]
+        await ZentaoBulkModel().undo(before: before, succeeded: ["zt1:task:1"], left: 3, state: env.state, bugs: false, toasts: nil)
+        XCTAssertEqual(env.adapter.assigned.map(\.left), [3])
+    }
+
     func testQuickAssignHandsOverWhatChangesAndRemembersThePerson() async {
         let env = BoardsEnv(section: ZentaoSection.tasks, members: members)
-        let tickets = [boardTask("1", assignee: "an"), boardTask("2", assignee: "binh"), boardTask("3", assignee: "an")]
+        let tickets = [task("1", assignee: "an"), task("2", assignee: "binh"), task("3", assignee: "an")]
         await ZentaoBulkModel().quickAssign("binh", tickets: tickets, state: env.state, bugs: false, toasts: nil)
         XCTAssertEqual(env.adapter.assigned.map(\.assignee), ["binh", "binh"])   // 2 is binh's already
         XCTAssertEqual(env.state.recentAssignees, ["binh"])
@@ -35,21 +56,21 @@ final class ZentaoQuickAssignTests: XCTestCase {
 
     func testQuickAssignSkipsSomeoneOffTheTeam() async {
         let env = BoardsEnv(section: ZentaoSection.tasks, members: members)
-        await ZentaoBulkModel().quickAssign("zed", tickets: [boardTask("1", assignee: "an")], state: env.state, bugs: false, toasts: nil)
+        await ZentaoBulkModel().quickAssign("zed", tickets: [task("1", assignee: "an")], state: env.state, bugs: false, toasts: nil)
         XCTAssertTrue(env.adapter.assigned.isEmpty)
         XCTAssertTrue(env.state.recentAssignees.isEmpty)
     }
 
     func testUndoHandsTheTicketsBack() async {
         let env = BoardsEnv(section: ZentaoSection.tasks, members: members)
-        let before = [boardTask("1", assignee: "an"), boardTask("2", assignee: "binh")]
+        let before = [task("1", assignee: "an"), task("2", assignee: "binh")]
         await ZentaoBulkModel().undo(before: before, succeeded: before.map(\.id), state: env.state, bugs: false, toasts: nil)
         XCTAssertEqual(env.adapter.assigned.map(\.assignee), ["an", "binh"])
     }
 
     func testAnOtherPickSurvivesAQuickAssignOfOneCard() async {
         let env = BoardsEnv(section: ZentaoSection.tasks, members: members)
-        let one = boardTask("1", assignee: "an")
+        let one = task("1", assignee: "an")
         env.state.taskBoard.select(["zt1:task:9"])
         await ZentaoBulkModel().quickAssign("binh", tickets: [one], state: env.state, bugs: false, toasts: nil)
         XCTAssertEqual(env.state.taskBoard.selectedIds, ["zt1:task:9"])

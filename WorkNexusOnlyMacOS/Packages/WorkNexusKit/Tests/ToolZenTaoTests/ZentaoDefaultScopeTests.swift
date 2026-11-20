@@ -56,6 +56,16 @@ final class ZentaoDefaultScopeTests: XCTestCase {
         XCTAssertEqual(env.state.bugTeam?.group.id, "g1")
     }
 
+    func testOnlyMeGoesByTheLoginAsZenTaoWritesIt() async {
+        let env = BoardsEnv(section: ZentaoSection.tasks, boardScopes: InMemoryBoardScopes())
+        env.pages.personWork = ["thanh": ZenTaoPersonWork(ids: [], total: 0, truncated: false, login: "Thanh")]
+        env.state.applyDefaultScope(account: account(env), bugs: false)
+        await env.wait { env.state.taskTeam?.isLoading == false }
+        XCTAssertEqual(env.state.taskTeam?.logins, ["Thanh"])
+        XCTAssertEqual(env.state.boardMembers.map(\.account), ["Thanh"])
+        XCTAssertNotNil(env.state.taskTeam?.loads["Thanh"])
+    }
+
     func testTheDefaultIsAppliedOncePerSession() async {
         let env = BoardsEnv(section: ZentaoSection.tasks, boardScopes: InMemoryBoardScopes())
         env.state.applyDefaultScope(account: account(env), bugs: false)

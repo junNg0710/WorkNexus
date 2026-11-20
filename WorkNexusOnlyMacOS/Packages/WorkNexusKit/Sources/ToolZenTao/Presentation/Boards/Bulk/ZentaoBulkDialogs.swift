@@ -16,6 +16,7 @@ struct ZentaoBulkSummary: View {
         case .notAllowed: appString("leaderBulkReasonNotAllowed", "ZenTao does not allow it in its state")
         case .unchanged: appString("leaderBulkReasonUnchanged", "already so")
         case .notMember: appString("leaderBulkReasonNotMember", "not on its team")
+        case .needsHours: appString("leaderBulkReasonNeedsHours", "needs hours left")
         }
     }
 
@@ -25,7 +26,7 @@ struct ZentaoBulkSummary: View {
                               : appFormat("leaderBulkWillChange", "%1$@ will change on ZenTao", "\(plan.tickets.count)"))
                 .font(theme.typography.bodyStrong).foregroundStyle(plan.isEmpty ? theme.colors.tx3 : theme.colors.tx)
             let notAllowed = plan.skipped(.notAllowed).count, unchanged = plan.skipped(.unchanged).count
-            let notMember = plan.skipped(.notMember).count
+            let notMember = plan.skipped(.notMember).count, needsHours = plan.skipped(.needsHours).count
             if notAllowed > 0 {
                 Text(appFormat("leaderBulkSkipNotAllowed", "%1$@ skipped: ZenTao does not allow it in their state", "\(notAllowed)"))
                     .font(theme.typography.meta).foregroundStyle(theme.colors.tx3)
@@ -36,6 +37,10 @@ struct ZentaoBulkSummary: View {
             }
             if notMember > 0 {
                 Text(appFormat("leaderBulkSkipNotMember", "%1$@ skipped: not on the ticket's execution or product team", "\(notMember)"))
+                    .font(theme.typography.meta).foregroundStyle(theme.colors.amber)
+            }
+            if needsHours > 0 {
+                Text(appFormat("leaderBulkSkipNeedsHours", "%1$@ skipped: tasks with no hours left, until you type them above", "\(needsHours)"))
                     .font(theme.typography.meta).foregroundStyle(theme.colors.amber)
             }
             if !plan.skipped.isEmpty {

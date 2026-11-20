@@ -55,6 +55,8 @@ public struct ZentaoModuleData: Sendable {
         public let pinnedPeople: ZenTaoPinnedPeopleStore
         public let boardScopes: ZenTaoBoardScopeStore
         public let recentAssignees: ZenTaoRecentAssigneesStore
+        public let departmentTeams: ZenTaoDepartmentTeamSource
+        public let pinnedTeams: ZenTaoPinnedTeamsStore
     }
 
     /// Wires the Data layer over `db` and the core services. `runner` is the sync layer's optimistic-action runner
@@ -85,7 +87,9 @@ public struct ZentaoModuleData: Sendable {
             todos: ZenTaoTodoService(clients: pool),
             pinnedPeople: UserDefaultsZenTaoPinnedPeople(),
             boardScopes: UserDefaultsZenTaoBoardScopes(),
-            recentAssignees: UserDefaultsZenTaoRecentAssignees())
+            recentAssignees: UserDefaultsZenTaoRecentAssignees(),
+            departmentTeams: RestZenTaoDepartmentTeams(clients: pool),
+            pinnedTeams: UserDefaultsZenTaoPinnedTeams())
     }
 
     /// The document export use case with the real HTML-to-Markdown converter.

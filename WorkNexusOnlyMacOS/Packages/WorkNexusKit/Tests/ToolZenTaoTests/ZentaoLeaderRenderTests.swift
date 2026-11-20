@@ -54,7 +54,7 @@ final class ZentaoLeaderRenderTests: XCTestCase {
         [task("1", "doing", who: "thanh", pri: .urgent, due: -3), task("2", "doing", who: "thanh", due: 1),
          task("3", "wait", who: "thanh", due: 6), task("4", "doing", who: "cat", pri: .high, due: -1),
          task("5", "wait", who: "cat", due: 2), task("6", "pause", who: "luci", updated: 12),
-         task("7", "wait", who: nil, pri: .high, due: 4), task("8", "wait", who: nil), task("9", "doing", who: "luci", due: 0),
+         task("7", "wait", who: nil, pri: .high, due: 4, left: 0), task("8", "wait", who: nil), task("9", "doing", who: "luci", due: 0),
          task("10", "done", who: "thanh", due: -8)]
     }
 
@@ -148,7 +148,9 @@ final class ZentaoLeaderRenderTests: XCTestCase {
     func testBulkAssignDialogListsThePeopleWithTheirLoad() async throws {
         let env = await env()
         env.state.togglePinned("luci")
+        // Task 7 has no hours left: the dialog asks for them.
         env.state.taskBoard.select(env.state.shownTickets(bugs: false).filter { ["1", "4", "7"].contains($0.externalKey) }.map(\.id))
+        XCTAssertEqual(env.state.bulkTargets(bugs: false).filter { NeedsHoursLeft()($0) }.map(\.externalKey), ["7"])
         for dark in [false, true] {
             try await render("bulk-assign\(dark ? "-dark" : "")", AppDialogFrameHost {
                 ZentaoBulkAssignDialog(deps: env.deps, state: env.state, bugs: false, model: ZentaoBulkModel(), onClose: {})

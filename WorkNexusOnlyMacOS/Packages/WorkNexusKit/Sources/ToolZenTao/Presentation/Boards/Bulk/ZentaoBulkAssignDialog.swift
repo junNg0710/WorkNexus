@@ -15,11 +15,25 @@ struct ZentaoBulkAssignDialog: View {
     @State private var login: String?
     @State private var filter = ""
     @State private var note: ZentaoNoteModel?
+    /// Hours left for the picked tasks that have none: ZenTao will not assign an unfinished task without them.
+    @State private var left = ""
+
+    init(deps: ZentaoDependencies, state: ZentaoUIState, bugs: Bool, model: ZentaoBulkModel, initialLogin: String? = nil,
+         onClose: @escaping () -> Void) {
+        self.deps = deps; self.state = state; self.bugs = bugs; self.model = model; self.onClose = onClose
+        _login = State(initialValue: initialLogin)
+    }
+
+    /// The hours typed in, when they are a valid amount.
+    private var hours: Double? {
+        let h = zentaoParseHours(left)
+        return CheckZenTaoAssignLeft()(h) == nil ? h : nil
+    }
 
     private func plan(_ targets: [Ticket]) -> ZenTaoBulkPlan {
         guard let login else { return ZenTaoBulkPlan(tickets: [], skipped: []) }
         let teams = source.value.map { ZenTaoAssignTeams(members: $0.teams.mapValues { Set($0.map(\.account)) }) }
-        return PlanBulkAction()(targets, .assign(login: login, comment: nil), canTake: teams.map { t in { t.canTake($0, $1) } })
+        return PlanBulkAction()(targets, .assign(login: login, comment: nil, left: hours), canTake: teams.map { t in { t.canTake($0, $1) } })
     }
 
     private func people(_ targets: [Ticket], _ s: ZentaoBulkAssignSource) -> [ZenTaoBulkAssignee] {
@@ -38,7 +52,7 @@ struct ZentaoBulkAssignDialog: View {
                               guard let login else { return }
                               let comment = note?.value
                               onClose()
-                              Task { await model.run(.assign(login: login, comment: comment), plan: plan, state: state, bugs: bugs, toasts: toasts) }
+                              Task { await model.run(.assign(login: login, comment: comment, left: hours), plan: plan, state: state, bugs: bugs, toasts: toasts) }
                           }, onClose: onClose) {
             ZentaoFieldLabel(appString("fieldAssignTo", "Assign to"))
             switch source {
@@ -51,6 +65,15 @@ struct ZentaoBulkAssignDialog: View {
                                        ticketCount: targets.count) { login = $0 }
             }
             ZentaoFieldGap()
+            let needing = targets.filter { NeedsHoursLeft()($0) }.count
+            if needing > 0 {
+                ZentaoTaskHoursField(label: appFormat("leaderBulkHoursLeft", "Hours left, for the %1$@ tasks that have none", "\(needing)"),
+                                     text: $left)
+                if !left.trimmingCharacters(in: .whitespaces).isEmpty, let problem = CheckZenTaoAssignLeft()(zentaoParseHours(left)) {
+                    ZentaoTaskProblemLine(problem)
+                }
+                ZentaoFieldGap()
+            }
             if let first = targets.first, let note {
                 ZentaoFieldLabel(appString("zentaoNote", "Note"))
                 ZentaoNoteField(deps: deps, ticket: first, note: note)

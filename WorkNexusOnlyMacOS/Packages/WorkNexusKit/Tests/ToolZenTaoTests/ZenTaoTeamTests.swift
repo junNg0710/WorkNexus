@@ -75,6 +75,7 @@ final class ZenTaoTeamTests: XCTestCase {
         let me = makeClient(server).account
         let id = try await adapter.userId(of: me.uppercased()).get()
         XCTAssertEqual(id, "42")
+        XCTAssertEqual(adapter.zenTaoLogin(of: me.uppercased()), "admin")   // the profile's own spelling
         XCTAssertFalse(server.requests.contains { $0.path.hasSuffix("/api.php/v1/users") })   // no need for the user list
     }
 
@@ -88,8 +89,10 @@ final class ZenTaoTeamTests: XCTestCase {
                 return .json(["total": size + 1, "users": users])
             }
         }
-        let id = try await makeAdapter(server).userId(of: "junng").get()
+        let adapter = makeAdapter(server)
+        let id = try await adapter.userId(of: "junng").get()
         XCTAssertEqual(id, "5000")
+        XCTAssertEqual(adapter.zenTaoLogin(of: "junng"), "JunNg")
         XCTAssertEqual(server.requests.filter { $0.path.hasSuffix("/api.php/v1/users") }.compactMap { $0.query("page") }, ["1", "2"])
     }
 
@@ -166,4 +169,28 @@ final class ZenTaoTeamTests: XCTestCase {
 
 private extension Result {
     var failureValue: Failure? { if case .failure(let f) = self { f } else { nil } }
+}
+
+/// A colleague's ZenTao profile for chat's profile popup.
+final class ZenTaoPersonMapperTests: XCTestCase {
+    func testAUserBecomesAProfileWithItsDepartmentPath() {
+        let json: JSON = ["user": ["dept": 5, "role": ["code": "dev", "name": "Developer"] as JSON, "email": "bull@x.io", "mobile": " ",
+                                   "join": "2026-05-12", "last": 1_779_268_800, "weixin": "bullwx", "address": "0000-00-00"] as JSON]
+        let p = mapZenTaoPerson(json, departments: [["id": 1, "name": "VN", "parent": 0], ["id": 5, "name": "VUE VN", "parent": 1]])
+        XCTAssertEqual(p.department, "VN > VUE VN")
+        XCTAssertEqual(p.role, "dev")
+        XCTAssertEqual(p.email, "bull@x.io")
+        XCTAssertNil(p.mobile)
+        XCTAssertNil(p.address)
+        XCTAssertEqual(p.wechat, "bullwx")
+        XCTAssertEqual(p.lastLogin, Date(timeIntervalSince1970: 1_779_268_800))
+        XCTAssertNotNil(p.joined)
+    }
+
+    func testNeverAndEmptyDatesAreNone() {
+        XCTAssertNil(zenTaoPersonDate("0000-00-00 00:00:00"))
+        XCTAssertNil(zenTaoPersonDate(0))
+        XCTAssertNil(zenTaoPersonDate(""))
+        XCTAssertNotNil(zenTaoPersonDate("2026-11-20 15:20:00"))
+    }
 }

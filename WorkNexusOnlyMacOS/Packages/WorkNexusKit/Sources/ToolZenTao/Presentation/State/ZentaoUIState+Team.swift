@@ -98,6 +98,8 @@ extension ZentaoUIState {
             case .success(let work):
                 scope.loads[login] = .loaded(count: work.ids.count, total: work.total, truncated: work.truncated)
                 scope.ids.formUnion(work.ids)
+                // ZenTao writes the login otherwise ("JunNg" for "junng"): the person goes by that, as their tickets do.
+                if let real = work.login, real != login { scope.rename(login, to: real) }
             case .failure(let f):
                 Diagnostics.error("zentao", "Reading the \(bugs ? "bugs" : "tasks") of \(login) failed: \(f.message)")
                 scope.loads[login] = .failed(f.message)
@@ -108,7 +110,9 @@ extension ZentaoUIState {
 
     private func updateTeam(bugs: Bool, _ change: (inout ZentaoTeamScope) -> Void) {
         guard var scope = team(bugs: bugs) else { return }
+        let members = scope.group.members
         change(&scope)
         setTeam(scope, bugs: bugs)
+        if scope.group.members != members { boardMembers = scope.group.members.map { ProviderUser(account: $0.login, displayName: $0.name) } }
     }
 }

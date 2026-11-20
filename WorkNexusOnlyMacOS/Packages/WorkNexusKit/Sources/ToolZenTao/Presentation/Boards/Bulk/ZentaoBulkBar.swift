@@ -16,6 +16,8 @@ struct ZentaoBulkBar: View {
     let deps: ZentaoDependencies; let state: ZentaoUIState; let bugs: Bool
     @State private var model = ZentaoBulkModel()
     @State private var dialog: ZentaoBulkDialog?
+    /// The person a one-click assign was for, when it needs the dialog to ask for hours left first.
+    @State private var presetLogin: String?
 
     private var board: BoardController { bugs ? state.bugBoard : state.taskBoard }
     /// While picking (even before the first pick) or a run goes on.
@@ -47,7 +49,8 @@ struct ZentaoBulkBar: View {
         .animation(.easeOut(duration: 0.15), value: showing)
         .appDialog(item: $dialog) { which in
             switch which {
-            case .assign: ZentaoBulkAssignDialog(deps: deps, state: state, bugs: bugs, model: model, onClose: { dialog = nil })
+            case .assign: ZentaoBulkAssignDialog(deps: deps, state: state, bugs: bugs, model: model, initialLogin: presetLogin,
+                                                 onClose: { dialog = nil; presetLogin = nil })
             case .priority: ZentaoBulkPriorityDialog(state: state, bugs: bugs, model: model, onClose: { dialog = nil })
             case .close: ZentaoBulkCloseDialog(state: state, bugs: bugs, model: model, onClose: { dialog = nil })
             case .failures: ZentaoBulkFailuresDialog(state: state, bugs: bugs, model: model, onClose: { dialog = nil })
@@ -58,7 +61,12 @@ struct ZentaoBulkBar: View {
             guard let drop, drop.bugs == bugs else { return }
             state.bulkDrop = nil
             let tickets = state.shownTickets(bugs: bugs).filter { drop.ids.contains($0.id) }
-            Task { await model.quickAssign(drop.login, tickets: tickets, state: state, bugs: bugs, toasts: toasts) }
+            Task {
+                guard await model.quickAssign(drop.login, tickets: tickets, state: state, bugs: bugs, toasts: toasts) == .needsHours else { return }
+                // The dialog works on the pick: the dropped cards become it.
+                board.select(tickets.map(\.id))
+                askHours(drop.login)
+            }
         }
         .onChange(of: state.bulkRequest) { _, request in
             guard let request, request.bugs == bugs else { return }
@@ -67,11 +75,17 @@ struct ZentaoBulkBar: View {
         }
     }
 
+    /// Some tasks have no hours left: the dialog opens on `login`, asking for them.
+    private func askHours(_ login: String) {
+        presetLogin = login
+        dialog = .assign
+    }
+
     @ViewBuilder private func actions(_ targets: [Ticket]) -> some View {
         Text(appFormat("leaderSelected", "%1$@ selected", "\(targets.count)")).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx)
         Divider().frame(height: theme.sizes.icon14)
         ZentaoQuickAssignButton(state: state, enabled: !targets.isEmpty, onPick: { login in
-            Task { await model.quickAssign(login, tickets: targets, state: state, bugs: bugs, toasts: toasts) }
+            Task { if await model.quickAssign(login, tickets: targets, state: state, bugs: bugs, toasts: toasts) == .needsHours { askHours(login) } }
         }, onOther: { dialog = .assign })
         AppButton(appString("leaderBulkPriority", "Priority…"), systemImage: "flag", kind: .ghost) { dialog = .priority }.disabled(targets.isEmpty)
             .help(appString("tipBulkPriority", "Set the priority of every selected ticket"))

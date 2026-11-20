@@ -25,6 +25,15 @@ public struct ZentaoTeamScope: Equatable {
     public var logins: [String] { group.members.map(\.login) }
 
     public var isLoading: Bool { loads.values.contains { $0.isLoading } }
+
+    /// `login` goes by `real` from now on (ZenTao's own spelling of it); the "Only me" member keeps their login as name.
+    mutating func rename(_ login: String, to real: String) {
+        guard let i = group.members.firstIndex(where: { $0.login == login }) else { return }
+        let named = group.members[i].name == login
+        group.members[i].login = real
+        if named { group.members[i].name = real }
+        if let load = loads.removeValue(forKey: login) { loads[real] = load }
+    }
     public var failed: [String] { logins.filter { loads[$0]?.isFailed == true } }
     /// Every person's read failed: there is nothing to show.
     public var allFailed: Bool { !logins.isEmpty && failed.count == logins.count }

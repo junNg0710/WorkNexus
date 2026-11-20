@@ -28,5 +28,9 @@ public struct ZenTaoPersonWork: Equatable, Sendable {
     public var total: Int
     /// Whether reading stopped at the cap with more left.
     public var truncated: Bool
-    public init(ids: [String], total: Int, truncated: Bool) { self.ids = ids; self.total = total; self.truncated = truncated }
+    /// The person's login as ZenTao writes it, when it differs in case from the one asked for (or nil).
+    public var login: String?
+    public init(ids: [String], total: Int, truncated: Bool, login: String? = nil) {
+        self.ids = ids; self.total = total; self.truncated = truncated; self.login = login
+    }
 }

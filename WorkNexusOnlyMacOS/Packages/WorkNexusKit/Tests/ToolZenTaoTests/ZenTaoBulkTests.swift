@@ -3,10 +3,10 @@ import XCTest
 @testable import ToolZenTao
 
 final class ZenTaoBulkTests: XCTestCase {
-    private func task(_ id: String, status: String = "doing", assignee: String? = "an", pri: Priority = .medium) -> Ticket {
+    private func task(_ id: String, status: String = "doing", assignee: String? = "an", pri: Priority = .medium, left: Double? = 4) -> Ticket {
         Ticket(id: id, accountId: "a", projectId: "p", providerType: .zentao, externalKey: id, title: "T\(id)", body: "", priority: pri,
                status: status == "done" || status == "closed" ? .done : .inprogress, providerStatus: status, sourceHash: id,
-               externalType: "Task", assignee: assignee, providerEntity: .zentaoTask(ZenTaoTaskEntity()))
+               externalType: "Task", assignee: assignee, providerEntity: .zentaoTask(ZenTaoTaskEntity(left: left)))
     }
 
     private func bug(_ id: String, status: String = "active", assignee: String? = "an") -> Ticket {
@@ -29,6 +29,22 @@ final class ZenTaoBulkTests: XCTestCase {
         XCTAssertEqual(plan.tickets.map(\.id), ["1"])
         XCTAssertEqual(plan.skipped(.notMember).map(\.id), ["2"])
         XCTAssertEqual(plan.skipped(.unchanged).map(\.id), ["3"])   // already theirs: not counted as a team problem
+    }
+
+    func testATaskWithNoHoursLeftWaitsForSomeToBeGiven() {
+        let tickets = [task("1", left: 0), task("2", left: nil), task("3"), task("4", status: "done", left: 0)]
+        let without = PlanBulkAction()(tickets, .assign(login: "binh", comment: nil))
+        XCTAssertEqual(without.tickets.map(\.id), ["3", "4"])          // a done task needs none
+        XCTAssertEqual(without.skipped(.needsHours).map(\.id), ["1", "2"])
+        let with = PlanBulkAction()(tickets, .assign(login: "binh", comment: nil, left: 2))
+        XCTAssertEqual(with.tickets.map(\.id), ["1", "2", "3", "4"])
+    }
+
+    func testTheHoursGoOnlyToTheTasksThatHaveNone() async {
+        let ops = Ops()
+        let action = ZenTaoBulkAction.assign(login: "binh", comment: nil, left: 2)
+        _ = await RunZenTaoBulkAction(ops: ops)(PlanBulkAction()([task("1", left: 0), task("2", left: 5)], action), action)
+        XCTAssertEqual(ops.lefts, ["1": 2, "2": -1])
     }
 
     func testPriorityLeavesOnlyOpenTicketsThatChange() {
@@ -58,8 +74,12 @@ final class ZenTaoBulkTests: XCTestCase {
             lock.withLock { _calls.append("\(what):\(t.id)") }
             return failing.contains(t.id) ? .failure(.network("refused \(t.id)")) : .success(())
         }
-        func assign(_ ticket: Ticket, to login: String, comment: String?) async -> Outcome<Void> {
-            record("assign \(login)\(comment.map { " (\($0))" } ?? "")", ticket)
+        private var _lefts: [String: Double] = [:]
+        /// The hours sent with each assign (-1: none, the task keeps its own).
+        var lefts: [String: Double] { lock.withLock { _lefts } }
+        func assign(_ ticket: Ticket, to login: String, comment: String?, left: Double?) async -> Outcome<Void> {
+            lock.withLock { _lefts[ticket.id] = left ?? -1 }
+            return record("assign \(login)\(comment.map { " (\($0))" } ?? "")", ticket)
         }
         func setPriority(_ ticket: Ticket, to pri: Int) async -> Outcome<Void> { record("pri \(pri)", ticket) }
         func close(_ ticket: Ticket) async -> Outcome<Void> { record("close", ticket) }
@@ -143,7 +163,7 @@ final class BulkFakeEditor: ZenTaoTicketEditor, @unchecked Sendable {
 
 final class ZenTaoBulkOpsTests: XCTestCase {
     private func ops(_ editor: BulkFakeEditor, _ workflow: DetailFakeWorkflow) -> ZentaoBulkOps {
-        ZentaoBulkOps(workflow: workflow, editor: editor, assigner: { _, _, _ in .success(()) })
+        ZentaoBulkOps(workflow: workflow, editor: editor, assigner: { _, _, _, _ in .success(()) })
     }
     private func ticket(_ type: String, _ entity: TicketProviderEntity) -> Ticket {
         Ticket(id: "a:\(type):7", accountId: "a", projectId: "p", providerType: .zentao, externalKey: "7", title: "T", body: "", priority: .medium,
