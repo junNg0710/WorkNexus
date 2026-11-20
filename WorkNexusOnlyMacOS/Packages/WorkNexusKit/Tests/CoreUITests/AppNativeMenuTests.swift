@@ -42,4 +42,18 @@ final class AppNativeMenuTests: XCTestCase {
         _ = (inner.target as AnyObject?)?.perform(inner.action, with: inner)
         XCTAssertEqual(ran, ["inner"])
     }
+
+    /// A row's right-click menu is a native one: its entries keep their order, lines and checks, and a pick reports its
+    /// index (the menu itself closes on any click, Esc or pick: macOS draws it).
+    func testRightClickEntriesBecomeANativeMenuReportingThePickedIndex() {
+        var picked: [Int] = []
+        let entries = [AppMenuEntry(icon: "doc.on.doc", label: "Copy title"), AppMenuEntry(icon: "link", label: "Copy link"),
+                       AppMenuEntry(icon: "checkmark.circle", label: "Select", checked: true, dividerBefore: true)]
+        let menu = AppNativeMenu.menu(AppContextMenuModifier.items(entries) { picked.append($0) })
+        XCTAssertEqual(menu.items.map(\.title), ["Copy title", "Copy link", "", "Select"])
+        XCTAssertEqual(menu.items[3].state, .on)
+        let select = menu.items[3]
+        _ = (select.target as AnyObject?)?.perform(select.action, with: select)
+        XCTAssertEqual(picked, [2])
+    }
 }

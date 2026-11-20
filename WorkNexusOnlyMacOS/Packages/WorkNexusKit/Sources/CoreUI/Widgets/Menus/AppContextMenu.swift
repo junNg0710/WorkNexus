@@ -72,21 +72,21 @@ struct AppMenuRow: View {
     }
 }
 
-/// Catches a right-click (or ctrl-click) on the view it backs and reports it in the view's top-left coordinates;
-/// every other event passes through to the content beneath.
+/// Catches a right-click (or ctrl-click) on the view it backs and hands over the event and the view; every other event
+/// passes through to the content beneath.
 struct RightClickCatcher: NSViewRepresentable {
-    let onRightClick: (CGPoint) -> Void
+    let onRightClick: (NSEvent, NSView) -> Void
 
     final class CatcherView: NSView {
-        var handler: (CGPoint) -> Void = { _ in }
+        var handler: (NSEvent, NSView) -> Void = { _, _ in }
         override var isFlipped: Bool { true }
         override func hitTest(_ point: NSPoint) -> NSView? {
             guard let e = NSApp.currentEvent else { return nil }
             let secondary = e.type == .rightMouseDown || (e.type == .leftMouseDown && e.modifierFlags.contains(.control))
             return secondary ? super.hitTest(point) : nil
         }
-        override func rightMouseDown(with event: NSEvent) { handler(convert(event.locationInWindow, from: nil)) }
-        override func mouseDown(with event: NSEvent) { handler(convert(event.locationInWindow, from: nil)) }
+        override func rightMouseDown(with event: NSEvent) { handler(event, self) }
+        override func mouseDown(with event: NSEvent) { handler(event, self) }
     }
     func makeNSView(context: Context) -> CatcherView { let v = CatcherView(); v.handler = onRightClick; return v }
     func updateNSView(_ v: CatcherView, context: Context) { v.handler = onRightClick }
@@ -125,7 +125,7 @@ public struct AppMenuOverlay: ViewModifier {
 }
 
 public extension View {
-    /// A right-click menu: `onSelect` gets the index of the picked entry.
+    /// A right-click menu (native, at the pointer): `onSelect` gets the index of the picked entry.
     func appContextMenu(entries: [AppMenuEntry], onSelect: @escaping (Int) -> Void) -> some View {
         modifier(AppContextMenuModifier(entries: entries, onSelect: onSelect))
     }
@@ -135,12 +135,22 @@ public extension View {
     }
 }
 
+/// A right-click menu drawn by macOS at the pointer: it closes on a click anywhere, Esc or a pick, whatever the size
+/// of the view it belongs to. (It used to be drawn over the view itself, so on a table row only the row took the click
+/// that closes it, and the menu stayed open.)
 struct AppContextMenuModifier: ViewModifier {
-    @State private var anchor: CGPoint?
     let entries: [AppMenuEntry]; let onSelect: (Int) -> Void
     func body(content: Content) -> some View {
-        content
-            .background(RightClickCatcher { anchor = $0 })
-            .modifier(AppMenuOverlay(anchor: $anchor, entries: entries, onSelect: onSelect))
+        content.background(RightClickCatcher { event, view in
+            let menu = AppNativeMenu.menu(Self.items(entries, onSelect))
+            NSMenu.popUpContextMenu(menu, with: event, for: view)
+        })
+    }
+
+    static func items(_ entries: [AppMenuEntry], _ onSelect: @escaping (Int) -> Void) -> [AppNativeMenu.Item] {
+        entries.enumerated().map { i, e in
+            AppNativeMenu.Item(e.label, icon: e.icon, destructive: e.destructive, dividerBefore: e.dividerBefore,
+                               checked: e.checked) { onSelect(i) }
+        }
     }
 }
