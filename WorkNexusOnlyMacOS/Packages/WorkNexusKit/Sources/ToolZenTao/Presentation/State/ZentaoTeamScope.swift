@@ -33,9 +33,11 @@ public struct ZentaoTeamScope: Equatable {
     /// The team's tickets of one kind among `all`: read ones that are assigned to a member (a ticket reassigned since
     /// leaves the team's view as soon as the store knows).
     func tickets(in all: [Ticket], bugs: Bool) -> [Ticket] {
-        let type = bugs ? "bug" : "task", members = Set(logins)
+        // Logins are matched case aside, as ZenTao signs in (a handle typed "JunNg" holds "junng"'s tickets).
+        let type = bugs ? "bug" : "task", members = Set(logins.map { $0.lowercased() })
         return all.filter {
-            ids.contains($0.id) && $0.accountId == accountId && ($0.externalType ?? "").lowercased() == type && members.contains($0.assignee ?? "")
+            ids.contains($0.id) && $0.accountId == accountId && ($0.externalType ?? "").lowercased() == type
+                && members.contains(($0.assignee ?? "").lowercased())
         }
     }
 }

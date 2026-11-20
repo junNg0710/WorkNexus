@@ -64,6 +64,35 @@ final class ZenTaoTeamTests: XCTestCase {
         XCTAssertEqual(Set(tickets.stored.map(\.externalKey)), ["1", "2"])
     }
 
+    func testTheSignedInUserIsFoundFromTheirOwnProfile() async throws {
+        let server = StubServer { req in
+            .tokenOr(req) {
+                if req.path.hasSuffix("/api.php/v1/user") { return .json(["profile": ["id": 42, "account": "admin"] as JSON]) }
+                return .json([:])
+            }
+        }
+        let adapter = makeAdapter(server)
+        let me = makeClient(server).account
+        let id = try await adapter.userId(of: me.uppercased()).get()
+        XCTAssertEqual(id, "42")
+        XCTAssertFalse(server.requests.contains { $0.path.hasSuffix("/api.php/v1/users") })   // no need for the user list
+    }
+
+    func testSomeoneBeyondTheFirstPageOfUsersIsFound() async throws {
+        let size = ZenTaoProviderAdapter.userPageSize
+        let server = StubServer { req in
+            .tokenOr(req) {
+                guard req.path.hasSuffix("/api.php/v1/users") else { return .json([:]) }
+                let page = Int(req.query("page") ?? "1") ?? 1
+                let users: [JSON] = page == 1 ? (0..<size).map { ["id": $0, "account": "u\($0)"] as JSON } : [["id": 5000, "account": "JunNg"] as JSON]
+                return .json(["total": size + 1, "users": users])
+            }
+        }
+        let id = try await makeAdapter(server).userId(of: "junng").get()
+        XCTAssertEqual(id, "5000")
+        XCTAssertEqual(server.requests.filter { $0.path.hasSuffix("/api.php/v1/users") }.compactMap { $0.query("page") }, ["1", "2"])
+    }
+
     func testBugsOfAPersonCarryTheirProductLabelAndTheCapCutsALongRead() async throws {
         let server = StubServer { req in
             .tokenOr(req) {

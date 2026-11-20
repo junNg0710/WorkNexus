@@ -99,6 +99,7 @@ extension ZentaoUIState {
                 scope.loads[login] = .loaded(count: work.ids.count, total: work.total, truncated: work.truncated)
                 scope.ids.formUnion(work.ids)
             case .failure(let f):
+                Diagnostics.error("zentao", "Reading the \(bugs ? "bugs" : "tasks") of \(login) failed: \(f.message)")
                 scope.loads[login] = .failed(f.message)
             }
         }

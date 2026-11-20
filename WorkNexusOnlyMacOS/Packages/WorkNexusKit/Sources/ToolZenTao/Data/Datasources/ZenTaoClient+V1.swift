@@ -13,9 +13,11 @@ extension ZenTaoClient {
         return ZenTaoAssignedResponse(json: try responseMap(res.data))
     }
 
-    /// Users the current account may assign to (`GET /users`).
-    func users(limit: Int) async throws -> ZenTaoUsersResponse {
-        let res = try await getV1("/users", query: [("limit", "\(limit)")])
+    /// Users the current account may assign to (`GET /users`); `page` (1-based) reads past the first `limit`.
+    func users(limit: Int, page: Int? = nil) async throws -> ZenTaoUsersResponse {
+        var query = [("limit", "\(limit)")]
+        if let page { query.append(("page", "\(page)")) }
+        let res = try await getV1("/users", query: query)
         return ZenTaoUsersResponse(json: try responseMap(res.data))
     }
 
