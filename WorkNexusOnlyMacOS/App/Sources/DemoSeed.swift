@@ -60,6 +60,10 @@ extension DemoSeed {
                 NSApp.windows.first(where: { $0.canBecomeMain })?.setContentSize(NSSize(width: size[0], height: size[1]))
             }
         }
+        // `WN_DEMO_TICKET=<id>`: also opens that ticket over the place `WN_DEMO_NAV` goes to (a ticket open on a board).
+        if let ticket = env["WN_DEMO_TICKET"] {
+            Task { @MainActor in try? await Task.sleep(for: .seconds(4)); shell.nav.openTicket(ticket) }
+        }
         guard let spec = env["WN_DEMO_NAV"] else { return }
         let p = spec.split(separator: ":").map(String.init)
         switch p.first {

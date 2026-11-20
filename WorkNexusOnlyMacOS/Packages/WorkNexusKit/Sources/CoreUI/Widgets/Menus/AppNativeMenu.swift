@@ -1,5 +1,6 @@
 /// Not in the Flutter app.
 import AppKit
+import CoreDomain
 
 /// A native menu opened under the pointer from a button. AppKit runs the menu itself until a pick (or Esc), so it stays
 /// open whatever the view around the button does meanwhile - unlike a SwiftUI `Menu` in a row whose buttons show only
@@ -60,7 +61,19 @@ public enum AppNativeMenu {
         let m = menu(items)
         let gap: CGFloat = 4
         let below = NSPoint(x: 0, y: view.isFlipped ? view.bounds.height + gap : -gap)
-        m.popUp(positioning: nil, at: below, in: view)
+        let opened = ProcessInfo.processInfo.systemUptime
+        let picked = m.popUp(positioning: nil, at: below, in: view)
+        noteIfClosedAtOnce(picked: picked, opened: opened)
+    }
+
+    /// A menu that closed within a moment of opening, with nothing picked, is written to the log with what closed it:
+    /// nobody dismisses a menu that fast, so something took it away.
+    @MainActor private static func noteIfClosedAtOnce(picked: Bool, opened: TimeInterval) {
+        let shown = ProcessInfo.processInfo.systemUptime - opened
+        guard !picked, shown < 0.3 else { return }
+        let event = NSApp.currentEvent
+        let last = event.map { "\($0.type.rawValue)" + ($0.type == .appKitDefined || $0.type == .systemDefined ? "/\($0.subtype.rawValue)" : "") } ?? "none"
+        Diagnostics.info("ui", "A menu closed \(Int(shown * 1000)) ms after opening without a pick (last event \(last), app active \(NSApp.isActive))")
     }
 
     final class ClosureItem: NSMenuItem {

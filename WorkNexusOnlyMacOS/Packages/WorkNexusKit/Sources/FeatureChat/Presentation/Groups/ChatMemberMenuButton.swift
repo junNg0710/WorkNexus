@@ -13,13 +13,16 @@ struct ChatMemberMenuButton: View {
     @State private var anchor = AppMenuAnchor()
 
     var body: some View {
-        AppIconButton("ellipsis", help: shellString("chatMemberActions", "Member actions")) {
-            AppNativeMenu.popUp(Self.items(chat: chat, userId: userId, rights: rights).map { action in
-                AppNativeMenu.Item(Self.label(action), icon: Self.icon(action), destructive: action == .remove,
-                                   dividerBefore: action == .remove) { pick(action) }
-            }, under: anchor)
+        let help = shellString("chatMemberActions", "Member actions")
+        AppIconButton("ellipsis", help: help) { AppNativeMenu.popUp(menuItems(), under: anchor) }
+            .appMenu(anchor, help: help, items: menuItems)
+    }
+
+    private func menuItems() -> [AppNativeMenu.Item] {
+        Self.items(chat: chat, userId: userId, rights: rights).map { action in
+            AppNativeMenu.Item(Self.label(action), icon: Self.icon(action), destructive: action == .remove,
+                               dividerBefore: action == .remove) { pick(action) }
         }
-        .appMenuAnchor(anchor)
     }
 
     private func pick(_ action: ChatMemberAction) {

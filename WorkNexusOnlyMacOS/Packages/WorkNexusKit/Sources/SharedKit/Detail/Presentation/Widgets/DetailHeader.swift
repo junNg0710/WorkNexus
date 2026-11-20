@@ -85,18 +85,21 @@ struct DetailHeaderMoreButton: View {
         toasts?.show(done)
     }
 
+    private func items() -> [AppNativeMenu.Item] {
+        [
+            AppNativeMenu.Item(appString("refresh", "Refresh"), icon: "arrow.triangle.2.circlepath") { model.refresh(ticket) },
+            AppNativeMenu.Item(appString("copyTitle", "Copy title"), icon: "doc.on.doc") {
+                copy(ticketTitleWithRef(ticket), appString("titleCopied", "Title copied"))
+            },
+        ]
+    }
+
     /// A button like its neighbours (the whole square takes the click; a SwiftUI menu took it only on the dots), opening a
-    /// native menu just under itself.
+    /// native menu just under itself on the press.
     var body: some View {
-        AppIconButton("ellipsis", help: appString("more", "More"), outlined: true) {
-            AppNativeMenu.popUp([
-                AppNativeMenu.Item(appString("refresh", "Refresh"), icon: "arrow.triangle.2.circlepath") { model.refresh(ticket) },
-                AppNativeMenu.Item(appString("copyTitle", "Copy title"), icon: "doc.on.doc") {
-                    copy(ticketTitleWithRef(ticket), appString("titleCopied", "Title copied"))
-                },
-            ], under: anchor)
-        }
-        .appMenuAnchor(anchor)
+        let help = appString("more", "More")
+        AppIconButton("ellipsis", help: help, outlined: true) { AppNativeMenu.popUp(items(), under: anchor) }
+            .appMenu(anchor, help: help, items: items)
     }
 }
 

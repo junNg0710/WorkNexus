@@ -13,6 +13,7 @@ enum PlaceSwitchBench {
         #if DEBUG
         let env = ProcessInfo.processInfo.environment
         ChatScrollBench.start()
+        MenuLog.start(); MenuLog.clicks()
         guard let spec = env["WN_DEMO_PLACE_CYCLE"] else { return }
         let places = spec.split(separator: ",").map { $0.split(separator: ":").map(String.init) }
         let pause = env["WN_DEMO_PLACE_CYCLE_SECONDS"].flatMap(Double.init) ?? 3
@@ -182,6 +183,84 @@ final class ChatScrollBench: NSObject {
             print("BENCH scroll \(s): \(gaps.count) frames, \(over33) late ≥17 ms, \(over50) late ≥50 ms, worst \(worst) ms, main cpu \(MainCPU.take()) ms, y \(y) of \(h)")
             fflush(stdout)
             gaps = []
+        }
+    }
+}
+#endif
+
+#if DEBUG
+/// `WN_DEMO_MENULOG=1`: prints when a menu starts and ends tracking and when the app's main menu is replaced or changed,
+/// to find what closes a pop-up menu that nobody clicked away.
+@MainActor
+enum MenuLog {
+    private static var observers: [NSObjectProtocol] = []
+    private static var timer: Timer?
+    private static var lastMain: ObjectIdentifier?
+    private static let t0 = ProcessInfo.processInfo.systemUptime
+    private static func stamp() -> String { String(format: "%.2f", ProcessInfo.processInfo.systemUptime - t0) }
+
+    static func start() {
+        guard ProcessInfo.processInfo.environment["WN_DEMO_MENULOG"] == "1" else { return }
+        if ProcessInfo.processInfo.environment["WN_DEMO_ACTIVATE"] == "1" {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 8) { NSApp.activate(ignoringOtherApps: true); NSApp.windows.first(where: { $0.canBecomeMain })?.makeKeyAndOrderFront(nil) }
+        }
+        let c = NotificationCenter.default
+        func watch(_ name: Notification.Name, _ label: String) {
+            observers.append(c.addObserver(forName: name, object: nil, queue: nil) { n in
+                let menu = n.object as? NSMenu
+                let main = MainActor.assumeIsolated { menu === NSApp.mainMenu || menu?.supermenu != nil }
+                print("MENULOG \(MainActor.assumeIsolated { stamp() }) \(label) \(main ? "main-menu" : "popup") '\(menu?.title ?? "")' items=\(menu?.numberOfItems ?? -1)")
+                fflush(stdout)
+                if label == "end", !main {
+                    for line in Thread.callStackSymbols.prefix(40) { print("MENUSTACK " + line) }
+                    fflush(stdout)
+                }
+            })
+        }
+        for (name, label) in [(NSApplication.didResignActiveNotification, "app resign active"), (NSApplication.didBecomeActiveNotification, "app active"),
+                              (NSWindow.didBecomeKeyNotification, "window key"), (NSWindow.didResignKeyNotification, "window resign key"),
+                              (NSWindow.didBecomeMainNotification, "window main"), (NSWindow.didResignMainNotification, "window resign main")] {
+            observers.append(c.addObserver(forName: name, object: nil, queue: nil) { n in
+                print("MENULOG \(MainActor.assumeIsolated { stamp() }) \(label) \(n.object.map { String(describing: type(of: $0)) } ?? "")"); fflush(stdout)
+            })
+        }
+        watch(NSMenu.didBeginTrackingNotification, "begin")
+        watch(NSMenu.didEndTrackingNotification, "end")
+        watch(NSMenu.didAddItemNotification, "addItem")
+        watch(NSMenu.didRemoveItemNotification, "removeItem")
+        watch(NSMenu.didChangeItemNotification, "changeItem")
+        let t = Timer(timeInterval: 0.01, repeats: true) { _ in
+            MainActor.assumeIsolated {
+                let id = NSApp.mainMenu.map(ObjectIdentifier.init)
+                if id != lastMain { lastMain = id; print("MENULOG \(stamp()) mainMenu REPLACED"); fflush(stdout) }
+            }
+        }
+        RunLoop.main.add(t, forMode: .common)
+        timer = t
+    }
+
+    /// `WN_DEMO_CLICK=x,y[;x,y…]` (window points from its top-left): clicks there in turn, 2.5 s apart, as the mouse would
+    /// (the events go through the window's own hit-testing, title bar included).
+    static func clicks() {
+        guard let spec = ProcessInfo.processInfo.environment["WN_DEMO_CLICK"] else { return }
+        let points = spec.split(separator: ";").compactMap { p -> NSPoint? in
+            let v = p.split(separator: ",").compactMap { Double($0) }; return v.count == 2 ? NSPoint(x: v[0], y: v[1]) : nil
+        }
+        for (i, p) in points.enumerated() {
+            let t = Timer(timeInterval: 9 + Double(i) * 2.5, repeats: false) { _ in
+                MainActor.assumeIsolated {
+                    guard let w = NSApp.windows.first(where: { $0.canBecomeMain && $0.isVisible }) else { return }
+                    let at = NSPoint(x: p.x, y: w.frame.height - p.y)
+                    print("MENULOG \(stamp()) click \(Int(p.x)),\(Int(p.y)) active=\(NSApp.isActive) key=\(w.isKeyWindow)"); fflush(stdout)
+                    for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
+                        if let e = NSEvent.mouseEvent(with: type, location: at, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                                                      windowNumber: w.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: type == .leftMouseDown ? 1 : 0) {
+                            NSApp.sendEvent(e)
+                        }
+                    }
+                }
+            }
+            RunLoop.main.add(t, forMode: .common)
         }
     }
 }

@@ -121,12 +121,16 @@ private struct MoreActionsMenu: View {
     var body: some View {
         RoundActionButton(icon: "ellipsis", help: L.moreActions) {
             open = true
-            AppNativeMenu.popUp(actions.map { a in
-                AppNativeMenu.Item(a.title, icon: a.icon, destructive: a.destructive, dividerBefore: a.sectionStart || a.destructive, action: a.run)
-            }, under: anchor)
+            AppNativeMenu.popUp(items(), under: anchor)
             open = false
         }
-        .appMenuAnchor(anchor)
+        .appMenu(anchor, help: L.moreActions, onOpenChange: { open = $0 }, items: items)
+    }
+
+    private func items() -> [AppNativeMenu.Item] {
+        actions.map { a in
+            AppNativeMenu.Item(a.title, icon: a.icon, destructive: a.destructive, dividerBefore: a.sectionStart || a.destructive, action: a.run)
+        }
     }
 }
 
