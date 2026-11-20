@@ -31,6 +31,7 @@ struct ZentaoTaskColumn: View {
             BoardColumnDot(color)
         } badge: {
             PagedColumnCount(column.count, more: more)
+            ZentaoColumnSelectAll(controller: state.taskBoard, tickets: column.tickets)
         } content: {
             let order = column.tickets.map(\.id)
             ForEach(column.tickets) { ZentaoBoardCard(controller: state.taskBoard, ticket: $0, among: order) }

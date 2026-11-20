@@ -131,6 +131,31 @@ final class ZentaoLeaderRenderTests: XCTestCase {
                          size: CGSize(width: 700, height: 800))
     }
 
+    func testPickingModeShowsCheckboxesOnTheBoardAndTheList() async throws {
+        let env = await env()
+        env.state.taskBoard.beginSelecting()
+        let picked = env.state.shownTickets(bugs: false).filter { ["1", "4", "7"].contains($0.externalKey) }.map(\.id)
+        env.state.taskBoard.select(picked)
+        XCTAssertTrue(env.state.taskBoard.isSelecting)
+        XCTAssertEqual(env.state.bulkTargets(bugs: false).count, 3)
+        try await render("tasks-picking", section(env), size: CGSize(width: 1500, height: 640))
+        env.nav.setViewMode("list", section: ZentaoSection.tasks, accountId: "zt1")
+        try await render("tasks-picking-list", section(env), size: CGSize(width: 1300, height: 560))
+        env.state.taskBoard.endSelecting()
+        XCTAssertTrue(env.state.taskBoard.selectedIds.isEmpty)
+    }
+
+    func testBulkAssignDialogListsThePeopleWithTheirLoad() async throws {
+        let env = await env()
+        env.state.togglePinned("luci")
+        env.state.taskBoard.select(env.state.shownTickets(bugs: false).filter { ["1", "4", "7"].contains($0.externalKey) }.map(\.id))
+        for dark in [false, true] {
+            try await render("bulk-assign\(dark ? "-dark" : "")", AppDialogFrameHost {
+                ZentaoBulkAssignDialog(deps: env.deps, state: env.state, bugs: false, model: ZentaoBulkModel(), onClose: {})
+            }, size: CGSize(width: 760, height: 860), dark: dark)
+        }
+    }
+
     /// "New todo" as a chat message opens it: the name and the note filled in.
     func testNewTodoDialogFilledFromAChatMessage() async throws {
         let seed = ZentaoTodoPrompt.Seed(accountId: "zt", name: "Login fails on Safari after the last deploy",

@@ -40,10 +40,9 @@ struct ZentaoBoardCard: View {
             .padding(theme.cardPadding)
         }
         .overlay(alignment: .topTrailing) {
-            if picked {
-                // A badge on the card's corner, clear of the age text beside it.
-                Image(systemName: "checkmark.circle.fill").font(.system(size: theme.sizes.icon14)).foregroundStyle(c.accent)
-                    .background(Circle().fill(c.card)).offset(x: theme.spacing.s4, y: -theme.spacing.s4)
+            // A badge on the card's corner, clear of the age text beside it; an empty one on every card in picking mode.
+            if picked || controller.isSelecting || !controller.selectedIds.isEmpty {
+                BoardSelectionCheck(checked: picked).offset(x: theme.spacing.s4, y: -theme.spacing.s4)
             }
         }
         .opacity(pending ? 0.48 : 1)

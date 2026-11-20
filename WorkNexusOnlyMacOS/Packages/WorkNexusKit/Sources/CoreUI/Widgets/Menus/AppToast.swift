@@ -17,6 +17,11 @@ public struct AppToast: Identifiable, Equatable, Sendable {
     public let id: Int
     public let message: String
     public let kind: AppToastKind
+    /// The label of the toast's one button (Undo), when it has one; what it does is kept by the controller.
+    public var actionLabel: String? = nil
+
+    /// How long it stays up: a toast with a button gives time to reach it.
+    public var showFor: Duration { actionLabel == nil ? kind.showFor : max(kind.showFor, .seconds(8)) }
 }
 
 /// The toasts on screen, newest first, at most `maxShown`. Showing a message that is already up moves it to
@@ -26,17 +31,30 @@ public final class AppToastController {
     public static let maxShown = 3
     public private(set) var toasts: [AppToast] = []
     private var nextId = 0
+    @ObservationIgnored private var actions: [Int: @MainActor () -> Void] = [:]
     public init() {}
 
-    public func show(_ message: String, kind: AppToastKind = .success) {
+    /// Shows `message`; with `action`, the toast carries one button (`label`) that runs it and closes the toast.
+    public func show(_ message: String, kind: AppToastKind = .success, action: (label: String, run: @MainActor () -> Void)? = nil) {
         // A failure the user was shown is a failure worth tracing.
         if kind == .error { Diagnostics.error("ui", message) }
-        let t = AppToast(id: nextId, message: message, kind: kind)
+        let t = AppToast(id: nextId, message: message, kind: kind, actionLabel: action?.label)
+        if let action { actions[nextId] = action.run }
         nextId += 1
         toasts = Array(([t] + toasts.filter { $0.message != message }).prefix(Self.maxShown))
+        let shown = Set(toasts.map(\.id))
+        actions = actions.filter { shown.contains($0.key) }
+    }
+
+    /// Runs the button of toast `id` and closes it.
+    public func runAction(_ id: Int) {
+        let run = actions[id]
+        dismiss(id)
+        run?()
     }
 
     public func dismiss(_ id: Int) {
+        actions[id] = nil
         let left = toasts.filter { $0.id != id }
         if left.count != toasts.count { toasts = left }
     }
@@ -57,6 +75,7 @@ public extension EnvironmentValues {
 struct AppToastCard: View {
     @Environment(\.appTheme) private var theme
     let toast: AppToast; let onDismiss: () -> Void
+    var onAction: () -> Void = {}
     @State private var shown = false
     @State private var hovering = false
 
@@ -71,6 +90,10 @@ struct AppToastCard: View {
         HStack(spacing: theme.spacing.s8) {
             Image(systemName: glyph).font(.system(size: theme.sizes.icon16)).foregroundStyle(tint)
             Text(toast.message).font(theme.typography.body).foregroundStyle(c.tx).fixedSize(horizontal: false, vertical: true)
+            if let label = toast.actionLabel {
+                Button(label, action: onAction).buttonStyle(.plain).font(theme.typography.bodyStrong).foregroundStyle(c.accent)
+                    .pointerStyle(.link)
+            }
             if flagged { Image(systemName: "xmark").font(.system(size: theme.sizes.icon12)).foregroundStyle(c.tx2) }
         }
         .padding(.leading, theme.spacing.s16).padding(.trailing, flagged ? theme.spacing.s8 : theme.spacing.s16)
@@ -85,7 +108,7 @@ struct AppToastCard: View {
         .task(id: hovering) {
             if !shown { withAnimation(.easeOut(duration: theme.motion.base)) { shown = true } }
             guard !hovering else { return }
-            try? await Task.sleep(for: toast.kind.showFor)
+            try? await Task.sleep(for: toast.showFor)
             if !Task.isCancelled { onDismiss() }
         }
     }
@@ -104,7 +127,7 @@ public struct AppToastHost: ViewModifier {
             .overlay(alignment: .top) {
                 VStack(spacing: theme.spacing.s8) {
                     ForEach(controller.toasts) { t in
-                        AppToastCard(toast: t) { controller.dismiss(t.id) }.id(t.id)
+                        AppToastCard(toast: t, onDismiss: { controller.dismiss(t.id) }, onAction: { controller.runAction(t.id) }).id(t.id)
                     }
                 }
                 .frame(maxWidth: theme.sizes.dialogSm)

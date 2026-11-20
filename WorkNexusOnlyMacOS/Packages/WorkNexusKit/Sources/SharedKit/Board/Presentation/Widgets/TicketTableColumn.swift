@@ -11,6 +11,10 @@ public struct TicketTableColumn: Identifiable {
     public var width: CGFloat?
     public var alignEnd: Bool
     public var sortField: TicketSortField?
+    /// Drawn in the header instead of the label (the select-all checkbox).
+    public var header: (() -> AnyView)?
+    /// Whether the divider after it drags its width.
+    public var resizable = true
 
     public init(id: String, label: String, width: CGFloat? = nil, alignEnd: Bool = false, sortField: TicketSortField? = nil,
                 cell: @escaping (Ticket) -> AnyView) {

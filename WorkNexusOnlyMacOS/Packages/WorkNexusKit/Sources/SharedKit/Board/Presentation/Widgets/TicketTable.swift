@@ -29,7 +29,10 @@ public struct TicketTable<Footer: View>: View {
     private func key(_ column: TicketTableColumn) -> String { "\(id).\(column.id)" }
 
     private var sized: [TicketTableColumn] {
-        columns.map { col in
+        // Picking mode leads with a checkbox column.
+        let all = controller.isSelecting
+            ? [TicketTableColumn.selection(controller: controller, rows: rows, width: theme.sizes.control32)] + columns : columns
+        return all.map { col in
             guard let w = col.width else { return col }
             return col.withWidth(dragWidths[col.id] ?? controller.settings.tableColumnWidths[key(col)].map { CGFloat($0) } ?? w)
         }

@@ -4,10 +4,20 @@ import CoreUI
 import SharedKit
 import SwiftUI
 
-/// What a bulk action would do, said before it is applied: how many tickets change and why the others do not.
+/// What a bulk action would do, said before it is applied: how many tickets change and why the others do not; the
+/// skipped tickets themselves are one click away.
 struct ZentaoBulkSummary: View {
     @Environment(\.appTheme) private var theme
     let plan: ZenTaoBulkPlan
+    @State private var showSkipped = false
+
+    static func reason(_ r: ZenTaoBulkSkipReason) -> String {
+        switch r {
+        case .notAllowed: appString("leaderBulkReasonNotAllowed", "ZenTao does not allow it in its state")
+        case .unchanged: appString("leaderBulkReasonUnchanged", "already so")
+        case .notMember: appString("leaderBulkReasonNotMember", "not on its team")
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacing.s4) {
@@ -15,6 +25,7 @@ struct ZentaoBulkSummary: View {
                               : appFormat("leaderBulkWillChange", "%1$@ will change on ZenTao", "\(plan.tickets.count)"))
                 .font(theme.typography.bodyStrong).foregroundStyle(plan.isEmpty ? theme.colors.tx3 : theme.colors.tx)
             let notAllowed = plan.skipped(.notAllowed).count, unchanged = plan.skipped(.unchanged).count
+            let notMember = plan.skipped(.notMember).count
             if notAllowed > 0 {
                 Text(appFormat("leaderBulkSkipNotAllowed", "%1$@ skipped: ZenTao does not allow it in their state", "\(notAllowed)"))
                     .font(theme.typography.meta).foregroundStyle(theme.colors.tx3)
@@ -23,31 +34,21 @@ struct ZentaoBulkSummary: View {
                 Text(appFormat("leaderBulkSkipUnchanged", "%1$@ skipped: already so", "\(unchanged)"))
                     .font(theme.typography.meta).foregroundStyle(theme.colors.tx3)
             }
-        }
-    }
-}
-
-/// Hands every picked ticket to one person.
-struct ZentaoBulkAssignDialog: View {
-    @Environment(\.toasts) private var toasts
-    let deps: ZentaoDependencies; let state: ZentaoUIState; let bugs: Bool; let model: ZentaoBulkModel; let onClose: () -> Void
-    @State private var login: String?
-
-    var body: some View {
-        let targets = state.bulkTargets(bugs: bugs)
-        let plan = login.map { PlanBulkAction()(targets, .assign(login: $0)) } ?? ZenTaoBulkPlan(tickets: [], skipped: [])
-        ZentaoActionFrame(title: appFormat("leaderBulkAssignTitle", "Assign %1$@ tickets", "\(targets.count)"), icon: "person.badge.plus",
-                          submitLabel: appFormat("leaderBulkApply", "Apply to %1$@", "\(plan.tickets.count)"), busy: false,
-                          canSubmit: !plan.isEmpty, onSubmit: {
-                              guard let login else { return }
-                              onClose()
-                              Task { await model.run(.assign(login: login), on: targets, state: state, bugs: bugs, toasts: toasts) }
-                          }, onClose: onClose) {
-            ZentaoFieldLabel(appString("fieldAssignTo", "Assign to"))
-            // The people of the board's execution / product, read through the first picked ticket.
-            if let first = targets.first { ZentaoAssigneeDropdown(deps: deps, ticket: first, value: login) { login = $0 } }
-            ZentaoFieldGap()
-            if login != nil { ZentaoBulkSummary(plan: plan) }
+            if notMember > 0 {
+                Text(appFormat("leaderBulkSkipNotMember", "%1$@ skipped: not on the ticket's execution or product team", "\(notMember)"))
+                    .font(theme.typography.meta).foregroundStyle(theme.colors.amber)
+            }
+            if !plan.skipped.isEmpty {
+                Button(showSkipped ? appString("leaderBulkHideSkipped", "Hide the skipped tickets")
+                                   : appString("leaderBulkShowSkipped", "Show the skipped tickets")) { showSkipped.toggle() }
+                    .buttonStyle(.plain).font(theme.typography.metaStrong).foregroundStyle(theme.colors.accent).pointerStyle(.link)
+                if showSkipped {
+                    ForEach(plan.skipped, id: \.ticket.id) { s in
+                        Text(verbatim: "#\(s.ticket.externalKey) \(s.ticket.title) · \(Self.reason(s.reason))")
+                            .font(theme.typography.meta).foregroundStyle(theme.colors.tx2).lineLimit(1)
+                    }
+                }
+            }
         }
     }
 }
@@ -67,7 +68,7 @@ struct ZentaoBulkPriorityDialog: View {
                           canSubmit: !plan.isEmpty, onSubmit: {
                               guard let pri else { return }
                               onClose()
-                              Task { await model.run(.priority(pri), on: targets, state: state, bugs: bugs, toasts: toasts) }
+                              Task { await model.run(.priority(pri), plan: plan, state: state, bugs: bugs, toasts: toasts) }
                           }, onClose: onClose) {
             ZentaoFieldLabel(appString("priority", "Priority"))
             HStack(spacing: theme.spacing.s6) {
@@ -94,7 +95,7 @@ struct ZentaoBulkCloseDialog: View {
                           submitLabel: appFormat("leaderBulkApply", "Apply to %1$@", "\(plan.tickets.count)"), busy: false,
                           canSubmit: !plan.isEmpty, onSubmit: {
                               onClose()
-                              Task { await model.run(.close, on: targets, state: state, bugs: bugs, toasts: toasts) }
+                              Task { await model.run(.close, plan: plan, state: state, bugs: bugs, toasts: toasts) }
                           }, onClose: onClose) {
             ZentaoBulkSummary(plan: plan)
         }
@@ -115,7 +116,9 @@ struct ZentaoBulkFailuresDialog: View {
                               guard let failures else { return }
                               model.failures = nil
                               onClose()
-                              Task { await model.run(failures.action, on: failures.tickets, state: state, bugs: bugs, toasts: toasts) }
+                              // Planned again: a ticket changed since the run may no longer need it.
+                              Task { await model.run(failures.action, plan: PlanBulkAction()(failures.tickets, failures.action),
+                                                     state: state, bugs: bugs, toasts: toasts) }
                           }, onClose: { model.failures = nil; onClose() }) {
             VStack(alignment: .leading, spacing: theme.spacing.s8) {
                 ForEach(items) { t in

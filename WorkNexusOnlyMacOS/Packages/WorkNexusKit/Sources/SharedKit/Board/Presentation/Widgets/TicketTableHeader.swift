@@ -12,10 +12,10 @@ struct TicketTableHeader: View {
 
     var body: some View {
         let c = theme.colors
-        TicketTableCells(columns: columns, cells: columns.map { AnyView(HeaderLabel(column: $0, sort: sort, onSort: onSort)) },
+        TicketTableCells(columns: columns, cells: columns.map { $0.header?() ?? AnyView(HeaderLabel(column: $0, sort: sort, onSort: onSort)) },
                          totalWidth: totalWidth,
                          edges: columns.indices.map { i in
-                             i == columns.count - 1 ? nil
+                             i == columns.count - 1 || !columns[i].resizable ? nil
                                  : AnyView(ResizeHandle(onDelta: { onResize(i, $0) }, onEnd: onResizeEnd, onReset: { onResetWidth(i) }))
                          })
             .background(c.mix(c.card, c.accent, 0.07))

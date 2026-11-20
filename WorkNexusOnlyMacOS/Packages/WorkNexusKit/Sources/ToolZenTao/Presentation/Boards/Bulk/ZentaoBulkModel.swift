@@ -3,8 +3,10 @@ import CoreDomain
 import CoreUI
 import Foundation
 import Observation
+import SharedKit
 
-/// One bulk run on a board: progress while it goes, then what failed, so it can be shown and retried.
+/// One bulk run on a board: progress while it goes, then what failed, so it can be shown and retried. An assign can be
+/// undone from its toast: each ticket goes back to whoever held it.
 @MainActor @Observable
 final class ZentaoBulkModel {
     struct Progress: Equatable { var done: Int; var total: Int }
@@ -20,33 +22,70 @@ final class ZentaoBulkModel {
 
     func stop() { stopped = true }
 
-    func run(_ action: ZenTaoBulkAction, on tickets: [Ticket], state: ZentaoUIState, bugs: Bool, toasts: AppToastController?) async {
-        let plan = PlanBulkAction()(tickets, action)
+    /// Applies `action` to the tickets of `plan` (worked out by the dialog, which knows who can take what).
+    func run(_ action: ZenTaoBulkAction, plan: ZenTaoBulkPlan, state: ZentaoUIState, bugs: Bool, toasts: AppToastController?) async {
         guard progress == nil, !plan.isEmpty else { return }
-        stopped = false
         let board = bugs ? state.bugBoard : state.taskBoard
-        let ids = plan.tickets.map(\.id)
-        ids.forEach(board.beginAction)
-        progress = Progress(done: 0, total: ids.count)
-        let me = self
-        let result = await RunZenTaoBulkAction(ops: state.bulkOps())(
-            plan, action,
-            shouldContinue: { await MainActor.run { !me.stopped } },
-            progress: { done, total in
-                await MainActor.run { me.progress = Progress(done: done, total: total); board.endAction(ids[done - 1]) }
-            })
-        ids.forEach(board.endAction)
-        progress = nil
+        let result = await drive([(action, plan)], state: state, board: board)
         // What went through leaves the pick; what failed or never ran stays, to be retried.
         board.select(result.failed.map(\.ticketId) + result.notRun)
         var line = appFormat("leaderBulkDone", "%1$@: %2$@ done, %3$@ failed", Self.name(action), "\(result.succeeded.count)", "\(result.failed.count)")
         if !result.notRun.isEmpty { line += " " + appFormat("leaderBulkNotRun", "· %1$@ not run", "\(result.notRun.count)") }
-        toasts?.show(line, kind: result.isClean ? .success : .error)
+        // Handing work out by mistake is easy to undo: the toast carries the way back.
+        var undo: (label: String, run: @MainActor () -> Void)?
+        if case .assign = action, !result.succeeded.isEmpty {
+            let before = plan.tickets, succeeded = result.succeeded
+            undo = (appString("leaderBulkUndo", "Undo"), { [weak self] in
+                Task { await self?.undo(before: before, succeeded: succeeded, state: state, bugs: bugs, toasts: toasts) }
+            })
+        }
+        toasts?.show(line, kind: result.isClean ? .success : .error, action: undo)
         if !result.failed.isEmpty {
             let failed = Set(result.failed.map(\.ticketId))
             failures = Failures(action: action, tickets: plan.tickets.filter { failed.contains($0.id) },
                                 messages: Dictionary(result.failed.map { ($0.ticketId, $0.message) }, uniquingKeysWith: { a, _ in a }))
         }
+    }
+
+    /// Gives the `succeeded` tickets of an assign back to their holders in `before` (the tickets as they were).
+    func undo(before: [Ticket], succeeded: [String], state: ZentaoUIState, bugs: Bool, toasts: AppToastController?) async {
+        guard progress == nil else { return }
+        let plan = PlanBulkUndo()(before: before, succeeded: succeeded)
+        let none = plan.cannotUndo.isEmpty ? "" : " " + appFormat("leaderBulkUndoNobody", "· %1$@ had nobody before", "\(plan.cannotUndo.count)")
+        guard !plan.isEmpty else {
+            toasts?.show(appString("leaderBulkUndoNothing", "Nothing to undo: those tickets had nobody before") , kind: .warning)
+            return
+        }
+        // Each former holder's tickets as they are: they are not "unchanged", whatever the store still says.
+        let batches = plan.steps.map { (ZenTaoBulkAction.assign(login: $0.login, comment: nil), ZenTaoBulkPlan(tickets: $0.tickets, skipped: [])) }
+        let result = await drive(batches, state: state, board: bugs ? state.bugBoard : state.taskBoard)
+        let line = appFormat("leaderBulkUndone", "Undo: %1$@ back, %2$@ failed", "\(result.succeeded.count)", "\(result.failed.count)") + none
+        toasts?.show(line, kind: result.failed.isEmpty && result.notRun.isEmpty ? .success : .error)
+    }
+
+    /// Runs each batch one after another, one progress over all of them; a stop leaves the rest not run.
+    private func drive(_ batches: [(ZenTaoBulkAction, ZenTaoBulkPlan)], state: ZentaoUIState, board: BoardController) async -> ZenTaoBulkResult {
+        stopped = false
+        let ids = batches.flatMap { $0.1.tickets.map(\.id) }
+        ids.forEach(board.beginAction)
+        progress = Progress(done: 0, total: ids.count)
+        let me = self, ops = state.bulkOps()
+        var total = ZenTaoBulkResult()
+        var offset = 0
+        for (action, plan) in batches {
+            let base = offset
+            let result = await RunZenTaoBulkAction(ops: ops)(
+                plan, action,
+                shouldContinue: { await MainActor.run { !me.stopped } },
+                progress: { done, _ in
+                    await MainActor.run { me.progress = Progress(done: base + done, total: ids.count); board.endAction(ids[base + done - 1]) }
+                })
+            total.succeeded += result.succeeded; total.failed += result.failed; total.notRun += result.notRun
+            offset += plan.tickets.count
+        }
+        ids.forEach(board.endAction)
+        progress = nil
+        return total
     }
 
     static func name(_ action: ZenTaoBulkAction) -> String {

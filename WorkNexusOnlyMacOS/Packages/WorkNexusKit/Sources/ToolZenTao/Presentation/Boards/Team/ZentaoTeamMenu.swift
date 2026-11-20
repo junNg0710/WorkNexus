@@ -21,8 +21,8 @@ struct ZentaoTeamMenu: View {
         let current = state.team(bugs: bugs)?.group
         AppMenuButton(help: appString("leaderTeamHelp", "Follow a group of people across every execution"), items: menuItems) {
             HStack(spacing: theme.spacing.s4) {
-                Image(systemName: "person.3.fill").font(.system(size: theme.sizes.icon12))
-                Text(current?.name ?? appString("leaderTeam", "Team")).font(theme.typography.metaStrong).lineLimit(1)
+                Image(systemName: current?.isOnlyMe == true ? "person.fill" : "person.3.fill").font(.system(size: theme.sizes.icon12))
+                Text(current.map(Self.label) ?? appString("leaderTeam", "Team")).font(theme.typography.metaStrong).lineLimit(1)
                     .frame(maxWidth: theme.sizes.detailPanel / 3)
             }
             .foregroundStyle(current == nil ? theme.colors.tx2 : theme.colors.accent)
@@ -41,6 +41,11 @@ struct ZentaoTeamMenu: View {
         }
     }
 
+    /// What the header calls a group: "Only me" for the user's own work, else its name.
+    static func label(_ group: ZenTaoTeamGroup) -> String {
+        group.isOnlyMe ? appString("leaderOnlyMe", "Only me") : group.name
+    }
+
     /// The menu, read when the button is pressed: back to the execution (product), the groups (the open one checked),
     /// then new / edit / delete.
     private func menuItems() -> [AppNativeMenu.Item] {
@@ -51,12 +56,20 @@ struct ZentaoTeamMenu: View {
             out.append(.init(bugs ? appString("leaderBackToProduct", "Back to the product") : appString("leaderBackToExecution", "Back to the execution"),
                              icon: "arrow.uturn.backward") { state.closeTeam(bugs: bugs) })
         }
+        // Every account has its own work, saved or not.
+        if !account.handle.trimmingCharacters(in: .whitespaces).isEmpty {
+            let me = ZenTaoTeamGroup.onlyMe(accountId: account.id, login: account.handle)
+            out.append(.init(Self.label(me), icon: "person.fill", dividerBefore: current != nil, checked: current?.isOnlyMe == true) {
+                state.openTeam(me, bugs: bugs)
+            })
+        }
         for g in groups {
             out.append(.init("\(g.name) · \(g.members.count)", icon: "person.3", dividerBefore: g.id == groups.first?.id,
                              checked: g.id == current?.id) { state.openTeam(g, bugs: bugs) })
         }
         out.append(.init(appString("leaderNewGroup", "New team group…"), icon: "plus", dividerBefore: true) { dialog = ZentaoTeamEdit(group: nil) })
-        if let current {
+        // "Only me" is not a saved group: nothing to edit or delete.
+        if let current, !current.isOnlyMe {
             out.append(.init(appString("leaderEditGroup", "Edit this group…"), icon: "pencil") { dialog = ZentaoTeamEdit(group: current) })
             out.append(.init(appString("leaderDeleteGroup", "Delete this group"), icon: "trash", destructive: true) { confirmDelete = true })
         }

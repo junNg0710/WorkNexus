@@ -28,10 +28,13 @@ struct ZentaoBoardToolbar: View {
         let catalog = state.facetCatalog(bugs: bugs)
         BoardToolbar(controller: controller, scopes: scopes, searchScope: searchScope, modes: modes, viewMode: viewMode,
                      onViewMode: onViewMode, sortFields: Self.sortFields(bugs: bugs)) {
-            if filtering {
-                // Picking a filter shows it over every ticket: the All view.
-                FiltersButton(controller: controller, statusOption: option, catalog: catalog,
-                              onPick: scopes.first?.active == false ? scopes.first?.onTap : nil)
+            HStack(spacing: theme.spacing.s6) {
+                if filtering {
+                    // Picking a filter shows it over every ticket: the All view.
+                    FiltersButton(controller: controller, statusOption: option, catalog: catalog,
+                                  onPick: scopes.first?.active == false ? scopes.first?.onTap : nil)
+                }
+                ZentaoSelectButton(state: state, bugs: bugs)
             }
         } refresh: {
             BoardRefreshButton(loading: state.team(bugs: bugs)?.isLoading ?? (bugs ? state.bugSlice.isLoading : state.taskSlice.isLoading)) {

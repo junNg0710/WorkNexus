@@ -1974,5 +1974,81 @@
   "chatShareNoteHint": {
     "en": "Add a note — type @ to mention someone",
     "vi": "Thêm ghi chú — gõ @ để nhắc tên"
+  },
+  "leaderBulkHideSkipped": {
+    "en": "Hide the skipped tickets",
+    "vi": "Ẩn các ticket bị bỏ qua"
+  },
+  "leaderBulkNotOnTeam": {
+    "en": "%1$@ not on their team",
+    "vi": "%1$@ không thuộc nhóm của họ"
+  },
+  "leaderBulkReasonNotAllowed": {
+    "en": "ZenTao does not allow it in its state",
+    "vi": "ZenTao không cho phép ở trạng thái này"
+  },
+  "leaderBulkReasonNotMember": {
+    "en": "not on its team",
+    "vi": "người nhận không thuộc nhóm"
+  },
+  "leaderBulkReasonUnchanged": {
+    "en": "already so",
+    "vi": "đã như vậy"
+  },
+  "leaderBulkShowSkipped": {
+    "en": "Show the skipped tickets",
+    "vi": "Xem các ticket bị bỏ qua"
+  },
+  "leaderBulkSkipNotMember": {
+    "en": "%1$@ skipped: not on the ticket's execution or product team",
+    "vi": "%1$@ bỏ qua: người nhận không thuộc nhóm execution hoặc product của ticket"
+  },
+  "leaderBulkUndo": {
+    "en": "Undo",
+    "vi": "Hoàn tác"
+  },
+  "leaderBulkUndone": {
+    "en": "Undo: %1$@ back, %2$@ failed",
+    "vi": "Hoàn tác: %1$@ đã trả lại, %2$@ lỗi"
+  },
+  "leaderBulkUndoNobody": {
+    "en": "· %1$@ had nobody before",
+    "vi": "· %1$@ trước đó chưa có ai nhận"
+  },
+  "leaderBulkUndoNothing": {
+    "en": "Nothing to undo: those tickets had nobody before",
+    "vi": "Không có gì để hoàn tác: các ticket đó trước đó chưa có ai nhận"
+  },
+  "leaderOnlyMe": {
+    "en": "Only me",
+    "vi": "Chỉ mình tôi"
+  },
+  "leaderSelectDone": {
+    "en": "Done",
+    "vi": "Xong"
+  },
+  "leaderSelectMode": {
+    "en": "Select",
+    "vi": "Chọn"
+  },
+  "tipBulkNotOnTeam": {
+    "en": "Not on the team of any picked ticket: ZenTao would refuse it",
+    "vi": "Không thuộc nhóm của ticket nào đã chọn: ZenTao sẽ từ chối"
+  },
+  "tipDeselectAll": {
+    "en": "Drop all of these from the selection",
+    "vi": "Bỏ chọn tất cả mục này"
+  },
+  "tipSelectAllHere": {
+    "en": "Select all of these",
+    "vi": "Chọn tất cả mục này"
+  },
+  "tipSelectMode": {
+    "en": "Pick several tickets to assign, reprioritise or close them together",
+    "vi": "Chọn nhiều ticket để giao, đổi độ ưu tiên hoặc đóng cùng lúc"
+  },
+  "tipSelectModeDone": {
+    "en": "Stop picking and drop the selection (Esc)",
+    "vi": "Thoát chế độ chọn và bỏ chọn (Esc)"
   }
 }

@@ -3,7 +3,8 @@ import Foundation
 
 /// What a team leader can do to many tickets at once. Not in the Flutter app.
 public enum ZenTaoBulkAction: Equatable, Sendable {
-    case assign(login: String)
+    /// `comment`: the note left on every ticket (ZenTao's assign form has one).
+    case assign(login: String, comment: String?)
     /// ZenTao's priority: 1 urgent, 2 high, 3 medium, 4 low.
     case priority(Int)
     case close
@@ -14,6 +15,8 @@ public enum ZenTaoBulkSkipReason: Equatable, Sendable {
     case notAllowed
     /// The ticket already is what the action would make it.
     case unchanged
+    /// The person is not on the ticket's execution (task) or product (bug) team, so ZenTao would refuse it.
+    case notMember
 }
 
 public struct ZenTaoBulkSkip: Equatable, Sendable {
@@ -38,21 +41,24 @@ public struct PlanBulkAction: Sendable {
         return (t.externalType ?? "").lowercased() == "task"
     }
 
-    public func callAsFunction(_ tickets: [Ticket], _ action: ZenTaoBulkAction) -> ZenTaoBulkPlan {
+    /// `canTake`: whether a person may hold a ticket (on its team); unknown when nil, so nobody is skipped for it.
+    public func callAsFunction(_ tickets: [Ticket], _ action: ZenTaoBulkAction,
+                               canTake: ((Ticket, String) -> Bool)? = nil) -> ZenTaoBulkPlan {
         var run: [Ticket] = []
         var skipped: [ZenTaoBulkSkip] = []
         for t in tickets {
-            if let reason = skip(t, action) { skipped.append(ZenTaoBulkSkip(ticket: t, reason: reason)) } else { run.append(t) }
+            if let reason = skip(t, action, canTake) { skipped.append(ZenTaoBulkSkip(ticket: t, reason: reason)) } else { run.append(t) }
         }
         return ZenTaoBulkPlan(tickets: run, skipped: skipped)
     }
 
-    private func skip(_ t: Ticket, _ action: ZenTaoBulkAction) -> ZenTaoBulkSkipReason? {
+    private func skip(_ t: Ticket, _ action: ZenTaoBulkAction, _ canTake: ((Ticket, String) -> Bool)?) -> ZenTaoBulkSkipReason? {
         switch action {
-        case .assign(let login):
+        case .assign(let login, _):
             let canAssign = isTask(t) ? ListZenTaoTaskActions()(t).canAssign : ListZenTaoBugActions()(t).canAssign
             if !canAssign { return .notAllowed }
-            return (t.assignee ?? "") == login ? .unchanged : nil
+            if (t.assignee ?? "") == login { return .unchanged }
+            return canTake?(t, login) == false ? .notMember : nil
         case .priority(let pri):
             if !zentaoIsOpen(t) { return .notAllowed }
             return t.priority.level + 1 == pri ? .unchanged : nil
@@ -92,7 +98,7 @@ public struct RunZenTaoBulkAction: Sendable {
             guard await shouldContinue() else { result.notRun = plan.tickets[i...].map(\.id); break }
             let outcome: Outcome<Void>
             switch action {
-            case .assign(let login): outcome = await ops.assign(ticket, to: login)
+            case .assign(let login, let comment): outcome = await ops.assign(ticket, to: login, comment: comment)
             case .priority(let pri): outcome = await ops.setPriority(ticket, to: pri)
             case .close: outcome = await ops.close(ticket)
             }

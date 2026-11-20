@@ -33,6 +33,8 @@ public final class ZentaoUIState {
     public internal(set) var taskTeam: ZentaoTeamScope?
     public internal(set) var bugTeam: ZentaoTeamScope?
     var teamGeneration = 0
+    /// `accountId|tasks` / `accountId|bugs` boards that were opened on their remembered scope this session.
+    var appliedDefaultScopes: Set<String> = []
     /// Bumped when the pinned people change, so the people strip reads them again.
     var pinnedPeopleRevision = 0
     var observedTeamAccounts: Set<String> = []

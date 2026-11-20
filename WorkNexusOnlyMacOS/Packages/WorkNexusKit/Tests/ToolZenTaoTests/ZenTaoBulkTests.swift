@@ -17,10 +17,18 @@ final class ZenTaoBulkTests: XCTestCase {
 
     func testAssignSkipsTheFinishedAndTheAlreadyThere() {
         let plan = PlanBulkAction()([task("1"), task("2", assignee: "binh"), task("3", status: "closed"), bug("4", status: "closed"), bug("5")],
-                                    .assign(login: "binh"))
+                                    .assign(login: "binh", comment: nil))
         XCTAssertEqual(plan.tickets.map(\.id), ["1", "5"])
         XCTAssertEqual(plan.skipped(.unchanged).map(\.id), ["2"])
         XCTAssertEqual(plan.skipped(.notAllowed).map(\.id), ["3", "4"])
+    }
+
+    func testAssignSkipsWhoIsNotOnTheTicketsTeam() {
+        let plan = PlanBulkAction()([task("1"), task("2"), task("3", assignee: "binh")], .assign(login: "binh", comment: nil),
+                                    canTake: { t, _ in t.id != "2" })
+        XCTAssertEqual(plan.tickets.map(\.id), ["1"])
+        XCTAssertEqual(plan.skipped(.notMember).map(\.id), ["2"])
+        XCTAssertEqual(plan.skipped(.unchanged).map(\.id), ["3"])   // already theirs: not counted as a team problem
     }
 
     func testPriorityLeavesOnlyOpenTicketsThatChange() {
@@ -50,7 +58,9 @@ final class ZenTaoBulkTests: XCTestCase {
             lock.withLock { _calls.append("\(what):\(t.id)") }
             return failing.contains(t.id) ? .failure(.network("refused \(t.id)")) : .success(())
         }
-        func assign(_ ticket: Ticket, to login: String) async -> Outcome<Void> { record("assign \(login)", ticket) }
+        func assign(_ ticket: Ticket, to login: String, comment: String?) async -> Outcome<Void> {
+            record("assign \(login)\(comment.map { " (\($0))" } ?? "")", ticket)
+        }
         func setPriority(_ ticket: Ticket, to pri: Int) async -> Outcome<Void> { record("pri \(pri)", ticket) }
         func close(_ ticket: Ticket) async -> Outcome<Void> { record("close", ticket) }
     }
@@ -58,9 +68,9 @@ final class ZenTaoBulkTests: XCTestCase {
     func testRunsOneAfterAnotherAndReportsEachOutcome() async {
         let ops = Ops()
         ops.failing = ["2"]
-        let plan = PlanBulkAction()([task("1"), task("2"), task("3")], .assign(login: "binh"))
+        let plan = PlanBulkAction()([task("1"), task("2"), task("3")], .assign(login: "binh", comment: nil))
         let seen = LockedList<String>()
-        let result = await RunZenTaoBulkAction(ops: ops)(plan, .assign(login: "binh"), progress: { done, total in seen.add("\(done)/\(total)") })
+        let result = await RunZenTaoBulkAction(ops: ops)(plan, .assign(login: "binh", comment: nil), progress: { done, total in seen.add("\(done)/\(total)") })
         XCTAssertEqual(ops.calls, ["assign binh:1", "assign binh:2", "assign binh:3"])
         XCTAssertEqual(result.succeeded, ["1", "3"])                    // one ticket refused does not stop the rest
         XCTAssertEqual(result.failed, [ZenTaoBulkFailure(ticketId: "2", message: "refused 2")])
@@ -77,6 +87,13 @@ final class ZenTaoBulkTests: XCTestCase {
         XCTAssertEqual(ops.calls, ["pri 1:1"])
         XCTAssertEqual(result.succeeded, ["1"])
         XCTAssertEqual(result.notRun, ["2", "3"])
+    }
+
+    func testTheNoteGoesWithEveryTicket() async {
+        let ops = Ops()
+        let plan = PlanBulkAction()([task("1"), task("2")], .assign(login: "binh", comment: nil))
+        _ = await RunZenTaoBulkAction(ops: ops)(plan, .assign(login: "binh", comment: "sprint 12"))
+        XCTAssertEqual(ops.calls, ["assign binh (sprint 12):1", "assign binh (sprint 12):2"])
     }
 
     func testAnEmptyPlanDoesNothing() async {
@@ -126,7 +143,7 @@ final class BulkFakeEditor: ZenTaoTicketEditor, @unchecked Sendable {
 
 final class ZenTaoBulkOpsTests: XCTestCase {
     private func ops(_ editor: BulkFakeEditor, _ workflow: DetailFakeWorkflow) -> ZentaoBulkOps {
-        ZentaoBulkOps(workflow: workflow, editor: editor, assigner: { _, _ in .success(()) })
+        ZentaoBulkOps(workflow: workflow, editor: editor, assigner: { _, _, _ in .success(()) })
     }
     private func ticket(_ type: String, _ entity: TicketProviderEntity) -> Ticket {
         Ticket(id: "a:\(type):7", accountId: "a", projectId: "p", providerType: .zentao, externalKey: "7", title: "T", body: "", priority: .medium,

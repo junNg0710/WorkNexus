@@ -63,7 +63,7 @@ struct BoardsEnv {
     let state: ZentaoUIState
 
     init(section: SectionID = ZentaoSection.bugs, tickets: [Ticket] = [], members: [ProviderUser] = [],
-         teamGroups: ZenTaoTeamGroupRepository = NoTeamGroups()) {
+         teamGroups: ZenTaoTeamGroupRepository = NoTeamGroups(), boardScopes: ZenTaoBoardScopeStore = BoardsEnv.onTheirScope()) {
         let store = self.store, pages = self.pages
         store.accounts["zt1"] = Account(id: "zt1", workspaceId: "w1", providerType: .zentao, handle: "thanh", baseUrl: "https://zentao.example.com")
         for t in tickets { store.tickets[t.id] = t }
@@ -78,9 +78,16 @@ struct BoardsEnv {
         let docs = DetailFakeDocs()
         deps = ZentaoDependencies(services: services, nav: nav, registry: { ToolRegistry() }, tickets: pages, viewPages: pages, taskBugs: pages,
                                   editor: DetailFakeEditor(), teamMembers: DetailFakeTeam(members: members), workflow: workflow, docs: docs,
-                                  exportDoc: ExportZenTaoDoc(docs), teamGroups: teamGroups)
+                                  exportDoc: ExportZenTaoDoc(docs), teamGroups: teamGroups, boardScopes: boardScopes)
         state = ZentaoUIState(deps: deps)
         state.start()
+    }
+
+    /// Boards that open on their execution / product, as before "Only me" was the first-visit default.
+    nonisolated static func onTheirScope() -> InMemoryBoardScopes {
+        let scopes = InMemoryBoardScopes()
+        for bugs in [false, true] { scopes.setChoice(.scope, accountId: "zt1", bugs: bugs) }
+        return scopes
     }
 
     func product(_ id: String = "p1", _ name: String = "Social") -> ProviderProduct { ProviderProduct(id: id, name: name, accountId: "zt1") }

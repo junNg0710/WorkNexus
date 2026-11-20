@@ -32,7 +32,7 @@ extension ZentaoUIState {
                         if !added.isEmpty { loadTeam(bugs: bugs, only: added) } else { rescope() }
                     } else if known.contains(scope.group.id) {
                         // The group was there and is gone: deleted. (One never seen is just not stored yet.)
-                        closeTeam(bugs: bugs)
+                        closeTeam(bugs: bugs, remember: false)
                     }
                 }
             }
@@ -45,7 +45,9 @@ extension ZentaoUIState {
     // MARK: Showing a team
 
     /// Shows `group` on the Tasks (or Bugs) board instead of its execution (product) and reads each person's work.
-    public func openTeam(_ group: ZenTaoTeamGroup, bugs: Bool) {
+    /// `remember`: kept as the board's scope for the next launch (the user picked it).
+    public func openTeam(_ group: ZenTaoTeamGroup, bugs: Bool, remember: Bool = true) {
+        if remember { deps.boardScopes.setChoice(group.isOnlyMe ? .onlyMe : .team(id: group.id), accountId: group.accountId, bugs: bugs) }
         teamGeneration += 1   // reads of a team shown before are dropped
         var scope = ZentaoTeamScope(group: group)
         for m in group.members { scope.loads[m.login] = .loading }
@@ -57,9 +59,10 @@ extension ZentaoUIState {
         loadTeam(bugs: bugs, only: nil)
     }
 
-    /// Back to the execution (product) the board was on.
-    public func closeTeam(bugs: Bool) {
-        guard team(bugs: bugs) != nil else { return }
+    /// Back to the execution (product) the board was on. `remember`: kept as the board's scope for the next launch.
+    public func closeTeam(bugs: Bool, remember: Bool = true) {
+        guard let open = team(bugs: bugs) else { return }
+        if remember { deps.boardScopes.setChoice(.scope, accountId: open.accountId, bugs: bugs) }
         teamGeneration += 1
         setTeam(nil, bugs: bugs)
         membersFor = nil

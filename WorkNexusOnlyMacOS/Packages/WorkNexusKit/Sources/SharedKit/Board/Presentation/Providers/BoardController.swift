@@ -66,6 +66,9 @@ public final class BoardController {
     public internal(set) var selectedIds: Set<String> = []
     /// The ticket picked last: where a ⇧-click starts its range.
     var selectionAnchor: String?
+    /// Picking mode, turned on from the board's Select button: a plain click picks instead of opening, and cards and
+    /// rows show a checkbox.
+    public internal(set) var isSelecting = false
 
     var memory: [String: FilterState] = [:]
     var setAside: [String: FilterState] = [:]

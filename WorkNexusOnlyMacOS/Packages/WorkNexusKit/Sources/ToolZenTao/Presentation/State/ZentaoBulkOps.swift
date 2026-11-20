@@ -7,9 +7,9 @@ struct ZentaoBulkOps: ZenTaoBulkTicketOps {
     let workflow: ZenTaoWorkflowService
     let editor: ZenTaoTicketEditor
     /// Hands a ticket to a person and re-reads it (`ZentaoAssignAction`).
-    let assigner: @Sendable (Ticket, String) async -> Outcome<Void>
+    let assigner: @Sendable (Ticket, String, String?) async -> Outcome<Void>
 
-    func assign(_ ticket: Ticket, to login: String) async -> Outcome<Void> { await assigner(ticket, login) }
+    func assign(_ ticket: Ticket, to login: String, comment: String?) async -> Outcome<Void> { await assigner(ticket, login, comment) }
 
     func close(_ ticket: Ticket) async -> Outcome<Void> {
         if case .zentaoTask? = ticket.providerEntity { return await workflow.runTaskAction(ticket, .close, ZenTaoTaskActionInput()) }

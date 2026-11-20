@@ -18,11 +18,13 @@ struct ZentaoBulkBar: View {
     @State private var dialog: ZentaoBulkDialog?
 
     private var board: BoardController { bugs ? state.bugBoard : state.taskBoard }
+    /// While picking (even before the first pick) or a run goes on.
+    private var showing: Bool { board.isSelecting || !board.selectedIds.isEmpty || model.progress != nil }
 
     var body: some View {
         let targets = state.bulkTargets(bugs: bugs)
         Group {
-            if !board.selectedIds.isEmpty || model.progress != nil {
+            if showing {
                 HStack(spacing: theme.spacing.s8) {
                     // One line each, whatever the board's width.
                     if let p = model.progress { ZentaoBulkRunning(progress: p, onStop: model.stop) }
@@ -34,15 +36,15 @@ struct ZentaoBulkBar: View {
                 .shadow(color: .black.opacity(0.12), radius: 10, y: 3)
                 .padding(.bottom, theme.spacing.s20)
                 .background {
-                    // Present only while something is picked, so it never takes Esc from a field.
-                    Button("") { board.clearSelection() }.keyboardShortcut(.escape, modifiers: []).opacity(0).frame(width: 0, height: 0)
+                    // Present only while picking, so it never takes Esc from a field.
+                    Button("") { board.endSelecting() }.keyboardShortcut(.escape, modifiers: []).opacity(0).frame(width: 0, height: 0)
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-        .allowsHitTesting(!board.selectedIds.isEmpty || model.progress != nil)
-        .animation(.easeOut(duration: 0.15), value: board.selectedIds.isEmpty)
+        .allowsHitTesting(showing)
+        .animation(.easeOut(duration: 0.15), value: showing)
         .appDialog(item: $dialog) { which in
             switch which {
             case .assign: ZentaoBulkAssignDialog(deps: deps, state: state, bugs: bugs, model: model, onClose: { dialog = nil })
