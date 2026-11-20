@@ -4,7 +4,9 @@ import SwiftUI
 
 /// One row of the chat list: avatar, title, last message, time and unread; pinned and muted marks.
 /// Ported from: lib/features/chat/presentation/widgets/conversation_tile.dart
-struct ConversationTile: View {
+///
+/// Equatable on what it is given, so the list can skip the rows a change does not concern (see `ConversationRow`).
+struct ConversationTile: View, Equatable {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatSettings) private var settings
     @Environment(\.chatPrivacyHidden) private var hidden
@@ -13,6 +15,10 @@ struct ConversationTile: View {
     let selected: Bool
     let highlighted: Bool
     let compact: Bool
+
+    nonisolated static func == (a: ConversationTile, b: ConversationTile) -> Bool {
+        a.selected == b.selected && a.highlighted == b.highlighted && a.compact == b.compact && a.chat == b.chat
+    }
 
     var body: some View {
         let unread = chat.chat.unreadCount > 0

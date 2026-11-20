@@ -19,7 +19,7 @@ public final class BoardController {
 
     // MARK: Inputs
     /// Every ticket in the local DB.
-    public private(set) var tickets: [Ticket] = [] { didSet { recompute() } }
+    public private(set) var tickets: [Ticket] = [] { didSet { ticketsChanged() } }
     public private(set) var accounts: [String: Account] = [:] { didSet { recompute() } }
     public private(set) var workspaces: [String: Workspace] = [:]
     public private(set) var projects: [String: Project] = [:]
@@ -27,9 +27,9 @@ public final class BoardController {
     public private(set) var settings = AppSettings() { didSet { if oldValue != settings, scopeTickets != nil { recompute() } } }
     public private(set) var savedFilters: [SavedFilter] = []
     /// Replaces the tickets the board scopes from (a paged tool board that loads its own slice).
-    public var scopedTicketsOverride: [Ticket]? { didSet { recompute() } }
+    public var scopedTicketsOverride: [Ticket]? { didSet { ticketsChanged() } }
     /// Tool hook (Flutter: `ToolModule.scopeTickets`): narrows all tickets to the section / scope on screen.
-    public var scopeTickets: (([Ticket]) -> [Ticket])? { didSet { recompute() } }
+    public var scopeTickets: (([Ticket]) -> [Ticket])? { didSet { ticketsChanged() } }
     /// Which facet groups the filter popover offers (bug / task / MR boards); `.none` uses the generic groups.
     public var facetScope: BoardFacetScope = .none
     /// Account-wide "mine" board: hides the status / priority groups (the saved views cover them).
@@ -61,6 +61,8 @@ public final class BoardController {
     /// What the performance log calls this board ("zentao tasks"): its work and what it holds are written under it.
     public var perfName = "board"
     @ObservationIgnored private var stale = false
+    /// Whether the derived values were worked out at least once (until then nothing can be skipped).
+    @ObservationIgnored private var computed = false
 
     /// Tickets picked for a bulk action (⌘-click, ⇧-click); cards and rows draw them selected.
     public internal(set) var selectedIds: Set<String> = []
@@ -148,12 +150,30 @@ public final class BoardController {
 
     func recompute() {
         guard isActive else { stale = true; return }
-        stale = false
-        revision &+= 1
+        apply(scoped: scope())
+    }
+
+    /// The store's tickets changed, or the tool scoped again (a page of another view arrived). A sync writes tickets of
+    /// every board; when those in this board's scope are the same as before, nothing it shows changes, so nothing is
+    /// rebuilt or redrawn (it used to rebuild and redraw the whole board on every write, which stuttered while a sync ran).
+    private func ticketsChanged() {
+        guard isActive else { stale = true; return }
+        let next = scope()
+        if computed, !stale, next == scoped { describeForPerformanceLog(); return }
+        apply(scoped: next)
+    }
+
+    private func scope() -> [Ticket] {
         let all = tickets.count
-        scoped = PerformanceLog.measureSync("board: scope \(perfName)", detail: "of \(all) tickets") {
+        return PerformanceLog.measureSync("board: scope \(perfName)", detail: "of \(all) tickets") {
             scopedTicketsOverride ?? scopeTickets?(tickets) ?? tickets
         }
+    }
+
+    private func apply(scoped next: [Ticket]) {
+        stale = false; computed = true
+        revision &+= 1
+        scoped = next
         board = PerformanceLog.measureSync("board: build \(perfName)", detail: "\(scoped.count) tickets") { BuildBoard()(boardQuery) }
         resultCount = board.total
         describeForPerformanceLog()

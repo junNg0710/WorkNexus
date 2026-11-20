@@ -193,6 +193,52 @@ final class BoardControllerTests: XCTestCase {
         c.stop()
     }
 
+    /// A ticket store whose stream carries every write (the shared fake answers once).
+    private final class LiveTickets: TicketRepository, @unchecked Sendable {
+        private let lock = NSLock()
+        private var all: [Ticket]
+        private var continuation: AsyncStream<[Ticket]>.Continuation?
+        init(_ tickets: [Ticket]) { all = tickets }
+        func watchTickets() -> AsyncStream<[Ticket]> {
+            AsyncStream { c in lock.withLock { continuation = c; c.yield(all) } }
+        }
+        func ticket(id: String) async -> Outcome<Ticket?> { .success(lock.withLock { all.first { $0.id == id } }) }
+        func upsertTickets(_ list: [Ticket]) async -> Outcome<Void> {
+            lock.withLock {
+                for t in list { if let i = all.firstIndex(where: { $0.id == t.id }) { all[i] = t } else { all.append(t) } }
+                continuation?.yield(all)
+            }
+            return .success(())
+        }
+        func moveTicket(id: String, to status: UnifiedStatus) async -> Outcome<Void> { .success(()) }
+    }
+
+    /// A sync writes tickets of other boards too: a write that leaves this board's tickets as they were rebuilds nothing.
+    func testAWriteOutsideTheScopeRebuildsNothing() async {
+        let store = FakeStore(), live = LiveTickets([makeTicket("a"), makeTicket("b"), makeTicket("other")])
+        let services = AppServices(tickets: live, workspaces: store, comments: store, activity: store, syncStatus: SyncSuite.RecordingStatusRef(),
+                                   settings: FakeSettings(), credentials: store, sync: NoopSync(), ticketDetail: NoopSync(), adapters: FakeRegistry())
+        let c = BoardController(services: services, nav: AppNavController { _ in "board" }, registry: ToolRegistry())
+        c.scopeTickets = { $0.filter { $0.id != "other" && $0.id != "new" } }
+        c.start()
+        await waitFor { c.board.total == 2 }
+        let revision = c.revision
+        var other = makeTicket("other"); other.title = "changed elsewhere"
+        _ = await live.upsertTickets([other, makeTicket("new")])
+        await waitFor { c.tickets.count == 4 }
+        XCTAssertEqual(c.tickets.count, 4)
+        XCTAssertEqual(c.revision, revision, "the tickets in scope are the same: nothing is rebuilt")
+        // The tool scoping again to the same tickets (a page of another view arrived) rebuilds nothing either.
+        c.scopeTickets = { $0.filter { $0.id != "other" && $0.id != "new" } }
+        XCTAssertEqual(c.revision, revision)
+        var a = makeTicket("a"); a.title = "changed here"
+        _ = await live.upsertTickets([a])
+        await waitFor { c.revision != revision }
+        XCTAssertEqual(c.revision, revision + 1, "a ticket in scope changed: one rebuild")
+        XCTAssertEqual(c.scoped.first { $0.id == "a" }?.title, "changed here")
+        c.stop()
+    }
+
     /// A board kept mounted behind another section does no work for ticket changes, and catches up once when shown.
     func testAHiddenBoardWaitsAndCatchesUpWhenShown() async {
         let (c, _) = make(tickets: [makeTicket("a"), makeTicket("b")])

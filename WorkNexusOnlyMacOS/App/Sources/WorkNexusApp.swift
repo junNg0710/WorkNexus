@@ -53,6 +53,9 @@ private struct RootView: View {
                                   onPick: { v in shell.updateSettings { $0.accentColorValue = v } },
                                   onClose: { shell.customAccentRequested = false })
             }
+            // "Show FPS" (Settings › Local data › Diagnostics): a badge in the window's bottom corner, over everything (the
+            // title bar is full of breadcrumbs and search at narrow widths). It takes no clicks.
+            .overlay(alignment: .bottomTrailing) { FpsBadge().environment(\.appTheme, theme).padding(theme.spacing.s6) }
             .preferredColorScheme(shell.settings.themeFollowsSystem ? nil : theme.colorScheme)
             .background(WindowConfigurator { root.platform.attach(window: $0) })
             .task { await root.start() }

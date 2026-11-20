@@ -1,5 +1,6 @@
 import CoreDomain
 import CoreTools
+import CoreUI
 import XCTest
 @testable import SharedKit
 
@@ -42,6 +43,35 @@ final class RailPaneToggleTests: XCTestCase {
         s.railTap(isCurrent: true) { went += 1 }
         XCTAssertFalse(s.currentPaneFolded)
         XCTAssertTrue(ToolPaneHost.isVisible(s))
+    }
+
+    /// Clicked through faster than the places can be shown: only where the user ended up is built.
+    func testAPlaceIsNotBuiltWhileAnotherRailClickWaits() async throws {
+        let s = shell()
+        var behind = true
+        s.railGate = CatchUpGate(recheck: 0.01) { behind }
+        s.nav.select(.settings)
+        var went: [String] = []
+        s.railTap(isCurrent: false) { went.append("workspace") }
+        s.railTap(isCurrent: false) { went.append("chat") }
+        XCTAssertEqual(went, [])
+        behind = false
+        try await Task.sleep(for: .milliseconds(120))
+        XCTAssertEqual(went, ["chat"])
+    }
+
+    func testComingBackToThePlaceOnScreenDropsThePlaceAskedForAndFoldsNothing() async throws {
+        let s = shell()
+        var behind = true
+        s.railGate = CatchUpGate(recheck: 0.01) { behind }
+        s.nav.select(.settings)
+        var went = 0
+        s.railTap(isCurrent: false) { went += 1 }
+        s.railTap(isCurrent: true) { went += 1 }
+        behind = false
+        try await Task.sleep(for: .milliseconds(120))
+        XCTAssertEqual(went, 0)
+        XCTAssertFalse(s.currentPaneFolded)
     }
 
     func testEachPlaceFoldsOnItsOwnAndASectionHasItsOwnPane() {

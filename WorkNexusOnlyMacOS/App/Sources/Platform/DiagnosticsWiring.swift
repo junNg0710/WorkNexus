@@ -36,6 +36,19 @@ final class DiagnosticsWiring: NSObject {
         }
         MXMetricManager.shared.add(self)
         if Self.performanceLogOn { Self.setPerformanceLog(true) }
+        if Self.showFpsOn { FpsMeter.shared.setOn(true) }
+    }
+
+    // MARK: FPS badge
+
+    private static let fpsKey = "diagnostics.showFps"
+
+    /// Whether the user turned the FPS badge on (Settings › Local data › Diagnostics); kept on this Mac.
+    static var showFpsOn: Bool { UserDefaults.standard.bool(forKey: fpsKey) }
+
+    static func setShowFps(_ on: Bool) {
+        UserDefaults.standard.set(on, forKey: fpsKey)
+        FpsMeter.shared.setOn(on)
     }
 
     // MARK: Performance log

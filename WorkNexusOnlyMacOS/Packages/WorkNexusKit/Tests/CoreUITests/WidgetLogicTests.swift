@@ -196,3 +196,29 @@ final class InlineImageDecodeTests: XCTestCase {
         XCTAssertNil(decodeInlineImage(Data()))
     }
 }
+
+/// The "Show FPS" badge's numbers.
+final class FpsReadingTests: XCTestCase {
+    func testASteadySecondReadsTheDisplaysRate() {
+        let r = FpsReading(gaps: Array(repeating: 1.0 / 60, count: 60), frame: 1.0 / 60)
+        XCTAssertEqual(r.fps, 60)
+        XCTAssertEqual(r.worstMs, 17)
+        XCTAssertEqual(r.grade, .smooth)
+    }
+
+    func testAHeldUpSecondReadsLowWithItsLongestFrame() {
+        // 20 frames in the second, one of them held for 400 ms.
+        let r = FpsReading(gaps: Array(repeating: 0.6 / 19, count: 19) + [0.4], frame: 1.0 / 60)
+        XCTAssertEqual(r.fps, 20)
+        XCTAssertEqual(r.worstMs, 400)
+        XCTAssertEqual(r.grade, .slow)
+    }
+
+    func testAFewLateFramesAreUnevenAndA120HzDisplayIsJudgedByItsOwnRate() {
+        XCTAssertEqual(FpsReading(gaps: Array(repeating: 1.0 / 60, count: 57) + [0.05], frame: 1.0 / 60).grade, .uneven)
+        let pro = FpsReading(gaps: Array(repeating: 1.0 / 60, count: 60), frame: 1.0 / 120)
+        XCTAssertEqual(pro.displayFps, 120)
+        XCTAssertEqual(pro.grade, .uneven)   // 60 of 120
+        XCTAssertEqual(FpsReading(gaps: [], frame: 0).fps, 0)
+    }
+}

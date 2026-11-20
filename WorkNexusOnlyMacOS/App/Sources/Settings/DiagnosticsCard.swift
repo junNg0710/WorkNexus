@@ -12,6 +12,7 @@ struct DiagnosticsCard: View {
     let log: FileDiagnosticsLog
     @State private var bytes = 0
     @State private var performance = DiagnosticsWiring.performanceLogOn
+    @State private var showFps = DiagnosticsWiring.showFpsOn
 
     var body: some View {
         SettingsCard(title: appString("diagnosticsTitle", "Diagnostics"),
@@ -34,6 +35,12 @@ struct DiagnosticsCard: View {
                 performance = on
                 DiagnosticsWiring.setPerformanceLog(on)
                 toasts?.show(on ? appString("diagnosticsPerformanceOn", "Performance log on") : appString("diagnosticsPerformanceOff", "Performance log off"))
+            }
+            SettingsToggleRow(label: appString("diagnosticsFps", "Show FPS"),
+                              hint: appString("diagnosticsFpsHint", "Shows a small badge in the bottom corner of the window: the frames drawn in the last second and the longest wait between two of them. Green is smooth, amber uneven, red slow. Uses a little more power while on."),
+                              isOn: showFps) { on in
+                showFps = on
+                DiagnosticsWiring.setShowFps(on)
             }
         }
         .task { refresh() }

@@ -66,6 +66,7 @@ struct NavRail: View {
         }
         .padding(.bottom, theme.spacing.s12).padding(.top, theme.sizes.titleBar - theme.spacing.s8)
         .frame(width: theme.sizes.rail).frame(maxHeight: .infinity)
+        .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).maxX } action: { model.railEdge = $0 }
     }
 
     /// The tooltip of a place's button: its name and, for the place on screen, what a second click does to its side panel.

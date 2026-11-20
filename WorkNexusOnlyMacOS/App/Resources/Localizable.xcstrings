@@ -36330,6 +36330,57 @@
         }
       }
     },
+    "diagnosticsFps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show FPS"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện FPS"
+          }
+        }
+      }
+    },
+    "diagnosticsFpsHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows a small badge in the bottom corner of the window: the frames drawn in the last second and the longest wait between two of them. Green is smooth, amber uneven, red slow. Uses a little more power while on."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiện một nhãn nhỏ ở góc dưới cửa sổ: số khung hình vẽ trong giây vừa qua và khoảng chờ dài nhất giữa hai khung. Xanh là mượt, vàng là không đều, đỏ là chậm. Tốn thêm chút pin khi bật."
+          }
+        }
+      }
+    },
+    "fpsBadgeHelp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frames drawn in the last second, and the longest wait between two of them"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Số khung hình vẽ trong giây vừa qua và khoảng chờ dài nhất giữa hai khung"
+          }
+        }
+      }
+    },
     "leaderBulkChangePerson": {
       "extractionState": "manual",
       "localizations": {

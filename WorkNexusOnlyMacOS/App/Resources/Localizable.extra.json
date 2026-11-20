@@ -1983,6 +1983,18 @@
     "en": "Show more",
     "vi": "Xem thêm"
   },
+  "diagnosticsFps": {
+    "en": "Show FPS",
+    "vi": "Hiện FPS"
+  },
+  "diagnosticsFpsHint": {
+    "en": "Shows a small badge in the bottom corner of the window: the frames drawn in the last second and the longest wait between two of them. Green is smooth, amber uneven, red slow. Uses a little more power while on.",
+    "vi": "Hiện một nhãn nhỏ ở góc dưới cửa sổ: số khung hình vẽ trong giây vừa qua và khoảng chờ dài nhất giữa hai khung. Xanh là mượt, vàng là không đều, đỏ là chậm. Tốn thêm chút pin khi bật."
+  },
+  "fpsBadgeHelp": {
+    "en": "Frames drawn in the last second, and the longest wait between two of them",
+    "vi": "Số khung hình vẽ trong giây vừa qua và khoảng chờ dài nhất giữa hai khung"
+  },
   "leaderBulkChangePerson": {
     "en": "Change",
     "vi": "Đổi"

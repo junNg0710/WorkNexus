@@ -14,6 +14,12 @@ public final class ChatShellModel {
     @ObservationIgnored let repository: ChatRepository
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
     @ObservationIgnored private var typingLapse: Task<Void, Never>?
+    /// Where the chat list is in the window, told by the list: a click waiting there is another chat being picked.
+    @ObservationIgnored var listArea = CGRect.zero
+    @ObservationIgnored private lazy var selectGate = CatchUpGate { [weak self] in
+        guard let area = self?.listArea, !area.isEmpty else { return false }
+        return ClickBacklog.hasClick { area.contains($0) }
+    }
 
     var status: ChatConnectionStatus?
     private(set) var conversations: [ChatConversation] = []
@@ -137,6 +143,11 @@ public final class ChatShellModel {
     }
 
     // MARK: selection
+
+    /// A click on a chat of the list. Clicked through faster than the chats can be opened, only the last one is: a chat
+    /// whose click has another click on the list waiting behind it is skipped (`CatchUpGate`) instead of being built for
+    /// nothing while the window stands still.
+    func tap(_ gid: String) { selectGate.run { [weak self] in self?.select(gid) } }
 
     func select(_ gid: String?) {
         guard gid != selectedGid else { return }

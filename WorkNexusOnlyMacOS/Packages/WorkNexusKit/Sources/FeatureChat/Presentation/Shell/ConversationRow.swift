@@ -11,24 +11,16 @@ struct ConversationRow: View {
 
     var body: some View {
         let chat = item.chat
+        // Picking a chat re-runs every row here (each reads the selection); `equatable` stops that at the two rows whose
+        // tile changed, so the rest of the list is neither redrawn nor measured again on every switch.
         ConversationTile(chat: data, selected: chat.gid == model.selectedGid,
                          highlighted: model.isSearching && chat.gid == model.highlightedGid, compact: compact)
+            .equatable()
             // Pointing anywhere on the row shows its name, avatar and preview together while the privacy mode hides them.
             .chatPrivacyRowReveal()
-            .onTapGesture { model.select(chat.gid) }
-            .contextMenu {
-                Button { model.setStarred(chat, !chat.starred) } label: {
-                    Label(chat.starred ? shellString("chatUnpinChat", "Unpin chat") : shellString("chatPinChat", "Pin chat"),
-                          systemImage: chat.starred ? "pin.slash" : "pin")
-                }
-                Button { model.setMuted(chat, !chat.muted) } label: {
-                    Label(chat.muted ? shellString("chatUnmuteChat", "Unmute chat") : shellString("chatMuteChat", "Mute chat"),
-                          systemImage: chat.muted ? "bell" : "bell.slash")
-                }
-                Button { model.groupDialog = .category(chat) } label: {
-                    Label(shellString("chatSetCategory", "Category…"), systemImage: "folder.badge.plus")
-                }
-            }
+            .onTapGesture { model.tap(chat.gid) }
+            // The menu's rows are worked out when it opens, not for every row of the list on every redraw.
+            .contextMenu { ConversationRowMenu(model: model, chat: chat) }
     }
 
     /// Only the peer of a direct chat is drawn (avatar, presence, badge). Handing every row the whole user table made each
@@ -51,5 +43,25 @@ struct ConversationRow: View {
     private func lastSender(_ chat: ChatConversation) -> String? {
         guard chat.type != .one2one, let last = chat.lastMessage, last.content.asNotification == nil, !last.isNotice else { return nil }
         return last.isMine ? shellString("chatYou", "You") : ChatShellLabels.userName(model.users, last.senderId)
+    }
+}
+
+/// The right-click menu of a chat in the list: pin, mute, file under a category.
+private struct ConversationRowMenu: View {
+    let model: ChatShellModel
+    let chat: ChatConversation
+
+    var body: some View {
+        Button { model.setStarred(chat, !chat.starred) } label: {
+            Label(chat.starred ? shellString("chatUnpinChat", "Unpin chat") : shellString("chatPinChat", "Pin chat"),
+                  systemImage: chat.starred ? "pin.slash" : "pin")
+        }
+        Button { model.setMuted(chat, !chat.muted) } label: {
+            Label(chat.muted ? shellString("chatUnmuteChat", "Unmute chat") : shellString("chatMuteChat", "Mute chat"),
+                  systemImage: chat.muted ? "bell" : "bell.slash")
+        }
+        Button { model.groupDialog = .category(chat) } label: {
+            Label(shellString("chatSetCategory", "Category…"), systemImage: "folder.badge.plus")
+        }
     }
 }

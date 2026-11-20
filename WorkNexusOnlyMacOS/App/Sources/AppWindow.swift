@@ -1,4 +1,5 @@
 import AppKit
+import CoreUI
 import SwiftUI
 
 /// Hidden title bar; the traffic lights sit on the floating glass sidebar (macos/Runner/MainFlutterWindow.swift).
@@ -13,6 +14,8 @@ struct WindowConfigurator: NSViewRepresentable {
         let keeper = context.coordinator
         DispatchQueue.main.async {
             Self.configure(v.window)
+            // Scrolling anywhere in the app is not slowed by the pointer lying over what scrolls.
+            ScrollPointerPause.shared.start()
             if let w = v.window { keeper.watch(w); onWindow(w) }
         }
         return v

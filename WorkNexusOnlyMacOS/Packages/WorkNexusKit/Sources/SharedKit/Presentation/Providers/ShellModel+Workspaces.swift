@@ -1,5 +1,6 @@
 import CoreDomain
 import CoreTools
+import CoreUI
 import Foundation
 
 /// The active workspace (Flutter: `activeWorkspaceProvider`, `sortedActiveAccountsProvider`, the switcher's `_selectWorkspace`)
@@ -51,9 +52,18 @@ extension ShellModel {
 
     /// A click on a rail button: it goes to its place, or - when that place is the one on screen - folds / unfolds its pane.
     /// A click that also brought the app back from another app only shows the place: coming back to Chat must not fold its list.
-    public func railTap(isCurrent: Bool, now: Date = Date(), go: () -> Void) {
+    ///
+    /// Clicked through faster than the places can be shown, only the last one is built: a place whose click has another
+    /// rail click waiting behind it is skipped (`CatchUpGate`). The app used to build every one in turn, each for
+    /// nothing, and stood still for seconds meanwhile.
+    public func railTap(isCurrent: Bool, now: Date = Date(), go: @escaping () -> Void) {
         let bringsAppBack = now.timeIntervalSince(activatedAt) < Self.activationGrace
-        if isCurrent && !miniAppOnScreen && !bringsAppBack { toggleCurrentPane() } else { go() }
+        if isCurrent && !miniAppOnScreen && !bringsAppBack {
+            // Back on the place still on screen before the one asked for was built: that is where the user is; nothing folds.
+            if railGate.hasPending { railGate.cancel() } else { toggleCurrentPane() }
+        } else {
+            railGate.run(go)
+        }
     }
 
     /// How soon after the app came to the front a click still counts as the one that brought it back.
