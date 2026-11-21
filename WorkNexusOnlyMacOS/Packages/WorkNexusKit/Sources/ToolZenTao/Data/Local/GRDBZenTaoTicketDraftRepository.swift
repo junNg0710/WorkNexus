@@ -28,7 +28,11 @@ public final class GRDBZenTaoTicketDraftRepository: ZenTaoTicketDraftRepository,
     }
 
     private func storage<T>(_ run: () async throws -> T) async -> Outcome<T> {
-        do { return .success(try await run()) } catch { return .failure(.storage("Could not keep the draft")) }
+        do { return .success(try await run()) } catch {
+            // What the database said, for the log: the user only sees "Could not keep the draft".
+            Diagnostics.warning("editor", "Draft not kept: \(error)")
+            return .failure(.storage("Could not keep the draft"))
+        }
     }
 }
 

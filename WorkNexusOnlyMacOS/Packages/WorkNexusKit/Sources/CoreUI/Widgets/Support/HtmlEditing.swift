@@ -162,6 +162,15 @@ public final class HtmlEditingController {
     /// Turns a pasted image into the URL to show it at (by uploading it); a pasted image is dropped while
     /// this is nil or returns nil.
     public var onImagePaste: ((Data) async -> String?)?
+    /// Told when the document was changed from outside the editor view (`insertImage`), so the view shows it.
+    public var onExternalChange: (() -> Void)?
+
+    /// Puts the image at `url` where the caret was last (a file dropped on the form, outside the text itself).
+    public func insertImage(_ url: String) {
+        document.insertImage(url, at: max(selectionEnd, 0))
+        selectionEnd += 1
+        onExternalChange?()
+    }
 
     /// - Parameters:
     ///   - readImage: the clipboard's picture (injectable for tests).

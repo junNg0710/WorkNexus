@@ -69,6 +69,18 @@ final class HtmlEditingControllerTests: XCTestCase {
         XCTAssertTrue(html.contains("<p>x</p>"), html)
     }
 
+    /// A picture dropped on the form outside the text goes where the caret last was, and the editor view is told to show it.
+    func testAnImageInsertedFromOutsideTheEditorIsInTheHtmlAndTheViewIsTold() {
+        let c = HtmlEditingController(html: "<p>Steps</p>")
+        var told = 0
+        c.onExternalChange = { told += 1 }
+        c.selectionEnd = 5
+        c.insertImage("https://z.example.com/file-read-9.png")
+        XCTAssertEqual(told, 1)
+        XCTAssertTrue(c.html.contains("file-read-9.png"), c.html)
+        XCTAssertEqual(c.selectionEnd, 6, "a second picture goes after the first")
+    }
+
     func testEmptyEditorGivesEmptyHtml() {
         XCTAssertEqual(HtmlEditingController(html: "<p> </p>").html, "")
         let c = HtmlEditingController(html: "<p>a</p>")

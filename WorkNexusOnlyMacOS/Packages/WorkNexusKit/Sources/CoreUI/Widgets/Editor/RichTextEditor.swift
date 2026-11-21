@@ -45,13 +45,15 @@ public struct RichTextEditor: View {
             RichEditorToolbar(commands: commands, canInsertImage: onUploadImage != nil, uploading: uploading, onPickImage: pickImage)
             Divider().overlay(theme.colors.line)
             EditorSurface(controller: controller, commands: commands, theme: theme, imageLoader: imageLoader,
-                          reloadToken: reloadToken, placeholder: placeholder)
+                          reloadToken: reloadToken, placeholder: placeholder,
+                          onFiles: onUploadImage != nil || onDropFiles != nil
+                              ? { files in Task { await drop(files.map { DroppedFile(name: $0.name, bytes: $0.data) }) } } : nil)
                 .frame(minHeight: minHeight)
         }
         .background(theme.colors.panel2, in: RoundedRectangle(cornerRadius: theme.radii.md))
         .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
         .clipShape(RoundedRectangle(cornerRadius: theme.radii.md))
-        .onAppear { installPasteUpload() }
+        .onAppear { installPasteUpload(); controller.onExternalChange = { reloadToken += 1 } }
     }
 
     private func installPasteUpload() {
@@ -103,6 +105,8 @@ private struct EditorSurface: NSViewRepresentable {
     let imageLoader: ImageBytesLoader?
     let reloadToken: Int
     let placeholder: String?
+    /// Files dragged onto the text or pasted (images inline, the rest attached); nil leaves them to the text view.
+    var onFiles: (([ClipboardAttachment]) -> Void)?
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -133,6 +137,7 @@ private struct EditorSurface: NSViewRepresentable {
 
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         context.coordinator.parent = self
+        if onFiles == nil { context.coordinator.textView?.onFiles = nil }
         context.coordinator.applyTheme()
         if context.coordinator.loadedToken != reloadToken { context.coordinator.reload() }
     }
@@ -150,6 +155,12 @@ private struct EditorSurface: NSViewRepresentable {
         func attach(_ tv: RichNSTextView, layout: RichLayoutManager) {
             textView = tv; self.layout = layout
             tv.onPasteImage = { [weak self] in await self?.pasteImage() ?? false }
+            tv.onFiles = { [weak self] files in
+                guard let self else { return }
+                // An image goes where the caret is.
+                self.syncFromView()
+                self.parent.onFiles?(files)
+            }
             parent.commands.textView = tv
             applyTheme()
             reload()

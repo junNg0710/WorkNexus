@@ -57,6 +57,8 @@ final class RichLayoutManager: NSLayoutManager {
 final class RichNSTextView: NSTextView {
     /// Returns true when it consumed the paste (a picture was uploaded).
     var onPasteImage: (() async -> Bool)?
+    /// Takes files dragged in or pasted (copied in Finder, or a screenshot on the clipboard); nil leaves them to the text view.
+    var onFiles: (([ClipboardAttachment]) -> Void)?
     /// Hint drawn while the editor is empty.
     var placeholder: String?
     var placeholderColor: NSColor = .secondaryLabelColor
@@ -75,7 +77,46 @@ final class RichNSTextView: NSTextView {
         super.acceptableDragTypes.filter { $0 != .fileURL && $0 != NSPasteboard.PasteboardType("NSFilenamesPboardType") }
     }
 
+    /// Files dragged in come to `onFiles` (images go into the text, the rest become attachments): left to the text view
+    /// they were taken as text, the file's address typed where they were dropped.
+    static func carriesFiles(_ pasteboard: NSPasteboard) -> Bool {
+        pasteboard.canReadObject(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true])
+    }
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        onFiles != nil && Self.carriesFiles(sender.draggingPasteboard) ? .copy : super.draggingEntered(sender)
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        onFiles != nil && Self.carriesFiles(sender.draggingPasteboard) ? .copy : super.draggingUpdated(sender)
+    }
+
+    override func prepareForDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        onFiles != nil && Self.carriesFiles(sender.draggingPasteboard) ? true : super.prepareForDragOperation(sender)
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        guard let onFiles, Self.carriesFiles(sender.draggingPasteboard) else { return super.performDragOperation(sender) }
+        let files = PasteboardKit(pasteboard: sender.draggingPasteboard).readAttachments() ?? []
+        guard !files.isEmpty else { return false }
+        // Where they were let go is where an image goes.
+        let at = characterIndexForInsertion(at: convert(sender.draggingLocation, from: nil))
+        setSelectedRange(NSRange(location: at, length: 0))
+        onFiles(files)
+        return true
+    }
+
+    override func concludeDragOperation(_ sender: NSDraggingInfo?) {
+        if onFiles != nil, let sender, Self.carriesFiles(sender.draggingPasteboard) { return }
+        super.concludeDragOperation(sender)
+    }
+
     override func paste(_ sender: Any?) {
+        // Files copied in Finder go in as files (an image into the text, the rest attached), not as their names.
+        if let onFiles {
+            let kit = PasteboardKit()
+            if !kit.readFilePaths().isEmpty, let files = kit.readAttachments(), !files.isEmpty { onFiles(files); return }
+        }
         guard let onPasteImage else { return super.paste(sender) }
         Task { @MainActor [weak self] in
             if await onPasteImage() { return }

@@ -66,6 +66,8 @@ struct TaskEditorView: View {
                          onDiscardDraft: state?.draftSavedAt == nil ? nil : { confirmDiscard = true })
             if let state, let desc = controller.desc {
                 TaskFormCentered(controller: controller, state: state, desc: desc, next: $next, onSave: save, onClose: close)
+                    .editorFormDrop(text: desc, upload: { await controller.uploadImage($0, $1) },
+                                    attach: { files in controller.edit { $0.newFiles += files } })
             } else {
                 EditorLoadState(failure: controller.loadFailure) { Task { await controller.load() } }
             }

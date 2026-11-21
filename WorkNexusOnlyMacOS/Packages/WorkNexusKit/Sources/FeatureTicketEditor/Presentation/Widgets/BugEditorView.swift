@@ -66,6 +66,8 @@ struct BugEditorView: View {
                 } side: {
                     BugSideFields(controller: controller, state: state)
                 }
+                .editorFormDrop(text: steps, upload: { await controller.uploadImage($0, $1) },
+                                attach: { files in controller.edit { $0.newFiles += files } })
             } else {
                 EditorLoadState(failure: controller.loadFailure) { Task { await controller.load() } }
             }
