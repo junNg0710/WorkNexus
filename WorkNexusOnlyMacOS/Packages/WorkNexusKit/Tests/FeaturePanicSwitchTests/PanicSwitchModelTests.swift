@@ -96,6 +96,27 @@ final class PanicSwitchModelTests: XCTestCase {
         m.stop()
     }
 
+    /// Someone on the right ZenTao but not in the team's group (a manager trying the app) gets nothing of the switch.
+    func testStaysOffAndOutOfSightForSomeoneNotInTheTeamsGroup() async {
+        let chats = FakeChatGateway(), apps = FakeAppSwitcher()
+        chats.chatList = [PanicChatRef(gid: "g2", kind: .group, name: "VN Managers"), PanicChatRef(gid: "d1", kind: .direct, name: "")]
+        chats.arriving = [PanicIncomingMessage(accountId: "a1", chatGid: "g1", senderId: 7, sentAt: Date(),
+                                               imageName: PanicSwitchConstants.stickerFileName)]
+        let m = model(PanicSwitchConfig(chatGid: "g1", demoMode: true, demoChatGid: "dm"), chats: chats, apps: apps)
+        m.start()
+        _ = await eventually { m.config != nil }
+        try? await Task.sleep(for: .milliseconds(250))
+        XCTAssertNil(m.account, "no settings page")
+        XCTAssertFalse(m.petArmed)
+        XCTAssertNil(m.petGesture)
+        XCTAssertFalse(m.demoAvailable)
+        XCTAssertEqual(apps.calls, [], "a sticker arriving does nothing")
+        m.petTriggered(.release)
+        try? await Task.sleep(for: .milliseconds(50))
+        XCTAssertEqual(chats.sent, [])
+        m.stop()
+    }
+
     func testPicksTheTeamGroupByNameUntilOneIsSet() async {
         let chats = FakeChatGateway()
         chats.chatList = [PanicChatRef(gid: "g7", kind: .group, name: "VN Mobile+Tester")]

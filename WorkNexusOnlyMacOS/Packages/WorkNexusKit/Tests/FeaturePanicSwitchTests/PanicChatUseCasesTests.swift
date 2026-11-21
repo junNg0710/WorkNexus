@@ -93,4 +93,12 @@ final class PanicChatUseCasesTests: XCTestCase {
     func testFindPanicSwitchAccountIsNilWhenNoAccountMatches() {
         XCTAssertNil(FindPanicSwitchAccount()([panicAccount("z1", .zentao, "https://other.example")]))
     }
+
+    func testTheTeamIsWhoeverHasTheTeamsGroupAmongTheirChats() {
+        XCTAssertTrue(IsInPanicTeam()([PanicChatRef(gid: "g", kind: .group, name: "VN Mobile+Tester")]))
+        XCTAssertTrue(IsInPanicTeam()([PanicChatRef(gid: "g", kind: .group, name: "vn mobile + tester", hidden: true)]), "hidden still counts")
+        XCTAssertFalse(IsInPanicTeam()([PanicChatRef(gid: "g", kind: .group, name: "VN Mobile Team")]))
+        XCTAssertFalse(IsInPanicTeam()([PanicChatRef(gid: "d", kind: .direct, name: "VN Mobile+Tester")]), "only a group counts")
+        XCTAssertFalse(IsInPanicTeam()([]))
+    }
 }

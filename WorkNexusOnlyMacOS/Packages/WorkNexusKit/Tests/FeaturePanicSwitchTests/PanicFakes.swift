@@ -29,7 +29,8 @@ final class FakeChatGateway: PanicChatGateway, @unchecked Sendable {
     var me: Int?
     var members: Outcome<[Int]> = .success([])
     var arriving: [PanicIncomingMessage] = []
-    var chatList: [PanicChatRef] = []
+    /// The user's chats: the team's group by default (who the switch is for).
+    var chatList: [PanicChatRef] = [PanicChatRef(gid: "team", kind: .group, name: "VN Mobile+Tester")]
 
     func incoming() -> AsyncStream<PanicIncomingMessage> {
         // A moment late, as live messages are: the account and settings are in by then.

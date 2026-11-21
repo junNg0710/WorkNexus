@@ -20,7 +20,8 @@ struct SettingsPages: View {
         case "pet": PetSettingsPage(root: root)
         case "chat": ChatSettingsPage(shell: root.shell, mcp: root.aiTools.mcpModel)
         case "translation": TranslationSettingsPage(root: root)
-        case "panicSwitch": PanicSwitchSettingsPage(root: root)
+        // Only for the team the switch is for: anyone else (or a remembered page after leaving the team) gets General.
+        case "panicSwitch" where root.panic.model.account != nil: PanicSwitchSettingsPage(root: root)
         case "cache": CacheSettingsPage(root: root)
         default: GeneralSettingsPage(root: root)
         }

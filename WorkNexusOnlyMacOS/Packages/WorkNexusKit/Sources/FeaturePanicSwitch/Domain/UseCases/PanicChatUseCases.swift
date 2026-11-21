@@ -20,6 +20,13 @@ public struct FindPanicSwitchAccount: Sendable {
     }
 }
 
+/// Not in the Flutter app: whether the user is in the team's group (`PanicSwitchConstants.defaultGroupName`) among
+/// their chats, which is who the switch is offered to. A group they have hidden still counts: they are in it.
+public struct IsInPanicTeam: Sendable {
+    public init() {}
+    public func callAsFunction(_ conversations: [PanicChatRef]) -> Bool { PickDefaultPanicGroup()(conversations) != nil }
+}
+
 /// Ported from: lib/features/panic_switch/domain/usecases/pick_default_panic_group.dart
 /// The group to use before the user picks one: the one named `PanicSwitchConstants.defaultGroupName`, when the account is
 /// in it. Only letters and digits are compared — the team's group is "VN Mobile+Tester".

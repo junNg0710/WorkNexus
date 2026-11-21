@@ -28,7 +28,8 @@ public final class PanicSwitchModel {
     public enum Members: Equatable { case idle, loading, loaded([PanicPerson]), failed }
     public enum Apps: Equatable { case loading, loaded([AppRef]), failed }
 
-    /// The ZenTao account the switch works through; nil keeps the feature off (and its settings card away).
+    /// The ZenTao account the switch works through: one of the ZenTao it is offered for whose user is in the team's group
+    /// (`IsInPanicTeam`). Nil keeps the feature off and out of sight (no settings page, no pet trigger, no listening).
     public private(set) var account: Account?
     public private(set) var config: PanicSwitchConfig?
     public private(set) var loadFailed = false
@@ -41,6 +42,9 @@ public final class PanicSwitchModel {
     @ObservationIgnored private let deps: PanicSwitchDependencies
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
     @ObservationIgnored private var defaultGroupTask: Task<Void, Never>?
+    /// Follows whether the account found on the server is in the team's group.
+    @ObservationIgnored private var teamTask: Task<Void, Never>?
+    @ObservationIgnored private var candidate: Account?
     @ObservationIgnored private var chatRefs: [PanicChatRef]?
     @ObservationIgnored private var people: [Int: PanicPerson] = [:]
 
@@ -75,7 +79,7 @@ public final class PanicSwitchModel {
         let accounts = deps.accounts
         tasks.append(Task { [weak self] in
             await self?.loadConfig()
-            for await list in accounts() { self?.setAccount(FindPanicSwitchAccount()(list)) }
+            for await list in accounts() { self?.follow(FindPanicSwitchAccount()(list)) }
         })
         // Every live message passes here: only a sticker under a reserved name (a string compare, off the main thread) goes
         // on to the rest of the checks.
@@ -90,6 +94,7 @@ public final class PanicSwitchModel {
     public func stop() {
         tasks.forEach { $0.cancel() }; tasks = []
         defaultGroupTask?.cancel(); defaultGroupTask = nil
+        teamTask?.cancel(); teamTask = nil
         deps.overlay.hide()
     }
 
@@ -154,6 +159,22 @@ public final class PanicSwitchModel {
         case .failure(let f): loadFailed = true; report(.failure(f))
         }
         ensureDefaultGroup()
+    }
+
+    /// `next` is signed in to the ZenTao the switch is for: it becomes the switch's account while its chats include the
+    /// team's group, and stops being it when they no longer do (the user left the group).
+    private func follow(_ next: Account?) {
+        guard next != candidate else { return }
+        candidate = next
+        teamTask?.cancel(); teamTask = nil
+        guard let next else { setAccount(nil); return }
+        let conversations = deps.chats.conversations(accountId: next.id)
+        teamTask = Task { [weak self] in
+            for await list in conversations {
+                guard !Task.isCancelled else { return }
+                self?.setAccount(IsInPanicTeam()(list) ? next : nil)
+            }
+        }
     }
 
     private func setAccount(_ next: Account?) {

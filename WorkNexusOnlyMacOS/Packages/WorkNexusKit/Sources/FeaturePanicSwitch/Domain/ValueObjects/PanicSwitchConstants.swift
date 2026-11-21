@@ -11,7 +11,8 @@ public enum PanicSwitchConstants {
     public static let stickerMimeType = "image/png"
     /// The feature is only offered to people signed in to this ZenTao.
     public static let zentaoBaseUrl = "https://zentao.oasoft.xyz:4433/zentao"
-    /// The group picked by default until the user chooses one.
+    /// The team's group: picked by default until the user chooses one, and who the feature is for at all. Someone not in
+    /// it (a manager trying the app) sees nothing of the switch: no settings page, no trigger on the pet, no listening.
     public static let defaultGroupName = "VN Mobile Tester"
     /// A sticker older than this is ignored: a guard against messages that arrive late (after a reconnect) setting the
     /// switch off long after.
