@@ -33,7 +33,7 @@ struct TranslationTabView: View {
 
     var body: some View {
         let state = model.state(ticket), record = model.record
-        let lang = translationLanguage(for: shell.settings.translationLang)
+        let lang = translationLanguage(for: model.targetLang)
         DetailScrollBody(layout: layout) {
             VStack(alignment: state == .none ? .center : .leading, spacing: 0) {
                 if state == .none { TranslationEmptyState(flag: lang.flag, language: lang.nativeName, backend: hub.backendName) }

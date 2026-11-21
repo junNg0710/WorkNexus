@@ -7,15 +7,16 @@ public struct CollectReleaseNotes: Sendable {
     private let repository: UpdateRepository
     public init(_ repository: UpdateRepository) { self.repository = repository }
 
-    public func callAsFunction(after: String, upTo: String) async -> Outcome<String> {
-        await repository.fetchStableReleaseNotes().map { Self.combine($0, after: after, upTo: upTo) }
+    /// `language`: each release's notes in it where they have a translation (`LocalizedReleaseNotes`), else English.
+    public func callAsFunction(after: String, upTo: String, language: String = "en") async -> Outcome<String> {
+        await repository.fetchStableReleaseNotes().map { Self.combine($0, after: after, upTo: upTo, language: language) }
     }
 
-    public static func combine(_ releases: [ReleaseNote], after: String, upTo: String) -> String {
+    public static func combine(_ releases: [ReleaseNote], after: String, upTo: String, language: String = "en") -> String {
         guard let from = AppVersion(after), let to = AppVersion(upTo) else { return "" }
         var seen = Set<AppVersion>()
         let picked = releases.compactMap { r -> (version: AppVersion, notes: String)? in
-            let notes = r.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+            let notes = LocalizedReleaseNotes.pick(r.notes, language: language)
             guard let v = AppVersion(r.version), !v.isPrerelease, v > from, v <= to, !notes.isEmpty else { return nil }
             return (v, notes)
         }

@@ -38,10 +38,10 @@ public struct DetailUnderlineTabs<T: Hashable>: View {
 
 /// Original / Translation tabs of the detail panel (the translation one only when the feature hook provides it).
 struct DetailTabBar: View {
-    let controller: DetailController; let model: TicketDetailModel
+    let controller: DetailController; let ticket: Ticket; let model: TicketDetailModel
     var body: some View {
         var labels: [(DetailTab, String)] = [(.original, appString("original", "Original"))]
-        if let l = controller.extensions.translationTabLabel?() { labels.append((.translation, l)) }
+        if let l = controller.extensions.translationTabLabel?(ticket) { labels.append((.translation, l)) }
         return DetailUnderlineTabs(labels: labels, current: model.tab) { model.tab = $0 }
     }
 }

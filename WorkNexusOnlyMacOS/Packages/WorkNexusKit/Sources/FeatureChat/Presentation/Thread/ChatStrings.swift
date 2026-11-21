@@ -44,6 +44,7 @@ enum L {
     static var hideTranslation: String { appString("chatShowOriginal", "Hide translation") }
     static var translate: String { appString("chatTranslate", "Translate") }
     static var retranslate: String { appString("chatRetranslate", "Translate again") }
+    static var translateTo: String { appString("chatTranslateTo", "Translate to") }
     static var saveSticker: String { appString("chatSaveSticker", "Save as sticker") }
     static var pin: String { appString("chatPin", "Pin") }
     static var unpin: String { appString("chatUnpin", "Unpin") }

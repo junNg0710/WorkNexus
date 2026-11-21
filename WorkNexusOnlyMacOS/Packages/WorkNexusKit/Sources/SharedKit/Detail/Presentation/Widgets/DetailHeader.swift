@@ -62,6 +62,12 @@ struct DetailHeaderTopBar: View {
                 CopyLinkButton(url: url)
             }
             DetailCopyTitleButton(ticket: ticket)
+            if let languages = controller.extensions.translateInto {
+                DetailTranslateButton(items: {
+                    // Picking a language also shows the translation tab, where the result comes in.
+                    languages(ticket).map { item in var i = item; let run = item.action; i.action = { model.tab = .translation; run() }; return i }
+                })
+            }
             if !url.isEmpty {
                 if let share = controller.extensions.shareToChat {
                     // Pass the ticket on in chat without leaving it: pick the chats, it sends "#12 Title" and the link.
@@ -75,6 +81,26 @@ struct DetailHeaderTopBar: View {
             AppIconButton("arrow.triangle.2.circlepath", help: appString("refresh", "Refresh"), outlined: true) { model.refresh(ticket) }
             AppIconButton("xmark", help: appString("close", "Close"), outlined: true, action: onClose)
         }
+    }
+}
+
+/// "Translate into…": a menu of the languages, as an outlined icon button like its neighbours.
+struct DetailTranslateButton: View {
+    @Environment(\.appTheme) private var theme
+    @State private var hovering = false
+    let items: () -> [AppNativeMenu.Item]
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: theme.radii.md)
+        AppMenuButton(help: appString("translateInto", "Translate into…"), items: items) {
+            Image(systemName: "globe").font(.system(size: theme.sizes.icon16))
+                .foregroundStyle(hovering ? theme.colors.tx : theme.colors.tx2)
+                .frame(width: theme.sizes.control32, height: theme.sizes.control32)
+                .background(hovering ? theme.colors.tx.opacity(0.08) : .clear, in: shape)
+                .overlay { shape.stroke(hovering ? theme.colors.line2 : theme.colors.line, lineWidth: theme.borders.hairline) }
+        }
+        .onHover { hovering = $0 }
+        .fixedSize()
     }
 }
 

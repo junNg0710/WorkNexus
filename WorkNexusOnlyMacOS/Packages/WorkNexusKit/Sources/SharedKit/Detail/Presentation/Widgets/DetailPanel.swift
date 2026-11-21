@@ -31,7 +31,7 @@ public struct DetailPanel: View {
                 } else {
                     VStack(spacing: 0) {
                         DetailHeader(controller: controller, ticket: ticket, wsColor: wsColor, model: model, onClose: onClose)
-                        DetailTabBar(controller: controller, model: model)
+                        DetailTabBar(controller: controller, ticket: ticket, model: model)
                         ZStack(alignment: .top) {
                             DetailTabBody(controller: controller, ticket: ticket, model: model, layout: layout)
                             if model.syncing { ProgressView().progressViewStyle(.linear).tint(c.accent).frame(height: theme.borders.thick) }

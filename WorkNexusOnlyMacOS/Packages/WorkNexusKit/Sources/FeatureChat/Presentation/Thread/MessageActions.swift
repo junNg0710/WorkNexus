@@ -12,7 +12,9 @@ struct MessageAction: Identifiable {
     var destructive = false
     /// Starts a group of its own in the menus (a divider before it).
     var sectionStart = false
-    var run: () -> Void
+    /// A submenu instead of an action ("Translate to" › the languages).
+    var children: [MessageAction] = []
+    var run: () -> Void = {}
 }
 
 extension ThreadContext {
@@ -76,9 +78,19 @@ extension ThreadContext {
             }
         }]
         if tr.hasDone(message.gid) {
+            let lang = tr.language(of: message.gid) ?? settings.translationLang
             out.append(MessageAction(id: "retranslate", icon: "arrow.clockwise", title: L.retranslate) {
-                Task { @MainActor in await tr.translate(message, lang: settings.translationLang, model: settings.translationModel, force: true) }
+                Task { @MainActor in await tr.translate(message, lang: lang, model: settings.translationModel, force: true) }
             })
+        }
+        // Into another language than the usual one, for this message only (the usual one stays as Settings has it).
+        let others = tr.languages.filter { $0.code != settings.translationLang }
+        if !others.isEmpty {
+            out.append(MessageAction(id: "translateTo", icon: "globe", title: L.translateTo, children: others.map { l in
+                MessageAction(id: "translateTo.\(l.code)", icon: "character.bubble", title: "\(l.flag) \(l.nativeName)") {
+                    Task { @MainActor in await tr.translate(message, lang: l.code, model: settings.translationModel) }
+                }
+            }))
         }
         return out
     }

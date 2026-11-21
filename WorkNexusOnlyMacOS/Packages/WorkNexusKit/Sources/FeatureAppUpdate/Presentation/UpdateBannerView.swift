@@ -19,7 +19,8 @@ public struct UpdateBannerView: View {
         VStack(spacing: 0) { content }
             .appDialog(item: $notesOf) { update in
                 ReleaseNotesDialog(title: appString("updateDialogHeadline", "A new version of WorkNexus is available"),
-                                   from: update.currentVersion, to: update.latestVersion, notes: update.releaseNotes) { notesOf = nil }
+                                   from: update.currentVersion, to: update.latestVersion,
+                                   notes: LocalizedReleaseNotes.pick(update.releaseNotes, language: AppLanguage.current)) { notesOf = nil }
             }
     }
 

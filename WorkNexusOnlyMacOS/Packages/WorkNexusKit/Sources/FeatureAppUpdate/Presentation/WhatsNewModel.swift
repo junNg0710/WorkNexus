@@ -1,4 +1,5 @@
 import CoreDomain
+import CoreUI
 import Foundation
 import Observation
 
@@ -19,7 +20,7 @@ public final class WhatsNewModel {
     public func checkAtLaunch() async {
         guard !checked else { return }
         checked = true
-        switch await findWhatsNew() {
+        switch await findWhatsNew(language: AppLanguage.current) {
         case .success(let found): news = found
         case .failure(let f): Diagnostics.warning("update", "What's new: \(f.message)")
         }

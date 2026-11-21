@@ -30,7 +30,8 @@ struct TranslationFooterView: View {
             Text(appString("machineTranslationNote", "Machine translation · review before relying on it"))
                 .font(theme.typography.caption).foregroundStyle(theme.colors.tx3).lineSpacing(theme.spacing.s2)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            TranslationLanguageControl(value: shell.settings.translationLang) { v in shell.updateSettings { $0.translationLang = v } }
+            // This ticket's language: picking one translates it into that (Settings keeps the usual one).
+            TranslationLanguageControl(value: model.targetLang) { v in model.translate(ticket, into: v) }
         }
         .padding(.horizontal, theme.spacing.s20).padding(.vertical, theme.spacing.s12)
         .background(theme.colors.panel)

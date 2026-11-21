@@ -11,12 +11,23 @@ final class MessageTranslationController {
     enum Entry: Equatable { case loading, failed(String), done(ChatMessageTranslation) }
 
     private(set) var entries: [String: Entry] = [:]
+    /// The language each shown translation is in (one picked for a message can differ from the usual one).
+    private var langs: [String: String] = [:]
     private var restored: Set<String> = []
     let services: ChatServices
     init(services: ChatServices) { self.services = services }
 
     /// Whether the thread can translate at all (a translator and a store are wired).
     var available: Bool { services.translator != nil && services.translations != nil }
+
+    /// The languages a message can be translated into (Settings › Translation lists them).
+    var languages: [ChatAiLanguage] { services.aiLanguages }
+
+    /// The language of the translation shown under `gid`, if one is.
+    func language(of gid: String) -> String? { entries[gid] == nil ? nil : langs[gid] }
+
+    /// `code`'s flag and name ("🇨🇳 中文"), when it is a known language.
+    func label(of code: String) -> String? { languages.first { $0.code == code }.map { "\($0.flag) \($0.nativeName)" } }
 
     /// Whether a translation is shown (or being fetched) under `gid`.
     func isShown(_ gid: String) -> Bool { entries[gid] != nil }
@@ -26,7 +37,7 @@ final class MessageTranslationController {
     func restore(_ message: ChatMessage, lang: String) async {
         guard let store = services.translations, message.content.asText != nil, restored.insert(message.gid).inserted else { return }
         if case .success(let t?) = await store.find(accountId: message.accountId, gid: message.gid, targetLang: lang), t.visible, entries[message.gid] == nil {
-            entries[message.gid] = .done(t)
+            entries[message.gid] = .done(t); langs[message.gid] = lang
         }
     }
 
@@ -35,7 +46,11 @@ final class MessageTranslationController {
         guard let store = services.translations, let service = services.translator else { return }
         // Not linked: the host explains how to link OpenCode; nothing starts.
         if let ready = services.ensureTranslatorReady, !(await ready()) { return }
-        entries[message.gid] = .loading
+        // A translation shown in another language is hidden (it stays stored), so only one shows under the message.
+        if let shown = langs[message.gid], shown != lang, entries[message.gid] != nil {
+            _ = await store.setVisible(accountId: message.accountId, gid: message.gid, targetLang: shown, visible: false)
+        }
+        entries[message.gid] = .loading; langs[message.gid] = lang
         let result = await TranslateChatMessage(store, service)(message, targetLang: lang, model: model.isEmpty ? nil : model, force: force)
         switch result {
         case .success(let t): entries[message.gid] = .done(t)
@@ -45,8 +60,9 @@ final class MessageTranslationController {
 
     /// Hides the translation under `message` (it stays stored).
     func hide(_ message: ChatMessage, lang: String) async {
-        entries[message.gid] = nil
-        _ = await services.translations?.setVisible(accountId: message.accountId, gid: message.gid, targetLang: lang, visible: false)
+        let shown = langs[message.gid] ?? lang
+        entries[message.gid] = nil; langs[message.gid] = nil
+        _ = await services.translations?.setVisible(accountId: message.accountId, gid: message.gid, targetLang: shown, visible: false)
     }
 }
 
@@ -76,7 +92,10 @@ struct MessageTranslationView: View {
                     case .done(let t):
                         Text(t.text).font(font).foregroundStyle(ink.text.color).textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true)
-                        Text(L.translatedBy(t.model ?? "OpenCode")).font(theme.typography.caption).foregroundStyle(ink.meta.color)
+                        // A language picked for this message says which it is.
+                        let other = t.targetLang == settings.translationLang ? nil : controller.label(of: t.targetLang)
+                        Text([other, L.translatedBy(t.model ?? "OpenCode")].compactMap { $0 }.joined(separator: " · "))
+                            .font(theme.typography.caption).foregroundStyle(ink.meta.color)
                     }
                 }
                 .padding(theme.spacing.s10)

@@ -12,6 +12,8 @@ final class TranslationTabModel {
     private(set) var record: TranslationRecord?
     private(set) var loading = false
     private(set) var failure: String?
+    /// The language picked for this ticket (the header's translate button, the footer's picker); nil: Settings' language.
+    private(set) var pickedLang: String?
     let ticketId: String
     private let hub: TranslationHub
     @ObservationIgnored private var watcher: Task<Void, Never>?
@@ -21,9 +23,14 @@ final class TranslationTabModel {
 
     static func source(of ticket: Ticket) -> TicketSource { TicketSource(title: ticket.title, body: ticket.body) }
 
+    /// The language this ticket is translated into.
+    var targetLang: String { pickedLang ?? hub.settings().translationLang }
+
     func state(_ ticket: Ticket) -> TranslationState {
         let feature = hub.feature
-        return feature.resolveState(currentSourceHash: feature.service.contentHash(Self.source(of: ticket)), record: record, loading: loading, hasError: failure != nil)
+        // A stored translation in another language is not this one: it is asked for again.
+        let current = record.flatMap { $0.targetLang == targetLang ? $0 : nil }
+        return feature.resolveState(currentSourceHash: feature.service.contentHash(Self.source(of: ticket)), record: current, loading: loading, hasError: failure != nil)
     }
 
     /// Starts watching the cached record (the views call it when they appear).
@@ -36,17 +43,19 @@ final class TranslationTabModel {
     }
 
     /// Translates through the provider chosen for translation, first making sure it is set up; a run in flight is left alone.
-    func translate(_ ticket: Ticket) {
+    /// `language` translates this ticket into it from now on (Settings' language is left as it is).
+    func translate(_ ticket: Ticket, into language: String? = nil) {
         guard !loading else { return }
+        if let language { pickedLang = language }
         loading = true; failure = nil
-        let feature = hub.feature, settings = hub.settings(), gate = hub.gate
+        let feature = hub.feature, settings = hub.settings(), gate = hub.gate, target = targetLang
         run = Task { [weak self] in
             defer { self?.loading = false }
             guard await gate.ensureLinked() else { return }
             let src = Self.source(of: ticket)
             let model = settings.translationModel.isEmpty ? nil : settings.translationModel
             switch await feature.service.translate(ticketId: ticket.id, source: src, sourceHash: feature.service.contentHash(src),
-                                                   targetLang: settings.translationLang, model: model) {
+                                                   targetLang: target, model: model) {
             case .success(let rec): _ = await feature.repository.saveTranslation(rec)
             case .failure(let f): if case .cancelled = f {} else { self?.failure = f.message }
             }

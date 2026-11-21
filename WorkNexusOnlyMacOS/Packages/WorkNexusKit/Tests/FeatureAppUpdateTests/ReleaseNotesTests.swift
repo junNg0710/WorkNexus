@@ -193,3 +193,44 @@ final class FindWhatsNewTests: XCTestCase {
         XCTAssertEqual(after, "1.9.5")
     }
 }
+
+final class LocalizedReleaseNotesTests: XCTestCase {
+    private let notes = """
+    WorkNexus Mac 1.9.22.
+
+    **Chat**
+    - Faster.
+
+    <details><summary>Tiếng Việt</summary>
+    <!-- lang:vi -->
+    **Chat**
+    - Nhanh hơn.
+    </details>
+
+    <details><summary>简体中文</summary>
+    <!-- lang:zh-Hans -->
+    **聊天**
+    - 更快。
+    </details>
+    """
+
+    func testTheAppsLanguageGetsItsTranslation() {
+        XCTAssertEqual(LocalizedReleaseNotes.pick(notes, language: "vi"), "**Chat**\n- Nhanh hơn.")
+        XCTAssertEqual(LocalizedReleaseNotes.pick(notes, language: "zh-Hans"), "**聊天**\n- 更快。")
+        XCTAssertEqual(LocalizedReleaseNotes.pick(notes, language: "zh"), "**聊天**\n- 更快。")
+    }
+
+    func testOtherLanguagesGetTheEnglishWithoutTheFoldedTranslations() {
+        XCTAssertEqual(LocalizedReleaseNotes.pick(notes, language: "en"), "WorkNexus Mac 1.9.22.\n\n**Chat**\n- Faster.")
+        XCTAssertEqual(LocalizedReleaseNotes.pick(notes, language: "fr"), "WorkNexus Mac 1.9.22.\n\n**Chat**\n- Faster.")
+        // Notes from before the translations are shown as they are.
+        XCTAssertEqual(LocalizedReleaseNotes.pick("Plain notes.", language: "vi"), "Plain notes.")
+    }
+
+    func testSeveralReleasesAreEachInTheAppsLanguage() {
+        let text = CollectReleaseNotes.combine([ReleaseNote(version: "v1.3.0+mac", notes: notes), ReleaseNote(version: "v1.2.0+mac", notes: "Old notes.")],
+                                               after: "1.1.0", upTo: "1.3.0", language: "vi")
+        XCTAssertEqual(text, "## v1.3.0\n\n**Chat**\n- Nhanh hơn.\n\n## v1.2.0\n\nOld notes.")
+    }
+}
+

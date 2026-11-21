@@ -20,10 +20,11 @@ struct StubTranslator: ChatTextTranslator {
 @MainActor
 final class MessageActionsTests: XCTestCase {
     private func context(chat: ChatConversation = Make.chat("g"), translate: Bool = false, forward: Bool = false, selfId: Int? = 1,
-                         account: String? = nil, store: StubTranslations = StubTranslations()) -> ThreadContext {
+                         account: String? = nil, store: StubTranslations = StubTranslations(), languages: [ChatAiLanguage] = []) -> ThreadContext {
         let state = ChatThreadState(accountId: "a", chat: chat, selfAccount: account)
         state.selfUserId = selfId
-        let services = ChatServices(chat: StubChatRepository(), translations: translate ? store : nil, translator: translate ? StubTranslator() : nil)
+        var services = ChatServices(chat: StubChatRepository(), translations: translate ? store : nil, translator: translate ? StubTranslator() : nil)
+        services.aiLanguages = languages
         let model = MessageTimelineModel(state: state, services: services)
         return ThreadContext(model: model, actions: ChatThreadActions(forward: forward ? { _ in } : nil, saveAsSticker: { _ in }))
     }
@@ -142,6 +143,28 @@ final class MessageActionsTests: XCTestCase {
         XCTAssertTrue(ids(ctx, m).contains("retranslate"))
         XCTAssertEqual(ctx.actions(for: m, settings: ChatSettings(), inThread: false).first { $0.id == "translate" }?.title, "Hide translation")
         XCTAssertFalse(ids(context(translate: false), m).contains("translate"), "no translator wired")
+    }
+
+    /// "Translate to" lists the chat's other languages; picking one translates this message into it only.
+    func testAMessageCanBeTranslatedIntoAnotherLanguage() async {
+        let ctx = context(translate: true, languages: [ChatAiLanguage(code: "vi", englishName: "Vietnamese", nativeName: "Tiếng Việt", flag: "🇻🇳"),
+                                                       ChatAiLanguage(code: "zh", englishName: "Chinese", nativeName: "中文", flag: "🇨🇳")])
+        let m = Make.message("t2", content: .text("hello"), serverId: 6)
+        var settings = ChatSettings(); settings.translationLang = "vi"
+        let to = ctx.actions(for: m, settings: settings, inThread: false).first { $0.id == "translateTo" }
+        XCTAssertEqual(to?.children.map(\.title), ["🇨🇳 中文"], "the usual language is the plain Translate")
+        to?.children.first?.run()
+        let done = await eventuallyTrue { ctx.model.translation.language(of: "t2") == "zh" && ctx.model.translation.hasDone("t2") }
+        XCTAssertTrue(done)
+        XCTAssertEqual(ctx.model.translation.label(of: "zh"), "🇨🇳 中文")
+        // In the right-click menu on the text too, as a submenu.
+        let menu = ctx.textMenu(for: m, settings: settings, selection: nil)
+        XCTAssertEqual(menu.first { $0.title == "Translate to" }?.children.map(\.title), ["🇨🇳 中文"])
+    }
+
+    private func eventuallyTrue(_ cond: @escaping @MainActor () -> Bool) async -> Bool {
+        for _ in 0..<100 { if cond() { return true }; try? await Task.sleep(for: .milliseconds(10)) }
+        return cond()
     }
 
     func testTranslationFailureIsShownAndHidingKeepsItStored() async {

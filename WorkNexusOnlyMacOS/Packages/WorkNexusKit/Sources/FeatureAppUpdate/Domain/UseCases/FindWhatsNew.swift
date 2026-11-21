@@ -20,7 +20,8 @@ public struct FindWhatsNew: Sendable {
 
     public init(releases: UpdateRepository, seen: SeenVersionStore) { self.releases = releases; self.seen = seen }
 
-    public func callAsFunction() async -> Outcome<WhatsNew?> {
+    /// `language`: the app's, for the notes (`LocalizedReleaseNotes`).
+    public func callAsFunction(language: String = "en") async -> Outcome<WhatsNew?> {
         let current = releases.currentVersion()
         let last: String?
         switch await seen.lastSeen() {
@@ -31,7 +32,7 @@ public struct FindWhatsNew: Sendable {
             // First launch, a downgrade or the same build: nothing to tell.
             return last == current ? .success(nil) : await remember(current, nil)
         }
-        switch await CollectReleaseNotes(releases)(after: last, upTo: current) {
+        switch await CollectReleaseNotes(releases)(after: last, upTo: current, language: language) {
         case .failure(let f): return .failure(f)
         case .success(let notes):
             return await remember(current, notes.isEmpty ? nil : WhatsNew(from: last, to: current, notes: notes))

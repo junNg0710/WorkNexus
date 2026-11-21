@@ -1,5 +1,6 @@
 import CoreDomain
 import CoreTools
+import CoreUI
 import SwiftUI
 
 /// Everything the shared detail panel needs from features / tools it must not import (rule 10.1). Built once by the
@@ -9,8 +10,11 @@ public struct DetailExtensions {
     /// The "Translation" tab body (Flutter `TranslationTab`) and its footer (`TranslationFooter`).
     public var translationTab: ((Ticket, DetailLayout) -> AnyView)?
     public var translationFooter: ((Ticket) -> AnyView)?
-    /// Label of the translation tab, e.g. "🇻🇳 Tiếng Việt" (the user's target language). nil hides the tab.
-    public var translationTabLabel: (() -> String?)?
+    /// Label of a ticket's translation tab, e.g. "🇻🇳 Tiếng Việt" (the language it is translated into). nil hides the tab.
+    public var translationTabLabel: ((Ticket) -> String?)?
+    /// The languages a ticket can be translated into, for the header's translate button: picking one translates the
+    /// ticket into it (and the panel shows the translation tab). nil hides the button.
+    public var translateInto: ((Ticket) -> [AppNativeMenu.Item])?
     /// Opens a ticket editor route for the "edit" button (`TicketEditorRoute`); default: ZenTao bugs / tasks.
     public var editRoute: ((Ticket) -> TicketEditorRoute?)?
     /// Uploads an image pasted into the rich comment editor (ZenTao) and returns its URL.

@@ -128,9 +128,7 @@ private struct MoreActionsMenu: View {
     }
 
     private func items() -> [AppNativeMenu.Item] {
-        actions.map { a in
-            AppNativeMenu.Item(a.title, icon: a.icon, destructive: a.destructive, dividerBefore: a.sectionStart || a.destructive, action: a.run)
-        }
+        actions.map { a in a.nativeMenuItem(dividerBefore: a.sectionStart || a.destructive) }
     }
 }
 
@@ -157,7 +155,13 @@ private struct MessageContextMenu: View {
 private struct MessageMenuItem: View {
     let action: MessageAction
     var body: some View {
-        Button(role: action.destructive ? .destructive : nil, action: action.run) { Label(action.title, systemImage: action.icon) }
+        if action.children.isEmpty {
+            Button(role: action.destructive ? .destructive : nil, action: action.run) { Label(action.title, systemImage: action.icon) }
+        } else {
+            Menu {
+                ForEach(action.children) { MessageMenuItem(action: $0) }
+            } label: { Label(action.title, systemImage: action.icon) }
+        }
     }
 }
 

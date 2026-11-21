@@ -11,13 +11,22 @@ extension ThreadContext {
         if let selection, !selection.isEmpty {
             items.append(AppNativeMenu.Item(L.copySelection, icon: "text.cursor") { Self.copy(selection) })
         }
-        let wanted = ["copy", "reply", "forward", "translate", "retranslate"]
+        let wanted = ["copy", "reply", "forward", "translate", "retranslate", "translateTo"]
         let actions = actions(for: message, settings: settings, inThread: false).filter { wanted.contains($0.id) }
             .sorted { wanted.firstIndex(of: $0.id)! < wanted.firstIndex(of: $1.id)! }
         for (i, a) in actions.enumerated() {
-            items.append(AppNativeMenu.Item(a.title, icon: a.icon, dividerBefore: i == 0 || a.id == "reply", action: a.run))
+            items.append(a.nativeMenuItem(dividerBefore: i == 0 || a.id == "reply"))
         }
         return items
+    }
+}
+
+extension MessageAction {
+    /// The action as a native menu item, its children as a submenu.
+    func nativeMenuItem(dividerBefore: Bool = false) -> AppNativeMenu.Item {
+        children.isEmpty
+            ? AppNativeMenu.Item(title, icon: icon, destructive: destructive, dividerBefore: dividerBefore, action: run)
+            : AppNativeMenu.Item(title, icon: icon, dividerBefore: dividerBefore, children: children.map { $0.nativeMenuItem() })
     }
 }
 
