@@ -49129,6 +49129,29 @@
         }
       }
     },
+    "chatTranslateTo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate to"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dịch sang"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译为"
+          }
+        }
+      }
+    },
     "detailShowLess": {
       "extractionState": "manual",
       "localizations": {
@@ -49221,6 +49244,29 @@
         }
       }
     },
+    "dropFilesOnForm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop images to put in the description, other files to attach"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thả ảnh để chèn vào mô tả, file khác sẽ được đính kèm"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖入图片会插入到描述中，其他文件将作为附件"
+          }
+        }
+      }
+    },
     "fpsBadgeHelp": {
       "extractionState": "manual",
       "localizations": {
@@ -49240,6 +49286,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "最近一秒绘制的帧数，以及两帧之间的最长间隔"
+          }
+        }
+      }
+    },
+    "languageRestartHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS's own menus (right-click on text, Services) switch language after a restart."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menu của macOS (chuột phải vào chữ, Dịch vụ) sẽ đổi ngôn ngữ sau khi khởi động lại app."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 自带的菜单（文字右键菜单、服务）将在重启 App 后切换语言。"
+          }
+        }
+      }
+    },
+    "languageRestartNow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restart now"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khởi động lại"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "立即重启"
           }
         }
       }
@@ -50026,6 +50118,121 @@
         }
       }
     },
+    "nativeAppEdit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Mac app"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sửa Mac app"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑 Mac App"
+          }
+        }
+      }
+    },
+    "nativeAppEditMenu": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit name and icon…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sửa tên và icon…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑名称和图标…"
+          }
+        }
+      }
+    },
+    "nativeAppIconOwn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the app's icon"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dùng icon của app"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用 App 自带图标"
+          }
+        }
+      }
+    },
+    "petSayAppBadge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@ new"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@ mới"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@：%2$@ 条新消息"
+          }
+        }
+      }
+    },
+    "petSayAppNews": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ has something new"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ có thông báo mới"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 有新动态"
+          }
+        }
+      }
+    },
     "tipBulkHoursOne": {
       "extractionState": "manual",
       "localizations": {
@@ -50206,6 +50413,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "停止选择并取消所选（Esc）"
+          }
+        }
+      }
+    },
+    "translateInto": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate into…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dịch sang…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译为…"
           }
         }
       }

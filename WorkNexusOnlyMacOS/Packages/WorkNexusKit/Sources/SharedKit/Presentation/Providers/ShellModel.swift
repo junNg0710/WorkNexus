@@ -118,6 +118,13 @@ public final class ShellModel {
         petChatNews = PetChatNews(title: title, sender: sender, body: body, link: link, number: (petChatNews?.number ?? 0) + 1)
     }
 
+    /// The newest news from an app on the rail, for the pet to say.
+    public private(set) var petAppNews: PetAppNews?
+    /// An app on the rail has news: the pet says so, and a click on it opens the app (`link`).
+    public func announceApp(_ app: String, badge: String? = nil, title: String? = nil, body: String? = nil, link: String?) {
+        petAppNews = PetAppNews(app: app, badge: badge, title: title, body: body, link: link, number: (petAppNews?.number ?? 0) + 1)
+    }
+
     public func account(_ id: String) -> Account? { accounts.first { $0.id == id } }
     public func theme(systemIsDark: Bool) -> AppTheme { AppTheme(settings: settings, systemIsDark: systemIsDark) }
 

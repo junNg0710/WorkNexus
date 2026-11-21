@@ -51,8 +51,11 @@ public struct ShellHost {
     public var petNewestWaiting: () -> PetNotice? = { nil }
     /// Opens what a line of the pet's links to (a chat, a notification's ticket), bringing the app forward.
     public var petOpen: (String) -> Void = { _ in }
-    /// Brings the app's window forward (a click on the floating pet).
+    /// Brings the app's window forward ("Open WorkNexus" in the floating pet's menu).
     public var revealApp: () -> Void = {}
+    /// A click on the floating pet: brings the app forward from another app, and hides it again when it is already in front
+    /// (the pet is then a switch between the app and whatever the user was in).
+    public var toggleApp: () -> Void = {}
     /// The pet's alert gesture (held, or two or three quick clicks, in the window or floating): the panic switch's official
     /// trigger; nil: clicks act as usual.
     public var petTripleTap: PetTripleTap?

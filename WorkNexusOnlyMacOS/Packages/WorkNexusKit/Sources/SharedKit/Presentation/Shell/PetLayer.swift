@@ -83,6 +83,11 @@ struct PetLayer: View {
             guard new > old, !details else { return }
             director.notify(); director.say(PetSignalText.newChats(new - old))
         }
+        // An app on the rail has news (its Dock badge went up, a web mini app notified): a click on the line opens it.
+        .onChange(of: model.petAppNews) { _, news in
+            guard let news else { return }
+            director.notify(); director.say(PetSignalText.app(news, details: details), for: Self.detailDuration, link: news.link)
+        }
         .onChange(of: model.petChatNews) { _, news in
             guard details, let news else { return }
             director.notify(); director.say(PetSignalText.chat(news), for: Self.detailDuration, link: news.link)
@@ -117,7 +122,7 @@ struct PetLayer: View {
         let width = Self.floatingWidth
         let height = width * CGFloat(PetSpriteSheet.cellHeight) / CGFloat(PetSpriteSheet.cellWidth)
         let content = FloatingPetContent(director: director, sheet: sheet, width: width, followsCursor: settings.petFollowsCursor,
-                                         onOpen: model.host.revealApp, onOpenLink: model.host.petOpen,
+                                         onOpen: model.host.revealApp, onToggle: model.host.toggleApp, onOpenLink: model.host.petOpen,
                                          onDock: { model.updateSettings { $0.petDisplay = .inWindow } },
                                          onHide: { model.updateSettings { $0.showPet = false } }, demo: model.host.petDemo)
         let theme = theme

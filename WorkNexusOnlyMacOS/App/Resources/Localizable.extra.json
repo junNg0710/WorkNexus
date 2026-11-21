@@ -1979,6 +1979,10 @@
     "en": "Switch chat account",
     "vi": "Đổi tài khoản chat"
   },
+  "chatTranslateTo": {
+    "en": "Translate to",
+    "vi": "Dịch sang"
+  },
   "detailShowLess": {
     "en": "Show less",
     "vi": "Thu gọn"
@@ -1995,9 +1999,21 @@
     "en": "Shows a small badge in the bottom corner of the window: the frames drawn in the last second and the longest wait between two of them. Green is smooth, amber uneven, red slow. Uses a little more power while on.",
     "vi": "Hiện một nhãn nhỏ ở góc dưới cửa sổ: số khung hình vẽ trong giây vừa qua và khoảng chờ dài nhất giữa hai khung. Xanh là mượt, vàng là không đều, đỏ là chậm. Tốn thêm chút pin khi bật."
   },
+  "dropFilesOnForm": {
+    "en": "Drop images to put in the description, other files to attach",
+    "vi": "Thả ảnh để chèn vào mô tả, file khác sẽ được đính kèm"
+  },
   "fpsBadgeHelp": {
     "en": "Frames drawn in the last second, and the longest wait between two of them",
     "vi": "Số khung hình vẽ trong giây vừa qua và khoảng chờ dài nhất giữa hai khung"
+  },
+  "languageRestartHint": {
+    "en": "macOS's own menus (right-click on text, Services) switch language after a restart.",
+    "vi": "Menu của macOS (chuột phải vào chữ, Dịch vụ) sẽ đổi ngôn ngữ sau khi khởi động lại app."
+  },
+  "languageRestartNow": {
+    "en": "Restart now",
+    "vi": "Khởi động lại"
   },
   "leaderBulkChangePerson": {
     "en": "Change",
@@ -2135,6 +2151,26 @@
     "en": "Unpin “%1$@”",
     "vi": "Bỏ ghim “%1$@”"
   },
+  "nativeAppEdit": {
+    "en": "Edit Mac app",
+    "vi": "Sửa Mac app"
+  },
+  "nativeAppEditMenu": {
+    "en": "Edit name and icon…",
+    "vi": "Sửa tên và icon…"
+  },
+  "nativeAppIconOwn": {
+    "en": "Use the app's icon",
+    "vi": "Dùng icon của app"
+  },
+  "petSayAppBadge": {
+    "en": "%1$@: %2$@ new",
+    "vi": "%1$@: %2$@ mới"
+  },
+  "petSayAppNews": {
+    "en": "%1$@ has something new",
+    "vi": "%1$@ có thông báo mới"
+  },
   "tipBulkHoursOne": {
     "en": "Hours left for this task; empty keeps what it has",
     "vi": "Số giờ còn lại cho task này; để trống thì giữ nguyên"
@@ -2166,6 +2202,10 @@
   "tipSelectModeDone": {
     "en": "Stop picking and drop the selection (Esc)",
     "vi": "Thoát chế độ chọn và bỏ chọn (Esc)"
+  },
+  "translateInto": {
+    "en": "Translate into…",
+    "vi": "Dịch sang…"
   },
   "zentaoAddModule": {
     "en": "Add a module",

@@ -211,6 +211,11 @@ enum MenuLog {
                 let menu = n.object as? NSMenu
                 let main = MainActor.assumeIsolated { menu === NSApp.mainMenu || menu?.supermenu != nil }
                 print("MENULOG \(MainActor.assumeIsolated { stamp() }) \(label) \(main ? "main-menu" : "popup") '\(menu?.title ?? "")' items=\(menu?.numberOfItems ?? -1)")
+                if label == "begin", !main, let menu {
+                    print("MENULOG items: " + menu.items.prefix(6).map { $0.isSeparatorItem ? "-" : $0.title }.joined(separator: " | "))
+                    // Closed again by itself, so the next scripted click can run.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { menu.cancelTracking() }
+                }
                 fflush(stdout)
                 if label == "end", !main {
                     for line in Thread.callStackSymbols.prefix(40) { print("MENUSTACK " + line) }
@@ -244,14 +249,32 @@ enum MenuLog {
     /// (the events go through the window's own hit-testing, title bar included).
     static func clicks() {
         guard let spec = ProcessInfo.processInfo.environment["WN_DEMO_CLICK"] else { return }
-        let points = spec.split(separator: ";").compactMap { p -> NSPoint? in
-            let v = p.split(separator: ",").compactMap { Double($0) }; return v.count == 2 ? NSPoint(x: v[0], y: v[1]) : nil
+        // `r:x,y` is a right-click (the pointer moved there first); `R:x,y` a right-click where the pointer already is.
+        let points = spec.split(separator: ";").compactMap { raw -> (NSPoint, Bool, Bool)? in
+            let right = raw.hasPrefix("r:") || raw.hasPrefix("R:"), still = raw.hasPrefix("R:")
+            let v = (right ? raw.dropFirst(2) : raw[...]).split(separator: ",").compactMap { Double($0) }
+            return v.count == 2 ? (NSPoint(x: v[0], y: v[1]), right, still) : nil
         }
-        for (i, p) in points.enumerated() {
+        for (i, (p, right, still)) in points.enumerated() {
             let t = Timer(timeInterval: 9 + Double(i) * 2.5, repeats: false) { _ in
                 MainActor.assumeIsolated {
                     guard let w = NSApp.windows.first(where: { $0.canBecomeMain && $0.isVisible }) else { return }
                     let at = NSPoint(x: p.x, y: w.frame.height - p.y)
+                    if right {
+                        // A right-click as a hand makes it: the pointer comes over the place first, then the button.
+                        print("MENULOG \(stamp()) right-click \(Int(p.x)),\(Int(p.y))"); fflush(stdout)
+                        if !still, let move = NSEvent.mouseEvent(with: .mouseMoved, location: at, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                                                         windowNumber: w.windowNumber, context: nil, eventNumber: 0, clickCount: 0, pressure: 0) { NSApp.postEvent(move, atStart: false) }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                            for type in [NSEvent.EventType.rightMouseDown, .rightMouseUp] {
+                                if let e = NSEvent.mouseEvent(with: type, location: at, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                                                              windowNumber: w.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: type == .rightMouseDown ? 1 : 0) {
+                                    NSApp.postEvent(e, atStart: false)
+                                }
+                            }
+                        }
+                        return
+                    }
                     print("MENULOG \(stamp()) click \(Int(p.x)),\(Int(p.y)) active=\(NSApp.isActive) key=\(w.isKeyWindow)"); fflush(stdout)
                     for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
                         if let e = NSEvent.mouseEvent(with: type, location: at, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,

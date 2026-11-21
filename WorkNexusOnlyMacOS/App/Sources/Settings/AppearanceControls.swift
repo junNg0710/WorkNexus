@@ -103,12 +103,29 @@ struct LanguagePicker: View {
     let shell: ShellModel
 
     var body: some View {
+        let code = AppLanguage.supported.contains(shell.settings.localeCode) ? shell.settings.localeCode : "en"
         SettingsRow(label: appString("language", "Language")) {
-            AppDropdown(value: AppLanguage.supported.contains(shell.settings.localeCode) ? shell.settings.localeCode : "en",
-                        values: AppLanguage.supported, labelOf: { AppLanguage.nativeName($0) }) { code in
+            AppDropdown(value: code, values: AppLanguage.supported, labelOf: { AppLanguage.nativeName($0) }) { code in
                 AppLanguage.apply(code)
                 shell.updateSettings { $0.localeCode = code }
             }
+        }
+        // The app's own text follows at once; what macOS draws (the right-click menu on text, Services) only after a restart.
+        if AppLanguage.systemMenusLag(behind: code) { LanguageRestartNote() }
+    }
+}
+
+/// Under the language picker after a change: macOS's own menus keep the language the app started in until it restarts.
+private struct LanguageRestartNote: View {
+    @Environment(\.appTheme) private var theme
+
+    var body: some View {
+        HStack(spacing: theme.spacing.s8) {
+            Image(systemName: "info.circle").foregroundStyle(theme.colors.tx3)
+            Text(appString("languageRestartHint", "macOS's own menus (right-click on text, Services) switch language after a restart."))
+                .font(theme.typography.caption).foregroundStyle(theme.colors.tx2).fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: theme.spacing.s8)
+            AppButton(appString("languageRestartNow", "Restart now"), kind: .ghost) { AppRelaunch.now() }
         }
     }
 }

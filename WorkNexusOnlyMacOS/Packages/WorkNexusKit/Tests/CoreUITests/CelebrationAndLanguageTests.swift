@@ -41,6 +41,10 @@ final class AppLanguageTests: XCTestCase {
         AppLanguage.apply("vi"); XCTAssertEqual(AppLanguage.current, "vi")
         AppLanguage.apply("zh-Hans"); XCTAssertEqual(AppLanguage.current, "zh-Hans")
         XCTAssertEqual(AppLanguage.nativeName("zh-Hans"), "简体中文")
+        // macOS's own menus keep the language the process started in: they lag behind any other pick.
+        let launch = AppLanguage.launchLanguage
+        XCTAssertFalse(AppLanguage.systemMenusLag(behind: launch))
+        XCTAssertTrue(AppLanguage.systemMenusLag(behind: launch.hasPrefix("zh") ? "vi" : "zh-Hans"))
         AppLanguage.apply("xx"); XCTAssertEqual(AppLanguage.current, "en")
         XCTAssertEqual(AppLanguage.locale.identifier, "en")
         XCTAssertEqual(appString("someUnknownKey", "Fallback"), "Fallback")

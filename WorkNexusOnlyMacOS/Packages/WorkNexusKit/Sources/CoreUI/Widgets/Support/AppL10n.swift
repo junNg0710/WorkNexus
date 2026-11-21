@@ -60,9 +60,24 @@ public enum AppLanguage {
     public static var current: String { lock.withLock { code } }
     public static var locale: Locale { Locale(identifier: current) }
 
+    /// Whether `apply` saves the language for macOS (`AppleLanguages`). Off for a demo run: it shares the app's identity,
+    /// and what it saved became the real app's language at its next launch (the menus macOS draws came up in Chinese).
+    nonisolated(unsafe) public static var remembers = true
+
+    /// The language macOS's own parts of the app (the text system's right-click menu, Services, the standard menu items)
+    /// came up in: they read it once, at launch, and keep it until the app is started again.
+    public static let launchLanguage: String =
+        UserDefaults.standard.stringArray(forKey: "AppleLanguages")?.first ?? Locale.preferredLanguages.first ?? "en"
+
+    /// Whether macOS's own menus still speak another language than the one picked (until a restart).
+    public static func systemMenusLag(behind code: String) -> Bool {
+        !(launchLanguage == code || launchLanguage.hasPrefix(code + "-"))
+    }
+
     /// Makes `code` ("en", "vi", "zh-Hans") the UI language. Idempotent and cheap: the host calls it from a view body.
     public static func apply(_ requested: String) {
         let new = supported.contains(requested) ? requested : "en"
+        _ = launchLanguage   // read before this writes it
         let changed: Bool = lock.withLock {
             guard applied != new else { return false }
             applied = new; code = new
@@ -71,7 +86,7 @@ public enum AppLanguage {
         }
         guard changed else { return }
         installMainBundleOverride()
-        UserDefaults.standard.set([new], forKey: "AppleLanguages")
+        if remembers { UserDefaults.standard.set([new], forKey: "AppleLanguages") }
     }
 
     private static func installMainBundleOverride() {

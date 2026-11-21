@@ -65,6 +65,9 @@ final class PlatformServices {
 
     /// A Dock click while the window is hidden (closed to the tray): brings that window back. False when this app has no
     /// hidden window to bring (demo runs, before the window attached), so the system's own reopen goes ahead.
+    /// The app's window is on screen (not closed to the tray, not in the Dock).
+    var windowIsShown: Bool { attachedWindow.map { $0.isVisible && !$0.isMiniaturized } ?? false }
+
     func reopenWindow() -> Bool {
         guard let window = attachedWindow else { return false }
         if window.isMiniaturized { window.deminiaturize(nil) }

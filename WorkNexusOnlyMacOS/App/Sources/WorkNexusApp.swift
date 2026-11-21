@@ -103,6 +103,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let quitGrace: TimeInterval = 1.5
 }
 
+/// Starting the app again: a detached shell waits for this process to end, then opens the app bundle again.
+enum AppRelaunch {
+    @MainActor static func now() {
+        let pid = ProcessInfo.processInfo.processIdentifier
+        let bundle = Bundle.main.bundlePath.replacingOccurrences(of: "'", with: "'\\''")
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/bin/sh")
+        p.arguments = ["-c", "while kill -0 \(pid) 2>/dev/null; do sleep 0.2; done; /usr/bin/open '\(bundle)'"]
+        p.standardOutput = FileHandle.nullDevice; p.standardError = FileHandle.nullDevice
+        do { try p.run() } catch { Diagnostics.warning("app", "Could not restart: \(error.localizedDescription)"); return }
+        AppQuit.now()
+    }
+}
+
 /// Quitting the app from code.
 enum AppQuit {
     /// Asks the app to quit from a run-loop timer: called from main-queue work (a task, a dispatched block), a direct

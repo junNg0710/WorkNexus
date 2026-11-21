@@ -71,6 +71,8 @@ final class CompositionRoot {
         diagnostics = DiagnosticsWiring()
         let env = ProcessInfo.processInfo.environment
         isDemo = DemoMode.isEnabled
+        // A demo run shares the app's identity: the language it shows must not become the real app's.
+        if isDemo { AppLanguage.remembers = false }
         let registrars = [ZentaoModuleData().migrations, ChatFeature.migrationRegistrar, MiniAppsFeature.migrationRegistrar]
         if let path = env["WN_DB_PATH"], !path.isEmpty {
             db = try AppDatabase.open(path: URL(fileURLWithPath: path), registrars: registrars)

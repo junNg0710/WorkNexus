@@ -2,7 +2,8 @@ import CoreUI
 import SwiftUI
 
 /// What the floating panel holds: the pet. Dragged it moves the panel (and makes that its new place to stroll around),
-/// clicked it opens what it is saying (a message, a notification) or else brings the app forward, and its menu puts it
+/// clicked it opens what it is saying (a message, a notification) or else brings the app forward - or, when the app is
+/// already in front, hides it (`onToggle`) - and its menu puts it
 /// back in the window or hides it (and, in the panic switch's demo mode, offers "Demo"). When it walks the panel goes
 /// with it (`FloatingPetPanel.follow`). What it says (or, while the pointer rests on it, the state of things) goes to
 /// the bubble's own panel above it (`FloatingPetPanel.setBubble`), so the pet's panel never changes size. Not in the
@@ -13,6 +14,8 @@ struct FloatingPetContent: View {
     let width: CGFloat
     let followsCursor: Bool
     let onOpen: () -> Void
+    /// A click on the pet: the app forward, or away again when it is in front.
+    let onToggle: () -> Void
     let onOpenLink: (String) -> Void
     let onDock: () -> Void
     let onHide: () -> Void
@@ -24,7 +27,7 @@ struct FloatingPetContent: View {
 
     var body: some View {
         PetView(director: director, sheet: sheet, width: width, followsCursor: followsCursor, pausesWithApp: false, movable: false,
-                showsBubble: false, onTap: onOpen, onOpenLink: onOpenLink)
+                showsBubble: false, onTap: onToggle, onOpenLink: onOpenLink)
             .frame(width: width, height: height)
             .onHover { hovering = $0 }
             .gesture(DragGesture(minimumDistance: 3)

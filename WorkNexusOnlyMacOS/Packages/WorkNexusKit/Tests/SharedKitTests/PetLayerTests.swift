@@ -37,6 +37,15 @@ final class PetLayerTests: XCTestCase {
 
     func testThePetSaysWhatAChatMessageSays() {
         XCTAssertEqual(PetSignalText.chat(PetChatNews(title: "Lan", sender: nil, body: "ok em", number: 1)), "Lan: ok em")
+        // News from an app on the rail: its badge, or (details on) what its page notified.
+        let slack = PetAppNews(app: "Slack", badge: "3", link: PetAppLink.nativeApp("s"), number: 1)
+        XCTAssertEqual(PetSignalText.app(slack, details: true), "Slack: 3 new")
+        let jenkins = PetAppNews(app: "Jenkins", title: "Build failed", body: "iOS_test", link: PetAppLink.miniApp("j"), number: 2)
+        XCTAssertEqual(PetSignalText.app(jenkins, details: true), "Jenkins: Build failed — iOS_test")
+        XCTAssertEqual(PetSignalText.app(jenkins, details: false), "Jenkins has something new", "no message text without the details")
+        XCTAssertEqual(PetAppLink(PetAppLink.nativeApp("s")), .nativeApp("s"))
+        XCTAssertEqual(PetAppLink(PetAppLink.miniApp("j")), .miniApp("j"))
+        XCTAssertNil(PetAppLink("chat:a:g"))
         XCTAssertEqual(PetSignalText.chat(PetChatNews(title: "Team", sender: "Lan", body: "Photo", number: 2)), "Team · Lan: Photo")
         XCTAssertEqual(PetSignalText.chat(PetChatNews(title: "", sender: nil, body: "hi", number: 3)), "hi")
     }

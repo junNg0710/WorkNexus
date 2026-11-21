@@ -27,6 +27,18 @@ enum PetSignalText {
             : appString("petSayWaitingOther", "%1$@ notifications are waiting for you").replacingOccurrences(of: "%1$@", with: "\(count)")
     }
 
+    /// News from an app on the rail: "Slack: 3 new", or - with the details on - "Jira: Build failed".
+    static func app(_ news: PetAppNews, details: Bool) -> String {
+        if details, let title = news.title?.trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty {
+            let body = news.body?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return "\(news.app): \(title)" + (body.isEmpty ? "" : " — \(body)")
+        }
+        if let badge = news.badge, !badge.isEmpty {
+            return appFormat("petSayAppBadge", "%1$@: %2$@ new", news.app, badge)
+        }
+        return appFormat("petSayAppNews", "%1$@ has something new", news.app)
+    }
+
     static func newChats(_ added: Int) -> String {
         added == 1 ? appString("petSayChatOne", "New chat message")
             : appString("petSayChatOther", "%1$@ new chat messages").replacingOccurrences(of: "%1$@", with: "\(added)")

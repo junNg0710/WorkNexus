@@ -54,10 +54,23 @@ struct HostWiring {
         host.petNewestWaiting = { r.notifications?.newestUnread.map { PetNotice(text: $0.text, link: $0.payload) } }
         // A line of the pet's opens what it is about: a chat (`chat:` payload) or a notification's ticket.
         host.petOpen = { link in
-            if link.hasPrefix("chat:") { r.chat.open(payload: link) }
+            if let app = PetAppLink(link) {
+                switch app {
+                // A Mac app comes forward over everything (WorkNexus stays where it is).
+                case .nativeApp(let id): Task { await r.miniApps.nativeApps.open(id: id) }
+                // A web mini app lives in WorkNexus's window: that comes forward on it.
+                case .miniApp(let id):
+                    NSApp.activate(); _ = r.platform.reopenWindow(); shell.nav.openMiniApp(id)
+                }
+            } else if link.hasPrefix("chat:") { r.chat.open(payload: link) }
             else if let n = r.notifications { Task { await n.handleTap(payload: link) } }
         }
         host.revealApp = { NSApp.activate(); _ = r.platform.reopenWindow() }
+        // The floating pet's panel never takes the app forward by itself, so `isActive` is still what was in front before.
+        host.toggleApp = { [weak platform = r.platform] in
+            if PetAppToggle.hides(appActive: NSApp.isActive, windowShown: platform?.windowIsShown ?? false) { NSApp.hide(nil) }
+            else { NSApp.activate(); _ = platform?.reopenWindow() }
+        }
         // Holding the pet (or two or three quick clicks, as chosen) sets off the panic switch's official trigger, when it is on
         // for this user; "Demo" in its right-click menu sets off the demo trigger while demo mode is on.
         host.petTripleTap = PetTripleTap(armed: {
@@ -91,6 +104,14 @@ struct HostWiring {
         shell.host = host
         installDetailExtensions()
         r.miniApps.model.requestShow = { shell.nav.openMiniApp($0) }
+        // News from the apps on the rail reaches the pet, which opens the app when its line is clicked.
+        r.miniApps.model.onNotified = { app, title, body in
+            shell.announceApp(app.name, title: title, body: body, link: PetAppLink.miniApp(app.id))
+        }
+        r.miniApps.nativeApps.readsBadgesInBackground = { shell.settings.showPet && shell.settings.petDisplay == .floating }
+        r.miniApps.nativeApps.onBadgeRose = { app, badge in
+            shell.announceApp(app.label, badge: badge, link: PetAppLink.nativeApp(app.id))
+        }
         r.miniApps.model.bringToFront = { NSApp.activate(); NSApp.windows.first(where: { $0.canBecomeMain })?.makeKeyAndOrderFront(nil) }
     }
 
@@ -114,11 +135,17 @@ struct HostWiring {
     private func installDetailExtensions() {
         let r = root, shell = root.shell
         var ext = DetailExtensions()
-        ext.translationTabLabel = {
-            let l = translationLanguage(for: shell.settings.translationLang)
+        let hub = TranslationHub(feature: r.translation, aiSetup: r.aiSetup, settings: { shell.settings }, gate: .shared)
+        ext.translationTabLabel = { ticket in
+            let l = translationLanguage(for: hub.model(for: ticket.id).targetLang)
             return "\(l.flag) \(l.nativeName)"
         }
-        let hub = TranslationHub(feature: r.translation, aiSetup: r.aiSetup, settings: { shell.settings }, gate: .shared)
+        ext.translateInto = { ticket in
+            let model = hub.model(for: ticket.id)
+            return translationLanguages.map { lang in
+                AppNativeMenu.Item("\(lang.flag)  \(lang.nativeName)", checked: lang.code == model.targetLang) { model.translate(ticket, into: lang.code) }
+            }
+        }
         OpenCodeLinkGate.shared.install(feature: r.translation) { shell.nav.select(.settings); shell.nav.setSettingsSection("translation") }
         ext.translationTab = { ticket, layout in AnyView(TranslationTabView(ticket: ticket, layout: layout, hub: hub, shell: shell).id(ticket.id)) }
         ext.translationFooter = { ticket in AnyView(TranslationFooterView(ticket: ticket, hub: hub, shell: shell).id(ticket.id)) }
