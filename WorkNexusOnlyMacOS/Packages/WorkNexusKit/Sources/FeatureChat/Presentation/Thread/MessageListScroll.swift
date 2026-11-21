@@ -78,6 +78,8 @@ struct MessageListScroll: View {
                 .frame(maxWidth: .infinity)
             }
             .defaultScrollAnchor(.bottom)
+            // A right-click on text anywhere in the list gets the app's menu, even on a message the pointer was not seen over.
+            .background { MessageListRightClick() }
             .onScrollPhaseChange { _, phase in activity.isScrolling = phase.isScrolling }
             .environment(\.chatScrollActivity, activity)
             .onScrollTargetVisibilityChange(idType: String.self, threshold: 0.1) { ids in

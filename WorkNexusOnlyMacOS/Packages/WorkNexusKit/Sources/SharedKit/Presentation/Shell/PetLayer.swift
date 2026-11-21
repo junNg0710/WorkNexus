@@ -107,6 +107,7 @@ struct PetLayer: View {
             else { director.say(PetSignalText.waiting(new)) }
         }
         .onChange(of: status, initial: true) { _, s in director.status = s }
+        .onChange(of: settings.petStaysWhenAppHides, initial: true) { _, on in FloatingPetPanel.shared.staysWhenAppHides = on }
         .onChange(of: FloatingKey(floats: floats, sheet: sheet.map { ObjectIdentifier($0.atlas) }, follows: settings.petFollowsCursor,
                                   dark: theme.colors.isDark), initial: true) { _, key in showFloating(key.floats) }
     }

@@ -2163,6 +2163,18 @@
     "en": "Use the app's icon",
     "vi": "Dùng icon của app"
   },
+  "petClickGoesBack": {
+    "en": "Goes back to the previous app",
+    "vi": "Quay lại app trước đó"
+  },
+  "petClickHidesApp": {
+    "en": "Hides WorkNexus",
+    "vi": "Ẩn WorkNexus"
+  },
+  "petClickInFront": {
+    "en": "A click on the pet while WorkNexus is in front",
+    "vi": "Bấm pet khi WorkNexus đang ở trên cùng"
+  },
   "petSayAppBadge": {
     "en": "%1$@: %2$@ new",
     "vi": "%1$@: %2$@ mới"
@@ -2170,6 +2182,10 @@
   "petSayAppNews": {
     "en": "%1$@ has something new",
     "vi": "%1$@ có thông báo mới"
+  },
+  "petStaysWhenAppHides": {
+    "en": "Stays on the desktop when WorkNexus is hidden",
+    "vi": "Giữ pet trên màn hình khi ẩn WorkNexus"
   },
   "tipBulkHoursOne": {
     "en": "Hours left for this task; empty keeps what it has",

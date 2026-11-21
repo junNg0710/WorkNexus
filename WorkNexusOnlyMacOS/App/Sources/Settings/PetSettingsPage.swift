@@ -22,6 +22,17 @@ struct PetSettingsPage: View {
                                                (.floating, appString("petFloating", "On the desktop"))] as [(PetDisplay, String)],
                                       value: s.petDisplay) { v in shell.updateSettings { $0.petDisplay = v; $0.showPet = true } }
                 }
+                if s.petDisplay == .floating {
+                    SettingsRow(label: appString("petClickInFront", "A click on the pet while WorkNexus is in front")) {
+                        SettingsSegmented(values: [(false, appString("petClickHidesApp", "Hides WorkNexus")),
+                                                   (true, appString("petClickGoesBack", "Goes back to the previous app"))],
+                                          value: s.petClickGoesBack) { v in shell.updateSettings { $0.petClickGoesBack = v } }
+                    }
+                    SettingsToggleRow(label: appString("petStaysWhenAppHides", "Stays on the desktop when WorkNexus is hidden"),
+                                      isOn: s.petStaysWhenAppHides) { on in
+                        shell.updateSettings { $0.petStaysWhenAppHides = on }
+                    }
+                }
                 SettingsToggleRow(label: appString("petFollowsCursor", "Looks toward the pointer (pets that can)"), isOn: s.petFollowsCursor) { on in
                     shell.updateSettings { $0.petFollowsCursor = on }
                 }

@@ -67,9 +67,16 @@ struct HostWiring {
         }
         host.revealApp = { NSApp.activate(); _ = r.platform.reopenWindow() }
         // The floating pet's panel never takes the app forward by itself, so `isActive` is still what was in front before.
+        LastOtherApp.shared.start()
         host.toggleApp = { [weak platform = r.platform] in
-            if PetAppToggle.hides(appActive: NSApp.isActive, windowShown: platform?.windowIsShown ?? false) { NSApp.hide(nil) }
-            else { NSApp.activate(); _ = platform?.reopenWindow() }
+            let last = LastOtherApp.shared
+            switch PetAppToggle.action(appActive: NSApp.isActive, windowShown: platform?.windowIsShown ?? false,
+                                       goesBack: shell.settings.petClickGoesBack, hasPrevious: last.isAvailable) {
+            case .hide: NSApp.hide(nil)
+            // The app the user was in comes back over WorkNexus, which stays under it as it was.
+            case .goBack: if !last.activate() { NSApp.hide(nil) }
+            case .bringForward: NSApp.activate(); _ = platform?.reopenWindow()
+            }
         }
         // Holding the pet (or two or three quick clicks, as chosen) sets off the panic switch's official trigger, when it is on
         // for this user; "Demo" in its right-click menu sets off the demo trigger while demo mode is on.

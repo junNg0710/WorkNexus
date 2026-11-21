@@ -68,6 +68,8 @@ public final class FloatingPetPanel {
     }
 
     public var isShown: Bool { panel?.isVisible == true }
+    /// Whether the pet (and what it says) stays on the desktop when the app is hidden: a click on the pet, ⌘H.
+    public var staysWhenAppHides = true { didSet { for p in [panel, bubblePanel] { p?.canHide = !staysWhenAppHides } } }
 
     /// Shows `content` in the panel (or swaps it in when the panel is up), for a pet `petSize` points big; `bubble` draws
     /// what it says above it.
@@ -261,6 +263,7 @@ public final class FloatingPetPanel {
         p.level = .floating
         p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         p.hidesOnDeactivate = false
+        p.canHide = !staysWhenAppHides
         p.isReleasedWhenClosed = false
         p.becomesKeyOnlyIfNeeded = true
         p.animationBehavior = .none

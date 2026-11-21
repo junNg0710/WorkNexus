@@ -32,12 +32,15 @@ struct MessageHoverActions<Content: View>: View {
             if alignEnd { buttons }
             // The menu's rows are worked out when it opens, not for every row of the list on every redraw.
             content.contextMenu { MessageContextMenu(ctx: ctx, message: message, inThread: inThread, picking: $picking) }
-                // On the text itself a right-click would open the text system's menu (Font, Spelling, Services…): a short
-                // chat menu answers it instead. Only the row under the pointer carries the catcher (an AppKit view): one on
+                // On the text itself (or its translation) a right-click would open the text system's menu (Font, Spelling,
+                // Services…): a short chat menu answers it instead, and the message's whole menu anywhere else on it. Only the row under the pointer carries the catcher (an AppKit view): one on
                 // every row made the whole list heavier to lay out, hit-test and walk for focus.
                 .background {
                     if hovering && !ctx.state.isSelecting {
-                        MessageTextRightClick(active: true) { selection in ctx.textMenu(for: message, settings: settings, selection: selection) }
+                        MessageTextRightClick(active: true) { selection, onText in
+                            onText ? ctx.textMenu(for: message, settings: settings, selection: selection)
+                                   : ctx.messageMenu(for: message, settings: settings, inThread: inThread) { picking = true }
+                        }
                     }
                 }
             if !alignEnd { buttons }

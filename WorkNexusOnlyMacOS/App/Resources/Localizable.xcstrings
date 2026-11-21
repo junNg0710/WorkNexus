@@ -50187,6 +50187,75 @@
         }
       }
     },
+    "petClickGoesBack": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goes back to the previous app"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quay lại app trước đó"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回到之前的应用"
+          }
+        }
+      }
+    },
+    "petClickHidesApp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hides WorkNexus"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ẩn WorkNexus"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏 WorkNexus"
+          }
+        }
+      }
+    },
+    "petClickInFront": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A click on the pet while WorkNexus is in front"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bấm pet khi WorkNexus đang ở trên cùng"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WorkNexus 在最前面时点击宠物"
+          }
+        }
+      }
+    },
     "petSayAppBadge": {
       "extractionState": "manual",
       "localizations": {
@@ -50229,6 +50298,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ 有新动态"
+          }
+        }
+      }
+    },
+    "petStaysWhenAppHides": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stays on the desktop when WorkNexus is hidden"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giữ pet trên màn hình khi ẩn WorkNexus"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏 WorkNexus 时宠物仍留在桌面上"
           }
         }
       }

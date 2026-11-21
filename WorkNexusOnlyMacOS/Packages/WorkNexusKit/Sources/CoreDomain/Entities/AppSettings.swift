@@ -67,6 +67,11 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var petFollowsCursor = true
     /// Whether the pet says what a new chat message or ZenTao notification says, rather than only that one came (macOS only).
     public var petShowsDetails = true
+    /// Whether the pet on the desktop stays there when WorkNexus is hidden (a click on the pet, ⌘H) (macOS only).
+    public var petStaysWhenAppHides = true
+    /// Whether a click on the pet while WorkNexus is in front puts the app the user was in before back over it, rather
+    /// than hiding WorkNexus (macOS only).
+    public var petClickGoesBack = true
 
     public init() {}
 
@@ -101,7 +106,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         s.viewModes = v(.viewModes, s.viewModes); s.showPet = v(.showPet, s.showPet)
         s.petId = try? c.decodeIfPresent(String.self, forKey: .petId)
         s.petDisplay = v(.petDisplay, s.petDisplay); s.petFollowsCursor = v(.petFollowsCursor, s.petFollowsCursor)
-        s.petShowsDetails = v(.petShowsDetails, s.petShowsDetails)
+        s.petShowsDetails = v(.petShowsDetails, s.petShowsDetails); s.petStaysWhenAppHides = v(.petStaysWhenAppHides, s.petStaysWhenAppHides)
+        s.petClickGoesBack = v(.petClickGoesBack, s.petClickGoesBack)
         self = s
     }
 }
