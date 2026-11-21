@@ -54,6 +54,8 @@ extension DemoSeed {
     static func applyEnvironment(shell: ShellModel) {
         let env = ProcessInfo.processInfo.environment
         if let t = env["WN_DEMO_THEME"], let v = ThemeVariant(rawValue: t) { shell.updateSettings { $0.variant = v } }
+        // `WN_DEMO_LANG=zh-Hans`: the UI in that language (a demo run writes only its own support folder).
+        if let lang = env["WN_DEMO_LANG"] { shell.updateSettings { $0.localeCode = lang } }
         if let size = env["WN_DEMO_SIZE"]?.split(separator: "x").compactMap({ Double($0) }), size.count == 2 {
             Task { @MainActor in
                 try? await Task.sleep(for: .seconds(1))

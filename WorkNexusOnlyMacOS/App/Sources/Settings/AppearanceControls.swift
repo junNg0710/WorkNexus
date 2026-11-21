@@ -98,14 +98,14 @@ struct LayoutRegionControls: View {
     }
 }
 
-/// The UI language (English / Vietnamese). It acts at once: `AppLanguage` re-points the strings and the root rebuilds.
+/// The UI language (English / Vietnamese / Simplified Chinese), each listed by its own name. It acts at once: `AppLanguage` re-points the strings and the root rebuilds.
 struct LanguagePicker: View {
     let shell: ShellModel
 
     var body: some View {
         SettingsRow(label: appString("language", "Language")) {
             AppDropdown(value: AppLanguage.supported.contains(shell.settings.localeCode) ? shell.settings.localeCode : "en",
-                        values: AppLanguage.supported, labelOf: { $0 == "vi" ? appString("vietnamese", "Vietnamese") : appString("english", "English") }) { code in
+                        values: AppLanguage.supported, labelOf: { AppLanguage.nativeName($0) }) { code in
                 AppLanguage.apply(code)
                 shell.updateSettings { $0.localeCode = code }
             }

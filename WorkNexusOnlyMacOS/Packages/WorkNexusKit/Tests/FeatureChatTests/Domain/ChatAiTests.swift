@@ -203,6 +203,9 @@ final class RewriteChatDraftTests: XCTestCase {
         XCTAssertEqual(resolve(picked: "vi", appLanguage: "en", offered: [vi, en]), vi)
         XCTAssertEqual(resolve(picked: nil, appLanguage: "fr", offered: [vi, en]), vi)
         XCTAssertEqual(resolve(picked: nil, appLanguage: "vi", offered: []).englishName, "English")
+        // The app in Simplified Chinese summarises in the languages' Chinese.
+        let zh = ChatAiLanguage(code: "zh", englishName: "Chinese (Simplified)", nativeName: "中文", flag: "🇨🇳")
+        XCTAssertEqual(resolve(picked: nil, appLanguage: "zh-Hans", offered: [vi, en, zh]), zh)
     }
 
     func testPeopleAreNamedByTheirRealNameElseByTheirId() {

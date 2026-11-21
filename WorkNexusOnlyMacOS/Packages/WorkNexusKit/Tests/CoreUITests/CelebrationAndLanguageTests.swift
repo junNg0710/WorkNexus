@@ -39,6 +39,8 @@ final class CustomColorTests: XCTestCase {
 final class AppLanguageTests: XCTestCase {
     func testUnknownLanguageFallsBackToEnglishAndStringsStillResolve() {
         AppLanguage.apply("vi"); XCTAssertEqual(AppLanguage.current, "vi")
+        AppLanguage.apply("zh-Hans"); XCTAssertEqual(AppLanguage.current, "zh-Hans")
+        XCTAssertEqual(AppLanguage.nativeName("zh-Hans"), "简体中文")
         AppLanguage.apply("xx"); XCTAssertEqual(AppLanguage.current, "en")
         XCTAssertEqual(AppLanguage.locale.identifier, "en")
         XCTAssertEqual(appString("someUnknownKey", "Fallback"), "Fallback")

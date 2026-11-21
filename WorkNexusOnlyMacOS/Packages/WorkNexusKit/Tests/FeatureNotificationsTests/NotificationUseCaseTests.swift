@@ -154,6 +154,7 @@ final class NotificationUseCaseTests: XCTestCase {
         let bug = ZenTaoNotification(accountId: "a", id: "1", summary: "Thanh指派了Bug", objectType: "bug")
         XCTAssertEqual(NotificationStrings.eventText(bug, language: "en"), "Thanh assigned Bug")
         XCTAssertEqual(NotificationStrings.eventText(bug, language: "vi"), "Thanh đã giao Bug")
+        XCTAssertEqual(NotificationStrings.eventText(bug, language: "zh-Hans"), "Thanh 指派了 Bug")
         let unknown = ZenTaoNotification(accountId: "a", id: "2", summary: "JunNg mentioned you", objectType: "bug")
         XCTAssertEqual(NotificationStrings.eventText(unknown, language: "en"), "JunNg mentioned you")
         let noObject = ZenTaoNotification(accountId: "a", id: "3", summary: "JunNg assigned Doc", objectType: "doc")

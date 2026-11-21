@@ -67,8 +67,20 @@ if extra_file.exists():
         strings[key] = {"extractionState": "manual", "localizations": {
             lang: {"stringUnit": {"state": "translated", "value": v}} for lang, v in vals.items()}}
         extra_added += 1
+# App/Resources/Localizable.zh-Hans.json: Simplified Chinese for every key ({"key": "...", printf-style like the
+# catalog), kept on the macOS side: the Flutter app has no Chinese .arb. An extra key may also carry "zh-Hans" itself.
+zh_file = root/"WorkNexusOnlyMacOS/App/Resources/Localizable.zh-Hans.json"
+if zh_file.exists():
+    zh = json.loads(zh_file.read_text())
+    for key, entry in strings.items():
+        if "zh-Hans" not in entry["localizations"] and zh.get(key):
+            entry["localizations"]["zh-Hans"] = {"stringUnit": {"state": "translated", "value": zh[key]}}
+    missing = [k for k, e in strings.items() if "zh-Hans" not in e["localizations"]]
+    if missing:
+        print(f"warning: {len(missing)} keys have no Simplified Chinese (English shows): {', '.join(missing[:12])}", file=sys.stderr)
 out = {"sourceLanguage": src, "strings": strings, "version": "1.0"}
 dst = root/"WorkNexusOnlyMacOS/App/Resources/Localizable.xcstrings"
 dst.parent.mkdir(parents=True, exist_ok=True)
 dst.write_text(json.dumps(out, ensure_ascii=False, indent=2))
-print(f"{len(strings)} keys ({extra_added} from Localizable.extra.json), locales={list(arbs)} -> {dst}")
+locales = sorted({l for e in strings.values() for l in e["localizations"]})
+print(f"{len(strings)} keys ({extra_added} from Localizable.extra.json), locales={locales} -> {dst}")

@@ -71,7 +71,8 @@ public struct ResolveChatSummaryLanguage: Sendable {
     public init() {}
     public func callAsFunction(picked: String?, appLanguage: String, offered: [ChatAiLanguage]) -> ChatAiLanguage {
         let code = picked ?? appLanguage
-        return offered.first { $0.code == code } ?? offered.first
+        // The app's "zh-Hans" is the languages' "zh".
+        return offered.first { $0.code == code } ?? offered.first { code.hasPrefix($0.code + "-") } ?? offered.first
             ?? ChatAiLanguage(code: "en", englishName: "English", nativeName: "English", flag: "🇬🇧")
     }
 }

@@ -55,9 +55,17 @@ enum NotificationStrings {
         .restarted: "đã tiếp tục", .finished: "đã hoàn thành", .paused: "đã tạm dừng", .canceled: "đã huỷ",
     ]
 
+    private static let zh: [NotificationAction: String] = [
+        .created: "创建了", .opened: "创建了", .changed: "变更了", .edited: "编辑了", .assigned: "指派了",
+        .closed: "关闭了", .deleted: "删除了", .commented: "评论了", .activated: "激活了",
+        .resolved: "解决了", .reviewed: "评审了", .confirmed: "确认了", .started: "开始了",
+        .restarted: "继续了", .finished: "完成了", .paused: "暂停了", .canceled: "取消了",
+    ]
+
     /// `notificationAction` of the ARB (an ICU select the xcstrings catalog cannot hold): the verb per language.
     static func action(_ a: NotificationAction, language: String = Bundle.main.preferredLocalizations.first ?? "en") -> String {
-        (language.hasPrefix("vi") ? vi : en)[a] ?? (language.hasPrefix("vi") ? "đã cập nhật" : "updated")
+        if language.hasPrefix("zh") { return zh[a] ?? "更新了" }
+        return (language.hasPrefix("vi") ? vi : en)[a] ?? (language.hasPrefix("vi") ? "đã cập nhật" : "updated")
     }
 
     /// `n`'s "who did what" in the app's language ("JunNg đã giao Bug"), whatever language ZenTao wrote it in;

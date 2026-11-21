@@ -40,7 +40,16 @@ func namingPlaceholders(_ text: String, like fallback: String) -> String {
 /// - `AppleLanguages` is written to the app's own defaults, so the next launch starts in the same language.
 /// Views read `locale` into `\.locale` for `LocalizedStringKey` text, and are rebuilt (`.id(code)`) by the host.
 public enum AppLanguage {
-    public static let supported = ["en", "vi"]
+    public static let supported = ["en", "vi", "zh-Hans"]
+
+    /// Each language by its own name, as language menus show them (a reader of one only needs to find their own).
+    public static func nativeName(_ code: String) -> String {
+        switch code {
+        case "vi": "Tiếng Việt"
+        case "zh-Hans": "简体中文"
+        default: "English"
+        }
+    }
     private static let lock = NSLock()
     nonisolated(unsafe) private static var override: Bundle?
     nonisolated(unsafe) private static var code = "en"
@@ -51,7 +60,7 @@ public enum AppLanguage {
     public static var current: String { lock.withLock { code } }
     public static var locale: Locale { Locale(identifier: current) }
 
-    /// Makes `code` ("en", "vi") the UI language. Idempotent and cheap: the host calls it from a view body.
+    /// Makes `code` ("en", "vi", "zh-Hans") the UI language. Idempotent and cheap: the host calls it from a view body.
     public static func apply(_ requested: String) {
         let new = supported.contains(requested) ? requested : "en"
         let changed: Bool = lock.withLock {
