@@ -33,6 +33,8 @@ public final class MiniAppsModel: LinkHandler {
     @ObservationIgnored public var requestShow: ((String) -> Void)?
     /// Brings the app window forward (a tapped notification).
     @ObservationIgnored public var bringToFront: (() -> Void)?
+    /// Told when a mini app's page shows a notification the user is not looking at: the app, its title and text.
+    @ObservationIgnored public var onNotified: ((MiniApp, String, String) -> Void)?
 
     let services: MiniAppsServices
     private let router: LinkRouter

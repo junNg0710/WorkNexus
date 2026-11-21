@@ -43,6 +43,13 @@ final class FixtureNativeRepository: NativeAppRepository, @unchecked Sendable {
     }
     func saveOrder(_ ids: [String]) async -> Outcome<Void> { order = ids; return .success(()) }
     func delete(id: String) async -> Outcome<Void> { items.removeAll { $0.id == id }; return .success(()) }
+    private(set) var importedIcons: [String: String] = [:]
+    private(set) var deletedIcons: [String] = []
+    func importIcon(id: String, sourcePath: String) async -> Outcome<String> {
+        if failing { return .failure(.storage("nope")) }
+        let kept = "/icons/\(id)_\((sourcePath as NSString).lastPathComponent)"; importedIcons[id] = kept; return .success(kept)
+    }
+    func deleteIcon(id: String) async { deletedIcons.append(id) }
 }
 
 /// An `AppLauncher` that opens nothing: it records what it was asked and lets a test send launch / quit events.

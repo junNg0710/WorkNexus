@@ -13,6 +13,7 @@ struct NativeAppRailButtons: View {
     @Environment(\.toasts) private var toasts
     let model: NativeAppsModel
     @State private var removing: NativeAppRailItem?
+    @State private var editing: NativeApp?
 
     /// A drag's payload starts with this, so a Mac app is never taken for a mini app (whose payload is its bare id).
     static let dragPrefix = "native:"
@@ -23,7 +24,7 @@ struct NativeAppRailButtons: View {
                 RailLabeledButton(label: item.name, badge: item.badgeCount, help: help(item)) {
                     open(item)
                 } leading: {
-                    NativeAppRailIcon(icon: model.icon(forPath: item.path), running: item.running, missing: item.missing)
+                    NativeAppRailIcon(icon: model.icon(forPath: item.path, custom: item.iconPath), running: item.running, missing: item.missing)
                 }
                 .draggable(Self.dragPrefix + item.id)
                 .dropDestination(for: String.self) { dropped, _ in
@@ -56,6 +57,7 @@ struct NativeAppRailButtons: View {
             guard let item = removing else { return }
             Task { await model.remove(item.id) }
         }
+        .appDialog(item: $editing) { app in NativeAppEditDialog(model: model, app: app) { editing = nil } }
     }
 
     private func help(_ item: NativeAppRailItem) -> String {
@@ -86,6 +88,7 @@ struct NativeAppRailButtons: View {
         } else {
             Button(appString("nativeAppReveal", "Reveal in Finder")) { app(item).map(model.reveal) }
         }
+        Button(appString("nativeAppEditMenu", "Edit name and icon…")) { editing = app(item) }
         Divider()
         Button(appString("nativeAppMoveUp", "Move up")) { Task { await model.move(id: item.id, by: -1) } }
             .disabled(!model.canMove(id: item.id, by: -1))

@@ -9,6 +9,10 @@ public protocol NativeAppRepository: Sendable {
     /// Puts the apps in the order of `ids` on the rail, first to last. Touches nothing but their positions.
     func saveOrder(_ ids: [String]) async -> Outcome<Void>
     func delete(id: String) async -> Outcome<Void>
+    /// Keeps a copy of the image at `sourcePath` as app `id`'s rail icon; the copy's path.
+    func importIcon(id: String, sourcePath: String) async -> Outcome<String>
+    /// Forgets app `id`'s own icon file (it shows the app's icon again).
+    func deleteIcon(id: String) async
 }
 
 /// Reads what an `.app` bundle says about itself.

@@ -7,6 +7,7 @@ public enum MiniAppsMigrations {
     public static let migrationId = "miniapps_v1"
     public static let nativeAppsMigrationId = "miniapps_v2"
     public static let openTabsMigrationId = "miniapps_v3"
+    public static let nativeAppLooksMigrationId = "miniapps_v4"
 
     public static let registrar: MigrationRegistrar = { migrator in
         migrator.registerMigration(migrationId) { db in
@@ -43,6 +44,13 @@ public enum MiniAppsMigrations {
                 t.primaryKey("miniAppId", .text)
                 t.column("tabsJson", .text).notNull()
                 t.column("selected", .integer).notNull().defaults(to: 0)
+            }
+        }
+        // Not in the Flutter app: a Mac app's own name and icon on the rail, as the user set them.
+        migrator.registerMigration(nativeAppLooksMigrationId) { db in
+            try db.alter(table: "nativeApps") { t in
+                t.add(column: "customName", .text)
+                t.add(column: "iconPath", .text)
             }
         }
     }

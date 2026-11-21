@@ -5,5 +5,9 @@ public struct RemoveNativeApp: Sendable {
     private let repository: NativeAppRepository
     public init(_ repository: NativeAppRepository) { self.repository = repository }
 
-    public func callAsFunction(id: String) async -> Outcome<Void> { await repository.delete(id: id) }
+    public func callAsFunction(id: String) async -> Outcome<Void> {
+        let removed = await repository.delete(id: id)
+        if case .success = removed { await repository.deleteIcon(id: id) }
+        return removed
+    }
 }

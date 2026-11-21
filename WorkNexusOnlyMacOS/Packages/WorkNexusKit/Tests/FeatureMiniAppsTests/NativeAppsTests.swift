@@ -118,6 +118,23 @@ final class NativeAppUseCaseTests: XCTestCase {
         guard case .failure(.storage) = await add(repo)(path: path, existing: []) else { return XCTFail("expected a storage failure") }
     }
 
+    /// An empty name or the app's own goes back to the app's own; dropping the icon forgets its file.
+    func testEditNamesTheAppAndSetsOrDropsItsIcon() async {
+        let repo = FixtureNativeRepository()
+        let app = native("jenkins")
+        repo.items = [app]
+        guard case .success(let named) = await EditNativeApp(repo)(app, name: "  CI build  ", iconPath: "/icons/jenkins.png") else { return XCTFail() }
+        XCTAssertEqual(named.label, "CI build")
+        XCTAssertEqual(named.name, "Jenkins", "the app's own name is kept")
+        XCTAssertEqual(repo.items.first?.iconPath, "/icons/jenkins.png")
+        guard case .success(let plain) = await EditNativeApp(repo)(named, name: "", iconPath: nil) else { return XCTFail() }
+        XCTAssertNil(plain.customName)
+        XCTAssertEqual(plain.label, "Jenkins")
+        XCTAssertEqual(repo.deletedIcons, ["jenkins"])
+        guard case .success(let same) = await EditNativeApp(repo)(plain, name: "Jenkins", iconPath: nil) else { return XCTFail() }
+        XCTAssertNil(same.customName, "the app's own name is no custom name")
+    }
+
     func testRemoveDeletes() async {
         let repo = FixtureNativeRepository(); repo.items = [native("a"), native("b", position: 1)]
         _ = await RemoveNativeApp(repo)(id: "a")
@@ -159,7 +176,7 @@ final class GRDBNativeAppRepositoryTests: XCTestCase {
         let tables = try db.writer.read { try String.fetchAll($0, sql: "SELECT name FROM sqlite_master WHERE type = 'table'") }
         XCTAssertTrue(tables.contains("nativeApps")); XCTAssertTrue(tables.contains("miniApps")); XCTAssertTrue(tables.contains("miniAppPermissions"))
         let applied = try db.writer.read { try String.fetchAll($0, sql: "SELECT identifier FROM grdb_migrations") }
-        XCTAssertEqual(applied.filter { $0.hasPrefix("miniapps_") }, ["miniapps_v1", "miniapps_v2", "miniapps_v3"], "v1 is untouched, v2 and v3 follow it")
+        XCTAssertEqual(applied.filter { $0.hasPrefix("miniapps_") }, ["miniapps_v1", "miniapps_v2", "miniapps_v3", "miniapps_v4"], "v1 is untouched, the rest follow it")
         XCTAssertEqual(MiniAppsMigrations.migrationId, "miniapps_v1")
     }
 
@@ -185,6 +202,24 @@ final class GRDBNativeAppRepositoryTests: XCTestCase {
         let list = await it.next()
         XCTAssertEqual(list?.map(\.id), ["c", "b"])
         XCTAssertEqual(list?.map(\.position), [0, 2])
+    }
+
+    /// The name and icon the user gave a Mac app are kept with it; an icon picked is copied in, and forgotten with the app.
+    func testKeepsTheNameAndIconGivenAndTheIconCopy() async throws {
+        let db = try AppDatabase.inMemory(registrars: [MiniAppsMigrations.registrar])
+        let dir = nativeTempDir(); defer { try? FileManager.default.removeItem(at: dir) }
+        let r = GRDBNativeAppRepository(database: db, icons: MiniAppIconStorage(folder: dir.appendingPathComponent("icons")))
+        let source = dir.appendingPathComponent("logo.png"); try Data([1, 2, 3]).write(to: source)
+        guard case .success(let kept) = await r.importIcon(id: "a", sourcePath: source.path) else { return XCTFail("not copied") }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: kept))
+        var app = native("a"); app.customName = "Build"; app.iconPath = kept
+        _ = await r.save(app)
+        var it = r.watchAll().makeAsyncIterator()
+        let list = await it.next()
+        XCTAssertEqual(list?.first?.label, "Build")
+        XCTAssertEqual(list?.first?.iconPath, kept)
+        await r.deleteIcon(id: "a")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: kept))
     }
 
     func testTwoRowsCannotShareABundleIdentifier() async throws {

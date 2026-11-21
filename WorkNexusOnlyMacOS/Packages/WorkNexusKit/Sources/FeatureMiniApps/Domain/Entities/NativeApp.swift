@@ -9,9 +9,20 @@ public struct NativeApp: Sendable, Equatable, Identifiable, Hashable {
     public var path: String
     /// Order on the rail, first to last.
     public var position: Int
+    /// The name the user gave it on the rail; nil keeps the app's own (`name`).
+    public var customName: String?
+    /// An image the user picked for it on the rail (a copy kept with the app's data); nil shows the app's own icon.
+    public var iconPath: String?
 
-    public init(id: String, name: String, bundleId: String, path: String, position: Int) {
+    public init(id: String, name: String, bundleId: String, path: String, position: Int, customName: String? = nil, iconPath: String? = nil) {
         self.id = id; self.name = name; self.bundleId = bundleId; self.path = path; self.position = position
+        self.customName = customName; self.iconPath = iconPath
+    }
+
+    /// What the rail and the menus call it: the user's name for it, else the app's own.
+    public var label: String {
+        let custom = customName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return custom.isEmpty ? name : custom
     }
 }
 

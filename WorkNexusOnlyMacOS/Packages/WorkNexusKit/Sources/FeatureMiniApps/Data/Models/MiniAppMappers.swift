@@ -23,9 +23,13 @@ extension MiniAppPermissionRow {
 }
 
 extension NativeApp {
-    init(row r: NativeAppRow) { self.init(id: r.id, name: r.name, bundleId: r.bundleId, path: r.path, position: r.position) }
+    init(row r: NativeAppRow) {
+        self.init(id: r.id, name: r.name, bundleId: r.bundleId, path: r.path, position: r.position, customName: r.customName, iconPath: r.iconPath)
+    }
 }
 
 extension NativeAppRow {
-    init(app a: NativeApp) { self.init(id: a.id, name: a.name, bundleId: a.bundleId, path: a.path, position: a.position) }
+    init(app a: NativeApp) {
+        self.init(id: a.id, name: a.name, bundleId: a.bundleId, path: a.path, position: a.position, customName: a.customName, iconPath: a.iconPath)
+    }
 }

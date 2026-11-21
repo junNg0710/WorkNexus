@@ -8,6 +8,7 @@ struct NativeAppSettingsList: View {
     let model: NativeAppsModel
     @State private var adding = false
     @State private var removing: NativeApp?
+    @State private var editing: NativeApp?
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacing.s4) {
@@ -15,7 +16,8 @@ struct NativeAppSettingsList: View {
                 AppInlineNote(appString("nativeAppSettingsEmpty", "No Mac apps yet. Add one with + on the rail."))
             }
             ForEach(model.apps) { app in
-                NativeAppSettingsRow(app: app, model: model, missing: model.missingIds.contains(app.id)) { removing = app }
+                NativeAppSettingsRow(app: app, model: model, missing: model.missingIds.contains(app.id),
+                                     onEdit: { editing = app }) { removing = app }
             }
             AppButton(appString("nativeAppAddMenuMac", "Add Mac app…"), systemImage: "plus", kind: .secondary) { adding = true }
                 .padding(.top, theme.spacing.s6)
@@ -23,6 +25,7 @@ struct NativeAppSettingsList: View {
         }
         .task { model.start(); model.refreshBadges() }
         .appDialog(isPresented: $adding) { NativeAppPickerDialog(model: model) { adding = false } }
+        .appDialog(item: $editing) { app in NativeAppEditDialog(model: model, app: app) { editing = nil } }
         .appConfirmDialog(isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
                           title: appFormat("miniAppRemoveTitle", "Remove %1$@?", removing?.name ?? ""),
                           message: appString("nativeAppRemoveMessage", "It only leaves the rail. The app itself is not affected."),
@@ -38,18 +41,20 @@ private struct NativeAppSettingsRow: View {
     let app: NativeApp
     let model: NativeAppsModel
     let missing: Bool
+    let onEdit: () -> Void
     let onRemove: () -> Void
 
     var body: some View {
         HStack(spacing: theme.spacing.s12) {
-            NativeAppRailIcon(icon: model.icon(forPath: app.path), running: false, missing: missing)
+            NativeAppRailIcon(icon: model.icon(forPath: app.path, custom: app.iconPath), running: false, missing: missing)
             VStack(alignment: .leading, spacing: 0) {
-                Text(app.name).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx).lineLimit(1)
+                Text(app.label).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx).lineLimit(1)
                 Text(missing ? appFormat("nativeAppMissing", "%1$@ was not found. It may have been moved or uninstalled.", app.name) : app.path)
                     .font(theme.typography.meta).foregroundStyle(missing ? theme.colors.red : theme.colors.tx3)
                     .lineLimit(1).truncationMode(.middle)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            AppIconButton("pencil", help: appString("nativeAppEditMenu", "Edit name and icon…"), action: onEdit)
             AppIconButton("trash", help: appString("miniAppRemove", "Remove from rail"), action: onRemove)
         }
         .padding(.vertical, theme.spacing.s4)

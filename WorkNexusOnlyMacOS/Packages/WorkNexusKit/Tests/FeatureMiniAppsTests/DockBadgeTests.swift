@@ -18,6 +18,30 @@ final class DockBadgeTests: XCTestCase {
         XCTAssertEqual(h.model.railItems.map(\.badgeCount), [0, 0])
     }
 
+    /// The pet hears about a badge going up - not about the badges already there when WorkNexus started, nor one going down.
+    func testABadgeGoingUpIsToldNotTheOnesAlreadyThere() async throws {
+        let h = try NativeHarness()
+        await h.seed([native("slack", path: "/Applications/Slack.app", position: 0), native("mail", path: "/Applications/Mail.app", position: 1)])
+        var told: [String] = []
+        h.model.onBadgeRose = { app, badge in told.append("\(app.label) \(badge)") }
+        h.dock.byPath = ["/Applications/Slack.app": "2"]
+        h.model.refreshBadges()
+        XCTAssertEqual(told, [], "there before: no news")
+        h.dock.byPath = ["/Applications/Slack.app": "5", "/Applications/Mail.app": "•"]
+        h.model.refreshBadges()
+        XCTAssertEqual(told, ["Mail •", "Slack 5"])
+        h.dock.byPath = ["/Applications/Slack.app": "1", "/Applications/Mail.app": "•"]
+        h.model.refreshBadges()
+        XCTAssertEqual(told.count, 2, "going down is no news")
+    }
+
+    func testRisenBadges() {
+        XCTAssertEqual(RisenBadges.ids(old: ["a": "2", "b": "1"], new: ["a": "3", "b": "1", "c": "•"]), ["a", "c"])
+        XCTAssertEqual(RisenBadges.ids(old: ["a": "9"], new: ["a": "10"]), ["a"])
+        XCTAssertEqual(RisenBadges.ids(old: ["a": "•"], new: ["a": "•"]), [])
+        XCTAssertEqual(RisenBadges.ids(old: [:], new: ["a": ""]), [])
+    }
+
     func testAnAppTheDockKnowsUnderAnotherPathIsFoundByItsBundleId() async throws {
         let h = try NativeHarness()
         let app = native("discord", path: "/Volumes/Data/Applications/Discord.app")

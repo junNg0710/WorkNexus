@@ -39,4 +39,6 @@ struct NativeAppRow: Codable, FetchableRecord, PersistableRecord {
     var bundleId: String
     var path: String
     var position: Int
+    var customName: String?
+    var iconPath: String?
 }

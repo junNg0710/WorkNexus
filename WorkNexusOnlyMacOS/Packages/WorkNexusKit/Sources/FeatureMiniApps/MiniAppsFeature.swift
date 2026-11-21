@@ -114,8 +114,10 @@ public final class MiniAppsFeature: @unchecked Sendable {
             findSavedWebLogin: FindSavedWebLogin(accounts: accounts, secret: { await credentials.read($0) }),
             webLogins: WebLoginServices(webLogins), notifier: notifier, settings: settings)
         let model = MiniAppsModel(services: services, router: router ?? .shared)
-        let nativeRepo = GRDBNativeAppRepository(database: database)
+        let nativeRepo = GRDBNativeAppRepository(
+            database: database, icons: MiniAppIconStorage(folder: supportDirectory.appendingPathComponent("native_app_icons", isDirectory: true)))
         let nativeApps = NativeAppsModel(repository: nativeRepo, add: AddNativeApp(nativeRepo, appBundleReader), remove: RemoveNativeApp(nativeRepo),
+                                         edit: EditNativeApp(nativeRepo),
                                          move: MoveNativeApp(nativeRepo), installed: installedApps ?? InstalledAppsScanner(reader: appBundleReader),
                                          launcher: launcher ?? WorkspaceAppLauncher(), dock: DockBadgeReader(),
                                          offerMemory: UserDefaultsBadgeOfferMemory())

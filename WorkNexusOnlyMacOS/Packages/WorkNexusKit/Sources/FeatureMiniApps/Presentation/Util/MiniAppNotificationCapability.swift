@@ -39,6 +39,7 @@ final class MiniAppNotificationCapability: MiniAppPageCapability {
             let tag = args.count > 2 ? "\(args[2])" : ""
             // The user is looking at this very page: it needs no pop-up.
             if page.model.isShown(app.id) && page.selectedTab && isWindowFocused() { return nil }
+            page.model.onNotified?(app, title, body)
             await notifier.show(
                 // One per tag, so a page updating a notification replaces it.
                 id: Self.stableId(app.id, tag.isEmpty ? title : tag), title: title, body: body, payload: miniAppNotificationPayload(app.id))
