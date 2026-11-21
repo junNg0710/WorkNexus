@@ -22,6 +22,10 @@ struct PetSettingsPage: View {
                                                (.floating, appString("petFloating", "On the desktop"))] as [(PetDisplay, String)],
                                       value: s.petDisplay) { v in shell.updateSettings { $0.petDisplay = v; $0.showPet = true } }
                 }
+                SettingsRow(label: appString("petSize", "Size")) {
+                    SettingsSlider(value: s.petScale, range: AppSettings.petScaleRange, step: 0.1,
+                                   format: { "\(Int(($0 * 100).rounded()))%" }) { v in shell.updateSettings { $0.petScale = v } }
+                }
                 if s.petDisplay == .floating {
                     SettingsRow(label: appString("petClickInFront", "A click on the pet while WorkNexus is in front")) {
                         SettingsSegmented(values: [(false, appString("petClickHidesApp", "Hides WorkNexus")),

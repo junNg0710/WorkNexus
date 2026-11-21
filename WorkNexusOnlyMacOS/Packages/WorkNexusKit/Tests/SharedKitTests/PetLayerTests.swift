@@ -26,12 +26,13 @@ final class PetLayerTests: XCTestCase {
         XCTAssertNil(s.petId); XCTAssertEqual(s.petDisplay, .floating); XCTAssertTrue(s.petFollowsCursor)
         XCTAssertTrue(s.petShowsDetails, "it says what a message or notification says unless told not to")
         XCTAssertTrue(s.petStaysWhenAppHides, "the pet stays on the desktop when the app hides unless told not to")
+        XCTAssertEqual(s.petScale, 1, "its usual size unless set")
         XCTAssertTrue(s.petClickGoesBack, "a click on the pet puts the previous app back over WorkNexus unless told to hide it")
         var chosen = AppSettings()
-        chosen.petId = "fox"; chosen.petDisplay = .inWindow; chosen.petFollowsCursor = false; chosen.petShowsDetails = false; chosen.petStaysWhenAppHides = false; chosen.petClickGoesBack = false
+        chosen.petId = "fox"; chosen.petDisplay = .inWindow; chosen.petFollowsCursor = false; chosen.petShowsDetails = false; chosen.petStaysWhenAppHides = false; chosen.petClickGoesBack = false; chosen.petScale = 1.5
         let back = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(chosen))
         XCTAssertEqual(back.petId, "fox"); XCTAssertEqual(back.petDisplay, .inWindow); XCTAssertFalse(back.petFollowsCursor)
-        XCTAssertFalse(back.petShowsDetails); XCTAssertFalse(back.petStaysWhenAppHides); XCTAssertFalse(back.petClickGoesBack)
+        XCTAssertFalse(back.petShowsDetails); XCTAssertFalse(back.petStaysWhenAppHides); XCTAssertFalse(back.petClickGoesBack); XCTAssertEqual(back.petScale, 1.5)
         // An unknown display (a newer build) falls back rather than losing the settings.
         let odd = try JSONDecoder().decode(AppSettings.self, from: Data(#"{"petDisplay": "orbit", "showPet": false}"#.utf8))
         XCTAssertEqual(odd.petDisplay, .floating); XCTAssertFalse(odd.showPet)

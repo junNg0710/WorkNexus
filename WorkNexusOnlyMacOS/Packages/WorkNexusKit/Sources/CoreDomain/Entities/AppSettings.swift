@@ -72,6 +72,10 @@ public struct AppSettings: Codable, Equatable, Sendable {
     /// Whether a click on the pet while WorkNexus is in front puts the app the user was in before back over it, rather
     /// than hiding WorkNexus (macOS only).
     public var petClickGoesBack = true
+    /// How big the pet is drawn, against its usual size (1), in the window and on the desktop (macOS only).
+    public var petScale: Double = 1
+    /// The sizes the pet can be set to (`petScale`).
+    public static let petScaleRange: ClosedRange<Double> = 0.5...2
 
     public init() {}
 
@@ -107,7 +111,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         s.petId = try? c.decodeIfPresent(String.self, forKey: .petId)
         s.petDisplay = v(.petDisplay, s.petDisplay); s.petFollowsCursor = v(.petFollowsCursor, s.petFollowsCursor)
         s.petShowsDetails = v(.petShowsDetails, s.petShowsDetails); s.petStaysWhenAppHides = v(.petStaysWhenAppHides, s.petStaysWhenAppHides)
-        s.petClickGoesBack = v(.petClickGoesBack, s.petClickGoesBack)
+        s.petClickGoesBack = v(.petClickGoesBack, s.petClickGoesBack); s.petScale = v(.petScale, s.petScale)
         self = s
     }
 }

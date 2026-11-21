@@ -2183,6 +2183,10 @@
     "en": "%1$@ has something new",
     "vi": "%1$@ có thông báo mới"
   },
+  "petSize": {
+    "en": "Size",
+    "vi": "Kích thước"
+  },
   "petStaysWhenAppHides": {
     "en": "Stays on the desktop when WorkNexus is hidden",
     "vi": "Giữ pet trên màn hình khi ẩn WorkNexus"

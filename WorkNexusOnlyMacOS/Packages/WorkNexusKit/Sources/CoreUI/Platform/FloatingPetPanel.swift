@@ -74,6 +74,7 @@ public final class FloatingPetPanel {
     /// Shows `content` in the panel (or swaps it in when the panel is up), for a pet `petSize` points big; `bubble` draws
     /// what it says above it.
     public func show(_ content: AnyView, petSize: CGSize, bubble: @escaping (String, CGFloat) -> AnyView) {
+        let resized = isShown && petSize != self.petSize
         self.petSize = petSize
         makeBubble = bubble
         let panel = self.panel ?? makePanel()
@@ -91,6 +92,8 @@ public final class FloatingPetPanel {
         }
         layout()
         if !panel.isVisible { panel.orderFrontRegardless(); layout() }
+        // Made bigger (the size setting), standing on the same spot: kept wholly on the screen.
+        if resized { keepOnScreen() }
     }
 
     /// Shows what the pet says above it, or takes the bubble away (nil). With `onTap` a click on the bubble does it.

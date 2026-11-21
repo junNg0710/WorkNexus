@@ -38,6 +38,8 @@ struct PetLayer: View {
     }
 
     private var settings: AppSettings { model.settings }
+    /// The size the pet is set to, against its usual one.
+    private var scale: CGFloat { CGFloat(min(max(settings.petScale, AppSettings.petScaleRange.lowerBound), AppSettings.petScaleRange.upperBound)) }
     /// Whether it says what a message or notification says (the setting), not only that one came.
     private var details: Bool { settings.petShowsDetails }
     /// How long it says a message or notification: a little longer than a short line, to be read.
@@ -55,12 +57,12 @@ struct PetLayer: View {
             Color.clear.allowsHitTesting(false)
             if settings.showPet, settings.petDisplay == .inWindow, let sheet {
                 // In a graph of its own: the pet's frames, walks and bubbles never re-render the window (`PetStage`).
-                let director = director, inset = Self.inset
+                let director = director, inset = Self.inset, width = PetView.defaultWidth * scale
                 PetStage(petRect: { size in
                     PetView.pointerRect(director: director, room: CGSize(width: size.width - 2 * inset, height: size.height - 2 * inset),
-                                        width: PetView.defaultWidth).offsetBy(dx: inset, dy: inset)
+                                        width: width).offsetBy(dx: inset, dy: inset)
                 }) {
-                    PetView(director: director, sheet: sheet, followsCursor: settings.petFollowsCursor, onOpenLink: model.host.petOpen) { x, y in
+                    PetView(director: director, sheet: sheet, width: width, followsCursor: settings.petFollowsCursor, onOpenLink: model.host.petOpen) { x, y in
                         UserDefaults.standard.set(x, forKey: Self.xKey); UserDefaults.standard.set(y, forKey: Self.yKey)
                     }
                     .padding(inset)
@@ -109,10 +111,10 @@ struct PetLayer: View {
         .onChange(of: status, initial: true) { _, s in director.status = s }
         .onChange(of: settings.petStaysWhenAppHides, initial: true) { _, on in FloatingPetPanel.shared.staysWhenAppHides = on }
         .onChange(of: FloatingKey(floats: floats, sheet: sheet.map { ObjectIdentifier($0.atlas) }, follows: settings.petFollowsCursor,
-                                  dark: theme.colors.isDark), initial: true) { _, key in showFloating(key.floats) }
+                                  dark: theme.colors.isDark, scale: scale), initial: true) { _, key in showFloating(key.floats) }
     }
 
-    private struct FloatingKey: Equatable { var floats: Bool; var sheet: ObjectIdentifier?; var follows: Bool; var dark: Bool }
+    private struct FloatingKey: Equatable { var floats: Bool; var sheet: ObjectIdentifier?; var follows: Bool; var dark: Bool; var scale: CGFloat }
 
     private func showFloating(_ on: Bool) {
         guard on, let sheet else {
@@ -120,7 +122,7 @@ struct PetLayer: View {
             if FloatingPetPanel.shared.isShown { FloatingPetPanel.shared.hide(); placeInWindow() }
             return
         }
-        let width = Self.floatingWidth
+        let width = Self.floatingWidth * scale
         let height = width * CGFloat(PetSpriteSheet.cellHeight) / CGFloat(PetSpriteSheet.cellWidth)
         let content = FloatingPetContent(director: director, sheet: sheet, width: width, followsCursor: settings.petFollowsCursor,
                                          onOpen: model.host.revealApp, onToggle: model.host.toggleApp, onOpenLink: model.host.petOpen,
