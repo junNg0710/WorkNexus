@@ -6,13 +6,15 @@ import SwiftUI
 
 /// The pet settings: whether a pet shows, where (in the window or floating on the desktop) and how big; how it moves, what
 /// it reacts to and how it speaks (`PetBehaviorCards`); what a click on it does; which pet - the TBChat character or one
-/// installed from codex-pets.net; and a way back to how everything came. Not in the Flutter app.
+/// installed from codex-pets.net. A way back to how everything came heads the page. Not in the Flutter app.
 struct PetSettingsPage: View {
     let root: CompositionRoot
 
     var body: some View {
         let shell = root.shell, s = shell.settings
         SettingsPage(title: appString("petSettings", "Pet")) {
+            // First on the page: the gallery at the bottom keeps growing ("Load more"), which would push it out of reach.
+            PetResetCard(shell: shell)
             SettingsCard(title: appString("petSettings", "Pet"),
                          subtitle: appString("petSettingsHint", "A small companion that reacts to chats, syncs and tickets waiting for you.")) {
                 SettingsToggleRow(label: appString("showPet", "Show the pet"), isOn: s.showPet) { on in
@@ -36,7 +38,6 @@ struct PetSettingsPage: View {
                     shell.updateSettings { $0.petId = id; $0.showPet = true }
                 }
             }
-            PetResetCard(shell: shell)
         }
     }
 }
