@@ -6,15 +6,15 @@ import SharedKit
 import SwiftUI
 import CoreTools
 
-/// Ported from: lib/features/mini_apps/presentation/widgets/mini_app_rail_section.dart — one rail button per mini app
-/// (its icon, or the name's initial) and "Add". Dragged onto another button it takes that place; the context menu edits it,
-/// closes a running page (to free memory) or removes it, after asking. The Mac app buttons (`NativeAppRailButtons`) follow the
-/// mini apps, and "Add" is a menu: a website (the mini-app dialog) or a Mac app.
+/// Ported from: lib/features/mini_apps/presentation/widgets/mini_app_rail_section.dart — the rail's own apps and "Add".
+/// Websites (mini apps) and Mac apps share one order here (`RailAppsModel`): one button each, wherever the user put it.
+/// Dragged onto another button it takes that place, whatever the kind of either; the context menu moves it a step up or
+/// down, edits it and removes it, after asking. "Add" is a menu: a website (the mini-app dialog) or a Mac app.
 struct MiniAppRailSection: View {
     @Environment(\.appTheme) private var theme
     let feature: MiniAppsFeature
     let nav: AppNavController
-    /// The keyboard shortcut of a place of the rail (`placeId`, `macAppPlaceId`), as shown in its tooltip; nil: none.
+    /// The keyboard shortcut of a place of the rail (`RailAppRef.id`), as shown in its tooltip; nil: none.
     var keys: (String) -> String? = { _ in nil }
     /// The key that place shows on its button while the shortcut's modifiers are held; nil: nothing.
     var keyHint: (String) -> String? = { _ in nil }
@@ -22,46 +22,28 @@ struct MiniAppRailSection: View {
     @State private var addingMacApp = false
     @State private var editing: MiniApp?
     @State private var removing: MiniAppRailItem?
-
-    /// A mini app as a place of the rail (`RailPlace.id`).
-    static func placeId(_ id: String) -> String { "miniapp:\(id)" }
-    /// A Mac app as a place of the rail.
-    static func macAppPlaceId(_ id: String) -> String { "macapp:\(id)" }
+    @State private var editingMacApp: NativeApp?
+    @State private var removingMacApp: NativeAppRailItem?
 
     var body: some View {
-        let model = feature.model
+        let model = feature.model, rail = feature.rail
         VStack(spacing: theme.spacing.s2) {
-            ForEach(model.railItems) { item in
-                RailLabeledButton(label: item.name, selected: item.selected, help: keys(Self.placeId(item.id)).map { "\(item.name) (\($0))" } ?? item.name) {
-                    nav.openMiniApp(item.id)
-                } leading: {
-                    MiniAppRailIcon(name: item.name, iconPath: item.iconPath).opacity(item.running ? 1 : 0.7)
-                }
-                .railKeyHint(keyHint(Self.placeId(item.id)))
-                .draggable(item.id)
-                .dropDestination(for: String.self) { dropped, _ in
-                    guard let id = dropped.first, id != item.id, !id.hasPrefix(NativeAppRailButtons.dragPrefix) else { return false }
-                    Task { await model.move(id: id, onto: item.id) }
-                    return true
-                }
-                .contextMenu {
-                    Button(appString("miniAppEdit", "Edit mini app")) { editing = model.apps.first { $0.id == item.id } }
-                    if item.running {
-                        Button(appString("miniAppClose", "Close page (free memory)")) {
-                            if nav.state.miniAppId == item.id { nav.select(.workspace) }
-                            model.close(item.id)
-                        }
-                    }
-                    Divider()
-                    Button(appString("miniAppRemove", "Remove from rail"), role: .destructive) { removing = item }
+            ForEach(rail.items) { entry in
+                switch entry {
+                case .miniApp(let item):
+                    MiniAppRailButton(item: item, rail: rail, nav: nav, keys: keys(entry.id), keyHint: keyHint(entry.id),
+                                      onEdit: { editing = model.apps.first { $0.id == item.id } }) { removing = item }
+                case .nativeApp(let item):
+                    NativeAppRailButton(item: item, rail: rail, keyHint: keyHint(entry.id),
+                                        onEdit: { editingMacApp = $0 }) { removingMacApp = item }
                 }
             }
-            NativeAppRailButtons(model: feature.nativeApps) { keyHint(Self.macAppPlaceId($0)) }
             RailLabeledButton(appString("miniAppAddShort", "Add"), systemImage: "plus.app", help: appString("nativeAppAddHelp", "Add a website or a Mac app")) {
                 RailPopupMenu.show([(appString("nativeAppAddMenuWebsite", "Add website…"), "globe", { adding = true }),
                                     (appString("nativeAppAddMenuMac", "Add Mac app…"), "app.badge", { addingMacApp = true })])
             }
         }
+        .modifier(NativeAppRailDialogs(model: feature.nativeApps, removing: $removingMacApp, editing: $editingMacApp))
         .appDialog(isPresented: $addingMacApp) { NativeAppPickerDialog(model: feature.nativeApps) { addingMacApp = false } }
         .appDialog(isPresented: $adding) {
             // A new app opens at once, as picking it on the rail would.
@@ -78,6 +60,68 @@ struct MiniAppRailSection: View {
             if nav.state.miniAppId == item.id { nav.select(.workspace) }
             Task { await feature.model.remove(item.id) }
         }
+    }
+}
+
+/// A mini app's button: its icon, or the name's initial. A click shows its page; the context menu edits it, closes a
+/// running page (to free memory), moves it or removes it.
+private struct MiniAppRailButton: View {
+    let item: MiniAppRailItem
+    let rail: RailAppsModel
+    let nav: AppNavController
+    let keys: String?
+    let keyHint: String?
+    let onEdit: () -> Void
+    let onRemove: () -> Void
+
+    var body: some View {
+        RailLabeledButton(label: item.name, selected: item.selected, help: keys.map { "\(item.name) (\($0))" } ?? item.name) {
+            nav.openMiniApp(item.id)
+        } leading: {
+            MiniAppRailIcon(name: item.name, iconPath: item.iconPath).opacity(item.running ? 1 : 0.7)
+        }
+        .modifier(RailAppPlace(rail: rail, ref: .miniApp(item.id), keyHint: keyHint))
+        .contextMenu {
+            Button(appString("miniAppEdit", "Edit mini app"), action: onEdit)
+            if item.running {
+                Button(appString("miniAppClose", "Close page (free memory)")) {
+                    if nav.state.miniAppId == item.id { nav.select(.workspace) }
+                    rail.miniApps.close(item.id)
+                }
+            }
+            Divider()
+            RailMoveMenuItems(rail: rail, ref: .miniApp(item.id))
+            Divider()
+            Button(appString("miniAppRemove", "Remove from rail"), role: .destructive, action: onRemove)
+        }
+    }
+}
+
+/// What a website's and a Mac app's button share as a place of the rail: the key hint, and the drag and drop that
+/// reorders - dropped on another button, of either kind, it takes that place.
+struct RailAppPlace: ViewModifier {
+    let rail: RailAppsModel
+    let ref: RailAppRef
+    let keyHint: String?
+
+    func body(content: Content) -> some View {
+        content
+            .railKeyHint(keyHint)
+            .draggable(ref.id)
+            .dropDestination(for: String.self) { dropped, _ in rail.drop(dropped.first, onto: ref) }
+    }
+}
+
+/// "Move up" / "Move down" of a rail button's context menu: one place within the websites and Mac apps together.
+struct RailMoveMenuItems: View {
+    let rail: RailAppsModel
+    let ref: RailAppRef
+
+    var body: some View {
+        Button(appString("nativeAppMoveUp", "Move up")) { Task { await rail.move(ref, by: -1) } }
+            .disabled(!rail.canMove(ref, by: -1))
+        Button(appString("nativeAppMoveDown", "Move down")) { Task { await rail.move(ref, by: 1) } }
+            .disabled(!rail.canMove(ref, by: 1))
     }
 }
 

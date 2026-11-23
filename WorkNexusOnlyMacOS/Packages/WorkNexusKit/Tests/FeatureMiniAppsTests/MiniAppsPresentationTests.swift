@@ -92,7 +92,7 @@ final class MiniAppsModelTests: XCTestCase {
     func testMoveRenumbersTheRail() async throws {
         let h = try await Harness()
         await h.seed([app("a", "https://a.io", position: 0), app("b", "https://b.io", position: 1)])
-        await h.model.move(from: 0, to: 1)
+        await h.feature.rail.move(.miniApp("a"), by: 1)
         XCTAssertEqual(h.model.apps.map(\.id), ["b", "a"])
         await h.settle { h.model.apps.first?.id == "b" }
         XCTAssertEqual(h.model.apps.first?.id, "b")

@@ -19,13 +19,6 @@ public final class GRDBNativeAppRepository: NativeAppRepository, @unchecked Send
         await write { try NativeAppRow(app: app).save($0) }
     }
 
-    /// Gives each app in `ids` its index as position, in one write.
-    public func saveOrder(_ ids: [String]) async -> Outcome<Void> {
-        await write { db in
-            for (i, id) in ids.enumerated() { try db.execute(sql: "UPDATE nativeApps SET position = ? WHERE id = ?", arguments: [i, id]) }
-        }
-    }
-
     public func delete(id: String) async -> Outcome<Void> {
         await write { try $0.execute(sql: "DELETE FROM nativeApps WHERE id = ?", arguments: [id]) }
     }

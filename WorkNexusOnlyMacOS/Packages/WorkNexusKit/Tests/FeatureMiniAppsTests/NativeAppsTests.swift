@@ -140,27 +140,6 @@ final class NativeAppUseCaseTests: XCTestCase {
         _ = await RemoveNativeApp(repo)(id: "a")
         XCTAssertEqual(repo.items.map(\.id), ["b"])
     }
-
-    func testMoveReordersAndRenumbers() async throws {
-        let repo = FixtureNativeRepository()
-        let apps = [native("a", position: 0), native("b", position: 1), native("c", position: 2)]
-        let moved = try await MoveNativeApp(repo)(apps, from: 0, to: 2).get()
-        XCTAssertEqual(moved.map(\.id), ["b", "c", "a"])
-        XCTAssertEqual(moved.map(\.position), [0, 1, 2])
-        XCTAssertEqual(repo.order, ["b", "c", "a"])
-        let back = try await MoveNativeApp(repo)(moved, from: 2, to: 1).get()
-        XCTAssertEqual(back.map(\.id), ["b", "a", "c"])
-    }
-
-    func testMoveGoingNowhereTouchesNothing() async throws {
-        let repo = FixtureNativeRepository()
-        let apps = [native("a"), native("b", position: 1)]
-        for (from, to) in [(0, 0), (-1, 1), (0, 2), (5, 0)] {
-            let result = try await MoveNativeApp(repo)(apps, from: from, to: to).get()
-            XCTAssertEqual(result, apps)
-        }
-        XCTAssertTrue(repo.order.isEmpty)
-    }
 }
 
 // MARK: Repository (in-memory GRDB), scanner
@@ -176,7 +155,7 @@ final class GRDBNativeAppRepositoryTests: XCTestCase {
         let tables = try db.writer.read { try String.fetchAll($0, sql: "SELECT name FROM sqlite_master WHERE type = 'table'") }
         XCTAssertTrue(tables.contains("nativeApps")); XCTAssertTrue(tables.contains("miniApps")); XCTAssertTrue(tables.contains("miniAppPermissions"))
         let applied = try db.writer.read { try String.fetchAll($0, sql: "SELECT identifier FROM grdb_migrations") }
-        XCTAssertEqual(applied.filter { $0.hasPrefix("miniapps_") }, ["miniapps_v1", "miniapps_v2", "miniapps_v3", "miniapps_v4"], "v1 is untouched, the rest follow it")
+        XCTAssertEqual(applied.filter { $0.hasPrefix("miniapps_") }, ["miniapps_v1", "miniapps_v2", "miniapps_v3", "miniapps_v4", "miniapps_v5"], "v1 is untouched, the rest follow it")
         XCTAssertEqual(MiniAppsMigrations.migrationId, "miniapps_v1")
     }
 
@@ -194,9 +173,9 @@ final class GRDBNativeAppRepositoryTests: XCTestCase {
     }
 
     func testSaveOrderAndDelete() async throws {
-        let (r, _) = try repo()
+        let (r, db) = try repo()
         for (i, id) in ["a", "b", "c"].enumerated() { _ = await r.save(native(id, position: i)) }
-        _ = await r.saveOrder(["c", "a", "b"])
+        _ = await GRDBRailOrderRepository(database: db).saveOrder([.nativeApp("c"), .nativeApp("a"), .nativeApp("b")])
         _ = await r.delete(id: "a")
         var it = r.watchAll().makeAsyncIterator()
         let list = await it.next()
@@ -326,17 +305,9 @@ final class NativeAppsModelTests: XCTestCase {
         XCTAssertEqual(h.model.apps.map(\.id), ["slack"])
     }
 
-    func testRemoveMoveAndTheMoveLimits() async throws {
+    func testRemoveTakesTheAppOffTheRail() async throws {
         let h = try NativeHarness()
-        await h.seed([native("a", position: 0), native("b", position: 1), native("c", position: 2)])
-        XCTAssertFalse(h.model.canMove(id: "a", by: -1)); XCTAssertTrue(h.model.canMove(id: "a", by: 1))
-        XCTAssertFalse(h.model.canMove(id: "c", by: 1)); XCTAssertFalse(h.model.canMove(id: "zzz", by: 1))
-        await h.model.move(id: "a", by: 1)
-        XCTAssertEqual(h.model.apps.map(\.id), ["b", "a", "c"])
-        await h.model.move(id: "c", onto: "b")
-        XCTAssertEqual(h.model.apps.map(\.id), ["c", "b", "a"])
-        await h.model.move(id: "a", by: -5)
-        XCTAssertEqual(h.model.apps.map(\.id), ["c", "b", "a"], "out of range changes nothing")
+        await h.seed([native("c", position: 0), native("b", position: 1), native("a", position: 2)])
         await h.model.remove("b")
         XCTAssertEqual(h.model.apps.map(\.id), ["c", "a"])
         await h.settle { h.model.apps.map(\.id) == ["c", "a"] }

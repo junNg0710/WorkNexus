@@ -42,16 +42,23 @@ struct HostWiring {
             AnyView(MiniAppRailSection(feature: r.miniApps, nav: shell.nav, keys: { shell.railShortcuts[$0]?.display },
                                        keyHint: { shell.railKeyHint($0) }))
         }
-        // The same buttons as places a keyboard shortcut opens: the mini apps, then the Mac apps.
+        // The same buttons as places a keyboard shortcut opens, in the one order the websites and the Mac apps share.
         host.railExtraPlaces = {
-            let native = r.miniApps.nativeApps
-            return r.miniApps.model.railItems.map { item in
-                RailPlace(id: MiniAppRailSection.placeId(item.id), name: item.name) { shell.nav.openMiniApp(item.id) }
-            } + native.apps.map { app in
-                RailPlace(id: MiniAppRailSection.macAppPlaceId(app.id), name: app.label) {
-                    Task {
-                        if case .failure = await native.launch(app) {
-                            shell.toasts.show(appFormat("nativeAppLaunchFailed", "Couldn't open %1$@", app.label), kind: .error)
+            let sites = r.miniApps.model, native = r.miniApps.nativeApps
+            return r.miniApps.rail.order.compactMap { ref -> RailPlace? in
+                switch ref.kind {
+                case .miniApp:
+                    return sites.apps.first { $0.id == ref.appId }.map { app in
+                        RailPlace(id: ref.id, name: app.name) { shell.nav.openMiniApp(app.id) }
+                    }
+                case .nativeApp:
+                    return native.apps.first { $0.id == ref.appId }.map { app in
+                        RailPlace(id: ref.id, name: app.label) {
+                            Task {
+                                if case .failure = await native.launch(app) {
+                                    shell.toasts.show(appFormat("nativeAppLaunchFailed", "Couldn't open %1$@", app.label), kind: .error)
+                                }
+                            }
                         }
                     }
                 }

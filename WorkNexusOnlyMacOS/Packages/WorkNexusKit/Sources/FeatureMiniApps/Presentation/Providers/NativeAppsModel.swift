@@ -18,7 +18,7 @@ public enum RisenBadges {
     static func count(_ badge: String) -> Int { Int(badge.filter(\.isNumber)) ?? 1 }
 }
 
-/// One entry of the rail's Mac app section.
+/// A Mac app on the rail.
 public struct NativeAppRailItem: Identifiable, Equatable, Sendable {
     public var id: String
     /// The app's label (the user's name for it, else its own).
@@ -40,7 +40,7 @@ public struct NativeAppRailItem: Identifiable, Equatable, Sendable {
     }
 }
 
-/// New feature, no Dart counterpart. The rail's Mac apps: the list, adding / removing / reordering, opening one (or bringing it
+/// New feature, no Dart counterpart. The rail's Mac apps: the list, adding / removing, opening one (or bringing it
 /// forward when it already runs), which of them run now (from the workspace's launch / quit notifications) and which went
 /// missing, and the installed-apps list behind the "Add Mac app" dialog. Icons come from the system and are kept per path.
 @MainActor @Observable
@@ -73,7 +73,6 @@ public final class NativeAppsModel {
     private let repository: NativeAppRepository
     private let addApp: AddNativeApp
     private let removeApp: RemoveNativeApp
-    private let moveApp: MoveNativeApp
     private let editApp: EditNativeApp
     private let installedSource: InstalledAppsSource
     private let launcher: AppLauncher
@@ -83,10 +82,10 @@ public final class NativeAppsModel {
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
     @ObservationIgnored private var icons: [String: NSImage] = [:]
 
-    init(repository: NativeAppRepository, add: AddNativeApp, remove: RemoveNativeApp, edit: EditNativeApp? = nil, move: MoveNativeApp,
+    init(repository: NativeAppRepository, add: AddNativeApp, remove: RemoveNativeApp, edit: EditNativeApp? = nil,
          installed: InstalledAppsSource, launcher: AppLauncher, dock: DockBadgeSource? = nil,
          offerMemory: BadgeOfferMemory? = nil) {
-        self.repository = repository; addApp = add; removeApp = remove; moveApp = move; editApp = edit ?? EditNativeApp(repository)
+        self.repository = repository; addApp = add; removeApp = remove; editApp = edit ?? EditNativeApp(repository)
         installedSource = installed; self.launcher = launcher; self.dock = dock
         self.offerMemory = offerMemory ?? InMemoryBadgeOfferMemory()
     }
@@ -247,25 +246,9 @@ public final class NativeAppsModel {
         if case .success = await removeApp(id: id) { apps.removeAll { $0.id == id } }
     }
 
-    public func move(from: Int, to: Int) async {
-        if case .success(let moved) = await moveApp(apps, from: from, to: to) { apps = moved }
-    }
-
-    /// Drops the app `id` where `target` is on the rail (a drag and drop): it takes `target`'s place and the rest shift.
-    public func move(id: String, onto target: String) async {
-        guard let from = apps.firstIndex(where: { $0.id == id }), let to = apps.firstIndex(where: { $0.id == target }) else { return }
-        await move(from: from, to: to)
-    }
-
-    /// One step towards the start (-1) or the end (+1) of the rail.
-    public func move(id: String, by step: Int) async {
-        guard let from = apps.firstIndex(where: { $0.id == id }) else { return }
-        await move(from: from, to: from + step)
-    }
-
-    public func canMove(id: String, by step: Int) -> Bool {
-        guard let i = apps.firstIndex(where: { $0.id == id }) else { return false }
-        return apps.indices.contains(i + step)
+    /// Shows the apps at the places they were just given on the rail (`RailAppsModel`), before the database says so.
+    func reposition(_ position: (String) -> Int?) {
+        apps = apps.map { app in var app = app; app.position = position(app.id) ?? app.position; return app }.sorted { $0.position < $1.position }
     }
 
     /// Whether a Mac app with this bundle identifier is on the rail already.

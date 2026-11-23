@@ -52,10 +52,10 @@ final class MiniAppRepositoryTests: XCTestCase {
     }
 
     func testLastUrlAndOrderTouchOnlyTheirColumns() async throws {
-        let r = repo(try database())
+        let db = try database(), r = repo(db)
         _ = await r.save(app("a", position: 0)); _ = await r.save(app("b", position: 1))
         _ = await r.saveLastUrl(id: "a", url: "https://x.io/deep")
-        _ = await r.saveOrder(["b", "a"])
+        _ = await GRDBRailOrderRepository(database: db).saveOrder([.miniApp("b"), .miniApp("a")])
         var it = r.watchAll().makeAsyncIterator()
         let list = await it.next()
         XCTAssertEqual(list?.map(\.id), ["b", "a"])

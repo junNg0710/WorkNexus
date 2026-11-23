@@ -9,7 +9,7 @@ public struct MiniApp: Sendable, Equatable, Identifiable, Hashable {
     public var iconPath: String?
     /// The page the app was last on, reopened next time; nil opens `url`.
     public var lastUrl: String?
-    /// Order on the rail, first to last.
+    /// Order on the rail, first to last, among the websites and the Mac apps alike (`OrderRailApps`).
     public var position: Int
     /// The pages of the tabs the app had open, in tab order, reopened next time (empty: one tab on `lastUrl` / `url`).
     /// Kept apart from the rest of the app, so editing the app never undoes them.

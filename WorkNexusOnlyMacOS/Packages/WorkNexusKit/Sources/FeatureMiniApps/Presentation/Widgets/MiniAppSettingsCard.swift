@@ -52,6 +52,10 @@ public struct MiniAppSettingsCard: View {
             AppExpandableCardSection(title: appString("miniAppTrustedCertsSection", "Trusted certificates"),
                                      hint: appString("miniAppTrustedCertsHint", "Sites whose invalid certificate you chose to trust. They load without asking again, until you forget them here."),
                                      content: { MiniAppTrustedCertificatesSection(model: feature.trustedModel) })
+            AppExpandableCardSection(title: appString("railOrderSettingsTitle", "Order on the rail"),
+                                     hint: appString("railOrderSettingsHint", "Websites and Mac apps share one order. Move one up or down here, or drag it onto another on the rail."), content: {
+                RailOrderSettingsList(rail: feature.rail)
+            })
             AppExpandableCardSection(title: appString("miniAppSettingsApps", "Your mini apps"),
                                      hint: appString("miniAppSettingsAppsHint", "Edit a mini app, or clear one site's data."), content: {
                 MiniAppSettingsAppList(feature: feature, apps: apps)

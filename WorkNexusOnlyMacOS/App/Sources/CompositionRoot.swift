@@ -196,6 +196,7 @@ final class CompositionRoot {
             ChatSwitchBench.start(chat: chat)
             PlaceSwitchBench.start(shell: shell, services: services)
             DragViewsProbe.start()
+            DemoRailMoves.start(shell: shell, rail: miniApps.rail)
             return
         }
         await coordinator.purgeAttachmentCache()

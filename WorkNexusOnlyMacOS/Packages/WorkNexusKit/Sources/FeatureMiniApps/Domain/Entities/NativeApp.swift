@@ -7,7 +7,7 @@ public struct NativeApp: Sendable, Equatable, Identifiable, Hashable {
     public var bundleId: String
     /// Where the `.app` bundle was when it was added (or last located).
     public var path: String
-    /// Order on the rail, first to last.
+    /// Order on the rail, first to last, among the websites and the Mac apps alike (`OrderRailApps`).
     public var position: Int
     /// The name the user gave it on the rail; nil keeps the app's own (`name`).
     public var customName: String?

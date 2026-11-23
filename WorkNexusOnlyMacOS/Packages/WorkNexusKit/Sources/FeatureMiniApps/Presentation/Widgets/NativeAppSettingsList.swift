@@ -2,7 +2,7 @@ import CoreUI
 import SwiftUI
 
 /// New feature, no Dart counterpart. The mini apps card's list of Mac apps, in rail order: each one's icon, name and place, a
-/// way to take it off the rail (asking first) and one to add another.
+/// way to take it off the rail (asking first) and one to add another. Their place on the rail is `RailOrderSettingsList`'s.
 struct NativeAppSettingsList: View {
     @Environment(\.appTheme) private var theme
     let model: NativeAppsModel

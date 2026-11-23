@@ -172,18 +172,6 @@ final class MiniAppTabsModelTests: XCTestCase {
         XCTAssertFalse(m.opensAsTab("about:blank", appId: "work", width: nil, height: nil))
         XCTAssertFalse(m.opensAsTab("https://corp.com", appId: "nobody", width: nil, height: nil))
     }
-
-    func testDroppingAnAppOnAnotherTakesItsPlace() async throws {
-        let h = try await Harness()
-        await h.seed([app("a", "https://a.io", position: 0), app("b", "https://b.io", position: 1), app("c", "https://c.io", position: 2)])
-        await h.model.move(id: "a", onto: "c")
-        XCTAssertEqual(h.model.apps.map(\.id), ["b", "c", "a"])
-        await h.model.move(id: "a", onto: "b")
-        XCTAssertEqual(h.model.apps.map(\.id), ["a", "b", "c"])
-        await h.model.move(id: "a", onto: "a")                                  // nowhere
-        await h.model.move(id: "zzz", onto: "a")                                // unknown
-        XCTAssertEqual(h.model.apps.map(\.id), ["a", "b", "c"])
-    }
 }
 
 // MARK: mini_app_shortcuts.dart

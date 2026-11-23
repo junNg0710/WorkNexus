@@ -35,13 +35,11 @@ func native(_ id: String, bundle: String? = nil, path: String? = nil, position: 
 final class FixtureNativeRepository: NativeAppRepository, @unchecked Sendable {
     var items: [NativeApp] = []
     var failing = false
-    private(set) var order: [String] = []
     func watchAll() -> AsyncStream<[NativeApp]> { AsyncStream { $0.yield(self.items.sorted { $0.position < $1.position }) } }
     func save(_ app: NativeApp) async -> Outcome<Void> {
         if failing { return .failure(.storage("nope")) }
         items.removeAll { $0.id == app.id }; items.append(app); return .success(())
     }
-    func saveOrder(_ ids: [String]) async -> Outcome<Void> { order = ids; return .success(()) }
     func delete(id: String) async -> Outcome<Void> { items.removeAll { $0.id == id }; return .success(()) }
     private(set) var importedIcons: [String: String] = [:]
     private(set) var deletedIcons: [String] = []
@@ -83,14 +81,15 @@ struct NativeHarness {
     let dock = FakeDock()
     let offers = InMemoryBadgeOfferMemory()
     let repository: GRDBNativeAppRepository
+    let db: AppDatabase
     let dir = nativeTempDir()
 
     init(installed: [AppBundleInfo] = []) throws {
-        let db = try AppDatabase.inMemory(registrars: [MiniAppsMigrations.registrar])
+        db = try AppDatabase.inMemory(registrars: [MiniAppsMigrations.registrar])
         repository = GRDBNativeAppRepository(database: db)
         let reader = PlistAppBundleReader()
         model = NativeAppsModel(repository: repository, add: AddNativeApp(repository, reader), remove: RemoveNativeApp(repository),
-                                move: MoveNativeApp(repository), installed: FixtureInstalled(apps: installed), launcher: launcher, dock: dock, offerMemory: offers)
+                                installed: FixtureInstalled(apps: installed), launcher: launcher, dock: dock, offerMemory: offers)
     }
 
     func settle(_ ok: @MainActor () -> Bool) async {

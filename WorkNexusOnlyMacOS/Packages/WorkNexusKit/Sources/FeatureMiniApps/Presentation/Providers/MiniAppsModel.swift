@@ -3,7 +3,7 @@ import CoreUI
 import Foundation
 import Observation
 
-/// One entry of the rail's mini-app section.
+/// A mini app (website) on the rail.
 public struct MiniAppRailItem: Identifiable, Equatable, Sendable {
     public var id: String
     public var name: String
@@ -105,14 +105,9 @@ public final class MiniAppsModel: LinkHandler {
         for id in ids { tabSets[id]?.reloadAll() }
     }
 
-    public func move(from: Int, to: Int) async {
-        if case .success(let moved) = await services.moveMiniApp(apps, from: from, to: to) { apps = moved }
-    }
-
-    /// Drops the app `id` where `target` is on the rail (a drag and drop): it takes `target`'s place and the rest shift.
-    public func move(id: String, onto target: String) async {
-        guard let from = apps.firstIndex(where: { $0.id == id }), let to = apps.firstIndex(where: { $0.id == target }) else { return }
-        await move(from: from, to: to)
+    /// Shows the apps at the places they were just given on the rail (`RailAppsModel`), before the database says so.
+    func reposition(_ position: (String) -> Int?) {
+        apps = apps.map { app in var app = app; app.position = position(app.id) ?? app.position; return app }.sorted { $0.position < $1.position }
     }
 
     public func remove(_ id: String) async {

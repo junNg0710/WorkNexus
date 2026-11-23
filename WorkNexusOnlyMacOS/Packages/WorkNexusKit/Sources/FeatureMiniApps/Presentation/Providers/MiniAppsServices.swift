@@ -19,7 +19,6 @@ struct MiniAppsServices: Sendable {
     var trusted: TrustedCertificateRepository
     var addMiniApp: AddMiniApp
     var updateMiniApp: UpdateMiniApp
-    var moveMiniApp: MoveMiniApp
     var resolvePermission: ResolveMiniAppPermission
     var isPinnedCertificate: IsPinnedCertificate
     var findSavedWebLogin: FindSavedWebLogin

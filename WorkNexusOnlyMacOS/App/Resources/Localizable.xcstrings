@@ -51681,6 +51681,121 @@
           }
         }
       }
+    },
+    "railOrderSettingsTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Order on the rail"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thứ tự trên thanh bên"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "侧栏顺序"
+          }
+        }
+      }
+    },
+    "railOrderSettingsHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Websites and Mac apps share one order. Move one up or down here, or drag it onto another on the rail."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trang web và ứng dụng Mac dùng chung một thứ tự. Chuyển lên hoặc xuống tại đây, hoặc kéo thả lên mục khác trên thanh bên."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网站和 Mac App 共用一个顺序。可在此上移或下移，也可在侧栏上把它拖到另一项上。"
+          }
+        }
+      }
+    },
+    "railOrderSettingsEmpty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing here yet. Add a website or a Mac app with + on the rail."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa có gì. Thêm trang web hoặc ứng dụng Mac bằng nút + trên thanh bên."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有内容。用侧栏上的 + 添加网站或 Mac App。"
+          }
+        }
+      }
+    },
+    "railOrderKindWebsite": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Website"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trang web"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网站"
+          }
+        }
+      }
+    },
+    "railOrderKindMacApp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac app"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ứng dụng Mac"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac App"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -34,13 +34,6 @@ public final class GRDBMiniAppRepository: MiniAppRepository, @unchecked Sendable
         await write { try MiniAppTabsRow(miniAppId: id, urls: urls, selected: selected).save($0) }
     }
 
-    /// Gives each app in `ids` its index as position, in one write.
-    public func saveOrder(_ ids: [String]) async -> Outcome<Void> {
-        await write { db in
-            for (i, id) in ids.enumerated() { try db.execute(sql: "UPDATE miniApps SET position = ? WHERE id = ?", arguments: [i, id]) }
-        }
-    }
-
     public func delete(id: String) async -> Outcome<Void> {
         icons.delete(id: id)
         return await write { db in

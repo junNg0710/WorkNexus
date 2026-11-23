@@ -123,4 +123,19 @@ final class NativeAppsRenderTests: XCTestCase {
         let h = try await seeded()
         try await render("settings-list", NativeAppSettingsList(model: h.model), size: CGSize(width: 640, height: 360), pad: 24)
     }
+
+    /// Settings' "Order on the rail": websites and Mac apps in one list, the first and the last with a step they cannot take.
+    func testRendersTheSharedOrderOfTheRail() async throws {
+        let rail = try await RailHarness()
+        let reader = PlistAppBundleReader()
+        let macApps = ["Safari", "Notes"].enumerated().compactMap { i, name -> NativeApp? in
+            guard case .success(let info) = reader.read(path: "/System/Applications/\(name).app") else { return nil }
+            return NativeApp(id: name.lowercased(), name: info.name, bundleId: info.bundleId, path: info.path, position: i * 2)
+        }
+        await rail.seed(sites: [app("jenkins", "https://jenkins.io", position: 1), app("trello", "https://trello.com", position: 3)], macApps: macApps)
+        XCTAssertEqual(rail.model.items.count, 2 + macApps.count)
+        for dark in [false, true] {
+            try await render("rail-order-\(dark ? "dark" : "light")", RailOrderSettingsList(rail: rail.model), size: CGSize(width: 520, height: 240), dark: dark, pad: 16)
+        }
+    }
 }

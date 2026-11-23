@@ -2422,5 +2422,25 @@
   "zentaoReloadModules": {
     "en": "Read the modules again",
     "vi": "Tải lại danh sách module"
+  },
+  "railOrderSettingsTitle": {
+    "en": "Order on the rail",
+    "vi": "Thứ tự trên thanh bên"
+  },
+  "railOrderSettingsHint": {
+    "en": "Websites and Mac apps share one order. Move one up or down here, or drag it onto another on the rail.",
+    "vi": "Trang web và ứng dụng Mac dùng chung một thứ tự. Chuyển lên hoặc xuống tại đây, hoặc kéo thả lên mục khác trên thanh bên."
+  },
+  "railOrderSettingsEmpty": {
+    "en": "Nothing here yet. Add a website or a Mac app with + on the rail.",
+    "vi": "Chưa có gì. Thêm trang web hoặc ứng dụng Mac bằng nút + trên thanh bên."
+  },
+  "railOrderKindWebsite": {
+    "en": "Website",
+    "vi": "Trang web"
+  },
+  "railOrderKindMacApp": {
+    "en": "Mac app",
+    "vi": "Ứng dụng Mac"
   }
 }

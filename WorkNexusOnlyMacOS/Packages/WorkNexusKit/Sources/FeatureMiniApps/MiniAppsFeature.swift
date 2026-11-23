@@ -5,7 +5,7 @@ import Foundation
 import SwiftUI
 
 /// Public entry point of FeatureMiniApps. The composition root:
-/// 1. passes `MiniAppsFeature.migrationRegistrar` (`miniapps_v1` + `miniapps_v2`) to `AppDatabase.open(registrars:)`,
+/// 1. passes `MiniAppsFeature.migrationRegistrar` (`miniapps_v1` … `miniapps_v5`) to `AppDatabase.open(registrars:)`,
 /// 2. builds one `MiniAppsFeature.make(...)` and calls `model.start()`,
 /// 3. installs it with `.miniApps(feature)` on the shell, so `MiniAppHostView(miniApp:)` can find it,
 /// 4. wires `model.requestShow` / `model.bringToFront` to the navigation and the window, and calls `model.show(id)` when the
@@ -27,6 +27,8 @@ public final class MiniAppsFeature: @unchecked Sendable {
     public let browsingData: MiniAppBrowsingDataRepository
     /// The Mac apps on the rail (new, no Dart counterpart): list, launch, running state, installed apps.
     @MainActor public let nativeApps: NativeAppsModel
+    /// The websites and the Mac apps as the one list the rail shows, and the commands that reorder it.
+    @MainActor public let rail: RailAppsModel
     public let addMiniApp: AddMiniApp
     public let updateMiniApp: UpdateMiniApp
     public let importBrowserCookies: ImportBrowserCookies
@@ -42,11 +44,12 @@ public final class MiniAppsFeature: @unchecked Sendable {
     /// Keeps the sites' session cookies from one run to the next (new, no Dart counterpart).
     @MainActor let sessionCookies: SessionCookieKeeper
 
-    @MainActor init(model: MiniAppsModel, nativeApps: NativeAppsModel, apps: MiniAppRepository, permissions: MiniAppPermissionRepository,
+    @MainActor init(model: MiniAppsModel, nativeApps: NativeAppsModel, railOrder: RailOrderRepository, apps: MiniAppRepository, permissions: MiniAppPermissionRepository,
                     trusted: TrustedCertificateRepository, cookieImports: CookieImportRepository, browserCookies: BrowserCookieRepository,
                     webViewCookies: WebViewCookieRepository, browsingData: MiniAppBrowsingDataRepository, add: AddMiniApp, update: UpdateMiniApp,
                     webLogins: WebLoginRepository, browserLogins: BrowserLoginRepository, sessionCookies: SessionCookieKeeper) {
-        self.model = model; self.nativeApps = nativeApps; self.apps = apps; self.permissions = permissions; trustedCertificates = trusted
+        self.model = model; self.nativeApps = nativeApps; rail = RailAppsModel(miniApps: model, nativeApps: nativeApps, move: MoveRailApp(railOrder))
+        self.apps = apps; self.permissions = permissions; trustedCertificates = trusted
         self.cookieImports = cookieImports; self.browserCookies = browserCookies; self.webViewCookies = webViewCookies
         self.browsingData = browsingData; addMiniApp = add; updateMiniApp = update
         self.webLogins = webLogins; self.sessionCookies = sessionCookies
@@ -98,7 +101,8 @@ public final class MiniAppsFeature: @unchecked Sendable {
         let trusted = FileTrustedCertificateRepository(file: supportDirectory.appendingPathComponent("trusted_certificates.json"))
         let imports = FileCookieImportRepository(file: supportDirectory.appendingPathComponent("cookie_imports.json"))
         let refresh = RefreshMiniAppIcon(apps)
-        let add = AddMiniApp(apps, refresh), update = UpdateMiniApp(apps, refresh)
+        let railOrder = GRDBRailOrderRepository(database: database)
+        let add = AddMiniApp(apps, refresh, order: railOrder), update = UpdateMiniApp(apps, refresh)
         let webLogins = KeychainWebLoginRepository(items: secrets.logins, neverSaveFile: supportDirectory.appendingPathComponent("password_never_save.json"))
         // One Chromium reader for cookies and passwords: the browser's key is asked of the keychain once.
         let chromium = ChromiumCookieReader()
@@ -109,19 +113,18 @@ public final class MiniAppsFeature: @unchecked Sendable {
                                          snapshot: SnapshotSessionCookies(webViewCookies, kept, keptSites), forget: ForgetSessionCookies(kept),
                                          changes: { webViewCookies.changes() })
         let services = MiniAppsServices(
-            apps: apps, permissions: permissions, trusted: trusted, addMiniApp: add, updateMiniApp: update, moveMiniApp: MoveMiniApp(apps),
+            apps: apps, permissions: permissions, trusted: trusted, addMiniApp: add, updateMiniApp: update,
             resolvePermission: ResolveMiniAppPermission(permissions), isPinnedCertificate: IsPinnedCertificate(pinnedCertificates ?? NoPinnedCertificates()),
             findSavedWebLogin: FindSavedWebLogin(accounts: accounts, secret: { await credentials.read($0) }),
             webLogins: WebLoginServices(webLogins), notifier: notifier, settings: settings)
         let model = MiniAppsModel(services: services, router: router ?? .shared)
         let nativeRepo = GRDBNativeAppRepository(
             database: database, icons: MiniAppIconStorage(folder: supportDirectory.appendingPathComponent("native_app_icons", isDirectory: true)))
-        let nativeApps = NativeAppsModel(repository: nativeRepo, add: AddNativeApp(nativeRepo, appBundleReader), remove: RemoveNativeApp(nativeRepo),
-                                         edit: EditNativeApp(nativeRepo),
-                                         move: MoveNativeApp(nativeRepo), installed: installedApps ?? InstalledAppsScanner(reader: appBundleReader),
+        let nativeApps = NativeAppsModel(repository: nativeRepo, add: AddNativeApp(nativeRepo, appBundleReader, order: railOrder),
+                                         remove: RemoveNativeApp(nativeRepo), edit: EditNativeApp(nativeRepo), installed: installedApps ?? InstalledAppsScanner(reader: appBundleReader),
                                          launcher: launcher ?? WorkspaceAppLauncher(), dock: DockBadgeReader(),
                                          offerMemory: UserDefaultsBadgeOfferMemory())
-        return MiniAppsFeature(model: model, nativeApps: nativeApps, apps: apps, permissions: permissions, trusted: trusted, cookieImports: imports,
+        return MiniAppsFeature(model: model, nativeApps: nativeApps, railOrder: railOrder, apps: apps, permissions: permissions, trusted: trusted, cookieImports: imports,
                                browserCookies: LocalBrowserCookieRepository(chromium: chromium, firefox: FirefoxCookieReader(), safari: SafariCookieReader()),
                                webViewCookies: webViewCookies, browsingData: WKMiniAppBrowsingDataRepository(), add: add, update: update,
                                webLogins: webLogins, browserLogins: LocalBrowserLoginRepository(reader: ChromiumLoginReader(keys: chromium)),

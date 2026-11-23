@@ -6,7 +6,6 @@ import XCTest
 
 actor FakeMiniAppRepo: MiniAppRepository {
     private(set) var saved: [MiniApp] = []
-    private(set) var order: [String] = []
     private(set) var icons = 0
     private(set) var tabSaves: [(id: String, urls: [String], selected: Int)] = []
     var failSave = false
@@ -17,7 +16,6 @@ actor FakeMiniAppRepo: MiniAppRepository {
     }
     func saveLastUrl(id: String, url: String) async -> Outcome<Void> { .success(()) }
     func saveTabs(id: String, urls: [String], selected: Int) async -> Outcome<Void> { tabSaves.append((id, urls, selected)); return .success(()) }
-    func saveOrder(_ ids: [String]) async -> Outcome<Void> { order = ids; return .success(()) }
     func delete(id: String) async -> Outcome<Void> { .success(()) }
     func fetchSiteIcon(id: String, pageUrl: String) async -> Outcome<String?> { icons += 1; return .success(nil) }
     func importIcon(id: String, sourcePath: String) async -> Outcome<String> { .success(sourcePath) }
@@ -36,7 +34,7 @@ final class FakePermissions: MiniAppPermissionRepository, @unchecked Sendable {
 
 func app(_ id: String, _ url: String = "https://x.io", position: Int = 0) -> MiniApp { MiniApp(id: id, name: id.uppercased(), url: url, position: position) }
 
-// MARK: add_mini_app_test.dart, move_mini_app_test.dart
+// MARK: add_mini_app_test.dart (moving: RailOrderTests)
 
 final class MiniAppUseCaseTests: XCTestCase {
     func testNormalizeUrl() {
@@ -85,27 +83,6 @@ final class MiniAppUseCaseTests: XCTestCase {
         XCTAssertEqual(same.value?.lastUrl, "https://a.io/deep"); XCTAssertEqual(same.value?.name, "a.io"); XCTAssertEqual(same.value?.position, 2)
         let moved = await UpdateMiniApp(repo, RefreshMiniAppIcon(repo))(app: old, url: "b.io", name: "B", iconPath: nil)
         XCTAssertNil(moved.value?.lastUrl); XCTAssertEqual(moved.value?.url, "https://b.io")
-    }
-
-    func testMoveReordersAndRenumbers() async {
-        let repo = FakeMiniAppRepo()
-        let apps = [app("a", position: 0), app("b", position: 1), app("c", position: 2)]
-        let res = await MoveMiniApp(repo)(apps, from: 0, to: 2)
-        XCTAssertEqual(res.value?.map(\.id), ["b", "c", "a"])
-        XCTAssertEqual(res.value?.map(\.position), [0, 1, 2])
-        let order = await repo.order
-        XCTAssertEqual(order, ["b", "c", "a"])
-    }
-
-    func testMoveOutOfRangeOrNowhereChangesNothing() async {
-        let repo = FakeMiniAppRepo()
-        let apps = [app("a"), app("b")]
-        for (from, to) in [(0, 0), (-1, 1), (5, 0), (0, 2), (0, -1)] {
-            let res = await MoveMiniApp(repo)(apps, from: from, to: to)
-            XCTAssertEqual(res.value, apps, "\(from)→\(to)")
-        }
-        let order = await repo.order
-        XCTAssertTrue(order.isEmpty)
     }
 }
 

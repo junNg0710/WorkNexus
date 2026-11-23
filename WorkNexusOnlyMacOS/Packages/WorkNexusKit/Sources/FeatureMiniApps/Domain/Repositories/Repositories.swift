@@ -4,7 +4,7 @@ import Foundation
 /// Ported from: lib/features/mini_apps/domain/repositories/mini_app_repository.dart
 /// The mini apps the user added, kept on this device.
 public protocol MiniAppRepository: Sendable {
-    /// Every mini app in rail order, live.
+    /// Every mini app in rail order, live. The order itself is `RailOrderRepository`'s: the Mac apps share it.
     func watchAll() -> AsyncStream<[MiniApp]>
     /// Keeps `app`, replacing the one with its id.
     func save(_ app: MiniApp) async -> Outcome<Void>
@@ -12,8 +12,6 @@ public protocol MiniAppRepository: Sendable {
     func saveLastUrl(id: String, url: String) async -> Outcome<Void>
     /// Remembers the pages of the tabs app `id` has open and which one is in front (`MiniApp.openTabs`). Touches nothing else.
     func saveTabs(id: String, urls: [String], selected: Int) async -> Outcome<Void>
-    /// Puts the apps in the order of `ids` on the rail, first to last. Touches nothing but their positions.
-    func saveOrder(_ ids: [String]) async -> Outcome<Void>
     /// Removes the app, its remembered permissions and its icon file.
     func delete(id: String) async -> Outcome<Void>
     /// Downloads the icon of the site at `pageUrl` for app `id` and keeps it on this device. The path, or nil when the site offers none.

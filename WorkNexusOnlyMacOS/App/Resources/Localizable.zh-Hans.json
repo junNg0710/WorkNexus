@@ -2245,5 +2245,10 @@
   "zentaoTodoDate": "日期",
   "zentaoTodoName": "待办",
   "zentaoTodoNew": "新建待办",
-  "zentaoUnpinFromPanel": "从侧面板取消固定"
+  "zentaoUnpinFromPanel": "从侧面板取消固定",
+  "railOrderSettingsTitle": "侧栏顺序",
+  "railOrderSettingsHint": "网站和 Mac App 共用一个顺序。可在此上移或下移，也可在侧栏上把它拖到另一项上。",
+  "railOrderSettingsEmpty": "还没有内容。用侧栏上的 + 添加网站或 Mac App。",
+  "railOrderKindWebsite": "网站",
+  "railOrderKindMacApp": "Mac App"
 }

@@ -8,6 +8,7 @@ public enum MiniAppsMigrations {
     public static let nativeAppsMigrationId = "miniapps_v2"
     public static let openTabsMigrationId = "miniapps_v3"
     public static let nativeAppLooksMigrationId = "miniapps_v4"
+    public static let railOrderMigrationId = "miniapps_v5"
 
     public static let registrar: MigrationRegistrar = { migrator in
         migrator.registerMigration(migrationId) { db in
@@ -52,6 +53,11 @@ public enum MiniAppsMigrations {
                 t.add(column: "customName", .text)
                 t.add(column: "iconPath", .text)
             }
+        }
+        // Not in the Flutter app: the websites and the Mac apps share one order on the rail, so their positions count in one
+        // sequence. Until now each kind counted from 0 and the Mac apps came after the websites: they keep that place.
+        migrator.registerMigration(railOrderMigrationId) { db in
+            try db.execute(sql: "UPDATE nativeApps SET position = position + COALESCE((SELECT MAX(position) + 1 FROM miniApps), 0)")
         }
     }
 }
