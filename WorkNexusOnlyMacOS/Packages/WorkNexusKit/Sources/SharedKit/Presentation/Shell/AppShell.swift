@@ -40,6 +40,7 @@ public struct AppShell: View {
         .foregroundStyle(theme.colors.tx)
         .environment(\.celebrate) { model.celebrate() }
         .background(EscapeKeyMonitor { model.handleEscape() })
+        .background(RailShortcutMonitor(handle: { model.handleRailShortcut($0) }, held: { model.railHints.modifiersChanged($0) }))
         .toastHost(model.toasts)
         .dialogHost(model.dialogs)
     }

@@ -51038,6 +51038,236 @@
         }
       }
     },
+    "shortcutChangeHelp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click, then press the new keys. Delete removes the shortcut, Esc cancels."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bấm rồi nhấn tổ hợp phím mới. Delete để xoá phím tắt, Esc để huỷ."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击后按下新的按键。按 Delete 删除快捷键，按 Esc 取消。"
+          }
+        }
+      }
+    },
+    "shortcutNeedsModifier": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold ⌘ or ⌃ with it"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy giữ ⌘ hoặc ⌃ cùng phím đó"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请同时按住 ⌘ 或 ⌃"
+          }
+        }
+      }
+    },
+    "shortcutNone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无"
+          }
+        }
+      }
+    },
+    "shortcutRecording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press the keys…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhấn tổ hợp phím…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请按下按键…"
+          }
+        }
+      }
+    },
+    "shortcutReserved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WorkNexus already uses these keys"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WorkNexus đã dùng tổ hợp phím này"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WorkNexus 已使用这组按键"
+          }
+        }
+      }
+    },
+    "shortcutsRailEnabled": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open places with the keyboard"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở các vị trí bằng bàn phím"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用键盘打开各个位置"
+          }
+        }
+      }
+    },
+    "shortcutsRailHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘1 to ⌘9 and ⌘0 open the first ten places from the top, ⌥⌘1 to ⌥⌘0 the next ten. Hold ⌘ to see the keys on the rail. Click a shortcut to choose other keys for that place."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘1 đến ⌘9 và ⌘0 mở mười vị trí đầu tiên tính từ trên xuống, ⌥⌘1 đến ⌥⌘0 mở mười vị trí tiếp theo. Giữ ⌘ để thấy phím trên thanh bên. Bấm vào một phím tắt để chọn phím khác cho vị trí đó."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘1 至 ⌘9 和 ⌘0 打开从上往下的前十个位置，⌥⌘1 至 ⌥⌘0 打开接下来的十个。按住 ⌘ 可在侧边栏上看到按键。点击某个快捷键，可为该位置选择其他按键。"
+          }
+        }
+      }
+    },
+    "shortcutsRailTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Places on the rail"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Các vị trí trên thanh bên"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "侧边栏上的位置"
+          }
+        }
+      }
+    },
+    "shortcutsResetHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put every shortcut back to the keys of its position"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đưa mọi phím tắt về phím theo vị trí của nó"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将所有快捷键恢复为按位置分配的按键"
+          }
+        }
+      }
+    },
+    "shortcutsSettings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcuts"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phím tắt"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快捷键"
+          }
+        }
+      }
+    },
     "tipBulkHoursOne": {
       "extractionState": "manual",
       "localizations": {

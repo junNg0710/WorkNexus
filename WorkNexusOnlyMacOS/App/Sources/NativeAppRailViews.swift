@@ -12,6 +12,8 @@ struct NativeAppRailButtons: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.toasts) private var toasts
     let model: NativeAppsModel
+    /// The key an app shows on its button while its shortcut's modifiers are held; nil: nothing.
+    var keyHint: (String) -> String? = { _ in nil }
     @State private var removing: NativeAppRailItem?
     @State private var editing: NativeApp?
 
@@ -26,6 +28,7 @@ struct NativeAppRailButtons: View {
                 } leading: {
                     NativeAppRailIcon(icon: model.icon(forPath: item.path, custom: item.iconPath), running: item.running, missing: item.missing)
                 }
+                .railKeyHint(keyHint(item.id))
                 .draggable(Self.dragPrefix + item.id)
                 .dropDestination(for: String.self) { dropped, _ in
                     guard let payload = dropped.first, payload.hasPrefix(Self.dragPrefix) else { return false }

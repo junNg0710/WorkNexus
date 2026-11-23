@@ -15,10 +15,12 @@ public struct ShellHost {
     public var chatView: (Account) -> AnyView = { _ in AnyView(EmptyView()) }
     /// The page of a workspace section (`overview` / `integrations` / `members` / `settings`).
     public var workspacePage: (_ section: String) -> AnyView = { _ in AnyView(EmptyView()) }
-    /// The page of a settings section (`general` / `appearance` / `pet` / `chat` / `translation` / `panicSwitch` / `cache`).
+    /// The page of a settings section (`general` / `appearance` / `shortcuts` / `pet` / `chat` / `translation` / `panicSwitch` / `cache`).
     public var settingsPage: (_ section: String) -> AnyView = { _ in AnyView(EmptyView()) }
     /// Rail: one button per mini app plus "Add".
     public var miniAppRail: () -> AnyView = { AnyView(EmptyView()) }
+    /// The places those buttons open (mini apps, then Mac apps), in the rail's order: a keyboard shortcut can open each.
+    public var railExtraPlaces: () -> [RailPlace] = { [] }
     /// The mounted mini-app web views (kept alive while hidden); shown while a mini app is selected.
     public var miniAppStack: () -> AnyView = { AnyView(EmptyView()) }
     /// The full-screen ticket editor of `AppNavState.editor`.

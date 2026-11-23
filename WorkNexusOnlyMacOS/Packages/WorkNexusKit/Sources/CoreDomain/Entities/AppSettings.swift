@@ -78,6 +78,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public static let petScaleRange: ClosedRange<Double> = 0.5...2
     /// What the pet does: how much it moves, what it reacts to, how it speaks (macOS only).
     public var petBehavior = PetBehavior()
+    /// The keys that open the places of the rail (⌘1 … ⌘0, then ⌥⌘1 … ⌥⌘0 from the top unless chosen otherwise).
+    public var railShortcuts = RailShortcuts()
 
     public init() {}
 
@@ -114,7 +116,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         s.petDisplay = v(.petDisplay, s.petDisplay); s.petFollowsCursor = v(.petFollowsCursor, s.petFollowsCursor)
         s.petShowsDetails = v(.petShowsDetails, s.petShowsDetails); s.petStaysWhenAppHides = v(.petStaysWhenAppHides, s.petStaysWhenAppHides)
         s.petClickGoesBack = v(.petClickGoesBack, s.petClickGoesBack); s.petScale = v(.petScale, s.petScale)
-        s.petBehavior = v(.petBehavior, s.petBehavior)
+        s.petBehavior = v(.petBehavior, s.petBehavior); s.railShortcuts = v(.railShortcuts, s.railShortcuts)
         self = s
     }
 }

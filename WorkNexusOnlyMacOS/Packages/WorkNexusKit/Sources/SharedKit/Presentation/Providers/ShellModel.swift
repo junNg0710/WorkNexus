@@ -47,6 +47,8 @@ public final class ShellModel {
     public var newTicketMenuTick = 0
     /// Window-level dialogs (`.appDialog` registers here; `AppShell` draws them over everything).
     public let dialogs = DialogCenter()
+    /// The key hints of the rail's places, up while ⌘ (or the modifiers of a chosen shortcut) is held.
+    public let railHints = RailKeyHints()
     /// Last account opened per provider, so a rail section button of a tool whose sections sit on the rail reopens it
     /// (Flutter `railAccountMemoryProvider`).
     public var railAccountMemory: [ProviderType: String] = [:]

@@ -2311,6 +2311,46 @@
     "en": "Stays on the desktop when WorkNexus is hidden",
     "vi": "Giữ pet trên màn hình khi ẩn WorkNexus"
   },
+  "shortcutChangeHelp": {
+    "en": "Click, then press the new keys. Delete removes the shortcut, Esc cancels.",
+    "vi": "Bấm rồi nhấn tổ hợp phím mới. Delete để xoá phím tắt, Esc để huỷ."
+  },
+  "shortcutNeedsModifier": {
+    "en": "Hold ⌘ or ⌃ with it",
+    "vi": "Hãy giữ ⌘ hoặc ⌃ cùng phím đó"
+  },
+  "shortcutNone": {
+    "en": "None",
+    "vi": "Không có"
+  },
+  "shortcutRecording": {
+    "en": "Press the keys…",
+    "vi": "Nhấn tổ hợp phím…"
+  },
+  "shortcutReserved": {
+    "en": "WorkNexus already uses these keys",
+    "vi": "WorkNexus đã dùng tổ hợp phím này"
+  },
+  "shortcutsRailEnabled": {
+    "en": "Open places with the keyboard",
+    "vi": "Mở các vị trí bằng bàn phím"
+  },
+  "shortcutsRailHint": {
+    "en": "⌘1 to ⌘9 and ⌘0 open the first ten places from the top, ⌥⌘1 to ⌥⌘0 the next ten. Hold ⌘ to see the keys on the rail. Click a shortcut to choose other keys for that place.",
+    "vi": "⌘1 đến ⌘9 và ⌘0 mở mười vị trí đầu tiên tính từ trên xuống, ⌥⌘1 đến ⌥⌘0 mở mười vị trí tiếp theo. Giữ ⌘ để thấy phím trên thanh bên. Bấm vào một phím tắt để chọn phím khác cho vị trí đó."
+  },
+  "shortcutsRailTitle": {
+    "en": "Places on the rail",
+    "vi": "Các vị trí trên thanh bên"
+  },
+  "shortcutsResetHint": {
+    "en": "Put every shortcut back to the keys of its position",
+    "vi": "Đưa mọi phím tắt về phím theo vị trí của nó"
+  },
+  "shortcutsSettings": {
+    "en": "Shortcuts",
+    "vi": "Phím tắt"
+  },
   "tipBulkHoursOne": {
     "en": "Hours left for this task; empty keeps what it has",
     "vi": "Số giờ còn lại cho task này; để trống thì giữ nguyên"

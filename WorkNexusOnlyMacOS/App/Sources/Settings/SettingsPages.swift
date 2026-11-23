@@ -5,7 +5,7 @@ import FeatureMiniApps
 import SharedKit
 import SwiftUI
 
-/// The settings place: one page per section of the settings nav pane (`general`, `appearance`, `pet`, `chat`,
+/// The settings place: one page per section of the settings nav pane (`general`, `appearance`, `shortcuts`, `pet`, `chat`,
 /// `translation`, `panicSwitch`, `cache`) over the shell's `AppSettings` (lib/core/widgets/quick_settings_* and the settings
 /// cards of each feature).
 struct SettingsPages: View {
@@ -17,6 +17,7 @@ struct SettingsPages: View {
         case "appearance": SettingsPage(title: appString("appearance", "Appearance")) {
             SettingsCard(title: appString("appearance", "Appearance")) { AppearanceControls(shell: root.shell) }
         }
+        case "shortcuts": ShortcutsSettingsPage(root: root)
         case "pet": PetSettingsPage(root: root)
         case "chat": ChatSettingsPage(shell: root.shell, mcp: root.aiTools.mcpModel)
         case "translation": TranslationSettingsPage(root: root)

@@ -14,20 +14,30 @@ struct MiniAppRailSection: View {
     @Environment(\.appTheme) private var theme
     let feature: MiniAppsFeature
     let nav: AppNavController
+    /// The keyboard shortcut of a place of the rail (`placeId`, `macAppPlaceId`), as shown in its tooltip; nil: none.
+    var keys: (String) -> String? = { _ in nil }
+    /// The key that place shows on its button while the shortcut's modifiers are held; nil: nothing.
+    var keyHint: (String) -> String? = { _ in nil }
     @State private var adding = false
     @State private var addingMacApp = false
     @State private var editing: MiniApp?
     @State private var removing: MiniAppRailItem?
 
+    /// A mini app as a place of the rail (`RailPlace.id`).
+    static func placeId(_ id: String) -> String { "miniapp:\(id)" }
+    /// A Mac app as a place of the rail.
+    static func macAppPlaceId(_ id: String) -> String { "macapp:\(id)" }
+
     var body: some View {
         let model = feature.model
         VStack(spacing: theme.spacing.s2) {
             ForEach(model.railItems) { item in
-                RailLabeledButton(label: item.name, selected: item.selected, help: item.name) {
+                RailLabeledButton(label: item.name, selected: item.selected, help: keys(Self.placeId(item.id)).map { "\(item.name) (\($0))" } ?? item.name) {
                     nav.openMiniApp(item.id)
                 } leading: {
                     MiniAppRailIcon(name: item.name, iconPath: item.iconPath).opacity(item.running ? 1 : 0.7)
                 }
+                .railKeyHint(keyHint(Self.placeId(item.id)))
                 .draggable(item.id)
                 .dropDestination(for: String.self) { dropped, _ in
                     guard let id = dropped.first, id != item.id, !id.hasPrefix(NativeAppRailButtons.dragPrefix) else { return false }
@@ -46,7 +56,7 @@ struct MiniAppRailSection: View {
                     Button(appString("miniAppRemove", "Remove from rail"), role: .destructive) { removing = item }
                 }
             }
-            NativeAppRailButtons(model: feature.nativeApps)
+            NativeAppRailButtons(model: feature.nativeApps) { keyHint(Self.macAppPlaceId($0)) }
             RailLabeledButton(appString("miniAppAddShort", "Add"), systemImage: "plus.app", help: appString("nativeAppAddHelp", "Add a website or a Mac app")) {
                 RailPopupMenu.show([(appString("nativeAppAddMenuWebsite", "Add website…"), "globe", { adding = true }),
                                     (appString("nativeAppAddMenuMac", "Add Mac app…"), "app.badge", { addingMacApp = true })])

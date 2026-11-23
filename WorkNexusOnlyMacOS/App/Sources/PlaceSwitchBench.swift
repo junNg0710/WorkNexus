@@ -14,6 +14,7 @@ enum PlaceSwitchBench {
         let env = ProcessInfo.processInfo.environment
         ChatScrollBench.start()
         MenuLog.start(); MenuLog.clicks()
+        DemoKeys.start(shell: shell)
         SpamClickBench.start()
         guard let spec = env["WN_DEMO_PLACE_CYCLE"] else { return }
         let places = spec.split(separator: ",").map { $0.split(separator: ":").map(String.init) }

@@ -38,7 +38,25 @@ struct HostWiring {
             }
         }
         host.settingsPage = { AnyView(SettingsPages(root: r, section: $0)) }
-        host.miniAppRail = { AnyView(MiniAppRailSection(feature: r.miniApps, nav: shell.nav)) }
+        host.miniAppRail = {
+            AnyView(MiniAppRailSection(feature: r.miniApps, nav: shell.nav, keys: { shell.railShortcuts[$0]?.display },
+                                       keyHint: { shell.railKeyHint($0) }))
+        }
+        // The same buttons as places a keyboard shortcut opens: the mini apps, then the Mac apps.
+        host.railExtraPlaces = {
+            let native = r.miniApps.nativeApps
+            return r.miniApps.model.railItems.map { item in
+                RailPlace(id: MiniAppRailSection.placeId(item.id), name: item.name) { shell.nav.openMiniApp(item.id) }
+            } + native.apps.map { app in
+                RailPlace(id: MiniAppRailSection.macAppPlaceId(app.id), name: app.label) {
+                    Task {
+                        if case .failure = await native.launch(app) {
+                            shell.toasts.show(appFormat("nativeAppLaunchFailed", "Couldn't open %1$@", app.label), kind: .error)
+                        }
+                    }
+                }
+            }
+        }
         host.miniAppStack = { AnyView(MiniAppsHostStack()) }
         host.editor = { AnyView(TicketEditorView(route: $0, nav: shell.nav)) }
         if let n = r.notifications {
