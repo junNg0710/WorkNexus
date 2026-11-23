@@ -53,10 +53,15 @@ final class ChatMessageWindowTests: XCTestCase {
         XCTAssertFalse(bottom.nearTop)
         XCTAssertTrue(bottom.nearBottom)
         XCTAssertFalse(bottom.away)
+        XCTAssertTrue(bottom.atEnd)
+        // A few points short of the end (the newest message cut off) is not the end.
+        XCTAssertFalse(ThreadScrollMetrics(offset: 4184, content: 5000, container: 800).atEnd)
+        XCTAssertFalse(top.atEnd)
         // A short list fills nothing: near both ends, not away.
         let short = ThreadScrollMetrics(offset: 0, content: 300, container: 800)
         XCTAssertTrue(short.nearTop && short.nearBottom)
         XCTAssertFalse(short.away)
+        XCTAssertTrue(short.atEnd)
         XCTAssertNotEqual(short, ThreadScrollMetrics(offset: 0, content: 400, container: 800), "content growth is reported")
     }
 }

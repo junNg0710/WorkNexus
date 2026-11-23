@@ -9,6 +9,8 @@ struct ThreadScrollMetrics: Equatable {
     var nearBottom = false
     /// Far enough from the newest message to show the jump-to-latest button.
     var away = false
+    /// At the very end of the list: nothing is left below.
+    var atEnd = false
     /// Changes as rows are added, so a first page too short to fill the screen still asks for the next one.
     var contentHeight = 0
 
@@ -24,6 +26,7 @@ struct ThreadScrollMetrics: Equatable {
         nearTop = offset < Self.loadThreshold
         nearBottom = below < Self.loadThreshold
         away = below > Self.awayThreshold
+        atEnd = below < 1
         contentHeight = Int(content)
     }
 }
@@ -69,10 +72,12 @@ struct MessageListScroll: View {
                     ForEach(stage.shown(model.rows)) { row in
                         ThreadRowView(ctx: ctx, row: row, showSenders: showSenders).equatable().id(row.id)
                     }
-                    Color.clear.frame(height: 1).id(Self.bottomId)
+                    // The room under the newest message is the mark itself, so scrolling to it reaches the list's very end
+                    // (as padding around the stack it stayed below the screen, and the newest message sat cut off).
+                    Color.clear.frame(height: theme.spacing.s16).id(Self.bottomId)
                 }
                 .scrollTargetLayout()
-                .padding(.vertical, theme.spacing.s16)
+                .padding(.top, theme.spacing.s16)
                 // The messages span the chat's frame at any width, in line with the header and the composer: other
                 // people's against its leading edge, your own against its trailing edge (bubbles keep their own cap).
                 .frame(maxWidth: .infinity)
@@ -80,7 +85,10 @@ struct MessageListScroll: View {
             .defaultScrollAnchor(.bottom)
             // A right-click on text anywhere in the list gets the app's menu, even on a message the pointer was not seen over.
             .background { MessageListRightClick() }
-            .onScrollPhaseChange { _, phase in activity.isScrolling = phase.isScrolling }
+            .onScrollPhaseChange { _, phase in
+                activity.isScrolling = phase.isScrolling
+                if phase == .tracking || phase == .interacting { activity.userScrolls += 1 }
+            }
             .environment(\.chatScrollActivity, activity)
             .onScrollTargetVisibilityChange(idType: String.self, threshold: 0.1) { ids in
                 visible.ids = Set(ids)
@@ -149,6 +157,7 @@ struct MessageListScroll: View {
         positioned = true
         quietUntil = Date().addingTimeInterval(0.8)
         restoreId = nil
+        let touches = activity.userScrolls
         Task { @MainActor in
             // After the rows of a new window are laid out.
             try? await Task.sleep(for: .milliseconds(40))
@@ -158,14 +167,28 @@ struct MessageListScroll: View {
                 case .message(let gid): proxy.scrollTo(gid, anchor: .center)
                 }
             }
-            if request.animates(onScreen: visible.ids) { withAnimation(.easeOut(duration: theme.motion.slow), go) } else { go() }
-            // Rows around a jumped-to message are still being measured (names, images, cards that load): put it back.
-            if case .message = request.target {
+            let glides = request.animates(onScreen: visible.ids)
+            if glides { withAnimation(.easeOut(duration: theme.motion.slow), go) } else { go() }
+            switch request.target {
+            case .message:
+                // Rows around a jumped-to message are still being measured (names, images, cards that load): put it back.
                 try? await Task.sleep(for: .milliseconds(250))
                 go()
+            case .bottom:
+                // The rows on the way down are measured only as they come in, so the first trip can stop short of the end:
+                // finish it, unless the reader scrolls or another request came in meanwhile.
+                if glides { try? await Task.sleep(for: .seconds(theme.motion.slow)) }
+                for _ in 0..<Self.settleTries {
+                    try? await Task.sleep(for: .milliseconds(120))
+                    guard ctx.model.scrollRequest == request, activity.userScrolls == touches else { return }
+                    if !scrolled.metrics.atEnd { go() }
+                }
             }
         }
     }
+
+    /// How many times a trip to the bottom is checked (and finished) after it was made.
+    private static let settleTries = 4
 }
 
 /// The ids of the rows on screen, in a plain reference so changing them does not redraw the list.
@@ -197,7 +220,11 @@ enum ChatRowsOnScreen {
 
 /// Whether the message list is scrolling, in a plain reference: rows read it in their hover handler, so a scroll starting
 /// or stopping redraws nothing.
-final class ChatScrollActivity { var isScrolling = false }
+final class ChatScrollActivity {
+    var isScrolling = false
+    /// How many times the reader has started scrolling by hand (never a scroll the app made).
+    var userScrolls = 0
+}
 
 private struct ChatScrollActivityKey: EnvironmentKey { static let defaultValue: ChatScrollActivity? = nil }
 extension EnvironmentValues {

@@ -107,7 +107,8 @@ enum MouseSweep {
 /// `WN_DEMO_CHAT_SCROLL=<points per second>` (with `WN_DEMO_CHAT_CYCLE` opening a long chat): the message list scrolls up
 /// for three seconds, then down for three, again and again, at that speed (600 is a slow read, 3000 a flick), stepped by
 /// the display link as a real scroll is. Each second it prints the frames drawn, the late ones and the main thread's CPU
-/// time - the cost of scrolling a chat, measured without a hand on the mouse.
+/// time - the cost of scrolling a chat, measured without a hand on the mouse. `WN_DEMO_CHAT_SCROLL_UP=<seconds>`: it only
+/// scrolls up, for that long, then leaves the list alone (still printing where it is) - to try the jump-to-latest button.
 @MainActor
 final class ChatScrollBench: NSObject {
     static let shared = ChatScrollBench()
@@ -119,6 +120,7 @@ final class ChatScrollBench: NSObject {
     private var gaps: [CFTimeInterval] = []
     private weak var found: NSScrollView?
     private var carry: CGFloat = 0
+    private let upOnly = ProcessInfo.processInfo.environment["WN_DEMO_CHAT_SCROLL_UP"].flatMap(Double.init)
 
     static func start() {
         guard let speed = ProcessInfo.processInfo.environment["WN_DEMO_CHAT_SCROLL"].flatMap(Double.init), speed > 0 else { return }
@@ -143,9 +145,14 @@ final class ChatScrollBench: NSObject {
         print("BENCH views \(total): \(top)"); fflush(stdout)
     }
 
-    /// The tallest vertical scroll view in the main window: the message list.
+    /// The tallest vertical scroll view in the main window: the message list. Trying the jump button, the one under the
+    /// middle of the chat instead (a chat a page or two long is shorter than the list of chats beside it).
     private var list: NSScrollView? {
         guard let root = NSApp.windows.first(where: { $0.canBecomeMain })?.contentView else { return nil }
+        if upOnly != nil {
+            var v = root.hitTest(NSPoint(x: root.bounds.width * 0.65, y: root.bounds.midY))
+            while let cur = v { if let s = cur as? NSScrollView { return s }; v = cur.superview }
+        }
         var best: NSScrollView?
         func walk(_ v: NSView) {
             if let s = v as? NSScrollView, let doc = s.documentView, doc.frame.height > s.contentView.bounds.height * 2,
@@ -163,10 +170,10 @@ final class ChatScrollBench: NSObject {
         gaps.append(dt); last = now
         if found == nil { found = list; NSApp.windows.first(where: { $0.canBecomeMain })?.orderFrontRegardless() }
         if let s = found {
-            let up = Int((now - began) / 3) % 2 == 0
+            let up = upOnly != nil || Int((now - began) / 3) % 2 == 0
             // A real wheel event, handled as one from the mouse is (setting the clip view's origin instead was undone by
             // the scroll view's own state): pixels, positive scrolls toward older messages.
-            carry += (up ? 1 : -1) * speed * CGFloat(dt)
+            if upOnly.map({ now - began < $0 }) ?? true { carry += (up ? 1 : -1) * speed * CGFloat(dt) }
             let whole = carry.rounded(.towardZero); carry -= whole
             if whole != 0, let cg = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1, wheel1: Int32(whole), wheel2: 0, wheel3: 0),
                let event = NSEvent(cgEvent: cg) {
@@ -181,7 +188,7 @@ final class ChatScrollBench: NSObject {
             let worst = Int(((late.max() ?? 0) * 1000).rounded())
             let over33 = late.filter { $0 >= 0.017 }.count, over50 = late.filter { $0 >= 0.05 }.count
             let y = Int(found?.contentView.bounds.origin.y ?? -1), h = Int(found?.documentView?.frame.height ?? -1)
-            print("BENCH scroll \(s): \(gaps.count) frames, \(over33) late ≥17 ms, \(over50) late ≥50 ms, worst \(worst) ms, main cpu \(MainCPU.take()) ms, y \(y) of \(h)")
+            print("BENCH scroll \(s): \(gaps.count) frames, \(over33) late ≥17 ms, \(over50) late ≥50 ms, worst \(worst) ms, main cpu \(MainCPU.take()) ms, y \(y) of \(h), view \(Int(found?.contentView.bounds.height ?? -1))")
             fflush(stdout)
             gaps = []
         }
