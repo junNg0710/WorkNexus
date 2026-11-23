@@ -35,6 +35,7 @@ final class DiagnosticsWiring: NSObject {
             try? FileManager.default.removeItem(at: marker)
         }
         MXMetricManager.shared.add(self)
+        NetworkWatcher.shared.start()
         if Self.performanceLogOn { Self.setPerformanceLog(true) }
         if Self.showFpsOn { FpsMeter.shared.setOn(true) }
     }

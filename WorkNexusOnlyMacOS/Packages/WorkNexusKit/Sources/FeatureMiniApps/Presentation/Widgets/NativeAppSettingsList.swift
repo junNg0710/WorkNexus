@@ -23,7 +23,7 @@ struct NativeAppSettingsList: View {
                 .padding(.top, theme.spacing.s6)
             if model.canShowBadges, !model.apps.isEmpty { NativeAppBadgeAccessRow(model: model).padding(.top, theme.spacing.s12) }
         }
-        .task { model.start(); model.refreshBadges() }
+        .task { model.start(); await model.refreshBadgesOffMain() }
         .appDialog(isPresented: $adding) { NativeAppPickerDialog(model: model) { adding = false } }
         .appDialog(item: $editing) { app in NativeAppEditDialog(model: model, app: app) { editing = nil } }
         .appConfirmDialog(isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),

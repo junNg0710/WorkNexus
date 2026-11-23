@@ -114,5 +114,7 @@ final class FakeDock: DockBadgeSource {
     var opened = 0
     func requestAccess() { asked += 1 }
     func openSettings() { opened += 1 }
+    var offMainReads = 0
     func badges() -> [String: String] { isAllowed ? byPath : [:] }
+    func readBadges() async -> [String: String] { offMainReads += 1; return badges() }
 }

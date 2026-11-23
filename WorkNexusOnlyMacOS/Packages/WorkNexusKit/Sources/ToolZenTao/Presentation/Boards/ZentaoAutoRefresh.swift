@@ -1,10 +1,12 @@
 /// Not in the Flutter app (its boards were read again only on demand).
 import AppKit
+import CoreDomain
 import CoreUI
 import SwiftUI
 
 /// Keeps the Tasks and Bugs boards current while they are looked at: new and changed tickets are picked up when the app
-/// comes back to the front and every few minutes while a board is on screen. Nothing is read while the window is hidden.
+/// comes back to the front and every few minutes while a board is on screen. Nothing is read while the window is hidden
+/// or the Mac has no network.
 struct ZentaoAutoRefresh: ViewModifier {
     let state: ZentaoUIState
     @Environment(\.sectionIsActive) private var sectionActive
@@ -21,11 +23,11 @@ struct ZentaoAutoRefresh: ViewModifier {
                 while !Task.isCancelled {
                     try? await Task.sleep(for: Self.interval)
                     if Task.isCancelled { return }
-                    if AppVisibility.isOnScreen { await run() }
+                    if AppVisibility.isOnScreen, Connectivity.isOnline { await run() }
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                guard sectionActive, Date().timeIntervalSince(lastRun) >= Self.resumeGap else { return }
+                guard sectionActive, Connectivity.isOnline, Date().timeIntervalSince(lastRun) >= Self.resumeGap else { return }
                 Task { await run() }
             }
     }

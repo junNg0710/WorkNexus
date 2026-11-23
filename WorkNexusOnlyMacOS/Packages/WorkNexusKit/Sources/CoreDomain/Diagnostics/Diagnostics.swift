@@ -77,7 +77,8 @@ public enum Diagnostics {
 
     /// Records a request that did not succeed: an answer of 400 or more, or no answer at all. A refused sign-in (401,
     /// 403) and a server error (5xx) or a lost connection are errors; any other 4xx (a missing item) a warning. A request
-    /// the app cancelled itself is not recorded. Successful requests are not recorded at all.
+    /// the app cancelled itself is not recorded. Successful requests are not recorded at all. No answer while the Mac has
+    /// no network (`Connectivity`) is a warning: nothing is wrong with the app or the server.
     public static func request(_ area: String, method: String, url: URL, status: Int?, error: Error? = nil, elapsed: TimeInterval) {
         if let error, isCancellation(error) { return }
         if let status, status < 400, error == nil { return }
@@ -85,6 +86,8 @@ public enum Diagnostics {
         if let status {
             let serious = status == 401 || status == 403 || status >= 500
             record(serious ? .error : .warning, area, "\(what) → HTTP \(status) (\(ms) ms)")
+        } else if !Connectivity.isOnline {
+            record(.warning, area, "\(what) → no network (\(ms) ms)")
         } else {
             record(.error, area, "\(what) → \(error.map { String(describing: $0) } ?? "no answer") (\(ms) ms)")
         }

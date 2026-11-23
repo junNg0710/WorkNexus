@@ -43,8 +43,10 @@ public struct PetSpriteSheet: @unchecked Sendable {
 
     /// A sheet on disk (PNG or WebP), drawn for the Codex timings unless told otherwise; nil when it cannot be read or is too small.
     public init?(contentsOf url: URL, timing: PetTiming = .codex) {
+        // Decoded here and now (callers read installed pets off the main thread): left to the first draw, the whole sheet
+        // was decoded on the main thread, a late frame every time a pet was chosen.
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
-              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
+              let image = CGImageSourceCreateImageAtIndex(source, 0, [kCGImageSourceShouldCacheImmediately: true] as CFDictionary) else { return nil }
         self.init(atlas: image, timing: timing)
     }
 

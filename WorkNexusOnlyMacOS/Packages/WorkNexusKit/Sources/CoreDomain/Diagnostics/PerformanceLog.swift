@@ -120,22 +120,27 @@ public struct FrameStutterWindow: Sendable, Equatable {
     public private(set) var frames = 0
     /// What the main thread was measured doing during the late frames, by kind of work.
     public private(set) var busy: [String: TimeInterval] = [:]
+    /// Where the main thread was seen during the late frames, and how many times (`StallSamples`).
+    public private(set) var seen: [String: Int] = [:]
 
     public init() {}
 
     /// One frame drawn `gap` seconds after the previous, at a display interval of `frame`, at time `now`. Returns a line
     /// to write when a window closes (or a hang happened).
-    /// `busy` is what the main thread was measured doing during that frame (`PerformanceLog.busy`).
-    public mutating func add(gap: TimeInterval, frame: TimeInterval, now: TimeInterval, busy work: [String: TimeInterval] = [:]) -> String? {
+    /// `busy` is what the main thread was measured doing during that frame (`PerformanceLog.busy`), `seen` where it was
+    /// seen meanwhile.
+    public mutating func add(gap: TimeInterval, frame: TimeInterval, now: TimeInterval, busy work: [String: TimeInterval] = [:],
+                             seen places: [String: Int] = [:]) -> String? {
         frames += 1
         let late = gap - frame
         var out: String?
         if late >= Self.hangAfter {
-            out = "Not responding for \(Self.ms(late))" + (WorkSpans.describe(work, late: late).map { ", \($0)" } ?? "")
+            out = "Not responding for \(Self.ms(late))" + Self.why(work, places, late: late)
         } else if late >= Self.lateAfter {
             if started == nil { started = now }
             count += 1; worst = max(worst, late); lost += late
             busy.merge(work, uniquingKeysWith: +)
+            seen.merge(places, uniquingKeysWith: +)
         }
         if let s = started, now - s >= Self.span { out = [out, close()].compactMap { $0 }.joined(separator: "; ") }
         return out
@@ -146,7 +151,12 @@ public struct FrameStutterWindow: Sendable, Equatable {
         defer { self = FrameStutterWindow() }
         guard count > 0 else { return nil }
         let line = "Stutter: \(count) late frame\(count == 1 ? "" : "s") in \(Int(Self.span)) s, worst \(Self.ms(worst)), \(Self.ms(lost)) lost"
-        return line + (WorkSpans.describe(busy, late: lost).map { ", \($0)" } ?? "")
+        return line + Self.why(busy, seen, late: lost)
+    }
+
+    /// ", busy with …, main thread in …": the measured work, then where the main thread was seen.
+    private static func why(_ busy: [String: TimeInterval], _ seen: [String: Int], late: TimeInterval) -> String {
+        [WorkSpans.describe(busy, late: late), StallSamples.describe(seen)].compactMap { $0 }.map { ", \($0)" }.joined()
     }
 
     static func ms(_ t: TimeInterval) -> String { "\(Int((t * 1000).rounded())) ms" }

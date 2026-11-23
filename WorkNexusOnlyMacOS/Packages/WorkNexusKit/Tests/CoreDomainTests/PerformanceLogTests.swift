@@ -63,6 +63,40 @@ final class PerformanceLogTests: XCTestCase {
         XCTAssertEqual(w.close(), "Stutter: 2 late frames in 5 s, worst 200 ms, 300 ms lost, busy with board: build zentao bugs 300 ms")
     }
 
+    /// What no measured work explains is named by where the main thread was seen.
+    func testLateFramesSayWhereTheMainThreadWasSeen() {
+        var w = FrameStutterWindow()
+        let frame = 1.0 / 60
+        _ = w.add(gap: 0.1 + frame, frame: frame, now: 1, seen: ["FeatureChat.StickerDecoder.decode": 6, "AG::Graph::update": 1])
+        _ = w.add(gap: frame, frame: frame, now: 1.5, seen: ["never": 9])   // on time: not kept
+        _ = w.add(gap: 0.2 + frame, frame: frame, now: 2, busy: ["chat: rows": 0.15], seen: ["FeatureChat.StickerDecoder.decode": 4, "B": 2, "C": 1, "D": 1])
+        XCTAssertEqual(w.close(), "Stutter: 2 late frames in 5 s, worst 200 ms, 300 ms lost, busy with chat: rows 150 ms, 150 ms unmeasured, "
+                       + "main thread in FeatureChat.StickerDecoder.decode ×10, B ×2, AG::Graph::update ×1, C ×1")
+        XCTAssertEqual(w.add(gap: 1.2 + frame, frame: frame, now: 9, seen: ["X.load {closure}": 80]),
+                       "Not responding for 1200 ms, main thread in X.load {closure} ×80")
+        XCTAssertNil(StallSamples.describe([:]))
+    }
+
+    func testSymbolsAreShortenedForALogLine() {
+        XCTAssertEqual(StallSamples.short("FeatureChat.MessageTimelineModel.rebuild(with: [CoreDomain.ChatMessage]) -> ()"), "FeatureChat.MessageTimelineModel.rebuild")
+        XCTAssertEqual(StallSamples.short("closure #1 () -> () in closure #2 (Swift.Int) -> () in FeatureChat.ChatImageBody.load() async -> ()"),
+                       "FeatureChat.ChatImageBody.load {closure}")
+        XCTAssertEqual(StallSamples.short("FeatureChat.ThreadRowView.body.getter : some"), "FeatureChat.ThreadRowView.body.getter")
+        XCTAssertEqual(StallSamples.short("CoreUI.Box<A>.value.getter : A"), "CoreUI.Box")
+        XCTAssertEqual(StallSamples.short("CGImageSourceCreateImageAtIndex"), "CGImageSourceCreateImageAtIndex")
+        XCTAssertEqual(StallSamples.short("FeatureChat.ChatImageBody.(show in _8C4801BC7F4C95ED90B6C0BDAB2E53E0)(Foundation.Data) async -> ()"),
+                       "FeatureChat.ChatImageBody.show")
+        XCTAssertTrue(StallSamples.isEntry("main") && StallSamples.isEntry(StallSamples.short("static WorkNexusMac.WorkNexusApp.$main() -> ()")))
+        XCTAssertFalse(StallSamples.isEntry("FeatureChat.ChatImageBody.load"))
+        XCTAssertTrue(StallSamples.isEntry("__debug_main_executable_dylib_entry_point"))
+        // Library code compiled into the app is not the app's own.
+        let filter = StallSamples.short("(extension in Swift):Swift._ArrayProtocol.filter((A.Element) throws -> Swift.Bool) throws -> [A.Element]")
+        XCTAssertEqual(filter, "Swift._ArrayProtocol.filter")
+        XCTAssertTrue(StallSamples.isLibrary(filter) && StallSamples.isLibrary(StallSamples.short("@nonobjc __C.NSImage.init(data: Foundation.Data) -> __C.NSImage?")))
+        XCTAssertTrue(StallSamples.isLibrary(StallSamples.short("generic specialization <Swift.Int> of Swift.Array.append(__owned A) -> ()")))
+        XCTAssertFalse(StallSamples.isLibrary("CoreUI.appString") || StallSamples.isLibrary("FeatureChat.HuggingMaxWidth.sizeThatFits"))
+    }
+
     func testMainThreadWorkIsKeptWhileOnAndASlowClickIsWrittenWhenShown() {
         PerformanceLog.setEnabled(true); sink.entries = []
         Diagnostics.step("account:a / zentao.tasks")

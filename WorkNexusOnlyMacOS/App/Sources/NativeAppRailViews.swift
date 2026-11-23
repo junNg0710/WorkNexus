@@ -42,7 +42,9 @@ struct NativeAppRailButtons: View {
         }
         .task { model.start() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            model.refreshMissing(); model.refreshBadges()
+            // Off the main thread: the Dock is busy bringing the app forward just now, and may take its time to answer.
+            model.refreshMissing()
+            Task { await model.refreshBadgesOffMain() }
         }
         // Badges need Accessibility access, which nobody goes looking for: said once, when there is an app to show one on.
         .appConfirmDialog(isPresented: Binding(get: { model.badgeOffer != nil }, set: { if !$0 { model.declineBadgeOffer() } }),

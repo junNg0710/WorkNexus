@@ -4,8 +4,8 @@ import CoreDomain
 import QuartzCore
 
 /// Watches the screen's frames while the performance log is on: a frame the main thread held up (a stuttering scroll, a
-/// slow redraw) is gathered into `FrameStutterWindow` and written with where it happened (`PerformanceLog`). It runs only
-/// while the app is in front; off, nothing ticks.
+/// slow redraw) is gathered into `FrameStutterWindow` and written with where it happened (`PerformanceLog`) and what the
+/// main thread was seen running meanwhile (`MainThreadSampler`). It runs only while the app is in front; off, nothing ticks.
 @MainActor
 public final class FrameStutterMonitor: NSObject {
     public static let shared = FrameStutterMonitor()
@@ -43,23 +43,28 @@ public final class FrameStutterMonitor: NSObject {
         let l = screen.displayLink(target: self, selector: #selector(tick(_:)))
         l.add(to: .main, forMode: .common)
         link = l; last = nil
+        MainThreadSampler.shared.start()
         // A click before the frames stopped (or at launch, before the window is in front) is not timed across the pause.
         PerformanceLog.cancelInteraction()
     }
 
     private func pause() {
         link?.invalidate(); link = nil; last = nil
+        MainThreadSampler.shared.stop()
         if let line = window.close() { PerformanceLog.note(line) }
     }
 
     @objc private func tick(_ link: CADisplayLink) {
         defer { last = link.timestamp }
+        let stacks = MainThreadSampler.shared.beat()
         guard let last else { return }
         let frame = link.duration > 0 ? link.duration : 1.0 / 60
         let gap = link.timestamp - last
-        // What held a late frame up: the measured main-thread work between the two frames.
-        let busy = gap - frame >= FrameStutterWindow.lateAfter ? PerformanceLog.busy(from: last, to: link.timestamp) : [:]
-        if let line = window.add(gap: gap, frame: frame, now: link.timestamp, busy: busy) { PerformanceLog.note(line) }
+        // What held a late frame up: the measured main-thread work between the two frames, and where the thread was seen.
+        let late = gap - frame >= FrameStutterWindow.lateAfter
+        let busy = late ? PerformanceLog.busy(from: last, to: link.timestamp) : [:]
+        let seen = late ? MainThreadSampler.tally(stacks) : [:]
+        if let line = window.add(gap: gap, frame: frame, now: link.timestamp, busy: busy, seen: seen) { PerformanceLog.note(line) }
         PerformanceLog.frameShown(at: link.timestamp)
     }
 }

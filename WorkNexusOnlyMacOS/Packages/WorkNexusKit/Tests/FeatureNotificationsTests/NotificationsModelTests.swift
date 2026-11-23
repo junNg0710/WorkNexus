@@ -227,4 +227,30 @@ final class NotificationsModelTests: XCTestCase {
         XCTAssertEqual(n1.count, n2.count)
         XCTAssertEqual(NotificationPoller.defaultInterval, .seconds(120))
     }
+
+    /// Without a network the poll waits: nothing is asked until it is back.
+    func testPollerSkipsTicksWhileOffline() async {
+        let count = Calls()
+        let online = OnlineFlag()
+        let poller = NotificationPoller(interval: .milliseconds(10), isOnline: { online.value })
+        poller.start { await count.add("t") }
+        try? await Task.sleep(for: .milliseconds(100))
+        let whileOffline = await count.items
+        XCTAssertTrue(whileOffline.isEmpty)
+        online.value = true
+        try? await Task.sleep(for: .milliseconds(150))
+        poller.stop()
+        let after = await count.items
+        XCTAssertFalse(after.isEmpty)
+    }
+}
+
+/// Whether the Mac has a network, as a test sets it.
+private final class OnlineFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var online = false
+    var value: Bool {
+        get { lock.withLock { online } }
+        set { lock.withLock { online = newValue } }
+    }
 }

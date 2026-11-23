@@ -55,6 +55,19 @@ final class DiagnosticsTests: XCTestCase {
         XCTAssertEqual(sink.entries[0].0.area, "zentao")
     }
 
+    /// While the Mac has no network a request with no answer is a warning, and going off and on is noted once each.
+    func testNoAnswerWhileOfflineIsAWarning() {
+        defer { Connectivity.set(online: true) }
+        let url = URL(string: "https://zt.example.com/api.php/v1/tokens")!
+        Connectivity.set(online: false); Connectivity.set(online: false)
+        XCTAssertFalse(Connectivity.isOnline)
+        Diagnostics.request("zentao", method: "POST", url: url, status: nil, error: URLError(.notConnectedToInternet), elapsed: 0.004)
+        Connectivity.set(online: true)
+        Diagnostics.request("zentao", method: "POST", url: url, status: nil, error: URLError(.timedOut), elapsed: 30)
+        XCTAssertEqual(sink.entries.map(\.0.level), [.info, .warning, .info, .error])
+        XCTAssertEqual(sink.entries.map(\.0.message).prefix(3), ["Network: offline", "POST zt.example.com/api.php/v1/tokens → no network (4 ms)", "Network: back online"])
+    }
+
     func testAnErrorCarriesTheStepsBeforeItAndTheNextOneOnlyWhatCameAfter() {
         Diagnostics.step("chat"); Diagnostics.step("chat"); Diagnostics.step("account:zt1 / zentao.bugs #3")
         Diagnostics.info("app", "Started")

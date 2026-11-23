@@ -18,6 +18,21 @@ final class DockBadgeTests: XCTestCase {
         XCTAssertEqual(h.model.railItems.map(\.badgeCount), [0, 0])
     }
 
+    /// The read that comes round every few seconds asks the Dock without keeping the main thread, and shows the same.
+    func testTheRegularReadDoesNotKeepTheMainThread() async throws {
+        let h = try NativeHarness()
+        await h.seed([native("discord", path: "/Applications/Discord.app", position: 0)])
+        let before = h.dock.offMainReads
+        h.dock.byPath = ["/Applications/Discord.app": "3"]
+        await h.model.refreshBadgesOffMain()
+        XCTAssertEqual(h.model.railItems.map(\.badge), ["3"])
+        XCTAssertEqual(h.dock.offMainReads, before + 1)
+        h.dock.isAllowed = false
+        await h.model.refreshBadgesOffMain()
+        XCTAssertEqual(h.model.railItems.map(\.badge), [nil], "not allowed: nothing is asked, nothing shows")
+        XCTAssertEqual(h.dock.offMainReads, before + 1)
+    }
+
     /// The pet hears about a badge going up - not about the badges already there when WorkNexus started, nor one going down.
     func testABadgeGoingUpIsToldNotTheOnesAlreadyThere() async throws {
         let h = try NativeHarness()

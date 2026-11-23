@@ -107,7 +107,7 @@ public final class NativeAppsModel {
         tasks.append(Task { [weak self] in
             while !Task.isCancelled {
                 // Not while the window cannot be seen (hidden to the tray, minimised, covered) - unless the pet floats.
-                if AppVisibility.isOnScreen || self?.readsBadgesInBackground() == true { self?.refreshBadges() }
+                if AppVisibility.isOnScreen || self?.readsBadgesInBackground() == true { await self?.refreshBadgesOffMain() }
                 try? await Task.sleep(for: Self.badgeInterval)
             }
         })
@@ -115,15 +115,29 @@ public final class NativeAppsModel {
 
     /// Reads the Dock's badges of the rail's apps now.
     public func refreshBadges() {
-        guard let dock else { return }
+        guard let dock, readsBadges(dock) else { return }
+        show(dock.badges())
+    }
+
+    /// The same without keeping the main thread while the Dock answers: every few seconds, and as a view comes in.
+    public func refreshBadgesOffMain() async {
+        guard let dock, readsBadges(dock) else { return }
+        show(await dock.readBadges())
+    }
+
+    /// Keeps the offer to turn badges on up to date; false when there is nothing to read (not allowed, or no app).
+    private func readsBadges(_ dock: DockBadgeSource) -> Bool {
         let allowed = dock.isAllowed
         if allowed != badgesAllowed { badgesAllowed = allowed }
         if allowed, !offerMemory.wasAllowed { offerMemory.wasAllowed = true }
         // Offered only once there is an app to show a badge on: asked once, and again whenever access that worked is lost.
         let offer: BadgeOffer? = allowed || apps.isEmpty ? nil : offerMemory.wasAllowed ? .lost : offerMemory.declined ? nil : .first
         if offer != badgeOffer { badgeOffer = offer }
-        guard allowed, !apps.isEmpty else { if !badges.isEmpty { badges = [:] }; return }
-        let byPath = dock.badges()
+        guard allowed, !apps.isEmpty else { if !badges.isEmpty { badges = [:] }; return false }
+        return true
+    }
+
+    private func show(_ byPath: [String: String]) {
         var next: [String: String] = [:]
         for app in apps {
             if let label = byPath[DockBadgeReader.normalized(app.path)] ?? byPath[DockBadgeKey.bundle(app.bundleId)] { next[app.id] = label }
