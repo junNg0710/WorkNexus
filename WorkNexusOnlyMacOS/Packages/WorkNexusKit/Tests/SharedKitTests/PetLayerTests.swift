@@ -141,4 +141,10 @@ final class PetLayerTests: XCTestCase {
         var s = AppSettings(); s.showPet = false
         XCTAssertFalse(try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(s)).showPet)
     }
+
+    func testToldToRoamTheScreenItsStripIsTheScreensWidth() {
+        let screen = CGRect(x: 0, y: 0, width: 1512, height: 900)
+        let strip = FloatingPetPanel.strip(home: 1400, petWidth: 96, span: screen.width, screen: screen)
+        XCTAssertEqual(strip.start, 48); XCTAssertEqual(strip.travel, 1512 - 96)
+    }
 }

@@ -43,6 +43,12 @@ public final class PetDirector {
     public var roomWidth: Double = 800
     /// Whether it walks about on its own now and then.
     public var canWander = true
+    /// Whether a calm pet waves or looks things over now and then.
+    public var idleGestures = true
+    /// The seconds of standing about before it does something of its own (mostly a walk to another spot).
+    public var pause: ClosedRange<Double> = PetDirector.flourishAfter { didSet { if pause != oldValue { planFlourish() } } }
+    /// Whether it says how things are (`status`) while the pointer rests on it.
+    public var statusOnHover = true
     /// The pace of the sheet it is drawn from (the view says).
     public var timing: PetTiming = .steady
     /// Which way it looks (0 = up, clockwise, of `PetSpriteSheet.lookDirections`), for a sheet that can look; nil looks
@@ -63,7 +69,7 @@ public final class PetDirector {
 
     /// Walking pace, in points per second.
     static let walkSpeed = 90.0
-    /// Seconds of standing about before it does something of its own (mostly a walk to another spot).
+    /// `pause`, unless set.
     static let flourishAfter: ClosedRange<Double> = 8...20
     /// How long a line stays in its speech bubble.
     public static let speechDuration: TimeInterval = 6
@@ -77,6 +83,12 @@ public final class PetDirector {
     public init(random: @escaping () -> Double = { Double.random(in: 0..<1) }, now: @escaping () -> Date = { Date() }) {
         self.random = random; self.now = now
         nextFlourish = Self.flourishAfter.lowerBound + random() * (Self.flourishAfter.upperBound - Self.flourishAfter.lowerBound)
+    }
+
+    /// When it next does something of its own, counted from now.
+    private func planFlourish() {
+        idleFor = 0
+        nextFlourish = pause.lowerBound + random() * (pause.upperBound - pause.lowerBound)
     }
 
     /// Where the character is at `date`, walking or not.
@@ -114,7 +126,7 @@ public final class PetDirector {
     /// something stays while the pointer is on the pet, so it can be clicked.
     public func bubble(hovering: Bool) -> String? {
         if speech?.link != nil { return speech?.text }
-        return hovering ? (status ?? speech?.text) : speech?.text
+        return hovering && statusOnHover ? (status ?? speech?.text) : speech?.text
     }
 
     /// What a click on the pet or its bubble opens now, if anything.
@@ -150,10 +162,9 @@ public final class PetDirector {
         // Whatever its mood, it walks to another spot now and then; only a calm pet also waves or looks things over
         // (in another mood a gesture would read as news).
         guard isStandingAbout, idleFor >= nextFlourish else { return }
-        idleFor = 0
-        nextFlourish = Self.flourishAfter.lowerBound + random() * (Self.flourishAfter.upperBound - Self.flourishAfter.lowerBound)
+        planFlourish()
         if canWander, random() < 0.75 { wander() }
-        else if mood == .calm { gesture(random() < 0.5 ? .review : .waving, cycles: 1) }
+        else if idleGestures, mood == .calm { gesture(random() < 0.5 ? .review : .waving, cycles: 1) }
     }
 
     /// Playing its mood's own animation: no gesture, no walk.

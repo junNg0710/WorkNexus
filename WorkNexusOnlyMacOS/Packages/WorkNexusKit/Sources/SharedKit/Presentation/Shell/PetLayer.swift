@@ -47,9 +47,18 @@ struct PetLayer: View {
     private var sheet: PetSpriteSheet? { model.host.petSheet() ?? bundled }
     private var floats: Bool { settings.showPet && settings.petDisplay == .floating && sheet != nil }
     private var waiting: Int { model.host.petWaiting() }
-    private var mood: PetDirector.Mood { Self.mood(of: model.syncStatuses.values, waiting: waiting) }
+    private var behavior: PetBehavior { settings.petBehavior }
+    /// What it reacts to and says now, as the user set it.
+    private var reacts: PetReacts { PetReacts(behavior) }
+    /// How the app is doing, as far as the pet shows it: without what the user told it not to react to.
+    private var mood: PetDirector.Mood {
+        let reacts = reacts
+        return Self.mood(of: reacts.to(.sync) ? Array(model.syncStatuses.values) : [], waiting: reacts.to(.notifications) ? waiting : 0)
+    }
+    /// What the pointer resting on it is told: how things really are, whatever it reacts to.
     private var status: String {
-        PetSignalText.status(mood: mood, statuses: model.syncStatuses.values, unreadChats: model.host.chatTotalUnread(), waiting: waiting)
+        let mood = Self.mood(of: model.syncStatuses.values, waiting: waiting)
+        return PetSignalText.status(mood: mood, statuses: model.syncStatuses.values, unreadChats: model.host.chatTotalUnread(), waiting: waiting)
     }
 
     var body: some View {
@@ -69,7 +78,8 @@ struct PetLayer: View {
                     // Right-click: the panic switch's demo trigger, while demo mode is on (no menu otherwise). The stage
                     // only takes the pointer over the pet, so this never shadows the content's own menus.
                     .contextMenu {
-                        if let runDemo = model.host.petDemo() { Button(appString("panicSwitchMenuDemo", "Demo"), action: runDemo) }
+                        if let runDemo = model.host.petDemo() { Button(appString("panicSwitchMenuDemo", "Demo"), action: runDemo); Divider() }
+                        PetQuickMenu(model: model)
                     }
                     .environment(\.appTheme, theme)
                     .environment(\.petTripleTap, model.host.petTripleTap)
@@ -78,43 +88,71 @@ struct PetLayer: View {
         }
         .onAppear { if !floats { placeInWindow() } }   // floating, its place is along the panel's strip
         .onChange(of: model.celebration.tick) { _, _ in
-            director.celebrate(); director.say(PetSignalText.celebrated)
+            guard reacts.to(.celebration) else { return }
+            director.celebrate(); say(PetSignalText.celebrated)
         }
         .onChange(of: model.host.chatTotalUnread()) { old, new in
             // With the details on, the message itself is news (`petChatNews`), said when it comes.
-            guard new > old, !details else { return }
-            director.notify(); director.say(PetSignalText.newChats(new - old))
+            guard new > old, !details, reacts.to(.chat) else { return }
+            director.notify(); say(PetSignalText.newChats(new - old))
         }
         // An app on the rail has news (its Dock badge went up, a web mini app notified): a click on the line opens it.
         .onChange(of: model.petAppNews) { _, news in
-            guard let news else { return }
-            director.notify(); director.say(PetSignalText.app(news, details: details), for: Self.detailDuration, link: news.link)
+            guard let news, reacts.to(.apps) else { return }
+            director.notify(); say(PetSignalText.app(news, details: details), for: Self.detailDuration, link: news.link)
         }
         .onChange(of: model.petChatNews) { _, news in
-            guard details, let news else { return }
-            director.notify(); director.say(PetSignalText.chat(news), for: Self.detailDuration, link: news.link)
+            guard details, let news, reacts.to(.chat) else { return }
+            director.notify(); say(PetSignalText.chat(news), for: Self.detailDuration, link: news.link)
         }
         .onChange(of: mood, initial: true) { old, mood in
             director.mood = mood
             if old == .busy, mood == .calm {
-                director.done(); director.say(PetSignalText.synced, for: 4)
+                director.done(); say(PetSignalText.synced, for: 4)
             } else if old != mood, let line = PetSignalText.mood(mood, statuses: model.syncStatuses.values, waiting: waiting) {
-                director.say(line, for: mood == .busy ? 4 : PetDirector.speechDuration)
+                say(line, for: mood == .busy ? 4 : PetDirector.speechDuration)
             }
         }
         // More notifications waiting while it already waits is news too.
         .onChange(of: waiting) { old, new in
             guard new > old, mood == .attention else { return }
-            if details, let notice = model.host.petNewestWaiting() { director.say(notice.text, for: Self.detailDuration, link: notice.link) }
-            else { director.say(PetSignalText.waiting(new)) }
+            if details, let notice = model.host.petNewestWaiting() { say(notice.text, for: Self.detailDuration, link: notice.link) }
+            else { say(PetSignalText.waiting(new)) }
         }
         .onChange(of: status, initial: true) { _, s in director.status = s }
         .onChange(of: settings.petStaysWhenAppHides, initial: true) { _, on in FloatingPetPanel.shared.staysWhenAppHides = on }
+        .onChange(of: behavior, initial: true) { _, behavior in apply(behavior) }
+        // "Quiet for 1 hour" is over: it reacts and speaks again.
+        .task(id: behavior.quietUntil) {
+            guard let until = behavior.quietUntil else { return }
+            try? await Task.sleep(for: .seconds(max(until.timeIntervalSinceNow, 0)))
+            if !Task.isCancelled { model.updateSettings { $0.petBehavior.quietUntil = nil } }
+        }
         .onChange(of: FloatingKey(floats: floats, sheet: sheet.map { ObjectIdentifier($0.atlas) }, follows: settings.petFollowsCursor,
-                                  dark: theme.colors.isDark, scale: scale), initial: true) { _, key in showFloating(key.floats) }
+                                  dark: theme.colors.isDark, scale: scale, roam: behavior.roam), initial: true) { _, key in showFloating(key.floats) }
     }
 
-    private struct FloatingKey: Equatable { var floats: Bool; var sheet: ObjectIdentifier?; var follows: Bool; var dark: Bool; var scale: CGFloat }
+    private struct FloatingKey: Equatable {
+        var floats: Bool; var sheet: ObjectIdentifier?; var follows: Bool; var dark: Bool; var scale: CGFloat; var roam: PetRoam
+    }
+
+    /// Says a line in its bubble, unless it is told not to speak, for as long as the user likes lines to stay.
+    private func say(_ text: String, for seconds: TimeInterval? = nil, link: String? = nil) {
+        let reacts = reacts
+        guard reacts.speaks else { return }
+        director.say(text, for: reacts.seconds(seconds ?? PetDirector.speechDuration), link: link)
+    }
+
+    /// How the user wants it to move and speak, handed to its director.
+    private func apply(_ behavior: PetBehavior) {
+        director.canWander = behavior.activity.wanders
+        director.pause = behavior.activity.pause
+        director.idleGestures = behavior.idleGestures
+        director.statusOnHover = behavior.statusOnHover
+        // Told to stand still in the middle of a walk: it stops where it is.
+        if !behavior.activity.wanders, director.walk != nil { director.place(x: director.x(at: Date()), y: director.y) }
+        if !PetReacts(behavior).speaks { director.hush() }
+    }
 
     private func showFloating(_ on: Bool) {
         guard on, let sheet else {
@@ -127,12 +165,14 @@ struct PetLayer: View {
         let content = FloatingPetContent(director: director, sheet: sheet, width: width, followsCursor: settings.petFollowsCursor,
                                          onOpen: model.host.revealApp, onToggle: model.host.toggleApp, onOpenLink: model.host.petOpen,
                                          onDock: { model.updateSettings { $0.petDisplay = .inWindow } },
-                                         onHide: { model.updateSettings { $0.showPet = false } }, demo: model.host.petDemo)
+                                         onHide: { model.updateSettings { $0.showPet = false } }, demo: model.host.petDemo,
+                                         quick: PetQuickMenu(model: model))
         let theme = theme
         FloatingPetPanel.shared.show(AnyView(content.environment(\.appTheme, theme).environment(\.petTripleTap, model.host.petTripleTap)), petSize: CGSize(width: width, height: height)) { text, tail in
             AnyView(FloatingPetBubble(text: text, tailShift: tail).environment(\.appTheme, theme))
         }
-        // On the desktop it strolls along a strip around where it was put.
+        // On the desktop it strolls along a strip around where it was put, or the whole screen.
+        FloatingPetPanel.shared.roamsScreen = behavior.roam == .screen
         let stroll = FloatingPetPanel.shared.stroll
         director.roomWidth = stroll.points; director.place(x: stroll.x, y: director.y)
     }

@@ -4,8 +4,9 @@ import FeaturePets
 import SharedKit
 import SwiftUI
 
-/// The pet settings: whether a pet shows and where (in the window or floating on the desktop), whether it looks toward the
-/// pointer, and which pet - the TBChat character or one installed from codex-pets.net. Not in the Flutter app.
+/// The pet settings: whether a pet shows, where (in the window or floating on the desktop) and how big; how it moves, what
+/// it reacts to and how it speaks (`PetBehaviorCards`); what a click on it does; which pet - the TBChat character or one
+/// installed from codex-pets.net; and a way back to how everything came. Not in the Flutter app.
 struct PetSettingsPage: View {
     let root: CompositionRoot
 
@@ -26,30 +27,55 @@ struct PetSettingsPage: View {
                     SettingsSlider(value: s.petScale, range: AppSettings.petScaleRange, step: 0.1,
                                    format: { "\(Int(($0 * 100).rounded()))%" }) { v in shell.updateSettings { $0.petScale = v } }
                 }
-                if s.petDisplay == .floating {
-                    SettingsRow(label: appString("petClickInFront", "A click on the pet while WorkNexus is in front")) {
-                        SettingsSegmented(values: [(false, appString("petClickHidesApp", "Hides WorkNexus")),
-                                                   (true, appString("petClickGoesBack", "Goes back to the previous app"))],
-                                          value: s.petClickGoesBack) { v in shell.updateSettings { $0.petClickGoesBack = v } }
-                    }
-                    SettingsToggleRow(label: appString("petStaysWhenAppHides", "Stays on the desktop when WorkNexus is hidden"),
-                                      isOn: s.petStaysWhenAppHides) { on in
-                        shell.updateSettings { $0.petStaysWhenAppHides = on }
-                    }
-                }
-                SettingsToggleRow(label: appString("petFollowsCursor", "Looks toward the pointer (pets that can)"), isOn: s.petFollowsCursor) { on in
-                    shell.updateSettings { $0.petFollowsCursor = on }
-                }
-                SettingsToggleRow(label: appString("petShowsDetails", "Says what a new message or notification says"),
-                                  isOn: s.petShowsDetails) { on in
-                    shell.updateSettings { $0.petShowsDetails = on }
-                }
             }
+            PetMotionCard(shell: shell)
+            PetReactionsCard(shell: shell)
+            if s.petDisplay == .floating { PetClickCard(shell: shell) }
             SettingsCard(title: appString("petChoose", "Choose a pet")) {
                 PetGalleryView(library: root.petLibrary, gallery: root.petGallery, selectedId: s.petId) { id in
                     shell.updateSettings { $0.petId = id; $0.showPet = true }
                 }
             }
+            PetResetCard(shell: shell)
+        }
+    }
+}
+
+/// What a click on the pet on the desktop does, and whether it stays there when WorkNexus is hidden.
+private struct PetClickCard: View {
+    let shell: ShellModel
+
+    var body: some View {
+        let s = shell.settings
+        SettingsCard(title: appString("petCardClick", "Clicks")) {
+            SettingsRow(label: appString("petClickInFront", "A click on the pet while WorkNexus is in front")) {
+                SettingsSegmented(values: [(false, appString("petClickHidesApp", "Hides WorkNexus")),
+                                           (true, appString("petClickGoesBack", "Goes back to the previous app"))],
+                                  value: s.petClickGoesBack) { v in shell.updateSettings { $0.petClickGoesBack = v } }
+            }
+            SettingsToggleRow(label: appString("petStaysWhenAppHides", "Stays on the desktop when WorkNexus is hidden"),
+                              isOn: s.petStaysWhenAppHides) { on in
+                shell.updateSettings { $0.petStaysWhenAppHides = on }
+            }
+        }
+    }
+}
+
+/// Puts every setting of the pet back as it came (after asking); the pet chosen stays.
+private struct PetResetCard: View {
+    let shell: ShellModel
+    @State private var asking = false
+
+    var body: some View {
+        SettingsCard(title: appString("petResetDefaults", "Reset to defaults")) {
+            SettingsRow(label: appString("petResetHint", "Every pet setting goes back to how it came. The pet you chose stays.")) {
+                AppButton(appString("reset", "Reset"), systemImage: "arrow.counterclockwise") { asking = true }
+            }
+        }
+        .appConfirmDialog(isPresented: $asking, title: appString("petResetDefaults", "Reset to defaults"),
+                          message: appString("petResetHint", "Every pet setting goes back to how it came. The pet you chose stays."),
+                          confirmLabel: appString("reset", "Reset")) {
+            shell.updateSettings { $0.resetPet() }
         }
     }
 }

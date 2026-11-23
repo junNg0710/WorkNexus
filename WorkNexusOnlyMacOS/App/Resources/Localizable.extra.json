@@ -2163,6 +2163,38 @@
     "en": "Use the app's icon",
     "vi": "Dùng icon của app"
   },
+  "petActivity": {
+    "en": "How active it is",
+    "vi": "Mức hoạt động"
+  },
+  "petActivityCalm": {
+    "en": "Calm",
+    "vi": "Ít"
+  },
+  "petActivityLively": {
+    "en": "Lively",
+    "vi": "Năng động"
+  },
+  "petActivityNormal": {
+    "en": "Normal",
+    "vi": "Bình thường"
+  },
+  "petActivityStill": {
+    "en": "Stands still",
+    "vi": "Đứng yên"
+  },
+  "petCardClick": {
+    "en": "Clicks",
+    "vi": "Khi bấm vào pet"
+  },
+  "petCardMotion": {
+    "en": "Movement",
+    "vi": "Chuyển động"
+  },
+  "petCardReactions": {
+    "en": "Reactions and speech",
+    "vi": "Phản ứng và lời nói"
+  },
   "petClickGoesBack": {
     "en": "Goes back to the previous app",
     "vi": "Quay lại app trước đó"
@@ -2175,6 +2207,70 @@
     "en": "A click on the pet while WorkNexus is in front",
     "vi": "Bấm pet khi WorkNexus đang ở trên cùng"
   },
+  "petIdleGestures": {
+    "en": "Waves and looks around when idle",
+    "vi": "Vẫy tay, ngó nghiêng khi rảnh"
+  },
+  "petMenuQuietHour": {
+    "en": "Quiet for 1 hour",
+    "vi": "Im lặng 1 giờ"
+  },
+  "petMenuSpeakAgain": {
+    "en": "Stop being quiet",
+    "vi": "Thôi im lặng"
+  },
+  "petMenuStandStill": {
+    "en": "Stand still",
+    "vi": "Đứng yên"
+  },
+  "petMenuWalkAgain": {
+    "en": "Walk about again",
+    "vi": "Đi lại tiếp"
+  },
+  "petReactApps": {
+    "en": "News from the apps on the rail",
+    "vi": "Thông báo từ các app trên thanh bên"
+  },
+  "petReactCelebration": {
+    "en": "A ticket you resolved",
+    "vi": "Khi bạn resolve ticket"
+  },
+  "petReactChat": {
+    "en": "New chat messages",
+    "vi": "Tin nhắn chat mới"
+  },
+  "petReactNotifications": {
+    "en": "ZenTao notifications",
+    "vi": "Thông báo ZenTao"
+  },
+  "petReactsHint": {
+    "en": "What the pet reacts to.",
+    "vi": "Những việc pet sẽ phản ứng."
+  },
+  "petReactSync": {
+    "en": "Sync status (syncing, errors, offline)",
+    "vi": "Trạng thái đồng bộ (đang đồng bộ, lỗi, mất mạng)"
+  },
+  "petResetDefaults": {
+    "en": "Reset to defaults",
+    "vi": "Đặt lại mặc định"
+  },
+  "petResetHint": {
+    "en": "Every pet setting goes back to how it came. The pet you chose stays.",
+    "vi": "Mọi cài đặt của pet trở về mặc định. Pet bạn đã chọn vẫn giữ nguyên."
+  },
+  "petRoam": {
+    "en": "Where it walks",
+    "vi": "Phạm vi đi lại"
+  },
+  "petRoamNearby": {
+    "en": "Around its spot",
+    "vi": "Quanh chỗ đặt"
+  },
+  "petRoamScreen": {
+    "en": "Across the screen",
+    "vi": "Dọc cả màn hình"
+  },
   "petSayAppBadge": {
     "en": "%1$@: %2$@ new",
     "vi": "%1$@: %2$@ mới"
@@ -2186,6 +2282,30 @@
   "petSize": {
     "en": "Size",
     "vi": "Kích thước"
+  },
+  "petSpeaks": {
+    "en": "Says what it reacts to in a speech bubble",
+    "vi": "Nói ra bằng bong bóng lời nói"
+  },
+  "petSpeechLength": {
+    "en": "How long a line stays",
+    "vi": "Thời gian hiện lời nói"
+  },
+  "petSpeechLong": {
+    "en": "Long",
+    "vi": "Dài"
+  },
+  "petSpeechNormal": {
+    "en": "Medium",
+    "vi": "Vừa"
+  },
+  "petSpeechShort": {
+    "en": "Short",
+    "vi": "Ngắn"
+  },
+  "petStatusOnHover": {
+    "en": "Says how things are when the pointer rests on it",
+    "vi": "Nói tình trạng hiện tại khi rê chuột vào"
   },
   "petStaysWhenAppHides": {
     "en": "Stays on the desktop when WorkNexus is hidden",

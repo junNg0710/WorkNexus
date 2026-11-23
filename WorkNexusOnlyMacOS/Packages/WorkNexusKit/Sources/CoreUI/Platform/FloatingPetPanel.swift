@@ -119,8 +119,13 @@ public final class FloatingPetPanel {
         return (minX + petWidth / 2, max(span - petWidth, 1))
     }
 
+    /// Whether it strolls the whole width of its screen, rather than a strip around where it was put.
+    public var roamsScreen = false
+
     private var currentStrip: (start: CGFloat, travel: CGFloat) {
-        Self.strip(home: home.x, petWidth: petSize.width, span: Self.strollSpan, screen: Self.screen(at: home), window: Self.appWindowFrame())
+        let screen = Self.screen(at: home)
+        if roamsScreen, let screen { return Self.strip(home: home.x, petWidth: petSize.width, span: screen.width, screen: screen) }
+        return Self.strip(home: home.x, petWidth: petSize.width, span: Self.strollSpan, screen: screen, window: Self.appWindowFrame())
     }
 
     /// The app's main window on screen (the biggest ordinary one), if it is up.

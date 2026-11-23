@@ -76,6 +76,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var petScale: Double = 1
     /// The sizes the pet can be set to (`petScale`).
     public static let petScaleRange: ClosedRange<Double> = 0.5...2
+    /// What the pet does: how much it moves, what it reacts to, how it speaks (macOS only).
+    public var petBehavior = PetBehavior()
 
     public init() {}
 
@@ -112,7 +114,18 @@ public struct AppSettings: Codable, Equatable, Sendable {
         s.petDisplay = v(.petDisplay, s.petDisplay); s.petFollowsCursor = v(.petFollowsCursor, s.petFollowsCursor)
         s.petShowsDetails = v(.petShowsDetails, s.petShowsDetails); s.petStaysWhenAppHides = v(.petStaysWhenAppHides, s.petStaysWhenAppHides)
         s.petClickGoesBack = v(.petClickGoesBack, s.petClickGoesBack); s.petScale = v(.petScale, s.petScale)
+        s.petBehavior = v(.petBehavior, s.petBehavior)
         self = s
+    }
+}
+
+public extension AppSettings {
+    /// Puts every setting of the pet back as it comes. The pet chosen (`petId`) stays.
+    mutating func resetPet() {
+        let fresh = AppSettings()
+        showPet = fresh.showPet; petDisplay = fresh.petDisplay; petFollowsCursor = fresh.petFollowsCursor
+        petShowsDetails = fresh.petShowsDetails; petStaysWhenAppHides = fresh.petStaysWhenAppHides
+        petClickGoesBack = fresh.petClickGoesBack; petScale = fresh.petScale; petBehavior = fresh.petBehavior
     }
 }
 

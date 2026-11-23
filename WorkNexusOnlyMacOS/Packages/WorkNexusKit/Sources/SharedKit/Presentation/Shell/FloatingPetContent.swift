@@ -21,6 +21,8 @@ struct FloatingPetContent: View {
     let onHide: () -> Void
     /// The panic switch's demo trigger while demo mode is on (`ShellHost.petDemo`): "Demo" heads the menu.
     var demo: () -> (() -> Void)? = { nil }
+    /// Its quick controls (stand still, keep quiet), heading the menu.
+    var quick: PetQuickMenu?
     @State private var hovering = false
 
     private var height: CGFloat { width * CGFloat(PetSpriteSheet.cellHeight) / CGFloat(PetSpriteSheet.cellWidth) }
@@ -41,6 +43,7 @@ struct FloatingPetContent: View {
                     Button(appString("panicSwitchMenuDemo", "Demo"), action: runDemo)
                     Divider()
                 }
+                if let quick { quick; Divider() }
                 Button(appString("trayOpenApp", "Open WorkNexus"), action: onOpen)
                 Button(appString("petShowInWindow", "Put the pet back in the window"), action: onDock)
                 Divider()
