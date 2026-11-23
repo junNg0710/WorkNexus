@@ -44,7 +44,9 @@ struct ThreadAvatar: View {
             tint
             Text(initials).font(.system(size: diameter * 0.4, weight: .semibold)).foregroundStyle(theme.colors.onColorInk)
             if let imageUrl, let url = URL(string: imageUrl) {
-                AsyncImage(url: url) { $0.resizable().scaledToFill() } placeholder: { Color.clear }
+                // Kept once fetched, at the size it is drawn: `AsyncImage` fetched and decoded the whole picture again,
+                // on the main thread, for every run of messages scrolling into view.
+                ThumbnailImage(url: url, maxPixels: diameter * 3, contentMode: .fill) { Color.clear }
             }
         }
     }

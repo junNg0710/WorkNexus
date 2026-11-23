@@ -192,6 +192,8 @@ final class ChatScrollBench: NSObject {
             print("BENCH scroll \(s): \(gaps.count) frames, \(over33) late ≥17 ms, \(over50) late ≥50 ms, worst \(worst) ms, main cpu \(MainCPU.take()) ms, y \(y) of \(h), view \(Int(found?.contentView.bounds.height ?? -1))")
             fflush(stdout)
             gaps = []
+            // Trying a position: the list is looked up again each second, so it is the one of the chat now open.
+            if upOnly != nil { found = nil }
         }
     }
 }

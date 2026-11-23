@@ -28,6 +28,13 @@ struct ChatImageBody: View {
     @State private var viewing = false
     @State private var error: String?
 
+    init(message: ChatMessage, image: ImageContent, state: ChatThreadState) {
+        self.message = message; self.image = image; self.state = state
+        // Seen before (scrolled back into view): the picture is there in the row's first frame - no skeleton, and no
+        // second draw of the row once a task has found it.
+        _picture = State(initialValue: isSticker ? nil : Self.decoded.object(forKey: decodedKey))
+    }
+
     private var key: TransferKey { TransferKey(accountId: message.accountId, content: .image(image)) }
     private var isSticker: Bool { IsStickerImage()(image) }
 
@@ -72,8 +79,9 @@ struct ChatImageBody: View {
     }
 
     private func load() async {
-        // Seen before (scrolled back into view): the decoded picture is there at once.
-        if picture == nil, !isSticker, let hit = Self.decoded.object(forKey: decodedKey) { picture = hit }
+        // Seen before (scrolled back into view): the decoded picture is there, and its bytes are not read again (opening
+        // it reads the original).
+        if !isSticker, let hit = Self.decoded.object(forKey: decodedKey) { picture = hit; return }
         // Small images travel inline; an own image not uploaded yet shows the picked bytes.
         if let b64 = image.inlineBase64, let d = Data(base64Encoded: b64, options: .ignoreUnknownCharacters) { await show(d); return }
         guard let repo = services?.chat else { failed = true; return }
@@ -115,11 +123,12 @@ struct ChatImageBody: View {
         }
     }
 
-    /// Decodes at display size: full-size decodes of every image passing by make fast scrolling stutter.
+    /// Decodes at display size: full-size decodes of every image passing by make fast scrolling stutter. Decoded here
+    /// and now (`ShouldCacheImmediately`), not on the main thread when the picture is first drawn.
     nonisolated static func downsampled(_ data: Data, maxPixel: CGFloat) -> NSImage? {
-        guard let src = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        guard let src = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary) else { return nil }
         let opts: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true, kCGImageSourceCreateThumbnailWithTransform: true,
-                                     kCGImageSourceThumbnailMaxPixelSize: maxPixel]
+                                     kCGImageSourceShouldCacheImmediately: true, kCGImageSourceThumbnailMaxPixelSize: max(1, maxPixel)]
         return CGImageSourceCreateThumbnailAtIndex(src, 0, opts as CFDictionary).map { NSImage(cgImage: $0, size: .zero) }
     }
 }

@@ -47,7 +47,7 @@ struct MessageListScroll: View {
     /// The rows (at least partly) on screen. Kept outside SwiftUI's state: it changes as every row scrolls in or out, and as
     /// state it re-ran this view - and every row of the list - on each change, which made scrolling stutter.
     @State private var visible = VisibleRows()
-    /// The row at the top of the viewport when older rows were asked for: put back at the top once they are in.
+    /// The first message on screen when older rows were asked for: put back at the top once they are in.
     @State private var restoreId: String?
     /// The list has been placed at the bottom (or at a jumped-to message): from then on its position is the reader's, so
     /// reaching the top asks for older messages. Before, the top is just where an unplaced list starts.
@@ -94,7 +94,7 @@ struct MessageListScroll: View {
                 visible.ids = Set(ids)
                 if PerformanceLog.isEnabled { PerformanceLog.setContext("chat", ChatRowsOnScreen.describe(model.rows, visible: visible.ids)) }
                 // While older rows are on their way, the row at the top is the one to come back to - until they arrive.
-                if model.loadingOlder, handledPrepends == model.prependCount { restoreId = topVisibleId }
+                if model.loadingOlder, handledPrepends == model.prependCount { restoreId = topVisibleMessageId }
             }
             .onScrollGeometryChange(for: ThreadScrollMetrics.self) { g in
                 ThreadScrollMetrics(offset: g.contentOffset.y + g.contentInsets.top, content: g.contentSize.height, container: g.containerSize.height)
@@ -119,9 +119,11 @@ struct MessageListScroll: View {
             .onChange(of: model.prependCount) { _, _ in
                 let id = restoreId
                 restoreId = nil
+                // At once, in the update that brought the rows: a turn later the list had already been laid out - and
+                // drawn - at the top of the new page.
+                if let id { proxy.scrollTo(id, anchor: .top) }
                 Task { @MainActor in
-                    await Task.yield()
-                    if let id { proxy.scrollTo(id, anchor: .top) }
+                    if let id { await keepReader(at: id, proxy) }
                     try? await Task.sleep(for: .milliseconds(450))
                     handledPrepends = model.prependCount
                     loadIfNeeded()
@@ -136,12 +138,25 @@ struct MessageListScroll: View {
         }
     }
 
-    /// The first row on screen.
-    private var topVisibleId: String? { ctx.model.rows.first { visible.ids.contains($0.id) }?.id }
+    /// The row that keeps the reader's place while older rows come in (see `ReaderAnchor`).
+    private var topVisibleMessageId: String? { ReaderAnchor.row(ctx.model.rows, visible: visible.ids) }
+
+    /// A scroll in progress can win over the one that put the reader's row back (the list then shows the top of the new
+    /// page): for a few frames, while the list is left above that row, it is put back again.
+    private func keepReader(at id: String, _ proxy: ScrollViewProxy) async {
+        for _ in 0..<Self.keepTries {
+            try? await Task.sleep(for: .milliseconds(34))
+            guard ReaderAnchor.isLost(id, rows: ctx.model.rows, visible: visible.ids) else { return }
+            proxy.scrollTo(id, anchor: .top)
+        }
+    }
+
+    /// How many times the reader's row is checked (and put back) after older rows came in.
+    private static let keepTries = 4
 
     private func requestOlder() {
         guard !ctx.model.loadingOlder else { return }
-        restoreId = topVisibleId
+        restoreId = topVisibleMessageId
         ctx.model.beginLoadOlder()
     }
 

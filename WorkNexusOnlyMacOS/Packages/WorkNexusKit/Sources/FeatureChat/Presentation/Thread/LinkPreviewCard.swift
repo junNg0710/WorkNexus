@@ -22,7 +22,8 @@ struct LinkPreviewCard: View {
                 Group { if loading { LinkPreviewSkeleton() } else { LinkPreviewLines(url: url, preview: preview) } }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if let image = preview?.imageUrl, let u = URL(string: image) {
-                    AsyncImage(url: u) { $0.resizable().scaledToFill() } placeholder: { Color.clear }
+                    // Kept once fetched, at the size it is drawn (see `ThumbnailImage`).
+                    ThumbnailImage(url: u, maxPixels: Self.height * 3, contentMode: .fill) { Color.clear }
                         .frame(width: Self.height, height: Self.height).clipped()
                         .padding(.trailing, -theme.spacing.s10)
                 }

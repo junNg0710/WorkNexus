@@ -10,19 +10,23 @@ import SwiftUI
 public struct ThumbnailImage<Placeholder: View>: View {
     let url: URL?
     let maxPixels: CGFloat
+    let contentMode: ContentMode
     let placeholder: Placeholder
     @State private var image: CGImage?
 
-    /// - Parameter maxPixels: the longest side, in pixels, the picture is shrunk to (twice the points it is drawn at).
-    public init(url: URL?, maxPixels: CGFloat, @ViewBuilder placeholder: () -> Placeholder) {
-        self.url = url; self.maxPixels = maxPixels; self.placeholder = placeholder()
+    /// - Parameters:
+    ///   - maxPixels: the longest side, in pixels, the picture is shrunk to (twice the points it is drawn at; more for one
+    ///     that fills its frame, where the shorter side has to cover it).
+    ///   - contentMode: `.fill` for a picture that covers its frame (an avatar); the caller clips it.
+    public init(url: URL?, maxPixels: CGFloat, contentMode: ContentMode = .fit, @ViewBuilder placeholder: () -> Placeholder) {
+        self.url = url; self.maxPixels = maxPixels; self.contentMode = contentMode; self.placeholder = placeholder()
         _image = State(initialValue: url.flatMap { ThumbnailCache.cached($0, maxPixels) })
     }
 
     public var body: some View {
         Group {
             if let image {
-                Image(decorative: image, scale: 2).resizable().interpolation(.medium).scaledToFit()
+                Image(decorative: image, scale: 2).resizable().interpolation(.medium).aspectRatio(contentMode: contentMode)
             } else {
                 placeholder
             }

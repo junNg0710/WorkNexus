@@ -14,6 +14,23 @@ struct ReplyMediaThumbView: View {
 
     static let side: CGFloat = 40
 
+    init(ctx: ThreadContext, content: MessageContent) {
+        self.ctx = ctx; self.content = content
+        _image = State(initialValue: Self.keptKey(ctx.accountId, content).flatMap { Self.kept.object(forKey: $0) })
+    }
+
+    /// The thumbs already decoded, so a quote scrolled back into view shows its picture at once.
+    nonisolated(unsafe) private static let kept: NSCache<NSString, NSImage> = { let c = NSCache<NSString, NSImage>(); c.countLimit = 300; return c }()
+
+    /// What a kept thumb goes by; nil for a file not on the server yet (its bytes may still change).
+    private static func keptKey(_ account: String, _ content: MessageContent) -> NSString? {
+        switch content {
+        case .image(let i) where i.fileId > 0: "\(account)|image|\(i.fileId)|\(i.name)" as NSString
+        case .file(let f) where f.fileId > 0: "\(account)|file|\(f.fileId)|\(f.name)" as NSString
+        default: nil
+        }
+    }
+
     /// Whether `content` gets a thumb, so callers can skip the gap beside it.
     static func shows(_ content: MessageContent) -> Bool {
         switch content { case .image, .file: true; default: false }
@@ -37,11 +54,17 @@ struct ReplyMediaThumbView: View {
 
     private func load() async {
         let chat = ctx.services.chat, account = ctx.accountId
+        let key = Self.keptKey(account, content)
+        if let key, let hit = Self.kept.object(forKey: key) { image = hit; return }
         let bytes: Data?
         switch content {
         case .image: bytes = await LoadChatAttachment(chat)(accountId: account, content: content, thumbnail: true).value
         default: bytes = await LoadVideoThumbnail(chat)(accountId: account, video: content).value
         }
-        image = bytes.flatMap(NSImage.init(data:))
+        // At the size it is drawn, off the main thread: `NSImage(data:)` decoded the whole picture there on first draw.
+        let pixels = Self.side * 3
+        let small = await Task.detached(priority: .userInitiated) { bytes.flatMap { ChatImageBody.downsampled($0, maxPixel: pixels) } }.value
+        image = small
+        if let key, let small { Self.kept.setObject(small, forKey: key) }
     }
 }

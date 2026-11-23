@@ -86,7 +86,8 @@ struct ChatAvatarView: View {
         ZStack {
             AvatarFill(name: name, style: style, side: side)
             if let url = style.imageUrl.flatMap(URL.init(string:)), !(style.imageUrl ?? "").isEmpty {
-                AsyncImage(url: url) { $0.resizable().scaledToFill() } placeholder: { Color.clear }
+                // Kept once fetched, at the size it is drawn (see `ThumbnailImage`).
+                ThumbnailImage(url: url, maxPixels: side * 3, contentMode: .fill) { Color.clear }
             }
         }
     }
