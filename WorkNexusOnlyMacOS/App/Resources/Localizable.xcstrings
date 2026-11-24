@@ -17476,7 +17476,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "联系人"
+            "value": "搜索联系人"
           }
         }
       }
@@ -52091,7 +52091,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "搜索联系人"
+            "value": "联系人"
           }
         }
       }
