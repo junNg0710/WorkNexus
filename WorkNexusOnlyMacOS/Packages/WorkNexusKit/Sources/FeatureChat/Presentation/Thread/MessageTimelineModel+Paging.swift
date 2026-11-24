@@ -104,6 +104,13 @@ extension MessageTimelineModel {
         scroll(to: .bottom, animated: false)
     }
 
+    /// A chat kept open behind another one goes back to how a chat opens: its newest page, at the newest message (`atEnd`:
+    /// the list is there already). Not when it is shown for a message to jump to.
+    func returnToLatest(atEnd: Bool) {
+        guard state.jump == nil else { return }
+        if window != .initial { backToLatest() } else if !atEnd { scroll(to: .bottom, animated: false) }
+    }
+
     /// Whether scrolling near the top should fetch older messages now.
     var canAutoLoadOlder: Bool { loaded && !loadingOlder && !reachedStart && !loadFailed }
 

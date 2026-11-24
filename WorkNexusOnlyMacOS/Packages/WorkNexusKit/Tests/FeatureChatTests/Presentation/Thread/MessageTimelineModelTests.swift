@@ -170,6 +170,40 @@ final class MessageTimelineModelTests: XCTestCase {
         await eventually("live page") { model.messages.last?.gid == "m200" }
     }
 
+    func testAKeptChatReturnsToItsNewestPageAndMessage() async {
+        let repo = TimelineRepo(count: 200)
+        let (model, task) = make(repo)
+        defer { task.cancel() }
+        await eventually("first page") { model.loaded }
+
+        // Already there: nothing to do.
+        model.returnToLatest(atEnd: true)
+        XCTAssertNil(model.scrollRequest)
+
+        // Scrolled up in the newest page: taken down, without a glide.
+        model.returnToLatest(atEnd: false)
+        XCTAssertEqual(model.scrollRequest?.target, .bottom)
+        XCTAssertEqual(model.scrollRequest?.animated, false)
+
+        // In a window jumped far back: back to the newest page.
+        await model.jump(to: 60)
+        XCTAssertTrue(model.window.isAround)
+        model.returnToLatest(atEnd: true)
+        XCTAssertEqual(model.window, .initial)
+        XCTAssertEqual(model.scrollRequest?.target, .bottom)
+        await eventually("live page") { model.messages.last?.gid == "m200" }
+    }
+
+    func testAKeptChatShownForAJumpIsLeftToTheJump() async {
+        let repo = TimelineRepo(count: 200)
+        let (model, task) = make(repo)
+        defer { task.cancel() }
+        await eventually("first page") { model.loaded }
+        model.state.requestJump(to: 60)
+        model.returnToLatest(atEnd: false)
+        XCTAssertNil(model.scrollRequest)
+    }
+
     func testTypingRowOpensWhileSomeoneTypesAndOnlyAtTheBottom() async {
         let repo = TimelineRepo(count: 5)
         repo.typingSignals = [ChatTypingSignal(chatGid: "g", userId: 5, typing: true), ChatTypingSignal(chatGid: "other", userId: 6, typing: true),

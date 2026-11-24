@@ -140,6 +140,8 @@ struct MessageListScroll: View {
                 }
             }
             .onDisappear { PerformanceLog.setContext("chat", nil) }
+            // A chat kept open behind another one comes back at its newest message, as one just opened does.
+            .onChange(of: ctx.state.isOnScreen) { _, shown in if shown { showLatest() } else { settleAtLatestWhileHidden() } }
             // `initial`: a request made before the rows came in (a jump while the chat was opening) is taken when they do.
             .onChange(of: model.scrollRequest, initial: true) { _, request in
                 guard let request else { return }
@@ -219,6 +221,21 @@ struct MessageListScroll: View {
         let touches = activity.userScrolls
         Task { @MainActor in await settleAtBottom(proxy, during: nil, touches: touches) }
     }
+
+    /// Back on screen: at the newest message. At once (not in a task), so a jump asked for in the same update comes after
+    /// it and wins.
+    private func showLatest() { ctx.model.returnToLatest(atEnd: scrolled.metrics.atEnd) }
+
+    /// Behind another chat the list goes to its newest message ahead of time, so coming back shows it there from the first
+    /// frame. A moment after it left, not in the frames of the switch itself.
+    private func settleAtLatestWhileHidden() {
+        Task { @MainActor in
+            try? await Task.sleep(for: Self.hiddenSettle)
+            if !ctx.state.isOnScreen { showLatest() }
+        }
+    }
+
+    private static let hiddenSettle = Duration.milliseconds(400)
 
     /// The rows on the way down are measured only as they come in, so a trip to the bottom can stop short of the end:
     /// it is finished, unless the reader scrolls or another scroll request came in meanwhile.

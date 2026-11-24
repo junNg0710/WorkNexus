@@ -69,8 +69,8 @@ final class ChatThreadSession {
         state.video.stop()
     }
 
-    /// Back on screen after `hide()`: pulls what a reconnect may have missed. Whether it is read is the message list's
-    /// call (it is where the user left it, which may be far up from the newest messages).
+    /// Back on screen after `hide()`: pulls what a reconnect may have missed. The message list goes to its newest message
+    /// and marks the chat read once that is in view.
     func show() {
         guard !state.isOnScreen else { return }
         assistant.catchUpDismissed = false
