@@ -83,8 +83,10 @@ struct SidebarPanel: View {
             NavRail(model: model)
             if ToolPaneHost.isVisible(model) {
                 Rectangle().fill(theme.colors.line.opacity(0.6)).frame(width: theme.borders.hairline).padding(.vertical, theme.spacing.s12)
-                ToolPaneHost(model: model)
             }
+            // Always mounted, taking no room while it is not shown (Chat, a mini app, a folded pane): taken out of the
+            // tree, every trip to Chat and back built the panes it keeps alive again from nothing.
+            ToolPaneHost(model: model)
         }
         .clipShape(RoundedRectangle(cornerRadius: theme.radii.xl, style: .continuous))
         .appGlass(in: RoundedRectangle(cornerRadius: theme.radii.xl, style: .continuous), fallback: theme.colors.panel2)

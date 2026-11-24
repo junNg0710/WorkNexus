@@ -209,9 +209,9 @@ final class MessageTimelineModel {
     }
 
     /// Marks the chat read while its newest messages are on screen — not while the user reads older ones, nor in a window
-    /// jumped far back.
+    /// jumped far back, nor while the chat is kept open behind another one.
     func markReadIfSeen() {
-        guard !away, !window.isAround, unread > 0, !markingRead else { return }
+        guard state.isOnScreen, !away, !window.isAround, unread > 0, !markingRead else { return }
         markingRead = true
         let chat = services.chat, account = accountId, gid = chatGid
         Task { [weak self] in

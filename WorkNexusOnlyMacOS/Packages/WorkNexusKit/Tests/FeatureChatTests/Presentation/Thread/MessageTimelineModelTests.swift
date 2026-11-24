@@ -12,6 +12,7 @@ final class TimelineRepo: StubChatRepository, @unchecked Sendable {
     var typingSignals: [ChatTypingSignal] = []
     var unread = 0
     var messageWatchers: [AsyncStream<[ChatMessage]>.Continuation] = []
+    var markReads = 0
 
     init(count: Int) {
         super.init()
@@ -49,7 +50,7 @@ final class TimelineRepo: StubChatRepository, @unchecked Sendable {
     }
     override func loadOlderMessages(accountId: String, chatGid: String, beforeServerId: Int?, inWindow: Bool, pageSize: Int?) async -> Outcome<Int> { .success(0) }
     override func loadMessagesAround(accountId: String, chatGid: String, serverId: Int) async -> Outcome<(from: Int, to: Int)?> { around }
-    override func markRead(accountId: String, chatGid: String) async -> Outcome<Void> { .success(()) }
+    override func markRead(accountId: String, chatGid: String) async -> Outcome<Void> { markReads += 1; return .success(()) }
 }
 
 @MainActor

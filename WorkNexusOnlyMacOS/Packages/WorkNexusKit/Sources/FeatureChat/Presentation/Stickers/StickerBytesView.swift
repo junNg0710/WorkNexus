@@ -11,21 +11,25 @@ import SwiftUI
 /// broken-image glyph.
 struct StickerBytesView: View {
     @Environment(\.appTheme) private var theme
+    /// False in a chat kept open behind another one: nothing plays there.
+    @Environment(\.animationsRun) private var animationsRun
     let data: Data
     var animated = true
 
     var body: some View {
+        let plays = animated && animationsRun
         switch StickerDecoder.decode(data) {
         case .lottie(let animation):
             if animated {
-                LottieView(animation: animation).playbackMode(.playing(.toProgress(1, loopMode: .loop))).resizable()
+                LottieView(animation: animation)
+                    .playbackMode(animationsRun ? .playing(.toProgress(1, loopMode: .loop)) : .paused(at: .currentFrame)).resizable()
             } else {
                 LottieView(animation: animation).playbackMode(.paused(at: .progress(0.4))).resizable()
             }
         case .image(let image):
             // `NSImage` sees the frames of a GIF only: an animated WebP showed its first frame for ever.
-            if StickerDecoder.isAnimated(data) { FrameAnimatedImage(data: data, animated: animated) }
-            else { AnimatedImage(image: image, animated: animated) }
+            if StickerDecoder.isAnimated(data) { FrameAnimatedImage(data: data, animated: plays) }
+            else { AnimatedImage(image: image, animated: plays) }
         case .none:
             Image(systemName: "photo.badge.exclamationmark").foregroundStyle(theme.colors.tx3)
         }

@@ -4,7 +4,8 @@ import Foundation
 import Observation
 
 /// Everything one open conversation needs beyond the shared `ChatThreadState`: its search, history download, member count
-/// and the open/mark-read behaviour. Created by `ChatShellModel` when a chat is selected, dropped when it closes.
+/// and the open/mark-read behaviour. Created by `ChatShellModel` when a chat is selected; kept while the chat is one of
+/// the last few opened (`hide()` / `show()`), closed when it is dropped.
 /// Ported from: lib/features/chat/presentation/widgets/thread_pane.dart
 @MainActor @Observable
 final class ChatThreadSession {
@@ -25,6 +26,7 @@ final class ChatThreadSession {
     @ObservationIgnored private let onFailure: (Failure) -> Void
     @ObservationIgnored private let isAppActive: @MainActor () -> Bool
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
+    @ObservationIgnored private var refreshing: Task<Void, Never>?
     @ObservationIgnored private var markingRead = false
     @ObservationIgnored private var lastUnreadMarked = 0
 
@@ -42,6 +44,9 @@ final class ChatThreadSession {
         history.onProgress = { [weak search] in search?.reload() }
     }
 
+    /// One session, one pane: a chat closed and opened again is built anew.
+    nonisolated var identity: ObjectIdentifier { ObjectIdentifier(self) }
+
     var canSend: Bool { CanSendToChat()(state.chat, selfUserId: state.selfUserId, selfAccount: state.selfAccount) }
     var canPin: Bool { PinChatMessage(repository).canPin(state.chat, selfUserId: state.selfUserId, selfAccount: state.selfAccount) }
 
@@ -54,20 +59,44 @@ final class ChatThreadSession {
             guard let self else { return }
             if case .success(let n) = await repository.memberCount(accountId: id, chatGid: gid), state.chat.type != .one2one { memberCount = n }
         })
-        tasks.append(Task { [weak self] in
+        refresh(thenMarkRead: true)
+    }
+
+    /// Another chat takes the screen and this one stays open behind it: nothing in it is read or played until `show()`.
+    func hide() {
+        guard state.isOnScreen else { return }
+        state.isOnScreen = false
+        state.video.stop()
+    }
+
+    /// Back on screen after `hide()`: pulls what a reconnect may have missed. Whether it is read is the message list's
+    /// call (it is where the user left it, which may be far up from the newest messages).
+    func show() {
+        guard !state.isOnScreen else { return }
+        assistant.catchUpDismissed = false
+        assistant.opened(unread: state.chat.unreadCount)
+        state.isOnScreen = true
+        refresh(thenMarkRead: false)
+    }
+
+    private func refresh(thenMarkRead: Bool) {
+        let gid = state.chatGid, id = state.accountId
+        refreshing?.cancel()
+        refreshing = Task { [weak self] in
             guard let self else { return }
             let repository = repository
             let refreshed = await PerformanceLog.measure("chat: open (refresh newest messages)", slowerThan: 0.5) {
                 await RefreshChatMessages(repository)(accountId: id, chatGid: gid)
             }
+            guard !Task.isCancelled else { return }
             if case .failure(let f) = refreshed { BackgroundChatFailure.handle(f, while: "refreshing an opened chat", notify: onFailure); return }
-            await markRead()
-        })
+            if thenMarkRead, state.isOnScreen { await markRead() }
+        }
     }
 
-    /// Marks the chat read when new messages arrive while it is open and the app is in front.
+    /// Marks the chat read when new messages arrive while it is on screen and the app is in front.
     func unreadChanged(_ unread: Int) {
-        guard unread > 0, unread != lastUnreadMarked, isAppActive() else { return }
+        guard state.isOnScreen, unread > 0, unread != lastUnreadMarked, isAppActive() else { return }
         Task { await markRead() }
     }
 
@@ -105,6 +134,7 @@ final class ChatThreadSession {
 
     func close() {
         tasks.forEach { $0.cancel() }; tasks = []
+        refreshing?.cancel(); refreshing = nil
         search.cancel(); history.teardown()
     }
 }

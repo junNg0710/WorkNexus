@@ -124,16 +124,39 @@ private struct ChatThreadArea: View {
     let model: ChatShellModel
 
     var body: some View {
-        Group {
-            if let thread = model.thread {
-                ChatThreadPane(model: model, session: thread).id(thread.state.chatGid)
-            } else if model.selectedGid != nil && !model.conversationsLoaded {
-                AppStateView(.loading)
-            } else {
-                AppInlineNote(shellString("chatSelectConversation", "Select a conversation"))
+        ZStack {
+            ChatOpenThreads(model: model)
+            if model.thread == nil {
+                Group {
+                    if model.selectedGid != nil && !model.conversationsLoaded {
+                        AppStateView(.loading)
+                    } else {
+                        AppInlineNote(shellString("chatSelectConversation", "Select a conversation"))
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(theme.colors.bg)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(theme.colors.bg)
+    }
+}
+
+/// The chats kept open (`ChatShellModel.openThreads`), each built once and only the selected one on screen: going back to
+/// a chat opened a moment ago shows it at once, where it was left, instead of building its header, input and messages
+/// again. A chat behind another one is not read, typed in or played (`ChatThreadState.isOnScreen`).
+private struct ChatOpenThreads: View {
+    let model: ChatShellModel
+
+    var body: some View {
+        let shown = model.thread
+        KeptAlive(shown: shown?.state.chatGid) { wake in
+            ForEach(model.openThreads, id: \.identity) { session in
+                let gid = session.state.chatGid, active = session === shown
+                ChatThreadPane(model: model, session: session)
+                    .keptAlive(gid, active: active, awake: active || wake.isAwake(gid), front: active)
+            }
+        }
     }
 }

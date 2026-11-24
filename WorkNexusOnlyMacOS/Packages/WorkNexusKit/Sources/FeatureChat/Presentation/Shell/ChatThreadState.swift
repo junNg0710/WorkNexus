@@ -48,6 +48,9 @@ public final class ChatThreadState {
     public var searchQuery = ""
     /// The chat video playing in a message's frame (or floating over the list); at most one.
     let video = ChatVideoPlaybackModel()
+    /// False while the chat is kept open behind another one (`ChatShellModel.openThreads`): nothing in it is being read,
+    /// so it marks nothing read, sends no typing signal and plays nothing.
+    public internal(set) var isOnScreen = true
 
     public init(accountId: String, chat: ChatConversation, selfAccount: String? = nil) {
         self.accountId = accountId; self.chatGid = chat.gid; self.chat = chat; self.selfAccount = selfAccount

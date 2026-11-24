@@ -15,6 +15,8 @@ private let stickerSide: CGFloat = 160
 struct ChatImageBody: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatServices) private var services
+    /// False in a chat kept open behind another one: a GIF does not play there.
+    @Environment(\.animationsRun) private var animationsRun
     let message: ChatMessage
     let image: ImageContent
     let state: ChatThreadState
@@ -70,7 +72,7 @@ struct ChatImageBody: View {
             StickerBytesView(data: data, animated: true)
         } else if let data, animated {
             // A GIF (or an animated WebP) sent as a picture plays in the chat.
-            FrameAnimatedImage(data: data, animated: true)
+            FrameAnimatedImage(data: data, animated: animationsRun)
         } else if let picture {
             Image(nsImage: picture).resizable().scaledToFill()
         } else {

@@ -31,6 +31,11 @@ public final class ChatShellModel {
     private(set) var selectedGid: String?
     /// The open chat's session; nil when none is selected or the chat is not known yet.
     private(set) var thread: ChatThreadSession?
+    /// The chats kept open, least recently shown first: the one on screen (`thread`) and the last few before it, which
+    /// stay built behind it so going back to one shows it at once, where it was left. Only `thread` is on screen
+    /// (`ChatThreadState.isOnScreen`).
+    private(set) var openThreads: [ChatThreadSession] = []
+    static let openThreadLimit = 4
 
     /// The list's tab, "unread only" and the picked categories (see `listFilter` for the one applied).
     var filter = ChatListFilter()
@@ -96,7 +101,7 @@ public final class ChatShellModel {
     func stop() {
         tasks.forEach { $0.cancel() }; tasks = []
         typingLapse?.cancel(); typingLapse = nil
-        thread?.close(); thread = nil
+        openThreads.forEach { $0.close() }; openThreads = []; thread = nil
         events.reportOpenChat(accountId: accountId, chatGid: nil)
     }
 
@@ -114,6 +119,7 @@ public final class ChatShellModel {
 
     func apply(conversations list: [ChatConversation]) {
         conversations = list; conversationsLoaded = true
+        dropThreads { session in session !== thread && chat(session.state.chatGid) == nil }
         if let gid = selectedGid { syncThread(gid) }
     }
 
@@ -151,25 +157,50 @@ public final class ChatShellModel {
 
     func select(_ gid: String?) {
         guard gid != selectedGid else { return }
-        thread?.close(); thread = nil
+        thread?.hide(); thread = nil
         selectedGid = gid
         events.reportOpenChat(accountId: accountId, chatGid: gid)
         if let gid { syncThread(gid) }
     }
 
-    /// Creates the open chat's session once its conversation is known, and keeps its chat/users/self current.
+    /// Puts the selected chat's session on screen once its conversation is known — the one kept from an earlier visit, or
+    /// a new one — and keeps its chat/users/self current.
     private func syncThread(_ gid: String) {
         guard let chat = chat(gid) else { return }
         if let thread, thread.state.chatGid == gid {
             if thread.state.chat != chat { thread.state.chat = chat }
             return
         }
+        if let kept = openThreads.first(where: { $0.state.chatGid == gid }) {
+            // What changed while it was behind another chat (only the chat on screen is kept current).
+            let state = kept.state
+            if state.chat != chat { state.chat = chat }
+            if state.users != users { state.users = users }
+            if state.selfUserId != selfUserId { state.selfUserId = selfUserId }
+            if state.roleNames != roleNames { state.roleNames = roleNames }
+            openThreads.removeAll { $0 === kept }; openThreads.append(kept)
+            thread = kept
+            kept.show()
+            return
+        }
         let session = ChatThreadSession(accountId: accountId, chat: chat, selfAccount: selfAccount, repository: repository,
                                         period: { [weak self] in self?.searchPeriod ?? .all },
                                         onFailure: { [weak self] in self?.report($0) })
         session.state.users = users; session.state.selfUserId = selfUserId; session.state.roleNames = roleNames
+        openThreads.append(session)
         thread = session
         session.open()
+        // The least recently shown beyond the limit go (the new one is last, so never the chat on screen).
+        let extra = openThreads.count - Self.openThreadLimit
+        if extra > 0 { let oldest = Set(openThreads.prefix(extra).map(ObjectIdentifier.init)); dropThreads { oldest.contains(ObjectIdentifier($0)) } }
+    }
+
+    /// Closes the kept chats `gone` picks (the least recently shown beyond the limit, chats that no longer exist).
+    private func dropThreads(_ gone: (ChatThreadSession) -> Bool) {
+        let dropped = openThreads.filter(gone)
+        guard !dropped.isEmpty else { return }
+        dropped.forEach { $0.close() }
+        openThreads.removeAll { session in dropped.contains { $0 === session } }
     }
 
     /// The search box's text; typing restarts the pick from the top.

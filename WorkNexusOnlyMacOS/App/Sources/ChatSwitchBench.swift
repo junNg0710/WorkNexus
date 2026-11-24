@@ -54,7 +54,9 @@ final class FrameGaps: NSObject {
         link = l
     }
 
-    func reset() { gaps = []; last = nil }
+    /// Keeps the time of the last frame: the gap that spans what the caller is about to do (or just did) is the one
+    /// that matters most, and starting over from nothing left it out of every count.
+    func reset() { gaps = [] }
 
     @objc private func tick(_ l: CADisplayLink) {
         if let last { gaps.append(l.timestamp - last) }

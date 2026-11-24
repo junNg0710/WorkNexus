@@ -1,16 +1,6 @@
 import CoreUI
 import SwiftUI
 
-private struct SectionActiveKey: EnvironmentKey { static let defaultValue = true }
-public extension EnvironmentValues {
-    /// False while a view is kept mounted behind the one on screen (`KeepAliveStack`): it should not register shortcuts,
-    /// grab focus or start work that is only for a visible section.
-    var sectionIsActive: Bool {
-        get { self[SectionActiveKey.self] }
-        set { self[SectionActiveKey.self] = newValue }
-    }
-}
-
 /// Which views `KeepAliveStack` has mounted and what each last showed. A class so the body can refresh it without a state
 /// change loop (it is only read by the same body that wrote it).
 @MainActor
@@ -30,8 +20,8 @@ final class KeepAliveStore {
 /// Ported from: lib/app/shell/viewport.dart (`_updateCache` + the `IndexedStack`) and tool_pane_host.dart: the last `limit`
 /// places stay mounted — hidden ones keep their filters, search text, scroll position and open branches — and the least
 /// recently used one is dropped to make room. `visible: false` hides all of them (an editor or a mini app covers the area).
-/// A hidden view keeps its size (boards lay out against it) but is invisible, ignores clicks, shortcuts and focus, and sees
-/// `\.sectionIsActive == false`.
+/// A hidden view keeps the size it last had on screen (`KeepAliveLayout`) but is invisible, ignores clicks, shortcuts and
+/// focus, and sees `\.sectionIsActive == false` (`KeptAlive`).
 struct KeepAliveStack: View {
     let activeKey: String?
     var visible = true
@@ -50,7 +40,7 @@ struct KeepAliveStack: View {
     var body: some View {
         if seenGeneration != generation { store.removeAll() }
         if let content { store.remember(activeKey, content) }
-        return ZStack {
+        return KeptAlive(shown: visible ? activeKey : nil) { wake in
             ForEach(store.lru.keys, id: \.self) { key in
                 let active = key == activeKey && visible
                 if let view = store.views[key] {
@@ -59,13 +49,7 @@ struct KeepAliveStack: View {
                         // loading skeleton) was centred in the window, leaving an empty band above its header.
                         // minWidth/minHeight 0: never larger than the viewport, however wide its content wants to be.
                         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
-                        .environment(\.sectionIsActive, active)
-                        .environment(\.animationsRun, active)
-                        .opacity(active ? 1 : 0)
-                        .allowsHitTesting(active)
-                        .disabled(!active)
-                        .accessibilityHidden(!active)
-                        .zIndex(key == activeKey ? 1 : 0)
+                        .keptAlive(key, active: active, awake: active || wake.isAwake(key), front: key == activeKey)
                 }
             }
         }

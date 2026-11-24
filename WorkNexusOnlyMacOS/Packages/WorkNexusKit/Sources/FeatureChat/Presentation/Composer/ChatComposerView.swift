@@ -34,6 +34,8 @@ public struct ChatComposerView: View {
         .onAppear { sync() }
         .onChange(of: settings) { _, _ in sync() }
         .onDisappear { controller.keepDraft(); controller.stopTyping() }
+        // Kept open behind another chat: the same as leaving it.
+        .onChange(of: state.isOnScreen) { _, shown in if !shown { controller.keepDraft(); controller.stopTyping() } }
         .task(id: state.chatGid) { await controller.loadMembers() }
         .task(id: state.chatGid) { await controller.stickerSuggestions.load(services?.stickers) }
         .task(id: state.chatGid) {

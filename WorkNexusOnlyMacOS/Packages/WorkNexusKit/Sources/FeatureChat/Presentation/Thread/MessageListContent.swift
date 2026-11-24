@@ -59,6 +59,8 @@ struct MessageListContent: View {
         .onChange(of: settings.appearance, initial: true) { _, a in
             model.markerGap = ChatStyle.resolve(a, theme: theme).separatorGap
         }
+        // Back on screen after a stay behind another chat: what came in meanwhile is read now, if its end is in view.
+        .onChange(of: state.isOnScreen) { _, shown in if shown { model.markReadIfSeen() } }
         // A jump asked for while shown, or before the list existed (tapping a notification opens the chat first): taken once.
         .onChange(of: state.jump, initial: true) { _, request in
             guard let request else { return }
