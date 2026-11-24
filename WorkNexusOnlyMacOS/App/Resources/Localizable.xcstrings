@@ -51796,6 +51796,29 @@
           }
         }
       }
+    },
+    "chatSavedToDownloads": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved to Downloads"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã lưu vào thư mục Tải về"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存到“下载”文件夹"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

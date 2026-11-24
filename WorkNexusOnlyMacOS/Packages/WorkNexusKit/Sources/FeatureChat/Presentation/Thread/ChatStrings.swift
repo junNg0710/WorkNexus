@@ -46,6 +46,12 @@ enum L {
     static var retranslate: String { appString("chatRetranslate", "Translate again") }
     static var translateTo: String { appString("chatTranslateTo", "Translate to") }
     static var saveSticker: String { appString("chatSaveSticker", "Save as sticker") }
+    static var download: String { appString("chatDownload", "Download") }
+    static var savedToDownloads: String { appString("chatSavedToDownloads", "Saved to Downloads") }
+    static var saveAs: String { appString("chatSaveAs", "Save as…") }
+    static var showInFolder: String { appString("chatShowInFolder", "Show in folder") }
+    static var openFile: String { appString("chatOpenFile", "Open file") }
+    static var copyImage: String { appString("copyImage", "Copy image") }
     static var pin: String { appString("chatPin", "Pin") }
     static var unpin: String { appString("chatUnpin", "Unpin") }
     static var retract: String { appString("chatRetract", "Retract") }

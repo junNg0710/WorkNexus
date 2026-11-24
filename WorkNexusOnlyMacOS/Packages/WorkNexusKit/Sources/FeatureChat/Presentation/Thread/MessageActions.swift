@@ -49,6 +49,7 @@ extension ThreadContext {
                 Task { @MainActor in if case .failure(let f) = await PinChatMessage(chat)(message, pinned: !pinned) { report(f.message) } }
             })
         }
+        out += mediaActions(for: message)
         if copy != nil, let create = actions.createTicket {
             out.append(MessageAction(id: "createBug", icon: "ladybug", title: L.createBug, sectionStart: true) { create(.bug, [message]) })
             out.append(MessageAction(id: "createTask", icon: "checklist", title: L.createTask) { create(.task, [message]) })

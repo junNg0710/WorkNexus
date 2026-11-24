@@ -2442,5 +2442,9 @@
   "railOrderKindMacApp": {
     "en": "Mac app",
     "vi": "Ứng dụng Mac"
+  },
+  "chatSavedToDownloads": {
+    "en": "Saved to Downloads",
+    "vi": "Đã lưu vào thư mục Tải về"
   }
 }

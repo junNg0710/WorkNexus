@@ -64,6 +64,40 @@ enum AttachmentActions {
         return await repo.saveAttachmentCopy(accountId: key.accountId, content: key.content, targetPath: url.path)
     }
 
+    /// Copies the attachment into the Downloads folder, under a name not taken there, downloading it first; the path it
+    /// got. Nil when it is being downloaded by another call already.
+    @MainActor
+    static func saveToDownloads(_ key: TransferKey, name: String, _ repo: ChatRepository) async -> Outcome<String>? {
+        switch await AttachmentTransfers.shared.download(key, repo) {
+        case nil: return nil
+        case .failure(let f)?: return .failure(f)
+        case .success?: break
+        }
+        let folder = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Downloads", isDirectory: true)
+        let free = freeName(name) { FileManager.default.fileExists(atPath: folder.appendingPathComponent($0).path) }
+        let target = folder.appendingPathComponent(free).path
+        switch await repo.saveAttachmentCopy(accountId: key.accountId, content: key.content, targetPath: target) {
+        case .success: return .success(target)
+        case .failure(let f): return .failure(f)
+        }
+    }
+
+    /// `name` as a file name, or "name (2).ext", "name (3).ext"... - the first one `taken` does not hold, so a copy never
+    /// replaces a file already there.
+    static func freeName(_ name: String, taken: (String) -> Bool) -> String {
+        let safe = name.map { "/:".contains($0) ? "_" : $0 }.reduce(into: "") { $0.append($1) }.trimmingCharacters(in: .whitespacesAndNewlines)
+        let base = safe.isEmpty ? "file" : safe
+        guard taken(base) else { return base }
+        let ext = (base as NSString).pathExtension, stem = (base as NSString).deletingPathExtension
+        var n = 2
+        while true {
+            let next = ext.isEmpty ? "\(stem) (\(n))" : "\(stem) (\(n)).\(ext)"
+            if !taken(next) { return next }
+            n += 1
+        }
+    }
+
     /// The file or its saved copy in Finder; downloads first when needed.
     @MainActor
     static func reveal(_ key: TransferKey, _ repo: ChatRepository) async -> Outcome<Void> {
