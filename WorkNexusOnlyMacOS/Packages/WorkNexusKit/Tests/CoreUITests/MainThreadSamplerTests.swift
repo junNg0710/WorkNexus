@@ -1,3 +1,4 @@
+import CoreDomain
 import XCTest
 @testable import CoreUI
 
@@ -16,6 +17,39 @@ final class MainThreadSamplerTests: XCTestCase {
         let here = seen.filter { $0.key.contains("spinForTheSamplerTest") }.values.reduce(0, +)
         XCTAssertGreaterThan(here, stacks.count / 2, "\(seen)")
         XCTAssertTrue(again.isEmpty, "what was seen is handed over once")
+    }
+
+    /// With none of the app's code on the stack, the place is the system function with what called it - and a thread only
+    /// waiting for its next event is told apart from one held up.
+    func testASystemPlaceSaysWhatItWasCalledForAndWaitingIsToldApart() {
+        typealias S = MainThreadSampler.Symbol
+        let trap = S(name: "mach_msg2_trap", image: "libsystem_kernel.dylib", isApp: false)
+        let wrap = S(name: "mach_msg", image: "libsystem_kernel.dylib", isApp: false)
+        let waiting = MainThreadSampler.systemPlace(trap, callers: [wrap, S(name: "__CFRunLoopServiceMachPort", image: "CoreFoundation", isApp: false)])
+        XCTAssertEqual(waiting, StallSamples.idle)
+        let committing = MainThreadSampler.systemPlace(trap, callers: [wrap, S(name: "CA::Context::commit_transaction", image: "QuartzCore", isApp: false)])
+        XCTAssertEqual(committing, "mach_msg2_trap ← CA::Context::commit_transaction (QuartzCore)")
+        XCTAssertEqual(MainThreadSampler.systemPlace(trap, callers: [wrap]), "mach_msg2_trap (libsystem_kernel.dylib)")
+        XCTAssertTrue(StallSamples.onlyIdle([StallSamples.idle: 4]))
+        XCTAssertFalse(StallSamples.onlyIdle([StallSamples.idle: 4, "X.load": 1]))
+        XCTAssertFalse(StallSamples.onlyIdle([:]))
+    }
+
+    /// The names are found off the main thread and handed back on it.
+    func testNamesCanBeFoundOffTheMainThread() async {
+        let sampler = MainThreadSampler()
+        sampler.start()
+        defer { sampler.stop() }
+        _ = spinForTheSamplerTest(seconds: 0.2)
+        let stacks = sampler.beat()
+        let seen = await withCheckedContinuation { (c: CheckedContinuation<[String: Int], Never>) in
+            MainThreadSampler.tallyLater(stacks) { found in
+                XCTAssertTrue(Thread.isMainThread)
+                c.resume(returning: found)
+            }
+        }
+        XCTAssertEqual(seen.values.reduce(0, +), stacks.count)
+        XCTAssertTrue(seen.keys.contains { $0.contains("spinForTheSamplerTest") }, "\(seen)")
     }
 
     func testStoppedItLooksAtNothing() {

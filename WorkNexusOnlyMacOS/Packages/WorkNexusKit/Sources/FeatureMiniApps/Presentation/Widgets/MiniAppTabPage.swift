@@ -8,11 +8,13 @@ struct MiniAppTabPage: View {
     let model: MiniAppsModel
     let tabs: MiniAppTabsModel
     let tab: MiniAppBrowserModel
+    /// The page is the one on screen; a page kept behind another stops drawing (`MiniAppWebView`).
+    var shown = true
 
     var body: some View {
         ZStack(alignment: .top) {
             // The same web view is kept while the tab is open, so the page is left alone on every progress tick.
-            MiniAppWebView(app: app, model: model, tabs: tabs, browser: tab)
+            MiniAppWebView(app: app, model: model, tabs: tabs, browser: tab, shown: shown)
             if tab.loading {
                 ProgressView(value: tab.progress).progressViewStyle(.linear).tint(theme.colors.accent)
             }

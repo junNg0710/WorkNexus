@@ -12,6 +12,13 @@ public enum StallSamples {
         return "main thread in " + top.map { "\($0.key) ×\($0.value)" }.joined(separator: ", ")
     }
 
+    /// The main thread was only waiting for the next event: the frame was late for another reason than the app's own
+    /// work (the display or the window server did not come for it in time).
+    public static let idle = "nothing (waiting for the next event)"
+
+    /// Whether everything seen during a late frame was the main thread waiting.
+    public static func onlyIdle(_ seen: [String: Int]) -> Bool { !seen.isEmpty && seen.keys.allSatisfy { $0 == idle } }
+
     /// A demangled symbol short enough for a log line: the function without its arguments, generics or result; a closure
     /// is named after the function it is in.
     public static func short(_ name: String) -> String {

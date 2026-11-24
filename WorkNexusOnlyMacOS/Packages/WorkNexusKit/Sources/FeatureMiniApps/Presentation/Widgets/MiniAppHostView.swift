@@ -51,7 +51,7 @@ private struct MiniAppPageBody: View {
                 // Every tab keeps its page; only the selected one shows (as the running apps do on the rail).
                 ForEach(tabs.tabs.filter(\.activated)) { tab in
                     let shown = tab.id == tabs.selectedId
-                    MiniAppTabPage(app: app, model: model, tabs: tabs, tab: tab)
+                    MiniAppTabPage(app: app, model: model, tabs: tabs, tab: tab, shown: shown && active)
                         .opacity(shown ? 1 : 0).allowsHitTesting(shown).accessibilityHidden(!shown)
                 }
             }

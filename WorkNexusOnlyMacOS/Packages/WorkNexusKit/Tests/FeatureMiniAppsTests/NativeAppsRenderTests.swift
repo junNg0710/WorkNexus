@@ -139,3 +139,17 @@ final class NativeAppsRenderTests: XCTestCase {
         }
     }
 }
+
+/// A page kept behind the one on screen is hidden for real, so it stops drawing (`MiniAppWebView`).
+@MainActor
+final class MiniAppPageVisibilityTests: XCTestCase {
+    func testAPageNotOnScreenIsHiddenAndComesBack() {
+        let view = NSView()
+        MiniAppWebView.show(false, view)
+        XCTAssertTrue(view.isHidden)
+        MiniAppWebView.show(false, view)
+        XCTAssertTrue(view.isHidden)
+        MiniAppWebView.show(true, view)
+        XCTAssertFalse(view.isHidden)
+    }
+}

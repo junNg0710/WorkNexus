@@ -63,8 +63,16 @@ public final class FrameStutterMonitor: NSObject {
         // What held a late frame up: the measured main-thread work between the two frames, and where the thread was seen.
         let late = gap - frame >= FrameStutterWindow.lateAfter
         let busy = late ? PerformanceLog.busy(from: last, to: link.timestamp) : [:]
-        let seen = late ? MainThreadSampler.tally(stacks) : [:]
-        if let line = window.add(gap: gap, frame: frame, now: link.timestamp, busy: busy, seen: seen) { PerformanceLog.note(line) }
+        // A frame the app did not answer for at all is written at once, with its names; for the others the names are
+        // found off the main thread and join the window a moment later - finding them here cost tens of milliseconds
+        // right after a late frame, enough to make the next one late too.
+        let hang = gap - frame >= FrameStutterWindow.hangAfter
+        if let line = window.add(gap: gap, frame: frame, now: link.timestamp, busy: busy, seen: hang ? MainThreadSampler.tally(stacks) : [:]) {
+            PerformanceLog.note(line)
+        }
+        if late, !hang, !stacks.isEmpty {
+            MainThreadSampler.tallyLater(stacks) { [weak self] seen in self?.window.note(seen: seen) }
+        }
         PerformanceLog.frameShown(at: link.timestamp)
     }
 }

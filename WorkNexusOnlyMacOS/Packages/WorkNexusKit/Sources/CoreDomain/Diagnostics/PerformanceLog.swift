@@ -146,6 +146,13 @@ public struct FrameStutterWindow: Sendable, Equatable {
         return out
     }
 
+    /// Where the main thread was seen during late frames already counted (the names are found off the main thread, so
+    /// they come a moment after the frames).
+    public mutating func note(seen places: [String: Int]) {
+        guard count > 0 else { return }
+        seen.merge(places, uniquingKeysWith: +)
+    }
+
     /// The line for what was gathered, and a fresh window; nil when nothing was late.
     public mutating func close() -> String? {
         defer { self = FrameStutterWindow() }

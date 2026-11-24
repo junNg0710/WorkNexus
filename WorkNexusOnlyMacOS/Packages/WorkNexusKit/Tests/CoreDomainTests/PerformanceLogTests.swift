@@ -77,6 +77,18 @@ final class PerformanceLogTests: XCTestCase {
         XCTAssertNil(StallSamples.describe([:]))
     }
 
+    func testNamesFoundLaterJoinTheLateFramesAlreadyCounted() {
+        let frame = 1.0 / 60
+        var w = FrameStutterWindow()
+        w.note(seen: ["Early.name": 3])
+        XCTAssertTrue(w.seen.isEmpty, "nothing was late: nothing to explain")
+        _ = w.add(gap: 0.1 + frame, frame: frame, now: 1)
+        w.note(seen: ["X.load": 5])
+        w.note(seen: ["X.load": 2, "Y.draw": 1])
+        XCTAssertEqual(w.seen, ["X.load": 7, "Y.draw": 1])
+        XCTAssertTrue(w.close()?.contains("main thread in X.load ×7, Y.draw ×1") ?? false)
+    }
+
     func testSymbolsAreShortenedForALogLine() {
         XCTAssertEqual(StallSamples.short("FeatureChat.MessageTimelineModel.rebuild(with: [CoreDomain.ChatMessage]) -> ()"), "FeatureChat.MessageTimelineModel.rebuild")
         XCTAssertEqual(StallSamples.short("closure #1 () -> () in closure #2 (Swift.Int) -> () in FeatureChat.ChatImageBody.load() async -> ()"),

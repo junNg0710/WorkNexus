@@ -149,31 +149,65 @@ public final class MainThreadSampler: @unchecked Sendable {
 
 extension MainThreadSampler {
     /// How often each place was seen in `stacks`: the innermost function of the app itself, or - when the app's code is
-    /// nowhere on the stack but where it starts - the system function the thread was in.
+    /// nowhere on the stack but where it starts - the system function the thread was in with what called it
+    /// ("mach_msg2_trap ← CA::Context::commit_transaction"), or `idle` when it was only waiting for the next event.
+    ///
+    /// Finding names is slow (tens of milliseconds for the stacks of one stall): call it off the main thread
+    /// (`tallyLater`), or the report of one late frame makes the next one late.
     public static func tally(_ stacks: [Stack]) -> [String: Int] {
         var seen: [String: Int] = [:]
-        var known: [UInt: Symbol?] = [:]
         for stack in stacks {
             var place: String?
+            var symbols: [Symbol?] = []
             for (i, address) in stack.enumerated() {
                 // A return address points after the call: one byte back is inside the calling function.
-                let at = i == 0 ? address : address - 1
-                let symbol: Symbol?
-                if let hit = known[at] { symbol = hit } else { symbol = Symbol(at); known[at] = symbol }
+                let symbol = named(i == 0 ? address : address - 1)
+                symbols.append(symbol)
                 guard let symbol, symbol.isApp, !StallSamples.isEntry(symbol.name), !StallSamples.isLibrary(symbol.name) else { continue }
                 place = symbol.name
                 break
             }
-            if place == nil, let top = stack.first, let leaf = Symbol(top) { place = "\(leaf.name) (\(leaf.image))" }
+            if place == nil, let leaf = symbols.first ?? nil { place = systemPlace(leaf, callers: symbols.dropFirst().compactMap { $0 }) }
             if let place { seen[place, default: 0] += 1 }
         }
         return seen
     }
 
-    struct Symbol {
+    /// `tally` on a background queue, its result handed back on the main actor.
+    @MainActor
+    public static func tallyLater(_ stacks: [Stack], then: @escaping @MainActor ([String: Int]) -> Void) {
+        naming.async {
+            let seen = tally(stacks)
+            DispatchQueue.main.async { MainActor.assumeIsolated { then(seen) } }
+        }
+    }
+
+    /// Where the thread was when no code of the app is on its stack: waiting for an event (`StallSamples.idle`), or the
+    /// system function it was in and the first caller from another library, which says what it was doing there.
+    static func systemPlace(_ leaf: Symbol, callers: [Symbol]) -> String {
+        let outside = callers.first { $0.image != leaf.image }
+        if let outside, outside.name.hasPrefix("__CFRunLoopServiceMachPort") || outside.name.hasPrefix("_DPSNextEvent") { return StallSamples.idle }
+        guard let outside else { return "\(leaf.name) (\(leaf.image))" }
+        return "\(leaf.name) ← \(outside.name) (\(outside.image))"
+    }
+
+    private static let naming = DispatchQueue(label: "com.worknexus.main-thread-sampler.names", qos: .utility)
+    /// The names found so far, by address (they do not change while the app runs).
+    private static let names = OSAllocatedUnfairLock(initialState: [UInt: Symbol?]())
+
+    private static func named(_ address: UInt) -> Symbol? {
+        if let hit = names.withLock({ $0[address] }) { return hit }
+        let symbol = Symbol(address)
+        names.withLock { if $0.count < 50_000 { $0[address] = symbol } }
+        return symbol
+    }
+
+    struct Symbol: Sendable {
         let name: String
         let image: String
         let isApp: Bool
+
+        init(name: String, image: String, isApp: Bool) { self.name = name; self.image = image; self.isApp = isApp }
 
         init?(_ address: UInt) {
             var info = Dl_info()
