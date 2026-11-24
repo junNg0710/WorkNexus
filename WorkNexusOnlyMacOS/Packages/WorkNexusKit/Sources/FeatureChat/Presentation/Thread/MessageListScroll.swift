@@ -52,6 +52,8 @@ struct MessageListScroll: View {
     /// The list has been placed at the bottom (or at a jumped-to message): from then on its position is the reader's, so
     /// reaching the top asks for older messages. Before, the top is just where an unplaced list starts.
     @State private var positioned = false
+    /// The list was taken to the newest message when it opened (once).
+    @State private var opened = false
     /// How many prepends have had the reader's place restored; loads wait for the rest.
     @State private var handledPrepends = 0
     /// Position changes made by a scroll request settle first; loads wait until then.
@@ -115,6 +117,8 @@ struct MessageListScroll: View {
                     loadIfNeeded()
                 }
             }
+            // Every row of the first page is in: the list goes to the newest message.
+            .onChange(of: stage == .all && model.loaded, initial: true) { _, ready in if ready { openAtLatest(proxy) } }
             // Older rows were added above: the reader's row goes back to the top, and no new page is asked for until it has.
             .onChange(of: model.prependCount) { _, _ in
                 let id = restoreId
@@ -190,15 +194,33 @@ struct MessageListScroll: View {
                 try? await Task.sleep(for: .milliseconds(250))
                 go()
             case .bottom:
-                // The rows on the way down are measured only as they come in, so the first trip can stop short of the end:
-                // finish it, unless the reader scrolls or another request came in meanwhile.
                 if glides { try? await Task.sleep(for: .seconds(theme.motion.slow)) }
-                for _ in 0..<Self.settleTries {
-                    try? await Task.sleep(for: .milliseconds(120))
-                    guard ctx.model.scrollRequest == request, activity.userScrolls == touches else { return }
-                    if !scrolled.metrics.atEnd { go() }
-                }
+                await settleAtBottom(proxy, during: request, touches: touches)
             }
+        }
+    }
+
+    /// A chat opens at its newest message. The scroll view's own bottom anchor is not enough: it places the list from
+    /// estimated row heights, and on some chats (tall pictures near the end) that left it several messages short of the
+    /// end, with the jump-to-latest button showing. So the list is sent there itself, and checked. Not when the chat opens
+    /// on a message jumped to.
+    private func openAtLatest(_ proxy: ScrollViewProxy) {
+        guard !opened else { return }
+        opened = true
+        let model = ctx.model
+        guard model.scrollRequest == nil, !model.window.isAround, ctx.state.jump == nil else { return }
+        proxy.scrollTo(Self.bottomId, anchor: .bottom)
+        let touches = activity.userScrolls
+        Task { @MainActor in await settleAtBottom(proxy, during: nil, touches: touches) }
+    }
+
+    /// The rows on the way down are measured only as they come in, so a trip to the bottom can stop short of the end:
+    /// it is finished, unless the reader scrolls or another scroll request came in meanwhile.
+    private func settleAtBottom(_ proxy: ScrollViewProxy, during request: ChatScrollRequest?, touches: Int) async {
+        for _ in 0..<Self.settleTries {
+            try? await Task.sleep(for: .milliseconds(120))
+            guard ctx.model.scrollRequest == request, activity.userScrolls == touches else { return }
+            if !scrolled.metrics.atEnd { proxy.scrollTo(Self.bottomId, anchor: .bottom) }
         }
     }
 
