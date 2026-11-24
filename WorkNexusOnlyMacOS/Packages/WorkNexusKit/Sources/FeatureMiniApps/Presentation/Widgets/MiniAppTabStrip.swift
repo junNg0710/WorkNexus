@@ -46,8 +46,34 @@ private extension MiniAppTabStrip {
     }
 
     var barsButton: some View {
-        MiniAppStripButton(symbol: MiniAppBars.symbol, help: bars.help) { bars.set(!bars.collapsed) }
-            .rotationEffect(bars.turn)
+        HStack(spacing: theme.spacing.s8) {
+            // Set apart from the tabs: it acts on the bars above, not on a tab.
+            Rectangle().fill(theme.colors.line).frame(width: theme.borders.hairline, height: theme.sizes.icon16)
+            MiniAppBarsButton(bars: bars)
+        }
+    }
+}
+
+/// The button at the strip's end that folds the bars above it away and brings them back: a small chip that reads as a
+/// control at rest (a lone 12 pt arrow was easy to miss and looked left over), its arrow turning over with the bars.
+private struct MiniAppBarsButton: View {
+    @Environment(\.appTheme) private var theme
+    @State private var hovering = false
+    let bars: MiniAppBars
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: theme.radii.md)
+        Button { bars.set(!bars.collapsed) } label: {
+            Image(systemName: MiniAppBars.symbol).font(.system(size: theme.sizes.icon12, weight: .bold))
+                .foregroundStyle(hovering ? theme.colors.accent : theme.colors.tx2)
+                .rotationEffect(bars.turn)
+                .frame(width: theme.sizes.control36 - theme.spacing.s4, height: theme.sizes.icon24)
+                .background(hovering ? theme.colors.accent.opacity(0.12) : theme.colors.panel2, in: shape)
+                .overlay(shape.stroke(hovering ? theme.colors.accent.opacity(0.35) : theme.colors.line, lineWidth: theme.borders.hairline))
+                .contentShape(shape)
+        }
+        .buttonStyle(.plain).onHover { hovering = $0 }.help(bars.help)
+        .animation(.easeOut(duration: theme.motion.fast), value: hovering)
     }
 }
 
