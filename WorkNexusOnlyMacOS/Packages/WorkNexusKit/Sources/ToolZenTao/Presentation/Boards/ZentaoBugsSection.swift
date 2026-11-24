@@ -9,7 +9,7 @@ import SwiftUI
 /// filters, view mode) and the board or the list. Bugs are listed per product only.
 public struct ZentaoBugsSection: View {
     @Environment(\.appTheme) private var theme
-    @Environment(\.sectionIsActive) private var sectionActive
+    @KeptAwake private var sectionActive
     let deps: ZentaoDependencies; let state: ZentaoUIState; let account: Account; let location: ToolLocation
 
     public init(deps: ZentaoDependencies, state: ZentaoUIState, account: Account, location: ToolLocation) {

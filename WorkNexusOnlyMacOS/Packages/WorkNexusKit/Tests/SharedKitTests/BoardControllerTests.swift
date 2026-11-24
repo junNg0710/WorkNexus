@@ -160,6 +160,8 @@ final class BoardControllerTests: XCTestCase {
 
     func testSelectionIsBuiltUpAndClearedWhenTheBoardChanges() {
         let (c, _) = make(tickets: [makeTicket("a"), makeTicket("b"), makeTicket("c")])
+        // A board lives in an account's place: the ticket it marks is the one open there.
+        c.nav.select(.account("ghP"))
         c.toggleSelected("a"); c.toggleSelected("b")
         XCTAssertEqual(c.selectedIds, ["a", "b"])
         c.toggleSelected("a")
@@ -175,6 +177,9 @@ final class BoardControllerTests: XCTestCase {
         // With nothing picked a plain click opens it.
         c.tapTicket("a")
         XCTAssertTrue(c.selectedIds.isEmpty)
+        XCTAssertEqual(c.openTicketId, "a")
+        // Behind the chat the board still marks its ticket (it is kept alive there).
+        c.nav.select(.chat)
         XCTAssertEqual(c.openTicketId, "a")
     }
 

@@ -15,7 +15,7 @@ struct ChatSelectionBar: View {
         let forwardable = picked.filter(ForwardChatMessage(model.repository).canForward)
         HStack(spacing: theme.spacing.s8) {
             AppIconButton("xmark", help: shellString("chatCancel", "Cancel")) { state.endSelection() }
-                .keyboardShortcut(.cancelAction)
+                .keptShortcut(.cancelAction)
             Text(L.selected(picked.count)).font(theme.typography.bodyStrong).foregroundStyle(theme.colors.tx)
             Spacer(minLength: theme.spacing.s8)
             AppButton(L.copy, systemImage: "doc.on.doc", kind: .ghost) {

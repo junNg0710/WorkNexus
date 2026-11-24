@@ -39,7 +39,7 @@ struct ZentaoBulkBar: View {
                 .padding(.bottom, theme.spacing.s20)
                 .background {
                     // Present only while picking, so it never takes Esc from a field.
-                    Button("") { board.endSelecting() }.keyboardShortcut(.escape, modifiers: []).opacity(0).frame(width: 0, height: 0)
+                    Button("") { board.endSelecting() }.keptShortcut(.escape, modifiers: []).opacity(0).frame(width: 0, height: 0)
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }

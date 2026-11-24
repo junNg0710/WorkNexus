@@ -225,7 +225,8 @@ public final class BoardController {
     // MARK: Actions
 
     public func openTicket(_ id: String) { nav.openTicket(id) }
-    public var openTicketId: String? { nav.openTicketId }
+    /// The ticket open at the boards' place, to mark its card (also while another place is on screen).
+    public var openTicketId: String? { nav.toolOpenTicketId }
 
     /// Drag & drop a card onto a column: writes the new status to the DB (the board reacts to the change).
     public func moveTicket(_ id: String, to status: UnifiedStatus) {

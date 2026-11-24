@@ -109,8 +109,8 @@ struct ZentaoDocViewer: View {
     /// Cmd+F and Ctrl+F open the find bar.
     private var shortcuts: some View {
         ZStack {
-            Button("") { openFind() }.keyboardShortcut("f", modifiers: .command)
-            Button("") { openFind() }.keyboardShortcut("f", modifiers: .control)
+            Button("") { openFind() }.keptShortcut("f", modifiers: .command)
+            Button("") { openFind() }.keptShortcut("f", modifiers: .control)
         }
         .opacity(0).allowsHitTesting(false)
     }

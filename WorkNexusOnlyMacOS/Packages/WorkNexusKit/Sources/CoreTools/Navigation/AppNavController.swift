@@ -6,7 +6,34 @@ import Observation
 /// when something opens is decided here rather than by each caller.
 @MainActor @Observable
 public final class AppNavController {
-    public private(set) var state = AppNavState()
+    /// The whole state. Reading it follows every change of it: a view kept alive behind the place on screen reads the
+    /// part it shows instead (`rail`, `locations`, `ticketHistories`, `toolAccountId`), or it would be drawn again on
+    /// every trip between places — every card of a board was.
+    public private(set) var state: AppNavState {
+        get { access(keyPath: \.state); return store }
+        set { apply(newValue) }
+    }
+    public var rail: RailTarget { access(keyPath: \.rail); return store.rail }
+    public var locations: [String: ToolLocation] { access(keyPath: \.locations); return store.locations }
+    public var ticketHistories: [String: [String]] { access(keyPath: \.ticketHistories); return store.ticketHistories }
+    /// The account whose place is on the rail — or was last, while the rail is on the chat, the dashboard or Settings.
+    /// What an account's kept place shows hangs on this, not on `rail`, so it stays as it is behind those.
+    public var toolAccountId: String? { access(keyPath: \.toolAccountId); return lastAccount }
+
+    @ObservationIgnored private var store = AppNavState()
+    @ObservationIgnored private var lastAccount: String?
+    /// The scope of each section asked about (`scope(of:accountId:)`), each observed on its own.
+    @ObservationIgnored private var sectionScopes: [String: NavSectionScope] = [:]
+
+    /// The scope of one section of an account (`ToolLocation.scope(of:)`), read again only when that scope changes — not
+    /// when the account goes to another section, as `locations` is.
+    public func scope(of section: SectionID, accountId: String) -> String? {
+        let key = Self.paneKey(accountId, section)
+        if let known = sectionScopes[key] { return known.scopeId }
+        let scope = NavSectionScope(accountId: accountId, section: section, scopeId: store.locations[accountId]?.scope(of: section))
+        sectionScopes[key] = scope
+        return scope.scopeId
+    }
     /// The navigation panes the reader folded away (`paneKey`), kept for the session so a pane stays folded across a trip to
     /// another place. Dart `collapsedPanesProvider`.
     public private(set) var collapsedPanes: Set<String> = []
@@ -20,6 +47,37 @@ public final class AppNavController {
 
     /// - Parameter defaultSection: maps an accountId to the tool's default section (from the `ToolRegistry`).
     public init(defaultSection: @escaping (String) -> SectionID) { self.defaultSection = defaultSection }
+
+    /// Stores `new`, telling the observers of each part that changed (and of the whole).
+    private func apply(_ new: AppNavState) {
+        let old = store
+        guard new != old else { return }
+        var account = lastAccount
+        if case .account(let id) = new.rail { account = id }
+        changing(\.state) {
+            changing(\.rail, if: new.rail != old.rail) {
+                changing(\.locations, if: new.locations != old.locations) {
+                    changing(\.ticketHistories, if: new.ticketHistories != old.ticketHistories) {
+                        changing(\.toolAccountId, if: account != lastAccount) { store = new; lastAccount = account }
+                    }
+                }
+            }
+        }
+        guard new.locations != old.locations else { return }
+        for scope in sectionScopes.values {
+            let now = new.locations[scope.accountId]?.scope(of: scope.section)
+            if scope.scopeId != now { scope.scopeId = now }
+        }
+    }
+
+    private func changing<T>(_ part: KeyPath<AppNavController, T>, if changed: Bool = true, _ body: () -> Void) {
+        if changed { withMutation(keyPath: part, body) } else { body() }
+    }
+
+    private func forgetToolAccount(_ gone: (String) -> Bool) {
+        guard let id = lastAccount, gone(id) else { return }
+        withMutation(keyPath: \.toolAccountId) { lastAccount = nil }
+    }
 
     // MARK: places
 
@@ -56,6 +114,7 @@ public final class AppNavController {
     /// `onWorkspaceSwitched`.
     public func onWorkspaceSwitched(newAccounts: [Account]) {
         state.ticketHistories = [:]
+        forgetToolAccount { id in !newAccounts.contains { $0.id == id } }
         if newAccounts.isEmpty {
             state.rail = .workspace; state.workspaceSection = "overview"; state.editor = nil; state.miniAppId = nil
             // Counts as choosing the workspace: until the new (empty) account list arrives, the default selection must not
@@ -72,10 +131,11 @@ public final class AppNavController {
         state.locations[id] = nil
         state.ticketHistories[RailTarget.account(id).key] = nil
         if state.rail == .account(id) { state.rail = .workspace; state.workspaceSection = "overview" }
+        forgetToolAccount { $0 == id }
     }
 
     public func location(for accountId: String) -> ToolLocation {
-        state.locations[accountId] ?? ToolLocation(section: defaultSection(accountId))
+        locations[accountId] ?? ToolLocation(section: defaultSection(accountId))
     }
     /// Goes to `section`, on the scope it was last left on (none the first time). The section on screen stays as it is.
     public func setSection(_ section: SectionID, accountId: String) {
@@ -130,8 +190,12 @@ public final class AppNavController {
         guard var h = state.ticketHistories[k], h.count > 1 else { return }
         h.removeLast(); state.ticketHistories[k] = h
     }
-    public var canGoBackTicket: Bool { (state.ticketHistories[state.rail.key]?.count ?? 0) > 1 }
-    public var openTicketId: String? { state.ticketHistories[state.rail.key]?.last }
+    public var canGoBackTicket: Bool { (ticketHistories[rail.key]?.count ?? 0) > 1 }
+    public var openTicketId: String? { ticketHistories[rail.key]?.last }
+    /// The ticket open at `place`, whether or not it is the place on screen (a kept place marks its own).
+    public func openTicketId(at place: RailTarget) -> String? { ticketHistories[place.key]?.last }
+    /// The ticket open at the tool account's place (`toolAccountId`): the one a board marks.
+    public var toolOpenTicketId: String? { toolAccountId.flatMap { openTicketId(at: .account($0)) } }
 
     // MARK: collapsible panes
 
@@ -163,4 +227,13 @@ public final class AppNavController {
         state.miniAppId = id
         if id != nil { state.editor = nil; state.ticketHistories = [:]; closeNotifications?() }
     }
+}
+
+/// One section's scope, observed on its own (`AppNavController.scope(of:accountId:)`).
+@MainActor @Observable
+final class NavSectionScope {
+    let accountId: String
+    let section: SectionID
+    var scopeId: String?
+    init(accountId: String, section: SectionID, scopeId: String?) { self.accountId = accountId; self.section = section; self.scopeId = scopeId }
 }

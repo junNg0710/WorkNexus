@@ -151,11 +151,11 @@ private struct ChatOpenThreads: View {
 
     var body: some View {
         let shown = model.thread
-        KeptAlive(shown: shown?.state.chatGid) { wake in
+        KeptAlive(shown: shown?.state.chatGid, keys: model.openThreads.map(\.state.chatGid)) { wake in
             ForEach(model.openThreads, id: \.identity) { session in
                 let gid = session.state.chatGid, active = session === shown
                 ChatThreadPane(model: model, session: session)
-                    .keptAlive(gid, active: active, awake: active || wake.isAwake(gid), front: active)
+                    .keptAlive(gid, active: active, presence: wake.presence(gid), front: active)
             }
         }
     }

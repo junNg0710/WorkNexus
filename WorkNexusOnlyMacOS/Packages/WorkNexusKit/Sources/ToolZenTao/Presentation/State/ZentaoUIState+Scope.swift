@@ -6,18 +6,22 @@ import Foundation
 import SharedKit
 
 extension ZentaoUIState {
-    /// The rail's account and the open scope. The product / execution selections apply only while they match this
-    /// place: another account, or a scope reset to "All", must not keep showing them.
-    var place: (accountId: String?, scopeId: String?) {
-        let s = deps.nav.state
-        guard case .account(let id) = s.rail else { return (nil, nil) }
-        return (id, s.locations[id]?.scopeId)
+    /// The tool account on the rail — or last on it: the boards stay as they are behind the chat or Settings.
+    var placeAccountId: String? { deps.nav.toolAccountId }
+
+    /// The tool account and the scope of one of its sections — its own, also while the other section is on screen: the
+    /// Tasks board keeps its execution and the Bugs board its product, so neither empties behind the other. The product
+    /// / execution selections apply only while they match it: another account, or a scope reset to "All", must not keep
+    /// showing them.
+    func place(of section: SectionID) -> (accountId: String?, scopeId: String?) {
+        guard let id = deps.nav.toolAccountId else { return (nil, nil) }
+        return (id, deps.nav.scope(of: section, accountId: id))
     }
 
     /// The tasks the Tasks section shows before the user's filters: the open execution's cached tasks, narrowed
     /// view by view to what each status view has loaded. Tasks are listed per execution: none until one is picked.
     func scopeTasks(_ tickets: [Ticket]) -> [Ticket] {
-        let place = place
+        let place = place(of: ZentaoSection.tasks)
         // A team replaces the execution: the tasks read from each person, wherever they are.
         if let team = taskTeam {
             guard team.accountId == place.accountId else { return [] }
@@ -39,7 +43,7 @@ extension ZentaoUIState {
     /// narrowed view by view to what each bug view has loaded. The Tasks board's execution does not narrow it: the two
     /// boards keep their own scope, so going from one to the other changes neither.
     func scopeBugs(_ tickets: [Ticket]) -> [Ticket] {
-        let place = place
+        let place = place(of: ZentaoSection.bugs)
         if let team = bugTeam { return team.accountId == place.accountId ? team.tickets(in: tickets, bugs: true) : [] }
         guard let product, product.accountId == place.accountId, product.productId == place.scopeId else { return [] }
         let related = bugRelated

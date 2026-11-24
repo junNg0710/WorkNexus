@@ -1,82 +1,75 @@
+import AppKit
 import SwiftUI
 
-private struct SectionActiveKey: EnvironmentKey { static let defaultValue = true }
-public extension EnvironmentValues {
-    /// False while a view is kept mounted behind the one on screen (`KeptAlive`): it should not register shortcuts,
-    /// grab focus or start work that is only for a visible section.
-    var sectionIsActive: Bool {
-        get { self[SectionActiveKey.self] }
-        set { self[SectionActiveKey.self] = newValue }
-    }
-}
-
-/// Which kept view is on screen, and which one just left it and has not been put to sleep yet. A class so the body can
-/// note the view on screen without a state change loop (it is only read by the same body that wrote it).
-@MainActor
-public final class KeepAliveWake {
-    public private(set) var shown: String?
-    public private(set) var leaving: String?
-
-    public init() {}
-
-    /// Notes which view is on screen now. The one it replaces stays awake until `settle()`.
-    public func show(_ key: String?) {
-        guard key != shown else { return }
-        leaving = shown
-        shown = key
-    }
-
-    public func settle() { leaving = nil }
-
-    /// Whether a view runs (enabled, animating, counted as the active section): the one on screen and the one leaving.
-    public func isAwake(_ key: String) -> Bool { key == shown || key == leaving }
-}
-
 /// Views kept mounted one over the other with only `shown` on screen: the shell's places, the chats last opened. Each
-/// view of `content` is marked with `keptAlive(_:active:awake:front:)`.
+/// view of `content` is marked with `keptAlive(_:active:presence:front:)`, its presence taken from the `KeepAliveWake`
+/// the content is given.
 ///
-/// A view that leaves the screen is hidden at once and put to sleep a frame later: disabling it, pausing its animations
-/// and telling it it is not the active section each walk its whole tree, and doing that for the view leaving in the same
-/// frame that wakes the one coming in made that frame twice as heavy.
+/// A view off screen is invisible and takes no clicks; what must stop while it is off screen — a shortcut, an endless
+/// animation, a refresh timer — reads `@KeptAwake`. That is one object per kept view, handed down once: a switch tells
+/// the few views that read it, where a value in the environment (or `disabled`) walked the whole tree of the view going
+/// to sleep and of the one waking, a third of what a switch cost.
 public struct KeptAlive<Content: View>: View {
     private let shown: String?
+    private let keys: [String]
     private let content: (KeepAliveWake) -> Content
+    @Environment(KeepAlivePresence.self) private var around: KeepAlivePresence?
     @State private var wake = KeepAliveWake()
-    /// Counts the views put to sleep: changing it draws the stack again once `wake.settle()` has run.
-    @State private var settled = 0
 
-    /// `content` is given what tells whether the view with a key is awake (`KeepAliveWake.isAwake`).
-    public init(shown: String?, @ViewBuilder content: @escaping (KeepAliveWake) -> Content) {
+    /// `keys`: the views kept now (the presence of one that is gone is forgotten).
+    public init(shown: String?, keys: [String], @ViewBuilder content: @escaping (KeepAliveWake) -> Content) {
         self.shown = shown
+        self.keys = keys
         self.content = content
     }
 
     public var body: some View {
-        wake.show(shown)
-        _ = settled
+        wake.prepare(shown: shown, keys: keys, around: around)
         let wake = wake
         return KeepAliveLayout { content(wake) }
-            .task(id: shown) {
-                await NextDisplayFrame.wait()
-                guard !Task.isCancelled, wake.leaving != nil else { return }
-                wake.settle()
-                settled += 1
+            .onChange(of: shown) { _, key in
+                wake.show(key)
+                KeptFocus.leaveTextField()
             }
     }
 }
 
 public extension View {
-    /// One view of a `KeptAlive` stack: off screen it is invisible and takes no clicks at once (`active`), and stops
-    /// running — disabled, so no shortcuts or focus, its animations paused, not the active section — once it is not
-    /// `awake`. `front` puts it over the others.
-    func keptAlive(_ key: String, active: Bool, awake: Bool, front: Bool) -> some View {
-        environment(\.sectionIsActive, awake)
-            .environment(\.animationsRun, awake)
+    /// One view of a `KeptAlive` stack: off screen (`active` false) it is invisible, takes no clicks and is left out of
+    /// accessibility. `front` puts it over the others. `presence` (`KeepAliveWake.presence`) is what `@KeptAwake` reads
+    /// inside it.
+    func keptAlive(_ key: String, active: Bool, presence: KeepAlivePresence, front: Bool) -> some View {
+        environment(presence)
             .opacity(active ? 1 : 0)
             .allowsHitTesting(active)
-            .disabled(!awake)
-            .accessibilityHidden(!awake)
+            .accessibilityHidden(!active)
             .zIndex(front ? 1 : 0)
             .keepAlivePlace(key, active: active)
+    }
+
+    /// `keyboardShortcut` for a control inside a view that may be kept alive off screen: the shortcut is its only while
+    /// that view is on screen (a control off screen would answer it too — it is still there).
+    func keptShortcut(_ key: KeyEquivalent, modifiers: EventModifiers = .command) -> some View {
+        modifier(KeptShortcut(shortcut: KeyboardShortcut(key, modifiers: modifiers)))
+    }
+
+    func keptShortcut(_ shortcut: KeyboardShortcut) -> some View { modifier(KeptShortcut(shortcut: shortcut)) }
+}
+
+private struct KeptShortcut: ViewModifier {
+    @KeptAwake private var awake
+    let shortcut: KeyboardShortcut
+
+    func body(content: Content) -> some View { content.keyboardShortcut(awake ? shortcut : nil) }
+}
+
+/// The text field being typed in belongs to the view on screen: when another view takes its place the window takes the
+/// keyboard back, or typing would go on into a field nobody sees. (The view coming in asks for the keyboard itself,
+/// after this.)
+@MainActor
+enum KeptFocus {
+    static func leaveTextField() {
+        guard let window = NSApp?.keyWindow, window.firstResponder is NSText else { return }
+        window.makeFirstResponder(nil)
     }
 }

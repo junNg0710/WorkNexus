@@ -10,7 +10,10 @@ extension ZentaoUIState {
 
     // MARK: The filter
 
-    private func leaderKey(_ bugs: Bool) -> String { (bugs ? bugBoard : taskBoard).currentBoardKey }
+    /// The board's own key, also while the other section is on screen (`BoardController.boardKey(of:)`).
+    private func leaderKey(_ bugs: Bool) -> String {
+        (bugs ? bugBoard : taskBoard).boardKey(of: bugs ? ZentaoSection.bugs : ZentaoSection.tasks)
+    }
 
     /// The leader's filter of the board on screen (each board keeps its own).
     public func leader(bugs: Bool) -> ZenTaoLeaderFilter { leaders[leaderKey(bugs)] ?? ZenTaoLeaderFilter() }
@@ -121,13 +124,13 @@ extension ZentaoUIState {
 extension ZentaoUIState {
     /// The cached ZenTao tickets of the account on screen, whichever execution or product they belong to.
     func accountZenTaoTickets(_ all: [Ticket]) -> [Ticket] {
-        guard let account = place.accountId else { return [] }
+        guard let account = placeAccountId else { return [] }
         return all.filter { $0.accountId == account && $0.providerType == .zentao }
     }
 
     /// Fetches ZenTao ticket `key` from the server (a task first, or a bug first) and returns its local ticket id.
     func fetchByKey(_ key: String, bugsFirst: Bool) async -> String? {
-        guard let accountId = place.accountId, let host = taskBoard.accounts[accountId]?.baseUrl.flatMap({ URL(string: $0)?.host }) else { return nil }
+        guard let accountId = placeAccountId, let host = taskBoard.accounts[accountId]?.baseUrl.flatMap({ URL(string: $0)?.host }) else { return nil }
         for type in bugsFirst ? ["bug", "task"] : ["task", "bug"] {
             if case .success(let id) = await deps.tickets.fetchZenTaoTicket(host: host, type: type, id: key) { return id }
         }

@@ -9,7 +9,7 @@ import SwiftUI
 /// Due this week, filters, view mode) and the board or the list. Tasks are listed per execution only.
 public struct ZentaoTasksSection: View {
     @Environment(\.appTheme) private var theme
-    @Environment(\.sectionIsActive) private var sectionActive
+    @KeptAwake private var sectionActive
     let deps: ZentaoDependencies; let state: ZentaoUIState; let account: Account; let location: ToolLocation
 
     public init(deps: ZentaoDependencies, state: ZentaoUIState, account: Account, location: ToolLocation) {

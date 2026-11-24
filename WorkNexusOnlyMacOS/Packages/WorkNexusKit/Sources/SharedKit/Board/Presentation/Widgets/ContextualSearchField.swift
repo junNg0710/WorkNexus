@@ -19,7 +19,7 @@ public struct ContextualSearchField: View {
     @State private var lookupKey: String?
     @State private var lookupFailed = false
     @FocusState private var focused: Bool
-    @Environment(\.sectionIsActive) private var sectionActive
+    @KeptAwake private var sectionActive
 
     public init(controller: BoardController, scope: String? = nil) { self.controller = controller; self.scope = scope }
 
@@ -75,7 +75,7 @@ public struct ContextualSearchField: View {
         .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(c.line, lineWidth: theme.borders.hairline))
         .background {
             Button("") { focused = true; if !text.trimmingCharacters(in: .whitespaces).isEmpty { showing = true } }
-                .keyboardShortcut("k", modifiers: .command).opacity(0).frame(width: 0, height: 0)
+                .keptShortcut("k", modifiers: .command).opacity(0).frame(width: 0, height: 0)
         }
         .overlay(alignment: .topLeading) {
             if showing {

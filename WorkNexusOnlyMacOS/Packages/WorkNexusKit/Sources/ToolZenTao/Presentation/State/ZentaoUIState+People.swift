@@ -5,14 +5,14 @@ extension ZentaoUIState {
     /// The people the leader keeps at the front of the people strip on this account, in order.
     var pinnedPeople: [String] {
         _ = pinnedPeopleRevision
-        guard let accountId = place.accountId else { return [] }
+        guard let accountId = placeAccountId else { return [] }
         return deps.pinnedPeople.pinned(accountId: accountId)
     }
 
     /// The people tickets were handed to lately on this account, most recent first.
     var recentAssignees: [String] {
         _ = pinnedPeopleRevision
-        guard let accountId = place.accountId else { return [] }
+        guard let accountId = placeAccountId else { return [] }
         return deps.recentAssignees.recent(accountId: accountId)
     }
 
@@ -31,7 +31,7 @@ extension ZentaoUIState {
     func movePerson(_ login: String, before target: String) { setPinned(MovePinnedPerson()(pinnedPeople, move: login, before: target)) }
 
     private func setPinned(_ logins: [String]) {
-        guard let accountId = place.accountId else { return }
+        guard let accountId = placeAccountId else { return }
         deps.pinnedPeople.setPinned(logins, accountId: accountId)
         pinnedPeopleRevision += 1
     }

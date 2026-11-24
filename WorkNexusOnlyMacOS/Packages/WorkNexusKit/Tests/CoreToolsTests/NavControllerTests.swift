@@ -102,4 +102,77 @@ final class NavControllerTests: XCTestCase {
         n.setSection("zentao.bugs", accountId: "zt")
         XCTAssertEqual(n.location(for: "zt").scopeId, "1", "the section on screen stays as it is")
     }
+
+    // MARK: what a place kept alive behind another one reads
+
+    func testTheToolAccountStaysWhileTheRailIsElsewhere() {
+        let n = nav()
+        XCTAssertNil(n.toolAccountId)
+        n.select(.account("a"))
+        XCTAssertEqual(n.toolAccountId, "a")
+        n.select(.chat); XCTAssertEqual(n.toolAccountId, "a", "its boards stay as they are behind the chat")
+        n.select(.settings); XCTAssertEqual(n.toolAccountId, "a")
+        n.select(.account("b")); XCTAssertEqual(n.toolAccountId, "b")
+        n.select(.chat)
+        n.onAccountRemoved("b"); XCTAssertNil(n.toolAccountId)
+        n.select(.account("a")); n.select(.chat)
+        n.onWorkspaceSwitched(newAccounts: []); XCTAssertNil(n.toolAccountId, "no account of the workspace left")
+    }
+
+    func testEachSectionKeepsItsOwnScopeBehindTheOther() {
+        let n = nav()
+        n.select(.account("zt"))
+        n.setSection("zentao.tasks", accountId: "zt"); n.setScope("exec7", accountId: "zt")
+        n.setSection("zentao.bugs", accountId: "zt"); n.setScope("prod3", accountId: "zt")
+        XCTAssertEqual(n.scope(of: "zentao.bugs", accountId: "zt"), "prod3")
+        XCTAssertEqual(n.scope(of: "zentao.tasks", accountId: "zt"), "exec7", "not the scope of the section on screen")
+        n.setSection("zentao.tasks", accountId: "zt")
+        XCTAssertEqual(n.scope(of: "zentao.tasks", accountId: "zt"), "exec7")
+        XCTAssertEqual(n.scope(of: "zentao.bugs", accountId: "zt"), "prod3")
+        n.setScope("exec9", accountId: "zt")
+        XCTAssertEqual(n.scope(of: "zentao.tasks", accountId: "zt"), "exec9")
+        XCTAssertEqual(n.location(for: "zt").scope(of: "zentao.bugs"), "prod3")
+    }
+
+    /// Whether reading `read` is told about a change made by `change`.
+    private func isTold(_ n: AppNavController, of change: () -> Void, reading read: @escaping () -> Void) -> Bool {
+        let told = Flag()
+        withObservationTracking(read) { told.on = true }
+        change()
+        return told.on
+    }
+
+    func testAKeptPlaceIsNotToldAboutATripToAnotherPlace() {
+        let n = nav()
+        n.select(.account("zt"))
+        n.setSection("zentao.tasks", accountId: "zt"); n.setScope("exec7", accountId: "zt")
+        n.openTicket("t1")
+        let board = { _ = n.toolAccountId; _ = n.scope(of: "zentao.tasks", accountId: "zt"); _ = n.toolOpenTicketId }
+
+        XCTAssertFalse(isTold(n, of: { n.select(.chat) }, reading: board))
+        XCTAssertFalse(isTold(n, of: { n.select(.account("zt")) }, reading: board))
+        XCTAssertFalse(isTold(n, of: { n.setSection("zentao.bugs", accountId: "zt") }, reading: board),
+                       "the other section on screen: the Tasks board keeps its scope")
+        XCTAssertEqual(n.toolOpenTicketId, "t1")
+        XCTAssertFalse(isTold(n, of: { n.setScope("prod3", accountId: "zt") }, reading: board))
+        // What it does show changed.
+        XCTAssertTrue(isTold(n, of: { n.setSection("zentao.tasks", accountId: "zt"); n.setScope("exec9", accountId: "zt") }, reading: board))
+        XCTAssertTrue(isTold(n, of: { n.openTicket("t2") }, reading: board))
+        XCTAssertTrue(isTold(n, of: { n.select(.account("other")) }, reading: board))
+        // The whole state still follows everything.
+        XCTAssertTrue(isTold(n, of: { n.select(.chat) }, reading: { _ = n.state }))
+        XCTAssertTrue(isTold(n, of: { n.select(.settings) }, reading: { _ = n.rail }))
+    }
+
+    func testAPlaceMarksItsOwnOpenTicket() {
+        let n = nav()
+        n.select(.account("a")); n.openTicket("1")
+        n.select(.workspace); n.openTicket("w")
+        XCTAssertEqual(n.openTicketId, "w")
+        XCTAssertEqual(n.openTicketId(at: .account("a")), "1")
+        XCTAssertEqual(n.toolOpenTicketId, "1", "the board behind the dashboard still marks its ticket")
+        XCTAssertEqual(n.openTicketId(at: .workspace), "w")
+    }
 }
+
+private final class Flag: @unchecked Sendable { var on = false }

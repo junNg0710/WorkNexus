@@ -81,7 +81,7 @@ private struct TypingOthers: View {
 /// reduced motion.
 struct ThreadTypingDots: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.animationsRun) private var animationsRun
+    @KeptAwake private var animationsRun
     let color: Color
     /// Diameter of one dot; gaps and the rise scale with it.
     let size: CGFloat

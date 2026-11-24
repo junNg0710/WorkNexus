@@ -38,7 +38,7 @@ struct ZentaoSelectButton: View {
         .background {
             // Present only in picking mode, so ⌘A keeps selecting text everywhere else.
             if on {
-                Button("") { state.selectAllShown(bugs: bugs) }.keyboardShortcut("a", modifiers: .command)
+                Button("") { state.selectAllShown(bugs: bugs) }.keptShortcut("a", modifiers: .command)
                     .opacity(0).frame(width: 0, height: 0).accessibilityHidden(true)
             }
         }

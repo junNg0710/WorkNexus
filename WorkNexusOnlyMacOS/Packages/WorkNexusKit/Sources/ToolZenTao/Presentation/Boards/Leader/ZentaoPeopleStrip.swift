@@ -54,7 +54,7 @@ struct ZentaoPeopleStrip: View {
                 }
                 ForEach(shown) { row in
                     PersonChipBody(name: row.isUnassigned ? appString("unassigned", "Unassigned") : (state.memberNames[row.login] ?? row.login),
-                                   count: row.open, overdue: row.overdue, accountId: state.place.accountId, login: row.login,
+                                   count: row.open, overdue: row.overdue, accountId: state.placeAccountId, login: row.login,
                                    active: leader.people.contains(row.login), pinned: pinned.contains(row.login),
                                    help: Self.help(row, bugs: bugs)) {
                         let add = NSEvent.modifierFlags.contains(.command)

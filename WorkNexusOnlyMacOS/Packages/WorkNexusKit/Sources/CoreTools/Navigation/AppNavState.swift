@@ -26,6 +26,10 @@ public struct ToolLocation: Hashable, Sendable {
         self.section = section; self.scopeId = scopeId; self.quickScope = quickScope
         self.viewModes = viewModes; self.recentScopeIds = recentScopeIds; self.sectionScopes = sectionScopes
     }
+
+    /// The scope of `section`: the open one while it is the section on screen, else the one it was left on. What a
+    /// section kept alive behind another one shows hangs on this, so it stays as it is until it is back.
+    public func scope(of section: SectionID) -> String? { section == self.section ? scopeId : sectionScopes[section] }
 }
 
 public enum TicketEditorRoute: Hashable, Sendable {

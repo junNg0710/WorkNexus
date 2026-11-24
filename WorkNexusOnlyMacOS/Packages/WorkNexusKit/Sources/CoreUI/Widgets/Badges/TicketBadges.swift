@@ -93,7 +93,7 @@ public struct SkeletonBox: View {
 /// box flickering on its own.
 struct SkeletonSheen: View {
     @Environment(\.appTheme) private var theme
-    @Environment(\.animationsRun) private var animationsRun
+    @KeptAwake private var animationsRun
     /// One sweep, and how far it travels (wider than any window).
     static let period: TimeInterval = 1.6
     static let travel: CGFloat = 2600

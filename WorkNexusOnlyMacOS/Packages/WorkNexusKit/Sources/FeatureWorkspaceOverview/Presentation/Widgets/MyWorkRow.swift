@@ -17,7 +17,7 @@ struct MyWorkRow: View {
         let c = theme.colors, t = theme.typography
         let type = ticket.externalType?.lowercased()
         let updated = ticket.updatedAt ?? ticket.createdAt
-        HoverSurface(onTap: { model.openTicket(ticket.id) }, selected: model.nav.openTicketId == ticket.id) {
+        HoverSurface(onTap: { model.openTicket(ticket.id) }, selected: model.nav.openTicketId(at: .workspace) == ticket.id) {
             HStack(alignment: .top, spacing: theme.spacing.s10) {
                 ZenTaoKindIcon(type)
                 VStack(alignment: .leading, spacing: theme.spacing.s6) {

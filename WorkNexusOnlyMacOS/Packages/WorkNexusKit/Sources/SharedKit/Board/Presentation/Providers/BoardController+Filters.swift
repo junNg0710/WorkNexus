@@ -1,13 +1,21 @@
 import CoreDomain
+import CoreTools
 import Foundation
 
 /// Ported from: lib/shared/board/presentation/providers/filter_providers.dart (`FilterController`, `boardKeyProvider`)
 public extension BoardController {
-    /// `section|accountId|scopeId` of the place on screen: each board remembers its own filter.
+    /// `section|accountId|scopeId` of the tool account's place (the one on the rail, or last on it): each board
+    /// remembers its own filter.
     var currentBoardKey: String {
-        let s = nav.state
-        guard case .account(let accountId) = s.rail, let loc = s.locations[accountId] else { return "default" }
+        guard let accountId = nav.toolAccountId, let loc = nav.locations[accountId] else { return "default" }
         return "\(loc.section.rawValue)|\(accountId)|\(loc.scopeId ?? "")"
+    }
+
+    /// The key of `section`'s board at the tool account's place — `currentBoardKey` while that section is on screen, and
+    /// the same key while another section is (a board kept alive behind it stays on its own filter).
+    func boardKey(of section: SectionID) -> String {
+        guard let accountId = nav.toolAccountId else { return "default" }
+        return "\(section.rawValue)|\(accountId)|\(nav.scope(of: section, accountId: accountId) ?? "")"
     }
 
     private func toggled<T: Hashable>(_ set: Set<T>, _ v: T) -> Set<T> {

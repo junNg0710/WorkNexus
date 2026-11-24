@@ -9,7 +9,7 @@ import SwiftUI
 /// or the Mac has no network.
 struct ZentaoAutoRefresh: ViewModifier {
     let state: ZentaoUIState
-    @Environment(\.sectionIsActive) private var sectionActive
+    @KeptAwake private var sectionActive
     /// How often a board on screen is read again.
     static let interval: Duration = .seconds(180)
     /// Coming back to the app reads again only when the last read is at least this old (switching apps often).

@@ -7,7 +7,7 @@ import SwiftUI
 /// Refresh button (⌘R) with a spinner while `loading`.
 public struct BoardRefreshButton: View {
     @Environment(\.appTheme) private var theme
-    @Environment(\.sectionIsActive) private var sectionActive
+    @KeptAwake private var sectionActive
     let loading: Bool; let onPressed: () -> Void
     public init(loading: Bool, onPressed: @escaping () -> Void) { self.loading = loading; self.onPressed = onPressed }
     public var body: some View {
@@ -20,7 +20,7 @@ public struct BoardRefreshButton: View {
             .background(theme.colors.panel, in: RoundedRectangle(cornerRadius: theme.radii.md))
             .overlay { if theme.showOutline { RoundedRectangle(cornerRadius: theme.radii.md).stroke(theme.colors.line, lineWidth: theme.borders.hairline) } }
         }
-        .buttonStyle(.plain).keyboardShortcut("r", modifiers: .command).help(appString("refresh", "Refresh"))
+        .buttonStyle(.plain).keptShortcut("r", modifiers: .command).help(appString("refresh", "Refresh"))
         // The menu's ⌘R refreshes the board on screen first (a hidden, kept-alive board must not answer it).
         .focusedSceneValue(\.boardRefresh, sectionActive && !loading ? onPressed : nil)
     }

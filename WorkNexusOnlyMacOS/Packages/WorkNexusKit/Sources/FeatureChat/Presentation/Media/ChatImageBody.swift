@@ -16,7 +16,7 @@ struct ChatImageBody: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatServices) private var services
     /// False in a chat kept open behind another one: a GIF does not play there.
-    @Environment(\.animationsRun) private var animationsRun
+    @KeptAwake private var animationsRun
     let message: ChatMessage
     let image: ImageContent
     let state: ChatThreadState

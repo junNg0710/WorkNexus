@@ -57,34 +57,64 @@ final class KeepAliveLayoutTests: XCTestCase {
         XCTAssertEqual(KeepAliveLayout.size(of: KeepAlivePlace(key: "a", active: false), in: stack, last: nil), stack)
     }
 
-    func testThePlaceLeavingStaysAwakeUntilSettled() {
+    func testOnlyTheViewShownIsAwake() {
         let wake = KeepAliveWake()
-        wake.show("chat")
-        XCTAssertTrue(wake.isAwake("chat"))
+        wake.prepare(shown: "chat", keys: ["chat", "tasks"], around: nil)
+        let chat = wake.presence("chat"), tasks = wake.presence("tasks")
+        XCTAssertTrue(chat.isAwake, "built as the view on screen")
+        XCTAssertFalse(tasks.isAwake)
+        XCTAssertTrue(wake.presence("chat") === chat, "one presence per view, never replaced")
+
+        // The stack is drawn with another view: the presences change after it, in `show`.
+        wake.prepare(shown: "tasks", keys: ["chat", "tasks"], around: nil)
+        XCTAssertTrue(chat.isAwake)
+        wake.show("tasks")
+        XCTAssertFalse(chat.isAwake)
+        XCTAssertTrue(tasks.isAwake)
+
+        // Everything covered (a mini app on screen): no view is awake.
+        wake.show(nil)
+        XCTAssertFalse(tasks.isAwake)
         XCTAssertFalse(wake.isAwake("tasks"))
-
-        wake.show("tasks")
-        XCTAssertTrue(wake.isAwake("tasks"))
-        XCTAssertTrue(wake.isAwake("chat"), "the place that just left sleeps a frame later")
-        // Drawn again with the same place: nothing changes.
-        wake.show("tasks")
-        XCTAssertEqual(wake.leaving, "chat")
-
-        wake.settle()
-        XCTAssertFalse(wake.isAwake("chat"))
-        XCTAssertTrue(wake.isAwake("tasks"))
     }
 
-    func testOnlyTheLastPlaceLeftStaysAwake() {
+    func testAViewBuiltLaterStartsAsWhatItIs() {
         let wake = KeepAliveWake()
-        wake.show("chat"); wake.show("tasks"); wake.show("bugs")
+        wake.prepare(shown: "chat", keys: ["chat"], around: nil)
+        _ = wake.presence("chat")
+        wake.prepare(shown: "bugs", keys: ["chat", "bugs"], around: nil)
+        XCTAssertTrue(wake.presence("bugs").isAwake, "awake from its first frame")
+        wake.show("bugs")
         XCTAssertFalse(wake.isAwake("chat"))
-        XCTAssertTrue(wake.isAwake("tasks"))
-        XCTAssertTrue(wake.isAwake("bugs"))
-        // Everything covered (a mini app on screen): the place it covers sleeps after the frame too.
-        wake.show(nil)
-        XCTAssertTrue(wake.isAwake("bugs"))
-        wake.settle()
-        XCTAssertFalse(wake.isAwake("bugs"))
+    }
+
+    func testAViewNoLongerKeptIsForgotten() {
+        let wake = KeepAliveWake()
+        wake.prepare(shown: "a", keys: ["a", "b"], around: nil)
+        let old = wake.presence("b")
+        wake.prepare(shown: "a", keys: ["a"], around: nil)
+        wake.prepare(shown: "a", keys: ["a", "b"], around: nil)
+        XCTAssertFalse(wake.presence("b") === old, "kept again later: a new view, a new presence")
+    }
+
+    func testAKeptViewInsideAHiddenOneIsAsleep() {
+        let place = KeepAlivePresence(shown: true)
+        let wake = KeepAliveWake()
+        wake.prepare(shown: "chat1", keys: ["chat1"], around: place)
+        let chat = wake.presence("chat1")
+        XCTAssertTrue(chat.isAwake)
+        // The chat place goes behind another place: its open chat is not on screen either.
+        let outer = KeepAliveWake()
+        outer.prepare(shown: "chat", keys: ["chat", "tasks"], around: nil)
+        let chatPlace = outer.presence("chat")
+        let inner = KeepAliveWake()
+        inner.prepare(shown: "c", keys: ["c"], around: chatPlace)
+        let thread = inner.presence("c")
+        XCTAssertTrue(thread.isAwake)
+        outer.show("tasks")
+        XCTAssertFalse(thread.isAwake)
+        XCTAssertTrue(thread.isShown, "still the chat its own stack shows")
+        outer.show("chat")
+        XCTAssertTrue(thread.isAwake)
     }
 }

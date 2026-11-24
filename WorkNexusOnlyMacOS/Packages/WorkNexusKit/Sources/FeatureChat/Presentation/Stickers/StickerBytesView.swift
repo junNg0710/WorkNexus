@@ -12,7 +12,7 @@ import SwiftUI
 struct StickerBytesView: View {
     @Environment(\.appTheme) private var theme
     /// False in a chat kept open behind another one: nothing plays there.
-    @Environment(\.animationsRun) private var animationsRun
+    @KeptAwake private var animationsRun
     let data: Data
     var animated = true
 
