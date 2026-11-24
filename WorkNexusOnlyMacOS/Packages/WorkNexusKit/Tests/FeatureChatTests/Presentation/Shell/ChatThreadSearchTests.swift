@@ -39,6 +39,38 @@ final class ChatThreadSearchTests: XCTestCase {
         XCTAssertEqual(search.activeIndex, -1)
     }
 
+    func testItIsNarrowedToOnePersonAndBack() async {
+        let repo = ShellFakeRepository()
+        repo.searchResults = [Make.message("m1", sender: 7, serverId: 1), Make.message("m2", sender: 9, serverId: 2), Make.message("m3", sender: 9, serverId: 3)]
+        let search = make(repo)
+        search.setQuery("x")
+        await ShellMake.expectEventually { search.matches.count == 3 }
+        XCTAssertEqual(search.senders, [9, 7], "who sent the matches, the one with the most first")
+        XCTAssertEqual(repo.lastSearch?.chatGids, ["g"]); XCTAssertNil(repo.lastSearch?.senderIds)
+        search.setSender(7)
+        await ShellMake.expectEventually { search.matches.count == 1 }
+        XCTAssertEqual(repo.lastSearch?.senderIds, [7])
+        XCTAssertEqual(search.senders, [9, 7], "the others stay on offer while it is narrowed")
+        XCTAssertEqual(search.activeIndex, -1)
+        search.setSender(nil)
+        await ShellMake.expectEventually { search.matches.count == 3 }
+        search.close()
+        XCTAssertNil(search.sender); XCTAssertTrue(search.senders.isEmpty); XCTAssertFalse(search.listOpen)
+    }
+
+    func testPickingAMatchFromTheListGoesToIt() async {
+        let repo = ShellFakeRepository(); repo.searchResults = hits(3)
+        let search = make(repo)
+        var jumps: [Int] = []
+        search.onJump = { jumps.append($0) }
+        search.setQuery("x")
+        await ShellMake.expectEventually { search.matches.count == 3 }
+        search.show(2)
+        XCTAssertEqual(search.activeIndex, 2); XCTAssertEqual(jumps, [3])
+        search.show(9)
+        XCTAssertEqual(search.activeIndex, 2, "nothing there")
+    }
+
     func testAFullPageMeansMoreAreStored() async {
         let repo = ShellFakeRepository(); repo.searchResults = hits(ChatThreadSearch.pageSize + 1)
         let search = make(repo)

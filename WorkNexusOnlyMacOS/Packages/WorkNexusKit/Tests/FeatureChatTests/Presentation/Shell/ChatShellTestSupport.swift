@@ -24,9 +24,12 @@ final class ShellFakeRepository: StubChatRepository, @unchecked Sendable {
     override func watchConversations(accountId: String) -> AsyncStream<[ChatConversation]> { AsyncStream { conversationsCont = $0 } }
     override func watchUsers(accountId: String) -> AsyncStream<[ChatUser]> { AsyncStream { usersCont = $0 } }
     override func watchTyping(accountId: String) -> AsyncStream<ChatTypingSignal> { AsyncStream { typingCont = $0 } }
-    override func searchMessages(accountId: String, chatGid: String?, query: String, since: Date?, limit: Int?) async -> Outcome<[ChatMessage]> {
-        searchCalls.append((query, limit))
-        return .success(Array(searchResults.prefix(limit ?? .max)))
+    /// What the last search was narrowed to.
+    var lastSearch: ChatMessageSearch?
+    override func searchMessages(accountId: String, matching search: ChatMessageSearch) async -> Outcome<[ChatMessage]> {
+        searchCalls.append((search.query, search.limit)); lastSearch = search
+        let found = searchResults.filter { m in search.senderIds.map { $0.contains(m.senderId) } ?? true }
+        return .success(Array(found.prefix(search.limit ?? .max)))
     }
     override func refreshMessages(accountId: String, chatGid: String) async -> Outcome<Void> { refreshCalls.append(chatGid); return refreshResult }
     override func markRead(accountId: String, chatGid: String) async -> Outcome<Void> { markReadCalls.append(chatGid); return .success(()) }

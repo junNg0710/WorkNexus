@@ -117,8 +117,12 @@ final class ParseAndTextTests: XCTestCase {
 
     func testFoldOfMessage() {
         let fold = FoldSearchText()
-        XCTAssertNil(fold.ofMessage(contentType: "image", content: #"{"name":"a.png"}"#))
-        XCTAssertNil(fold.ofMessage(contentType: "code", content: "print(1)"))
+        // A file and a picture by their name, a shared link by its address and title, code by its name and what it says.
+        XCTAssertEqual(fold.ofMessage(contentType: "image", content: #"{"name":"Ảnh A.png"}"#), "anh a.png")
+        XCTAssertEqual(fold.ofMessage(contentType: "file", content: #"{"name":"Báo cáo.zip","size":3}"#), "bao cao.zip")
+        XCTAssertEqual(fold.ofMessage(contentType: "object", content: #"{"type":"url","url":"https://zt.test/bug-view-4158.html"}"#), "https://zt.test/bug-view-4158.html")
+        XCTAssertEqual(fold.ofMessage(contentType: "code", content: #"{"lang":"swift","code":"print(1)","name":"Demo"}"#), "demo print(1)")
+        XCTAssertNil(fold.ofMessage(contentType: "emotion", content: "smile"), "nothing to search in an emoji")
         XCTAssertEqual(fold.ofMessage(contentType: "plain", content: "hỏi [@Thành](@#40) nhé"), "hoi @thanh nhe")
         XCTAssertEqual(fold.ofMessage(contentType: "plain", content: "ok :thumbsup:"), "ok 👍")
         XCTAssertEqual(fold.ofMessage(contentType: "text", content: "**Gấp**: sửa `snake_case` ~~cũ~~"), "gap: sua snake_case cu")

@@ -22,6 +22,8 @@ struct ChatThreadSearchBar: View {
                     .onKeyPress(keys: [.return]) { press in stepFromKey(press.modifiers.contains(.shift) ? -1 : 1); return .handled }
                     .onKeyPress(.escape) { session.toggleSearch(); return .handled }
                 ChatSearchPeriodButton(model: model, session: session)
+                // Once it is known who sent the matches: narrowing to one of them.
+                if !search.query.isEmpty, search.senders.count > 1 || search.sender != nil { ChatSearchSenderButton(model: model, search: search) }
                 if !search.query.isEmpty { Status(search: search) }
                 if !search.query.isEmpty {
                     AppIconButton("chevron.up", help: shellString("chatPrevious", "Previous")) { Task { await search.step(-1) } }
@@ -29,12 +31,17 @@ struct ChatThreadSearchBar: View {
                     AppIconButton("chevron.down", help: shellString("chatNext", "Next")) { Task { await search.step(1) } }
                         .disabled(search.matches.isEmpty)
                 }
+                if !search.matches.isEmpty {
+                    AppIconButton("list.bullet", help: search.listOpen ? shellString("chatSearchHideList", "Hide the list of results")
+                                                                       : shellString("chatSearchShowList", "List the results")) { search.listOpen.toggle() }
+                }
                 AppIconButton("xmark", help: shellString("chatCancel", "Cancel")) { session.toggleSearch() }
             }
             .padding(.horizontal, theme.spacing.s8)
             .frame(height: theme.sizes.control36 + theme.spacing.s8)
             .background(theme.colors.panel)
             .overlay(alignment: .bottom) { Rectangle().fill(theme.colors.line).frame(height: theme.borders.hairline) }
+            if search.listOpen, !search.matches.isEmpty { ChatThreadSearchResults(model: model, search: search) }
             ChatHistoryDownloadPrompt(session: session)
         }
         // Once the field is in the window (focusing it in the same pass as it appears does nothing): type at once.

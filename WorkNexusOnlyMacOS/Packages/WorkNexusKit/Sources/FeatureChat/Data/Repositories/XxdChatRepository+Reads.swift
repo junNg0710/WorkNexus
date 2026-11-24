@@ -80,8 +80,8 @@ extension XxdChatRepository {
         }
     }
 
-    public func searchMessages(accountId: String, chatGid: String?, query: String, since: Date?, limit: Int?) async -> Outcome<[ChatMessage]> {
-        await storage("Could not search messages") { try await local.searchMessages(accountId, cgid: chatGid, query: query, since: since, limit: limit) }
+    public func searchMessages(accountId: String, matching search: ChatMessageSearch) async -> Outcome<[ChatMessage]> {
+        await storage("Could not search messages") { try await local.searchMessages(accountId, search) }
     }
 
     /// Marks the chat read up to its last message: locally at once, on the server when online.

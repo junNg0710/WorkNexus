@@ -15,6 +15,7 @@ enum PlaceSwitchBench {
         ChatScrollBench.start()
         MenuLog.start(); MenuLog.clicks()
         DemoKeys.start(shell: shell)
+        DemoType.start()
         SpamClickBench.start()
         guard let spec = env["WN_DEMO_PLACE_CYCLE"] else { return }
         let places = spec.split(separator: ",").map { $0.split(separator: ":").map(String.init) }
@@ -285,7 +286,14 @@ enum MenuLog {
                         }
                         return
                     }
-                    print("MENULOG \(stamp()) click \(Int(p.x)),\(Int(p.y)) active=\(NSApp.isActive) key=\(w.isKeyWindow)"); fflush(stdout)
+                    // Which AppKit view is under the click, with its ancestors: says who takes it when SwiftUI's own view does not.
+                    var chain: [String] = [], under = w.contentView?.superview?.hitTest(at)
+                    while let v = under, chain.count < 6 {
+                        // A scroll view with where it is in the window, to tell one list from another.
+                        let frame = v is NSScrollView ? " \(v.convert(v.bounds, to: nil).integral)" : ""
+                        chain.append(String(describing: type(of: v)).prefix(48).description + frame); under = v.superview
+                    }
+                    print("MENULOG \(stamp()) click \(Int(p.x)),\(Int(p.y)) active=\(NSApp.isActive) key=\(w.isKeyWindow) under=\(chain.joined(separator: " < "))"); fflush(stdout)
                     for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
                         if let e = NSEvent.mouseEvent(with: type, location: at, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
                                                       windowNumber: w.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: type == .leftMouseDown ? 1 : 0) {

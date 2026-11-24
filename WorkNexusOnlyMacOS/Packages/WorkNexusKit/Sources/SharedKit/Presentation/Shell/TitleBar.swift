@@ -34,5 +34,7 @@ struct TitleBar: View {
         .animation(.easeOut(duration: theme.motion.base), value: model.showsGlobalSearch)
         .padding(.horizontal, theme.spacing.s8).frame(height: theme.sizes.titleBar - theme.spacing.s8)
         .background(WindowDragArea())
+        // Over the banner and the page under it: the search's results hang below the bar, and were drawn under them.
+        .zIndex(1)
     }
 }

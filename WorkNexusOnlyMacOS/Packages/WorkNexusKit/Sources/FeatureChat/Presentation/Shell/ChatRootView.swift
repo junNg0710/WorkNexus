@@ -94,6 +94,15 @@ struct ChatShellView: View {
             model.thread?.state.requestJump(to: target.serverId)
             model.events.pendingJump = nil
         }
+        .onChange(of: model.events.pendingSearch, initial: true) { _, target in
+            guard let target else { return }
+            model.select(target.chatGid)
+            if let session = model.thread {
+                if !session.search.isOpen { session.toggleSearch() }
+                session.search.setQuery(target.query)
+            }
+            model.events.pendingSearch = nil
+        }
         .onChange(of: openChat?.wrappedValue, initial: true) { _, gid in
             guard let gid else { return }
             model.select(gid); openChat?.wrappedValue = nil

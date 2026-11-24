@@ -10,6 +10,9 @@ public final class ChatShellEvents {
     public var pendingChatGid: String?
     /// A message to show once its chat is open (a search hit); the view clears it once it has.
     public var pendingJump: ChatJumpTarget?
+    /// A chat to open with its own search on these words (searching on inside a chat from a hit of the title bar's search);
+    /// the view clears it once it has.
+    public var pendingSearch: ChatSearchTarget?
     /// Message notifications are on in the app but blocked by the OS: shows the warning strip.
     public var notificationsBlocked = false
     /// "Turn on" in the warning strip.
@@ -42,6 +45,14 @@ public final class ChatShellEvents {
 
     /// Opens `chatGid` and jumps to its message `serverId` (loading it from the server when it is not stored around).
     public func open(chatGid: String, jumpTo serverId: Int) { pendingJump = ChatJumpTarget(chatGid: chatGid, serverId: serverId) }
+
+    /// Opens `chatGid` with its search bar on `query` (which also offers to load the chat's older history).
+    public func open(chatGid: String, searching query: String) { pendingSearch = ChatSearchTarget(chatGid: chatGid, query: query) }
+}
+
+public struct ChatSearchTarget: Equatable, Sendable {
+    public var chatGid: String
+    public var query: String
 }
 
 public struct ChatJumpTarget: Equatable, Sendable {

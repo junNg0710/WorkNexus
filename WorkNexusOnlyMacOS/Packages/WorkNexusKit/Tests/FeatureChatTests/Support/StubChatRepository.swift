@@ -34,7 +34,7 @@ class StubChatRepository: ChatRepository, @unchecked Sendable {
     func countOlderMessages(accountId: String, chatGid: String, before: Date) async -> Outcome<Int> { unstubbed() }
     func timelineExtent(accountId: String, chatGid: String) async -> Outcome<ChatTimelineExtent> { unstubbed() }
     func messageCount(accountId: String, chatGid: String) async -> Outcome<Int> { unstubbed() }
-    func searchMessages(accountId: String, chatGid: String?, query: String, since: Date?, limit: Int?) async -> Outcome<[ChatMessage]> { unstubbed() }
+    func searchMessages(accountId: String, matching search: ChatMessageSearch) async -> Outcome<[ChatMessage]> { unstubbed() }
     func fetchMessages(accountId: String, chatGid: String, serverIds: [Int]) async -> Outcome<Void> { unstubbed() }
     func sendText(accountId: String, chatGid: String, text: String, replyToId: Int?, markdown: Bool) async -> Outcome<Void> { unstubbed() }
     func sendEmoji(accountId: String, chatGid: String, code: String, replyToId: Int?) async -> Outcome<Void> { unstubbed() }

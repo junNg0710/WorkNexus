@@ -29,6 +29,13 @@ final class ChatListingTests: XCTestCase {
         XCTAssertEqual(Set(ChatListing.visible(chats, users: users, tab: .bots, query: "").map(\.id)), ["b", "s"])
     }
 
+    func testSearchIgnoresDiacriticsAndTakesWordsInAnyOrder() {
+        let chats = [ShellMake.chat("a", name: "Đội Quốc tế"), ShellMake.chat("b", name: "Quốc nội"), ShellMake.chat("c", name: "Team")]
+        XCTAssertEqual(ChatListing.visible(chats, users: users, tab: .all, query: "quoc").map(\.id).sorted(), ["a", "b"])
+        XCTAssertEqual(ChatListing.visible(chats, users: users, tab: .all, query: "te doi").map(\.id), ["a"])
+        XCTAssertEqual(ChatListing.visible(chats, users: users, tab: .all, query: "quoc team").map(\.id), [])
+    }
+
     func testSearchMatchesTheResolvedTitleCaseInsensitively() {
         let chats = [ShellMake.chat("g", name: "Release Team"), ShellMake.chat("d", type: .one2one, peer: 2)]
         XCTAssertEqual(ChatListing.visible(chats, users: users, tab: .all, query: " team ").map(\.id), ["g"])

@@ -17,6 +17,12 @@ final class ChatThreadSearch {
     private(set) var failed = false
     /// 0-based; -1 until the first step, so that step lands on the first match rather than the second.
     var activeIndex = -1
+    /// Only what this person sent; nil: anyone.
+    private(set) var sender: Int?
+    /// Who sent the matches of the search as typed (before it is narrowed to one of them), most matches first.
+    private(set) var senders: [Int] = []
+    /// The matches are listed under the bar, to pick one from.
+    var listOpen = false
 
     @ObservationIgnored private let accountId: String
     @ObservationIgnored private let chatGid: String
@@ -66,15 +72,37 @@ final class ChatThreadSearch {
     }
 
     private func run() async {
-        let q = query, n = limit
-        let result = await repository.searchMessages(accountId: accountId, chatGid: chatGid, query: q,
-                                                     since: period().since(Date()), limit: n + 1)
-        guard !Task.isCancelled, q == query else { return }
+        let q = query, n = limit, from = sender
+        let search = ChatMessageSearch(query: q, chatGids: [chatGid], senderIds: from.map { [$0] }, since: period().since(Date()), limit: n + 1)
+        let result = await repository.searchMessages(accountId: accountId, matching: search)
+        guard !Task.isCancelled, q == query, from == sender else { return }
         switch result {
-        case .success(let found): matches = Array(found.prefix(n)); hasMore = found.count > n; failed = false
+        case .success(let found):
+            matches = Array(found.prefix(n)); hasMore = found.count > n; failed = false
+            if from == nil { senders = Self.senders(of: matches) }
         case .failure: failed = true
         }
         isLoading = false
+    }
+
+    /// Who sent `messages`, the one with the most first.
+    static func senders(of messages: [ChatMessage]) -> [Int] {
+        let count = Dictionary(messages.map { ($0.senderId, 1) }, uniquingKeysWith: +)
+        return count.keys.sorted { (count[$0] ?? 0, $1) > (count[$1] ?? 0, $0) }
+    }
+
+    /// Narrows the search to what one person sent (nil: anyone again).
+    func setSender(_ id: Int?) {
+        guard id != sender else { return }
+        sender = id; activeIndex = -1; limit = Self.pageSize
+        reload()
+    }
+
+    /// Goes to the match at `index` (picked from the list).
+    func show(_ index: Int) {
+        guard matches.indices.contains(index) else { return }
+        activeIndex = index
+        if let serverId = matches[index].serverId { onJump(serverId) }
     }
 
     /// Steps `delta` matches older (positive) or newer and jumps to the one reached.
@@ -92,7 +120,7 @@ final class ChatThreadSearch {
 
     func close() {
         task?.cancel(); isOpen = false; query = ""; matches = []; hasMore = false; isLoading = false; failed = false
-        activeIndex = -1; onQuery("")
+        activeIndex = -1; sender = nil; senders = []; listOpen = false; onQuery("")
     }
 
     func cancel() { task?.cancel() }

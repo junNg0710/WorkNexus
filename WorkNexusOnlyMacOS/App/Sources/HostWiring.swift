@@ -116,20 +116,11 @@ struct HostWiring {
         host.petDemo = { r.panic.model.demoAvailable ? { r.panic.model.petTriggered(.demo) } : nil }
         // The panic switch's settings page is listed only for the ZenTao the feature is offered for.
         host.settingsSectionVisible = { $0 != "panicSwitch" || r.panic.model.account != nil }
-        // On the Chat page the title bar searches the chats and their stored messages; a hit opens the chat (at the message).
+        // On the Chat page the title bar searches the chats and their stored messages (`ChatPlaceSearch`).
         let chat = r.chat
         host.placeSearch = { rail in
             guard rail == .chat, let account = shell.chatAccount else { return nil }
-            return PlaceSearch(placeholder: appString("chatGlobalSearchHint", "Search chats and messages…")) { query in
-                await ChatGlobalSearch(repository: chat.repository, accountId: account.id).search(query).map { hit in
-                    PlaceSearchHit(id: hit.id,
-                                   section: hit.kind == .chat ? appString("chatGlobalSearchChats", "Chats") : appString("chatGlobalSearchMessages", "Messages"),
-                                   icon: hit.kind == .chat ? "bubble.left.and.bubble.right" : "text.bubble", title: hit.title, subtitle: hit.subtitle,
-                                   detail: hit.date.map { formatWhen($0) } ?? "") {
-                        if let id = hit.serverId { chat.events.open(chatGid: hit.chatGid, jumpTo: id) } else { chat.events.open(chatGid: hit.chatGid) }
-                    }
-                }
-            }
+            return ChatPlaceSearch.make(chat: chat, accountId: account.id, isDemo: r.isDemo)
         }
         host.miniAppName = { id in r.miniApps.model.apps.first { $0.id == id }?.name }
         host.newTicketTargets = { Self.newTicketTargets(shell) }

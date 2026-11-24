@@ -2454,5 +2454,81 @@
   "chatSavedToDownloads": {
     "en": "Saved to Downloads",
     "vi": "Đã lưu vào thư mục Tải về"
+  },
+  "chatSearchRecent": {
+    "en": "Recent searches",
+    "vi": "Tìm gần đây"
+  },
+  "chatSearchRecentChats": {
+    "en": "Recent chats",
+    "vi": "Chat gần đây"
+  },
+  "chatSearchClearRecent": {
+    "en": "Clear recent searches",
+    "vi": "Xoá lịch sử tìm"
+  },
+  "chatSearchAllChats": {
+    "en": "Show all {count} chats",
+    "vi": "Xem tất cả {count} chat"
+  },
+  "chatSearchAllMessages": {
+    "en": "Show all {count} messages",
+    "vi": "Xem tất cả {count} tin nhắn"
+  },
+  "chatSearchKindAll": {
+    "en": "All",
+    "vi": "Tất cả"
+  },
+  "chatSearchKindFiles": {
+    "en": "Files",
+    "vi": "File"
+  },
+  "chatSearchKindLinks": {
+    "en": "Links",
+    "vi": "Link"
+  },
+  "chatSearchKindImages": {
+    "en": "Images",
+    "vi": "Ảnh"
+  },
+  "chatSearchPeopleHeading": {
+    "en": "People",
+    "vi": "Người"
+  },
+  "chatSearchAllPeople": {
+    "en": "Show all {count} people",
+    "vi": "Xem tất cả {count} người"
+  },
+  "chatSearchLocalNote": {
+    "en": "Searches what is stored on this Mac. Narrow it with from:name, in:chat, has:file or \"exact words\".",
+    "vi": "Chỉ tìm trong dữ liệu đã lưu trên máy này. Thu hẹp bằng from:tên, in:chat, has:file hoặc \"đúng cụm từ\"."
+  },
+  "chatSearchInThisChat": {
+    "en": "Search in this chat",
+    "vi": "Tìm tiếp trong chat này"
+  },
+  "chatSearchSentBy": {
+    "en": "Sent by",
+    "vi": "Người gửi"
+  },
+  "chatSearchInChat": {
+    "en": "In chat",
+    "vi": "Trong chat"
+  },
+  "chatSearchAnyone": {
+    "en": "Anyone",
+    "vi": "Bất kỳ ai"
+  },
+  "chatSearchShowList": {
+    "en": "List the results",
+    "vi": "Liệt kê kết quả"
+  },
+  "chatSearchHideList": {
+    "en": "Hide the list of results",
+    "vi": "Ẩn danh sách kết quả"
+  },
+  "chatSearchAllResults": {
+    "en": "Show all {count} results",
+    "vi": "Xem tất cả {count} kết quả"
   }
 }

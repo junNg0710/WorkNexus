@@ -31,6 +31,34 @@ final class XxdChatRepositoryTests: RepositoryTestCase {
         XCTAssertEqual(messages.last?.gid, "m101")
     }
 
+    func testSearchIsNarrowedByKindSenderAndChat() async throws {
+        try await connectAndWait()
+        let file = #"{"name":"Báo cáo quý.zip","size":3,"id":7,"time":1,"type":"application/zip"}"#
+        let image = #"{"name":"bao-cao.png","size":3,"id":8,"time":1,"type":"image/png","width":10,"height":10}"#
+        let link = #"{"type":"url","url":"https://zt.test/bao-cao-view-4158.html"}"#
+        let code = #"{"lang":"swift","code":"let baoCao = 1","name":"Snippet"}"#
+        server.current.push(["method": "messagesend", "result": "success", "data": [
+            serverMessage(201, user: 31, content: file, type: "file"), serverMessage(202, user: 32, content: image, type: "image"),
+            serverMessage(203, user: 31, content: link, type: "object"), serverMessage(204, user: 32, content: code, type: "code"),
+            serverMessage(205, user: 32, content: "báo cáo ở https://zt.test/x nhé"), serverMessage(206, cgid: "g2", user: 31, content: "báo cáo khác")]])
+        _ = try await eventually(repo.watchMessages(accountId: acc, chatGid: "g1")) { $0.last?.gid == "m205" }
+        func ids(_ search: ChatMessageSearch) async -> [Int] {
+            ((await repo.searchMessages(accountId: acc, matching: search)).value ?? []).compactMap(\.serverId).sorted()
+        }
+        // Everything but pictures, which have only a file name to go by.
+        let all = await ids(ChatMessageSearch(query: "bao cao"))
+        XCTAssertEqual(all, [201, 203, 204, 205, 206])
+        let files = await ids(ChatMessageSearch(query: "bao cao", kind: .files)); XCTAssertEqual(files, [201])
+        let images = await ids(ChatMessageSearch(query: "bao", kind: .images)); XCTAssertEqual(images, [202])
+        let links = await ids(ChatMessageSearch(query: "", kind: .links)); XCTAssertEqual(links, [203, 205], "a shared link, and text with an address")
+        let written = await ids(ChatMessageSearch(query: "baocao", kind: .messages)); XCTAssertEqual(written, [204], "code is searched as what was written")
+        let fromOne = await ids(ChatMessageSearch(query: "bao cao", senderIds: [32])); XCTAssertEqual(fromOne, [204, 205], "not the picture")
+        let inChat = await ids(ChatMessageSearch(query: "bao cao", chatGids: ["g2"])); XCTAssertEqual(inChat, [206])
+        // Nothing typed lists what the rest lets through; with nothing at all there is nothing to look for.
+        let sent = await ids(ChatMessageSearch(senderIds: [31], kind: .files)); XCTAssertEqual(sent, [201])
+        let nothing = await ids(ChatMessageSearch()); XCTAssertEqual(nothing, [])
+    }
+
     func testLiveMessageFromSomeoneElseIsAnnouncedOnce() async throws {
         try await connectAndWait()
         let stream = repo.watchIncoming()
@@ -133,6 +161,13 @@ final class XxdChatRepositoryTests: RepositoryTestCase {
         XCTAssertEqual(extent.count, 120); XCTAssertEqual(extent.oldestServerId, 1); XCTAssertTrue(extent.reachesStart)
         let found = await repo.searchMessages(accountId: acc, chatGid: nil, query: "phat hanh", since: nil, limit: nil)
         XCTAssertEqual(found.value?.map(\.serverId), [5])
+        // Every word has to be there, in any order; words in quotes as a phrase.
+        let anyOrder = await repo.searchMessages(accountId: acc, chatGid: nil, query: "hanh GUI", since: nil, limit: nil)
+        XCTAssertEqual(anyOrder.value?.map(\.serverId), [5])
+        let phrase = await repo.searchMessages(accountId: acc, chatGid: nil, query: "\"hanh phat\"", since: nil, limit: nil)
+        XCTAssertEqual(phrase.value?.count, 0)
+        let missing = await repo.searchMessages(accountId: acc, chatGid: nil, query: "phat hanh moi", since: nil, limit: nil)
+        XCTAssertEqual(missing.value?.count, 0)
     }
 
     func testReplyParentFetchedByIdStaysOutOfTimeline() async throws {

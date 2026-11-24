@@ -17,13 +17,14 @@ enum ChatListing {
         visible(chats, users: users, filter: ChatListFilter(tab: tab), query: query)
     }
 
-    /// The chats `filter` lets through (tab, unread only, categories) whose title matches `query`.
+    /// The chats `filter` lets through (tab, unread only, categories) whose title has every word of `query`, compared
+    /// without case or diacritics (`quoc` finds `Quốc`), as the title bar's search does.
     static func visible(_ chats: [ChatConversation], users: [Int: ChatUser], filter: ChatListFilter, query: String) -> [ListedChat] {
-        let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let terms = SearchTerms.parse(query)
         let listed = chats.enumerated()
             .filter { filter.matches($0.element) }
             .map { (index: $0.offset, row: ListedChat(chat: $0.element, title: ChatShellLabels.title($0.element, users))) }
-            .filter { q.isEmpty || $0.row.title.lowercased().contains(q) }
+            .filter { terms.isEmpty || SearchTerms.allFound(terms, in: $0.row.title) }
         // Stable: chats the repository already ordered keep their order within the same rank.
         return listed.sorted { a, b in
             if a.row.chat.starred != b.row.chat.starred { return a.row.chat.starred }

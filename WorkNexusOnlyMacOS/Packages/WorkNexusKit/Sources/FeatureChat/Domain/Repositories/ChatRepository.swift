@@ -47,7 +47,8 @@ public protocol ChatRepository: ChatRuntimeSettings {
     func countOlderMessages(accountId: String, chatGid: String, before: Date) async -> Outcome<Int>
     func timelineExtent(accountId: String, chatGid: String) async -> Outcome<ChatTimelineExtent>
     func messageCount(accountId: String, chatGid: String) async -> Outcome<Int>
-    func searchMessages(accountId: String, chatGid: String?, query: String, since: Date?, limit: Int?) async -> Outcome<[ChatMessage]>
+    /// The stored messages `search` asks for, newest first.
+    func searchMessages(accountId: String, matching search: ChatMessageSearch) async -> Outcome<[ChatMessage]>
     func fetchMessages(accountId: String, chatGid: String, serverIds: [Int]) async -> Outcome<Void>
 
     // MARK: sending
@@ -119,5 +120,12 @@ public protocol ChatRepository: ChatRuntimeSettings {
 public extension ChatRepository {
     func watchMessages(accountId: String, chatGid: String) -> AsyncStream<[ChatMessage]> {
         watchMessages(accountId: accountId, chatGid: chatGid, limit: 50, reactions: true)
+    }
+}
+
+public extension ChatRepository {
+    /// The stored messages of one chat (or every chat) that have the words of `query`, newest first.
+    func searchMessages(accountId: String, chatGid: String?, query: String, since: Date?, limit: Int?) async -> Outcome<[ChatMessage]> {
+        await searchMessages(accountId: accountId, matching: ChatMessageSearch(query: query, chatGids: chatGid.map { [$0] }, since: since, limit: limit))
     }
 }

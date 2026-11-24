@@ -21,14 +21,32 @@ public struct FoldSearchText: Sendable {
         return m
     }()
 
-    /// The searchable text of a stored message, or nil for one that is not text.
+    /// How much of a code message is searched.
+    private static let codeLimit = 4000
+
+    /// The searchable text of a stored message: what it says, a file's or picture's name, a shared link's address and
+    /// title, a code message's name and code. Nil for one with nothing to search (an emoji, a notice).
     public func ofMessage(contentType: String, content: String) -> String? {
-        guard contentType == "plain" || contentType == "text" else { return nil }
+        switch contentType {
+        case "plain", "text": break
+        case "file", "image": return field("name", of: content).map(callAsFunction)
+        case "object": return callAsFunction([field("title", of: content), field("url", of: content)].compactMap { $0 }.joined(separator: " "))
+        case "code":
+            return callAsFunction([field("name", of: content), field("code", of: content).map { String($0.prefix(Self.codeLimit)) }]
+                .compactMap { $0 }.joined(separator: " "))
+        default: return nil
+        }
         var text = Mentions.repair(content.replacingOccurrences(of: "\u{FFFC}", with: ""))
         text = Self.mention.replace(text) { "@\($0[1] ?? "")" }
         text = Self.link.replace(text) { "\($0[1] ?? "") \($0[2] ?? "")" }
         if contentType == "text" { text = Self.markdownMarks.replace(text) { _ in "" } }
         return callAsFunction(DecodeEmoji()(text))
+    }
+
+    /// One text field of a message stored as JSON.
+    private func field(_ name: String, of content: String) -> String? {
+        guard let object = try? JSONSerialization.jsonObject(with: Data(content.utf8)) as? [String: Any] else { return nil }
+        return object[name] as? String
     }
 
     public func callAsFunction(_ text: String) -> String {

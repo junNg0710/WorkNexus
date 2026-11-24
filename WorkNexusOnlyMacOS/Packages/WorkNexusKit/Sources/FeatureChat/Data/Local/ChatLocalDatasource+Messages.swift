@@ -85,31 +85,52 @@ extension ChatLocalDatasource {
         }
     }
 
-    /// Case- and diacritic-folded search over text messages (`searchText`), newest first.
-    func searchMessages(_ accountId: String, cgid: String?, query: String, since: Date?, limit: Int?) async throws -> [ChatMessage] {
-        let folded = Self.fold(query)
-        guard !folded.isEmpty else { return [] }
-        try await fillSearchText(accountId)
+    /// Case- and diacritic-folded search over the stored messages (`searchText`), newest first. Every word of the query
+    /// has to be in the message, in any order; words in "quotes" as a phrase (`SearchTerms`). Narrowed to chats, senders,
+    /// a kind of message and a time when `search` says so; without words it lists what those let through.
+    func searchMessages(_ accountId: String, _ search: ChatMessageSearch) async throws -> [ChatMessage] {
+        guard !search.asksNothing else { return [] }
         // Typed text matches literally: LIKE's own wildcards are escaped.
-        let escaped = Self.escapeLike.replace(folded) { "\\\($0.whole)" }
+        let terms = SearchTerms.parse(search.query).map { Self.fold($0) }.filter { !$0.isEmpty }
+            .map { folded in "%" + Self.escapeLike.replace(folded) { "\\\($0.whole)" } + "%" }
+        try await fillSearchText(accountId)
         return try await db.writer.read { d in
-            var sql = "SELECT * FROM chatMessages WHERE accountId=? AND deleted=0 AND searchText LIKE ? ESCAPE '\\'"
-            var args: [any DatabaseValueConvertible] = [accountId, "%\(escaped)%"]
-            if let cgid { sql += " AND cgid=?"; args.append(cgid) }
-            if let since { sql += " AND sentAt>=?"; args.append(since) }
+            var sql = "SELECT * FROM chatMessages WHERE accountId=? AND deleted=0 AND \(Self.kindSQL(search.kind))"
+            var args: [any DatabaseValueConvertible] = [accountId]
+            for term in terms { sql += " AND searchText LIKE ? ESCAPE '\\'"; args.append(term) }
+            if let chats = search.chatGids {
+                sql += " AND cgid IN (\(chats.map { _ in "?" }.joined(separator: ",")))"; args += chats.map { $0 as any DatabaseValueConvertible }
+            }
+            if let senders = search.senderIds {
+                sql += " AND senderId IN (\(senders.map { _ in "?" }.joined(separator: ",")))"; args += senders.map { $0 as any DatabaseValueConvertible }
+            }
+            if let since = search.since { sql += " AND sentAt>=?"; args.append(since) }
             sql += " ORDER BY sentAt DESC"
-            if let limit { sql += " LIMIT \(limit)" }
+            if let limit = search.limit { sql += " LIMIT \(limit)" }
             let me = try Int.fetchOne(d, sql: "SELECT userId FROM chatAccounts WHERE accountId=?", arguments: [accountId])
             return try Row.fetchAll(d, sql: sql, arguments: StatementArguments(args)).map { ChatMappers.message(ChatMessageRow(row: $0), selfUserId: me) }
         }
     }
 
-    /// Computes `searchText` for stored text rows that predate it, once per account.
+    /// The rows a kind of search looks at. Everything searchable but pictures when no kind is asked for: a picture has
+    /// only its file name, which would answer a search for `png` with every picture there is.
+    private static func kindSQL(_ kind: ChatSearchKind?) -> String {
+        switch kind {
+        case nil: "contentType IN ('plain','text','code','file','object')"
+        case .messages: "contentType IN ('plain','text','code')"
+        case .files: "contentType='file'"
+        case .images: "contentType='image'"
+        case .links: "(contentType='object' OR (contentType IN ('plain','text') AND (searchText LIKE '%http://%' OR searchText LIKE '%https://%')))"
+        }
+    }
+
+    /// Computes `searchText` for stored rows that predate it (text first; files, links and code since they are searched
+    /// too), once per account.
     private func fillSearchText(_ accountId: String) async throws {
         if searchReady.current.contains(accountId) { return }
         while true {
             let count = try await db.writer.write { d -> Int in
-                let rows = try Row.fetchAll(d, sql: "SELECT gid, contentType, content FROM chatMessages WHERE accountId=? AND searchText IS NULL AND contentType IN ('plain','text') LIMIT 500", arguments: [accountId])
+                let rows = try Row.fetchAll(d, sql: "SELECT gid, contentType, content FROM chatMessages WHERE accountId=? AND searchText IS NULL AND contentType IN ('plain','text','file','image','code','object') LIMIT 500", arguments: [accountId])
                 for r in rows {
                     let t: String = r["contentType"], c: String = r["content"], gid: String = r["gid"]
                     // A row that folds to nothing keeps NULL; mark it with '' so it is not picked again.
