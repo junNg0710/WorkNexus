@@ -53,16 +53,24 @@ struct ChatShellView: View {
                 ChatTrustGate(model: model, host: trust.host)
             } else {
                 let layout = layouts.pick(listHidden: visibility.listHidden, infoHidden: visibility.infoHidden)
-                HStack(spacing: 0) {
-                    if !visibility.listHidden {
-                        ConversationListPane(model: model, compact: layout.compactList)
-                            .frame(width: layout.compactList ? ChatShellLayout.listCompactWidth : ChatShellLayout.listWidth)
-                            .transition(.move(edge: .leading))
-                    }
+                let listWidth = layout.compactList ? ChatShellLayout.listCompactWidth : ChatShellLayout.listWidth
+                ZStack(alignment: .leading) {
+                    // The open chat takes its new width at once and the list slides over its edge. Sliding together,
+                    // the chat was a little wider on every frame, and every message on screen was wrapped again each time.
                     ChatThreadArea(model: model).environment(\.chatShellLayout, layout)
+                        .padding(.leading, visibility.listHidden ? 0 : listWidth)
+                    ZStack(alignment: .leading) {
+                        if !visibility.listHidden {
+                            ConversationListPane(model: model, compact: layout.compactList)
+                                .frame(width: listWidth)
+                                .transition(.move(edge: .leading))
+                        }
+                    }
+                    .frame(width: listWidth, alignment: .leading)
+                    .clipped()
+                    .animation(.easeOut(duration: theme.motion.base), value: visibility.listHidden)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .animation(.easeOut(duration: theme.motion.base), value: visibility.listHidden)
                 // Only a change of layout redraws the shell, not every point of a window resize.
                 .onGeometryChange(for: ChatShellLayouts.self) { ChatShellLayouts(width: $0.size.width) } action: { layouts = $0 }
             }
