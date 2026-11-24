@@ -53,4 +53,14 @@ final class CatchUpGateTests: XCTestCase {
         gate.run { ran += 1 }
         XCTAssertEqual(ran, 1)
     }
+
+    /// `isBehind` being wrong must not swallow a click: the job runs once the gate has waited long enough.
+    func testAJobIsNotKeptForever() async throws {
+        let gate = CatchUpGate(recheck: 0.01, patience: 0.08) { true }
+        var ran = 0
+        gate.run { ran += 1 }
+        XCTAssertEqual(ran, 0)
+        try await Task.sleep(for: .milliseconds(400))
+        XCTAssertEqual(ran, 1)
+    }
 }

@@ -90,8 +90,16 @@ public struct PetSpriteSheet: @unchecked Sendable {
         return ((Int((degrees / step).rounded()) % n) + n) % n
     }
 
-    /// The sheet shipped with the app (`Pet/tbchat-pet.png` in the bundle); nil when it is not there.
+    /// The sheet shipped with the app (`Pet/tbchat-pet.png` in the bundle); nil when it is not there. The app's own is
+    /// read once: the pet's layer asks for it every time the window's root is drawn again, and reading the picture each
+    /// time held a frame up for 150 ms.
     public static func bundled(bundle: Bundle = .main) -> PetSpriteSheet? {
+        bundle === Bundle.main ? shipped : load(bundle)
+    }
+
+    private static let shipped: PetSpriteSheet? = load(.main)
+
+    private static func load(_ bundle: Bundle) -> PetSpriteSheet? {
         guard let url = bundle.url(forResource: "tbchat-pet", withExtension: "png", subdirectory: "Pet") ?? bundle.url(forResource: "tbchat-pet", withExtension: "png")
         else { return nil }
         return PetSpriteSheet(contentsOf: url, timing: .steady)

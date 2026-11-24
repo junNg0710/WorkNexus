@@ -135,7 +135,7 @@ public struct FrameStutterWindow: Sendable, Equatable {
         let late = gap - frame
         var out: String?
         if late >= Self.hangAfter {
-            out = "Not responding for \(Self.ms(late))" + Self.why(work, places, late: late)
+            out = Self.hangLine(late: late, busy: work, seen: places)
         } else if late >= Self.lateAfter {
             if started == nil { started = now }
             count += 1; worst = max(worst, late); lost += late
@@ -144,6 +144,11 @@ public struct FrameStutterWindow: Sendable, Equatable {
         }
         if let s = started, now - s >= Self.span { out = [out, close()].compactMap { $0 }.joined(separator: "; ") }
         return out
+    }
+
+    /// The line for a frame the app did not answer for at all, `late` past its time.
+    public static func hangLine(late: TimeInterval, busy work: [String: TimeInterval] = [:], seen places: [String: Int] = [:]) -> String {
+        "Not responding for \(ms(late))" + why(work, places, late: late)
     }
 
     /// Where the main thread was seen during late frames already counted (the names are found off the main thread, so

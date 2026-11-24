@@ -63,15 +63,21 @@ public final class FrameStutterMonitor: NSObject {
         // What held a late frame up: the measured main-thread work between the two frames, and where the thread was seen.
         let late = gap - frame >= FrameStutterWindow.lateAfter
         let busy = late ? PerformanceLog.busy(from: last, to: link.timestamp) : [:]
-        // A frame the app did not answer for at all is written at once, with its names; for the others the names are
-        // found off the main thread and join the window a moment later - finding them here cost tens of milliseconds
-        // right after a late frame, enough to make the next one late too.
-        let hang = gap - frame >= FrameStutterWindow.hangAfter
-        if let line = window.add(gap: gap, frame: frame, now: link.timestamp, busy: busy, seen: hang ? MainThreadSampler.tally(stacks) : [:]) {
-            PerformanceLog.note(line)
-        }
-        if late, !hang, !stacks.isEmpty {
-            MainThreadSampler.tallyLater(stacks) { [weak self] seen in self?.window.note(seen: seen) }
+        // The names of where the thread was seen are found off the main thread and join the line a moment later:
+        // finding them here cost tens of milliseconds after a late frame and hundreds after a hang (3–4 % of the main
+        // thread while moving between places), enough to make the next frame late too.
+        let lateBy = gap - frame
+        if lateBy >= FrameStutterWindow.hangAfter {
+            MainThreadSampler.tallyLater(stacks) { seen in
+                PerformanceLog.note(FrameStutterWindow.hangLine(late: lateBy, busy: busy, seen: seen))
+            }
+            // The window itself only moves on (a hang is written on its own, not counted among its late frames).
+            if let line = window.add(gap: frame, frame: frame, now: link.timestamp) { PerformanceLog.note(line) }
+        } else {
+            if let line = window.add(gap: gap, frame: frame, now: link.timestamp, busy: busy) { PerformanceLog.note(line) }
+            if late, !stacks.isEmpty {
+                MainThreadSampler.tallyLater(stacks) { [weak self] seen in self?.window.note(seen: seen) }
+            }
         }
         PerformanceLog.frameShown(at: link.timestamp)
     }
