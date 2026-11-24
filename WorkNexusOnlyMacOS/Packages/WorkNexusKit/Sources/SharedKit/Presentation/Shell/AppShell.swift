@@ -17,7 +17,8 @@ public struct AppShell: View {
         HStack(spacing: gap) {
             SidebarPanel(model: model)
             VStack(spacing: 0) {
-                TitleBar(model: model)
+                // Folded away with a mini app's bars; the change is animated by whoever folds them (the mini app's tab strip).
+                if !model.titleBarHidden { TitleBar(model: model).transition(.move(edge: .top).combined(with: .opacity)) }
                 model.host.banner()
                 ContentCard {
                     ZStack {

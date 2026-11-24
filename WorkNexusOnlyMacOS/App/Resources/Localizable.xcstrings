@@ -41654,6 +41654,29 @@
         }
       }
     },
+    "miniAppCollapseBars": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide the top bars"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thu gọn các thanh phía trên"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收起顶部栏"
+          }
+        }
+      }
+    },
     "miniAppCookiesFilesAccess": {
       "extractionState": "manual",
       "localizations": {
@@ -41742,6 +41765,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "配置文件"
+          }
+        }
+      }
+    },
+    "miniAppExpandBars": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show the top bars"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở rộng các thanh phía trên"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展开顶部栏"
           }
         }
       }

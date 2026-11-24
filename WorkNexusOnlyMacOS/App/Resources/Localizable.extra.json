@@ -679,6 +679,10 @@
     "en": "Close tab",
     "vi": "Đóng tab"
   },
+  "miniAppCollapseBars": {
+    "en": "Hide the top bars",
+    "vi": "Thu gọn các thanh phía trên"
+  },
   "miniAppCookiesFilesAccess": {
     "en": "Reading %1$@'s cookies needs Full Disk Access: turn it on for WorkNexus Mac, quit and reopen the app, then try again.",
     "vi": "Đọc cookie của %1$@ cần quyền Full Disk Access: bật cho WorkNexus Mac, thoát và mở lại app, rồi thử lại."
@@ -694,6 +698,10 @@
   "miniAppCookiesProfileLabel": {
     "en": "Profile",
     "vi": "Hồ sơ"
+  },
+  "miniAppExpandBars": {
+    "en": "Show the top bars",
+    "vi": "Mở rộng các thanh phía trên"
   },
   "miniAppLiveLimit": {
     "en": "Pages kept running",

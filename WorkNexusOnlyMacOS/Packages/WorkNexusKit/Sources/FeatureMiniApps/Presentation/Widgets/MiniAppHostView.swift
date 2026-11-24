@@ -3,7 +3,7 @@ import CoreUI
 import SwiftUI
 
 /// Ported from: lib/features/mini_apps/presentation/widgets/mini_app_view.dart
-/// One mini app: a browser-style bar and a strip of tabs over the web page. What each page is doing lives in its tab's
+/// One mini app: a browser-style bar and a strip of tabs over the web page (the bar folds away with `MiniAppBars`). What each page is doing lives in its tab's
 /// `MiniAppBrowserModel` (the app's tabs in `MiniAppTabsModel`); this only draws them and keeps the address field.
 /// Needs `.miniApps(feature)` up the tree.
 public struct MiniAppHostView: View {
@@ -28,6 +28,7 @@ private struct MiniAppPageBody: View {
     let tabs: MiniAppTabsModel
     let cookies: CookieImportModel
     let active: Bool
+    @Environment(\.miniAppBars) private var bars
     @State private var address = ""
     @State private var keys = MiniAppKeyMonitor()
     @FocusState private var addressFocused: Bool
@@ -35,10 +36,13 @@ private struct MiniAppPageBody: View {
     var body: some View {
         let browser = tabs.selected
         VStack(spacing: 0) {
-            MiniAppToolbar(address: $address, focus: $addressFocused, browser: browser, onSubmit: go,
-                           onHome: { browser.load(model.current(app).url) }, onOpenExternal: openExternal) {
-                MiniAppCookieButton(app: app, browser: browser, cookies: cookies)
-                MiniAppPasswordButton(browser: browser)
+            if !bars.collapsed {
+                MiniAppToolbar(address: $address, focus: $addressFocused, browser: browser, onSubmit: go,
+                               onHome: { browser.load(model.current(app).url) }, onOpenExternal: openExternal) {
+                    MiniAppCookieButton(app: app, browser: browser, cookies: cookies)
+                    MiniAppPasswordButton(browser: browser)
+                }
+                .transition(.move(edge: .top).combined(with: .opacity))
             }
             MiniAppTabStrip(app: app, tabs: tabs)
             // The selected tab's "Save password?" question, between the bars and its page.
@@ -56,6 +60,7 @@ private struct MiniAppPageBody: View {
         .onChange(of: browser.address) { _, new in if !addressFocused { address = new } }
         .onChange(of: tabs.selectedId) { _, _ in address = tabs.selected.address }
         .onChange(of: active, initial: true) { _, on in listen(on) }
+        .onChange(of: bars.collapsed) { _, _ in listen(active) }
         .onDisappear { keys.stop() }
     }
 
@@ -70,17 +75,28 @@ private struct MiniAppPageBody: View {
         if let url = URL(string: address) ?? URL(string: app.url) { NSWorkspace.shared.open(url) }
     }
 
+    /// Puts the keys in the address field. It is in the bar that folds away: that comes back first, and the field takes the
+    /// keys once it is there.
+    private func focusAddress(_ bars: MiniAppBars) {
+        guard bars.collapsed else { addressFocused = true; return }
+        bars.set(false)
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(60))
+            addressFocused = true
+        }
+    }
+
     /// Hears the browser's keys while this app is the one on screen.
     private func listen(_ on: Bool) {
         keys.web = { [tabs] in tabs.selected.parts?.web }
-        keys.perform = { [tabs, model, app] shortcut in
+        keys.perform = { [tabs, model, app, bars] shortcut in
             switch shortcut {
             case .reload: tabs.selected.reload()
             case .hardReload: tabs.selected.hardReload()
             case .back: tabs.selected.goBack()
             case .forward: tabs.selected.goForward()
             case .home: tabs.selected.load(model.current(app).url)
-            case .focusAddress: addressFocused = true
+            case .focusAddress: focusAddress(bars)
             case .devTools: MiniAppInspector.show(tabs.selected.parts?.web)
             case .newTab: tabs.newTab(url: model.current(app).url)
             // The last tab is not closed by ⌘W: the key goes on to close the window, which keeps the page running.

@@ -140,3 +140,14 @@ private struct MiniAppRailIcon: View {
         .frame(width: 22, height: 22).clipShape(RoundedRectangle(cornerRadius: theme.radii.sm))
     }
 }
+
+/// The mounted mini app pages. The fold of the bars over them is one of the app's settings, which the shell's title bar
+/// follows too (`ShellModel.titleBarHidden`), so one button folds both.
+struct MiniAppStackHost: View {
+    let shell: ShellModel
+    var body: some View {
+        MiniAppsHostStack(bars: MiniAppBars(collapsed: shell.settings.miniAppBarsCollapsed) { collapsed in
+            shell.updateSettings { $0.miniAppBarsCollapsed = collapsed }
+        })
+    }
+}

@@ -64,7 +64,7 @@ struct HostWiring {
                 }
             }
         }
-        host.miniAppStack = { AnyView(MiniAppsHostStack()) }
+        host.miniAppStack = { AnyView(MiniAppStackHost(shell: shell)) }
         host.editor = { AnyView(TicketEditorView(route: $0, nav: shell.nav)) }
         if let n = r.notifications {
             host.bell = { AnyView(NotificationsBellButton(model: n)) }

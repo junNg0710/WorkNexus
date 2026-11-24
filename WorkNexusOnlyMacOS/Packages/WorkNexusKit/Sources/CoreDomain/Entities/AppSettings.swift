@@ -48,6 +48,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var chatLocalApi = false
     public var miniAppLiveLimit = 5
     public var miniAppNotifyInBackground = true
+    /// Whether the bars over a mini app's page (the window's title bar and the browser bar) are folded away, leaving the
+    /// page their room; the tab strip stays, with the button that brings them back (macOS only).
+    public var miniAppBarsCollapsed = false
     public var accentColorValue: Int?
     public var pinnedProjects: [String] = []
     public var pinnedExecutions: [String] = []
@@ -106,6 +109,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         s.chatLocalApi = v(.chatLocalApi, s.chatLocalApi)
         s.chatStickerSuggestions = v(.chatStickerSuggestions, s.chatStickerSuggestions); s.chatAiReplyRole = v(.chatAiReplyRole, s.chatAiReplyRole); s.miniAppLiveLimit = v(.miniAppLiveLimit, s.miniAppLiveLimit)
         s.miniAppNotifyInBackground = v(.miniAppNotifyInBackground, s.miniAppNotifyInBackground)
+        s.miniAppBarsCollapsed = v(.miniAppBarsCollapsed, s.miniAppBarsCollapsed)
         s.accentColorValue = try? c.decodeIfPresent(Int.self, forKey: .accentColorValue)
         s.pinnedProjects = v(.pinnedProjects, s.pinnedProjects); s.pinnedExecutions = v(.pinnedExecutions, s.pinnedExecutions)
         s.teamExecutionVisibility = v(.teamExecutionVisibility, s.teamExecutionVisibility)

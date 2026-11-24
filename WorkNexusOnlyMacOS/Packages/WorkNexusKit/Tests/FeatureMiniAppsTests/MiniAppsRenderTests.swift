@@ -57,6 +57,18 @@ final class MiniAppsRenderTests: XCTestCase {
         try await render("browser-tabs-dark", view, size: CGSize(width: 900, height: 420), dark: true)
     }
 
+    /// Folded, the browser bar is gone and the tab strip (with the button that brings it back) is the first thing drawn.
+    func testTheBrowserBarFoldsAwayAndTheTabStripStays() async throws {
+        let h = try await seeded()
+        let work = h.model.apps[0]
+        h.model.show("work")
+        h.model.tabsModel(for: work).selected.onTitle("My tasks - ZenTao")
+        for collapsed in [false, true] {
+            let view = MiniAppHostView(miniApp: work).miniApps(h.feature).environment(\.miniAppBars, MiniAppBars(collapsed: collapsed))
+            try await render("bars-\(collapsed ? "collapsed" : "open")", view, size: CGSize(width: 900, height: 220))
+        }
+    }
+
     func testTheCookieButtonIsTintedOnceTheSignInIsGone() async throws {
         let h = try await seeded()
         let work = h.model.apps[0]

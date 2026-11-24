@@ -2,11 +2,13 @@ import CoreUI
 import SwiftUI
 
 /// The tabs of a mini app, Safari-style, under the browser bar: the app's icon (a spinner while the page loads) and the page's
-/// title on each, a close mark once there is more than one, and "+" for a new tab on the app's address.
+/// title on each, a close mark once there is more than one, and "+" for a new tab on the app's address. At its end, the
+/// button that folds the bars above it away (`MiniAppBars`); while they are, the strip is what drags the window.
 struct MiniAppTabStrip: View {
     @Environment(\.appTheme) private var theme
     let app: MiniApp
     let tabs: MiniAppTabsModel
+    @Environment(\.miniAppBars) private var bars
 
     var body: some View {
         // "+" sits right after the last tab while they fit; once they do not, the tabs scroll and "+" stays at the end.
@@ -15,13 +17,16 @@ struct MiniAppTabStrip: View {
                 items
                 newTabButton
                 Spacer(minLength: 0)
+                barsButton
             }
             HStack(spacing: theme.spacing.s4) {
                 ScrollView(.horizontal, showsIndicators: false) { HStack(spacing: theme.spacing.s4) { items } }
                 newTabButton
+                barsButton
             }
         }
         .padding(.horizontal, theme.spacing.s10).padding(.vertical, theme.spacing.s4)
+        .background { if bars.collapsed { WindowDragArea() } }
         .background(theme.colors.panel)
         .overlay(alignment: .bottom) { Rectangle().fill(theme.colors.line).frame(height: theme.borders.hairline) }
     }
@@ -38,6 +43,11 @@ private extension MiniAppTabStrip {
     var newTabButton: some View {
         MiniAppStripButton(symbol: "plus", help: appString("miniAppNewTab", "New tab")) { tabs.newTab(url: app.url) }
             .disabled(!tabs.canOpenTab).opacity(tabs.canOpenTab ? 1 : 0.4)
+    }
+
+    var barsButton: some View {
+        MiniAppStripButton(symbol: MiniAppBars.symbol, help: bars.help) { bars.set(!bars.collapsed) }
+            .rotationEffect(bars.turn)
     }
 }
 

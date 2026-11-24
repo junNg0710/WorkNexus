@@ -26,6 +26,19 @@ final class RailPaneToggleTests: XCTestCase {
         s.nav.select(.settings); XCTAssertFalse(s.showsGlobalSearch)
     }
 
+    /// Folding a mini app's bars takes the title bar along, on a mini app only: every other place keeps it.
+    func testTheTitleBarFoldsAwayOnlyOverAMiniAppWithItsBarsCollapsed() {
+        let s = shell()
+        s.nav.openMiniApp("gitlab"); XCTAssertFalse(s.titleBarHidden, "the bars come open")
+        s.updateSettings { $0.miniAppBarsCollapsed = true }
+        XCTAssertTrue(s.titleBarHidden)
+        s.nav.openMiniApp(nil); XCTAssertFalse(s.titleBarHidden, "Chat, the boards and Settings keep their title bar")
+        s.nav.select(.settings); XCTAssertFalse(s.titleBarHidden)
+        s.nav.openMiniApp("jenkins"); XCTAssertTrue(s.titleBarHidden, "the choice is one for every mini app")
+        s.updateSettings { $0.miniAppBarsCollapsed = false }
+        XCTAssertFalse(s.titleBarHidden)
+    }
+
     func testTheSecondClickFoldsThePaneAndTheThirdBringsItBack() {
         let s = shell()
         var went = 0
