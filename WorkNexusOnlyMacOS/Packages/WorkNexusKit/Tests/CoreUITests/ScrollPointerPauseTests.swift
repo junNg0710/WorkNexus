@@ -43,4 +43,26 @@ final class ScrollPointerPauseTests: XCTestCase {
         try await Task.sleep(for: .milliseconds(300))
         XCTAssertTrue(w.areCursorRectsEnabled)
     }
+
+    /// AppKit works out where a press would drag a window on every frame that changes its content: not during a scroll.
+    func testTheWindowCannotBeDraggedDuringAScrollAndCanAgainAfterIt() async throws {
+        let pause = ScrollPointerPause(settle: 0.05)
+        let w = window()
+        XCTAssertTrue(w.isMovable)
+        pause.scrolled(in: w)
+        XCTAssertFalse(w.isMovable)
+        pause.scrolled(in: w)
+        try await Task.sleep(for: .milliseconds(300))
+        XCTAssertTrue(w.isMovable)
+    }
+
+    func testAWindowThatCouldNotBeMovedStaysSo() async throws {
+        let pause = ScrollPointerPause(settle: 0.05)
+        let w = window()
+        w.isMovable = false
+        pause.scrolled(in: w)
+        try await Task.sleep(for: .milliseconds(300))
+        XCTAssertFalse(w.isMovable)
+        XCTAssertTrue(w.areCursorRectsEnabled)
+    }
 }

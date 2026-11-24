@@ -7,7 +7,17 @@ import SwiftUI
 /// + lib/core/widgets/privacy_mask.dart (`PrivacyRevealRegion`)
 private struct ChatPrivacyHiddenKey: EnvironmentKey { static let defaultValue: Set<ChatPrivacyPart> = [] }
 
+private struct ChatPrivacyInUseKey: EnvironmentKey { static let defaultValue = false }
+
 extension EnvironmentValues {
+    /// Whether the privacy mode hides anything at all (by the settings, whatever the pointer reveals right now). While
+    /// it does not, the masks add nothing to the views they are on - a fade and its animation on every name, quote and
+    /// bubble of every row was paid by everyone for a mode few have on.
+    var chatPrivacyInUse: Bool {
+        get { self[ChatPrivacyInUseKey.self] }
+        set { self[ChatPrivacyInUseKey.self] = newValue }
+    }
+
     /// The parts of the chat hidden here: what the settings hide, or nothing inside a reveal region under the pointer.
     var chatPrivacyHidden: Set<ChatPrivacyPart> {
         get { self[ChatPrivacyHiddenKey.self] }
@@ -18,6 +28,11 @@ extension EnvironmentValues {
 extension View {
     /// Sets `\.chatPrivacyHidden` from `\.chatSettings` for the whole chat (the shell).
     func chatPrivacyRoot() -> some View { modifier(ChatPrivacyRoot()) }
+
+    /// Hides `parts` in this view: the two values the masks read, always set together.
+    func chatPrivacy(hiding parts: Set<ChatPrivacyPart>) -> some View {
+        environment(\.chatPrivacyHidden, parts).environment(\.chatPrivacyInUse, !parts.isEmpty)
+    }
 
     /// An area whose masks all show the real content together while the pointer is over it: the open chat above the input,
     /// a side panel. Pointing anywhere on it shows all of it; the input below is outside it, so typing reveals nothing.
@@ -32,7 +47,7 @@ private struct ChatPrivacyRoot: ViewModifier {
     @Environment(\.chatSettings) private var settings
 
     func body(content: Content) -> some View {
-        content.environment(\.chatPrivacyHidden, ShouldHideChatPart().hiddenParts(settings.privacy))
+        content.chatPrivacy(hiding: ShouldHideChatPart().hiddenParts(settings.privacy))
     }
 }
 

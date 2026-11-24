@@ -44,7 +44,7 @@ final class ChatPrivacyRenderTests: XCTestCase {
                 ForEach(rows, id: \.chat.gid) { ConversationTile(chat: $0, selected: false, highlighted: false, compact: false) }
                 Spacer(minLength: 0)
             }
-            .environment(\.chatPrivacyHidden, hidden ? all : [])
+            .chatPrivacy(hiding: hidden ? all : [])
             try await render(view, "privacy-list\(hidden ? "-hidden" : "")", width: 340, height: 160)
         }
     }
@@ -70,7 +70,7 @@ final class ChatPrivacyRenderTests: XCTestCase {
             .background { ChatWallpaperView() }
             .chatStyleScope()
             .chatServices(services)
-            .environment(\.chatPrivacyHidden, hidden ? all : [])
+            .chatPrivacy(hiding: hidden ? all : [])
             try await render(view, "privacy-bubbles\(hidden ? "-hidden" : "")\(dark ? "-dark" : "")", width: 560, height: 520, dark: dark)
         }
     }

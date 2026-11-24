@@ -20,7 +20,8 @@ struct MessageLinkPreviews: View {
     static func previewUrls(_ message: ChatMessage) -> [String] {
         if message.deleted { return [] }
         switch message.content {
-        case .text(let t, _): return ChatTextLabels.urls(t)
+        // Asked for every text message on every redraw of its row: no address without "://".
+        case .text(let t, _): return t.contains("://") ? ChatTextLabels.urls(t) : []
         case .link(let url, _): return [url]
         default: return []
         }

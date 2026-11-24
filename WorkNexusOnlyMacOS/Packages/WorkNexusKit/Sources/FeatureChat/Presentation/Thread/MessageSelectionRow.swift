@@ -11,16 +11,19 @@ struct MessageSelectionRow<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        let selecting = state.isSelecting
-        let can = selecting && ChatThreadState.canSelect(message)
+        // Off - nearly always - the row is just the row: the tick's stack, fill and click catcher are built only while
+        // messages are being picked.
+        if state.isSelecting { picking } else { content }
+    }
+
+    private var picking: some View {
+        let can = ChatThreadState.canSelect(message)
         let on = can && state.isSelected(message)
-        HStack(alignment: .center, spacing: 0) {
-            if selecting {
-                Image(systemName: on ? "checkmark.circle.fill" : "circle").font(.system(size: theme.sizes.icon18))
-                    .foregroundStyle(on ? theme.colors.accent : theme.colors.tx3)
-                    .padding(.leading, theme.spacing.s12).opacity(can ? 1 : 0)
-            }
-            content.allowsHitTesting(!selecting)
+        return HStack(alignment: .center, spacing: 0) {
+            Image(systemName: on ? "checkmark.circle.fill" : "circle").font(.system(size: theme.sizes.icon18))
+                .foregroundStyle(on ? theme.colors.accent : theme.colors.tx3)
+                .padding(.leading, theme.spacing.s12).opacity(can ? 1 : 0)
+            content.allowsHitTesting(false)
         }
         .background(on ? theme.colors.accent.opacity(0.08) : Color.clear)
         .overlay {

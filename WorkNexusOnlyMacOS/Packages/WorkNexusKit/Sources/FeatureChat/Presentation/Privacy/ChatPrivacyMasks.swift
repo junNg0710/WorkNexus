@@ -66,6 +66,16 @@ extension View {
 }
 
 private struct ChatPrivacyFade: ViewModifier {
+    @Environment(\.chatPrivacyInUse) private var inUse
+    let part: ChatPrivacyPart
+
+    func body(content: Content) -> some View {
+        // The mode off in the settings: the view as it is.
+        if inUse { content.modifier(ChatPrivacyFadeOn(part: part)) } else { content }
+    }
+}
+
+private struct ChatPrivacyFadeOn: ViewModifier {
     @Environment(\.chatPrivacyHidden) private var hidden
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let part: ChatPrivacyPart
@@ -78,6 +88,15 @@ private struct ChatPrivacyFade: ViewModifier {
 }
 
 private struct ChatPrivacyCover: ViewModifier {
+    @Environment(\.chatPrivacyInUse) private var inUse
+    let cornerRadius: CGFloat?
+
+    func body(content: Content) -> some View {
+        if inUse { content.modifier(ChatPrivacyCoverOn(cornerRadius: cornerRadius)) } else { content }
+    }
+}
+
+private struct ChatPrivacyCoverOn: ViewModifier {
     @Environment(\.chatPrivacyHidden) private var hidden
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let cornerRadius: CGFloat?

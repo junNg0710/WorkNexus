@@ -85,13 +85,15 @@ struct MessageAvatarSlot: View {
     var body: some View {
         Group {
             if visible {
-                Button { ctx.actions.openProfile(senderId) } label: {
-                    ThreadAvatar(name: name, imageUrl: ctx.users[senderId]?.avatarUrl, shape: style.avatarShape,
-                                 diameter: style.avatarSize, verifiedRank: chatRoleRank(of: ctx.users[senderId]?.role),
-                                 masked: hidden.contains(.identity))
-                }
-                .buttonStyle(.plain)
-                .help(name)
+                // A tap, not a `Button`: a button brings keyboard focus and a focus ring with it, which cost more to
+                // build than the avatar itself - on every run of messages scrolling in.
+                ThreadAvatar(name: name, imageUrl: ctx.users[senderId]?.avatarUrl, shape: style.avatarShape,
+                             diameter: style.avatarSize, verifiedRank: chatRoleRank(of: ctx.users[senderId]?.role),
+                             masked: hidden.contains(.identity))
+                    .contentShape(Rectangle())
+                    .onTapGesture { ctx.actions.openProfile(senderId) }
+                    .help(name)
+                    .accessibilityAddTraits(.isButton)
             } else {
                 Color.clear
             }

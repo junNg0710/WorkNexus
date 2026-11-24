@@ -10,6 +10,11 @@ struct MessageUnderBubble: View {
     let alignEnd: Bool
     var thread: ThreadSummary?
 
+    /// Whether anyone reacted to `message` (what `ReactionChipsView` would draw).
+    static func hasReactions(_ ctx: ThreadContext, _ message: ChatMessage) -> Bool {
+        message.serverId.flatMap { ctx.model.reactions[$0] }?.isEmpty == false
+    }
+
     var body: some View {
         VStack(alignment: alignEnd ? .trailing : .leading, spacing: 0) {
             ReactionChipsView(ctx: ctx, message: message, alignEnd: alignEnd)

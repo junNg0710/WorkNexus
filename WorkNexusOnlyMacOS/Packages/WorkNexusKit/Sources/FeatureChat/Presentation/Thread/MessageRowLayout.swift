@@ -16,18 +16,15 @@ struct MessageRowLayout<Avatar: View, NameView: View, Content: View>: View {
 
     var body: some View {
         let gap = theme.spacing.s8
-        let row = HStack(alignment: style.avatar == .lastOfRun ? .bottom : .top, spacing: 0) {
-            if alignEnd { Spacer(minLength: 0) }
-            // The avatar sits by the run's last bubble (Telegram) or its first.
-            if hasAvatar && !alignEnd { avatar; Spacer().frame(width: gap) }
+        // The avatar sits by the run's last bubble (Telegram) or its first. One pass each (`ChatRowLayouts`), not stacks.
+        let row = ChatRowSides(hasAvatar: hasAvatar, alignEnd: alignEnd, gap: gap, bottom: style.avatar == .lastOfRun) {
+            if hasAvatar { avatar }
             content
-            if hasAvatar && alignEnd { Spacer().frame(width: gap); avatar }
-            if !alignEnd { Spacer(minLength: 0) }
         }
         if let name {
             let tailRoom = style.tail == nil ? 0 : BubbleTail.width
             let indent = tailRoom + (hasAvatar ? style.avatarSize + gap : 0)
-            VStack(alignment: alignEnd ? .trailing : .leading, spacing: 0) {
+            ChatColumn(trailing: alignEnd) {
                 name.padding(.leading, alignEnd ? 0 : indent).padding(.trailing, alignEnd ? indent : 0).padding(.bottom, theme.spacing.s4)
                 row
             }

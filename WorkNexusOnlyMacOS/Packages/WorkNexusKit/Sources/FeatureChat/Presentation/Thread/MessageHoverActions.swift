@@ -19,6 +19,9 @@ struct MessageHoverActions<Content: View>: View {
     @ViewBuilder let content: Content
     @Environment(\.chatScrollActivity) private var scrolling
     @State private var hovering = false
+    /// The pointer has been on this message: from then on its text can be selected (`\.chatTextSelectable`). Kept once
+    /// set, so a selection dragged out of the row is not lost.
+    @State private var touched = false
     @State private var picking = false
     /// The "…" menu is open: the buttons stay while it is.
     @State private var menuOpen = false
@@ -26,68 +29,66 @@ struct MessageHoverActions<Content: View>: View {
     var body: some View {
         // While "Multiple select" is on a click picks the row: no buttons then.
         let live = (hovering || picking || menuOpen) && !ctx.state.isSelecting
-        let buttons = HoverButtons(ctx: ctx, message: message, inThread: inThread, alignEnd: alignEnd, live: live,
-                                   picking: $picking, menuOpen: $menuOpen)
-        HStack(alignment: .bottom, spacing: 0) {
-            if alignEnd { buttons }
-            // The menu's rows are worked out when it opens, not for every row of the list on every redraw.
-            content.contextMenu { MessageContextMenu(ctx: ctx, message: message, inThread: inThread, picking: $picking) }
-                // On the text itself (or its translation) a right-click would open the text system's menu (Font, Spelling,
-                // Services…): a short chat menu answers it instead, and the message's whole menu anywhere else on it. Only the row under the pointer carries the catcher (an AppKit view): one on
-                // every row made the whole list heavier to lay out, hit-test and walk for focus.
-                .background {
-                    if hovering && !ctx.state.isSelecting {
-                        MessageTextRightClick(active: true) { selection, onText in
-                            onText ? ctx.textMenu(for: message, settings: settings, selection: selection)
-                                   : ctx.messageMenu(for: message, settings: settings, inThread: inThread) { picking = true }
-                        }
+        // Room for the most buttons it can have: its own (reply; open thread), React, and "…".
+        let ownCount = inThread ? 2 : 1, canReact = ctx.canReact(to: message)
+        let slots = CGFloat(ownCount + (canReact ? 1 : 0) + 1)
+        let room = slots * HoverButtons.side + (slots - 1) * theme.spacing.s6 + theme.spacing.s8 * 2
+        // The menu's rows are worked out when it opens, not for every row of the list on every redraw.
+        content.contextMenu { MessageContextMenu(ctx: ctx, message: message, inThread: inThread, picking: $picking) }
+            .environment(\.chatTextSelectable, touched)
+            // On the text itself (or its translation) a right-click would open the text system's menu (Font, Spelling,
+            // Services…): a short chat menu answers it instead, and the message's whole menu anywhere else on it. Only the
+            // row under the pointer carries the catcher (an AppKit view): one on every row made the whole list heavier to
+            // lay out, hit-test and walk for focus.
+            .background {
+                if hovering && !ctx.state.isSelecting {
+                    MessageTextRightClick(active: true) { selection, onText in
+                        onText ? ctx.textMenu(for: message, settings: settings, selection: selection)
+                               : ctx.messageMenu(for: message, settings: settings, inThread: inThread) { picking = true }
                     }
                 }
-            if !alignEnd { buttons }
-        }
+            }
+            // The buttons' room beside the bubble, kept on every row so nothing shifts when they appear, and the buttons
+            // in it, level with the bubble's bottom, only while they show. (Not an `HStack`: see `ChatRowLayouts`.)
+            .padding(alignEnd ? .leading : .trailing, room)
+            .overlay(alignment: alignEnd ? .bottomLeading : .bottomTrailing) {
+                if live {
+                    HoverButtons(ctx: ctx, message: message, ownCount: ownCount, canReact: canReact, picking: $picking, menuOpen: $menuOpen)
+                        .frame(width: room, height: HoverButtons.side, alignment: alignEnd ? .trailing : .leading)
+                }
+            }
         // While the list scrolls, rows pass under a still pointer: lighting each up (and back) as it goes by redrew them for
         // nothing. A row lights up when the pointer moves onto it; leaving always counts.
         .onHover { inside in
             if inside, scrolling?.isScrolling == true { return }
             hovering = inside
+            if inside, !touched { touched = true }
         }
     }
 }
 
-/// The round buttons beside a bubble. Their actions are worked out only while they show (hovered, or a menu or picker of
-/// theirs open); otherwise the row keeps their room empty, so nothing shifts when they appear. Building every row's
-/// actions on every redraw made scrolling a long chat heavy.
+/// The round buttons beside a bubble, with their actions worked out: built only while they show (hovered, or a menu or
+/// picker of theirs open). Building every row's actions on every redraw made scrolling a long chat heavy.
 private struct HoverButtons: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatSettings) private var settings
     let ctx: ThreadContext
     let message: ChatMessage
-    let inThread: Bool
-    let alignEnd: Bool
-    let live: Bool
+    let ownCount: Int
+    let canReact: Bool
     @Binding var picking: Bool
     @Binding var menuOpen: Bool
+    static let side: CGFloat = 28
 
     var body: some View {
-        let ownCount = inThread ? 2 : 1
-        let canReact = ctx.canReact(to: message)
-        // Room for the most buttons it can have: its own, React, and "…".
-        let slots = CGFloat(ownCount + (canReact ? 1 : 0) + 1)
-        let width = slots * 28 + (slots - 1) * theme.spacing.s6 + theme.spacing.s8 * 2
-        ZStack(alignment: alignEnd ? .trailing : .leading) {
-            Color.clear
-            if live {
-                let actions = ctx.actions(for: message, settings: settings, inThread: inThread)
-                let own = Array(actions.prefix(ownCount)), rest = Array(actions.dropFirst(ownCount))
-                HStack(spacing: theme.spacing.s6) {
-                    ForEach(own) { a in RoundActionButton(icon: a.icon, help: a.title, action: a.run) }
-                    if canReact { ReactButton(ctx: ctx, message: message, mine: mineReactions, picking: $picking) }
-                    if !rest.isEmpty { MoreActionsMenu(actions: rest, open: $menuOpen) }
-                }
-                .padding(.horizontal, theme.spacing.s8)
-            }
+        let actions = ctx.actions(for: message, settings: settings, inThread: ownCount == 2)
+        let own = Array(actions.prefix(ownCount)), rest = Array(actions.dropFirst(ownCount))
+        HStack(spacing: theme.spacing.s6) {
+            ForEach(own) { a in RoundActionButton(icon: a.icon, help: a.title, action: a.run) }
+            if canReact { ReactButton(ctx: ctx, message: message, mine: mineReactions, picking: $picking) }
+            if !rest.isEmpty { MoreActionsMenu(actions: rest, open: $menuOpen) }
         }
-        .frame(width: width, height: 28)
+        .padding(.horizontal, theme.spacing.s8)
     }
 
     private var mineReactions: Set<String> {

@@ -29,7 +29,7 @@ struct MessageBubbleView: View {
         MessageRowLayout(hasAvatar: l.hasAvatarSlot, alignEnd: l.alignEnd, style: style, name: l.nameOverRow ? nameView : nil) {
             MessageAvatarSlot(ctx: ctx, senderId: message.senderId, name: name, style: style, visible: l.avatarVisible)
         } content: {
-            VStack(alignment: l.alignEnd ? .trailing : .leading, spacing: 0) {
+            ChatColumn(trailing: l.alignEnd) {
                 if l.nameAbove { nameView.padding(.horizontal, theme.spacing.s4).padding(.bottom, theme.spacing.s4) }
                 if style.quote == .above, let quote {
                     quote.environment(\.chatBubbleInk, style.outsideQuoteInk())
@@ -44,8 +44,13 @@ struct MessageBubbleView: View {
                     quote.environment(\.chatBubbleInk, style.outsideQuoteInk())
                         .padding(.leading, gutter.leading).padding(.trailing, gutter.trailing).padding(.top, theme.spacing.s4)
                 }
-                MessageUnderBubble(ctx: ctx, message: message, alignEnd: l.alignEnd, thread: style.threadInMeta ? nil : thread)
-                    .padding(.leading, gutter.leading).padding(.trailing, gutter.trailing)
+                // Most messages have nothing under them: the view is not built for those (it was one of the dearest
+                // parts of a row that draws nothing).
+                let chip = style.threadInMeta ? nil : thread
+                if chip != nil || MessageUnderBubble.hasReactions(ctx, message) {
+                    MessageUnderBubble(ctx: ctx, message: message, alignEnd: l.alignEnd, thread: chip)
+                        .padding(.leading, gutter.leading).padding(.trailing, gutter.trailing)
+                }
             }
         }
     }
@@ -84,7 +89,7 @@ private struct MessageBubbleBody: View {
         let ink = style.ink(mine: l.mine)
         let gutter = l.gutter(style: style)
         if l.media {
-            VStack(alignment: l.alignEnd ? .trailing : .leading, spacing: 0) {
+            ChatColumn(trailing: l.alignEnd) {
                 MessageBodyView(ctx: ctx, message: message)
                 if let footer { footer.padding(.top, theme.spacing.s4) }
             }

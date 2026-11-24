@@ -5,6 +5,7 @@ import SwiftUI
 /// Message text — Markdown or plain with mentions and links. Link previews show under the text (`MessageLinkPreviews`).
 struct ChatTextBody: View {
     @Environment(\.chatBubbleInk) private var ink
+    @Environment(\.chatTextSelectable) private var selectable
     let ctx: ThreadContext
     let text: String
     /// Render through the Markdown engine (see `ChatTextLabels.rendersMarkdown`); plain text otherwise.
@@ -17,7 +18,7 @@ struct ChatTextBody: View {
                          selectsAcrossBlocks: true) { link in
                 if let id = ChatTextLabels.mentionUserId(link) { ctx.actions.openProfile(id) } else { ctx.openLink(link) }
             }
-            .textSelection(.enabled)
+            .chatTextSelection(selectable)
         } else {
             MentionTextView(text: text, ctx: ctx)
         }

@@ -22,16 +22,20 @@ struct MessageBubbleContent<Name: View, Quote: View, Footer: View>: View {
     var body: some View {
         let pinned = timeAtEnd && footer != nil
         let picture = !message.deleted && isChatPicture(message.content)
-        let column = VStack(alignment: .leading, spacing: 0) {
+        let column = ChatColumn {
             if let name { name.padding(.bottom, theme.spacing.s2).chatPrivacyFade(when: picture) }
             if let quote { quote.chatPrivacyFade(when: picture) }
             MessageBodyView(ctx: ctx, message: message)
-            Group {
-                MessageTranslationView(controller: ctx.model.translation, message: message)
-                // Compact previews of the links, under the text.
-                MessageLinkPreviews(ctx: ctx, message: message)
+            // A translation and link previews: built only for a message that has one.
+            let translated = ctx.model.translation.entries[message.gid] != nil, linked = MessageLinkPreviews.hasPreviews(message)
+            if translated || linked {
+                Group {
+                    if translated { MessageTranslationView(controller: ctx.model.translation, message: message) }
+                    // Compact previews of the links, under the text.
+                    if linked { MessageLinkPreviews(ctx: ctx, message: message) }
+                }
+                .chatPrivacyFade(when: picture)
             }
-            .chatPrivacyFade(when: picture)
             if let footer {
                 // Pinned: an invisible copy keeps the row's room.
                 footer.opacity(pinned ? 0 : 1).allowsHitTesting(!pinned).padding(.top, theme.spacing.s4).chatPrivacyFade(when: picture)

@@ -16,7 +16,8 @@ struct MessageSenderNameView: View {
     var timeSize: CGFloat?
 
     var body: some View {
-        Button { ctx.actions.openProfile(userId) } label: {
+        // A tap, not a `Button` (see `MessageAvatarSlot`).
+        Group {
             HStack(spacing: theme.spacing.s8) {
                 Text(name)
                     .font(labelSize.map { theme.typography.font(size: $0, weight: .semibold) } ?? theme.typography.label)
@@ -28,7 +29,9 @@ struct MessageSenderNameView: View {
                 }
             }
         }
-        .buttonStyle(.plain)
+        .contentShape(Rectangle())
+        .onTapGesture { ctx.actions.openProfile(userId) }
         .pointerStyle(.link)
+        .accessibilityAddTraits(.isButton)
     }
 }

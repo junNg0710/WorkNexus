@@ -10,6 +10,7 @@ import QuartzCore
 /// hover work it set off, the difference between 25 and 58 frames a second on a slow Mac. What the pointer is over does
 /// not matter while the content is moving: this turns the bookkeeping off for the scroll and has AppKit catch up once,
 /// a moment after the last movement. Until then the cursor and whatever was lit up under the pointer stay as they were.
+/// The window cannot be dragged for as long either (see `scrolled(in:now:)`).
 ///
 /// It watches every scroll view of the app (chat, boards, lists, details), by the bounds of their clip views.
 @MainActor
@@ -27,6 +28,8 @@ public final class ScrollPointerPause {
         var lastMove: CFTimeInterval
         /// A check already found it quiet; the next one that still does ends the pause.
         var seemsOver = false
+        /// Whether the window could be moved when the pause began (put back when it ends).
+        var wasMovable = true
     }
 
     init(settle: TimeInterval = 0.15) { self.settle = settle }
@@ -53,8 +56,12 @@ public final class ScrollPointerPause {
             if window.areCursorRectsEnabled { window.disableCursorRects() }
             return
         }
-        paused[id] = Paused(window: window, lastMove: now)
+        paused[id] = Paused(window: window, lastMove: now, wasMovable: window.isMovable)
         window.disableCursorRects()
+        // While a window can be moved, AppKit works out on every frame that changes its content where a press would
+        // drag it - a walk through every view, a twentieth of the main thread in a scrolling chat. Nobody drags a
+        // window in the middle of a scroll.
+        window.isMovable = false
         checkLater(id, after: settle)
     }
 
@@ -79,6 +86,7 @@ public final class ScrollPointerPause {
             return
         }
         paused[id] = nil
+        if entry.wasMovable { window.isMovable = true }
         window.enableCursorRects()
         // What is under the pointer now: the cursor and the hover of the views there.
         if let content = window.contentView { window.invalidateCursorRects(for: content) }

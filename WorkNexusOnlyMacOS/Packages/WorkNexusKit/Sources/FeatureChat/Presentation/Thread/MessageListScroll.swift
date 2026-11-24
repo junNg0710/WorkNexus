@@ -79,6 +79,11 @@ struct MessageListScroll: View {
                     Color.clear.frame(height: theme.spacing.s16).id(Self.bottomId)
                 }
                 .scrollTargetLayout()
+                // While the list scrolls, a clear sheet lies over the rows (inside the scrolled content, so the wheel
+                // still lands in the scroll view): what is under the still pointer is asked on every frame of a scroll,
+                // and without it the answer was looked for through every row's hover areas - a twelfth of the main
+                // thread in a fast scroll, measured in the installed app.
+                .overlay { ScrollHoverShield(activity: activity) }
                 .padding(.top, theme.spacing.s16)
                 // The messages span the chat's frame at any width, in line with the header and the composer: other
                 // people's against its leading edge, your own against its trailing edge (bubbles keep their own cap).
@@ -89,6 +94,7 @@ struct MessageListScroll: View {
             .background { MessageListRightClick() }
             .onScrollPhaseChange { _, phase in
                 activity.isScrolling = phase.isScrolling
+                activity.shield.on = phase.isScrolling
                 if phase == .tracking || phase == .interacting { activity.userScrolls += 1 }
             }
             .environment(\.chatScrollActivity, activity)
@@ -252,22 +258,6 @@ enum ChatRowsOnScreen {
         let kinds = [("pictures", pictures), ("stickers", stickers), ("videos", videos), ("files", files), ("links", links),
                      ("long texts", long), ("code", code)].filter { $0.1 > 0 }.map { "\($0.1) \($0.0)" }
         return "\(count) chat rows on screen" + (kinds.isEmpty ? "" : " (" + kinds.joined(separator: ", ") + ")")
-    }
-}
-
-/// Whether the message list is scrolling, in a plain reference: rows read it in their hover handler, so a scroll starting
-/// or stopping redraws nothing.
-final class ChatScrollActivity {
-    var isScrolling = false
-    /// How many times the reader has started scrolling by hand (never a scroll the app made).
-    var userScrolls = 0
-}
-
-private struct ChatScrollActivityKey: EnvironmentKey { static let defaultValue: ChatScrollActivity? = nil }
-extension EnvironmentValues {
-    var chatScrollActivity: ChatScrollActivity? {
-        get { self[ChatScrollActivityKey.self] }
-        set { self[ChatScrollActivityKey.self] = newValue }
     }
 }
 

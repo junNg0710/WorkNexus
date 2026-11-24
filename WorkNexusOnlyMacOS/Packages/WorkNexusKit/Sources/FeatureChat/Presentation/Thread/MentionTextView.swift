@@ -8,6 +8,7 @@ import SwiftUI
 struct MentionTextView: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatBubbleInk) private var ink
+    @Environment(\.chatTextSelectable) private var selectable
     let text: String
     let ctx: ThreadContext
 
@@ -20,7 +21,7 @@ struct MentionTextView: View {
             .foregroundStyle(ink.text.color)
             .lineSpacing(ink.fontSize * 0.2)
             .tint(ink.link.color)
-            .textSelection(.enabled)
+            .chatTextSelection(selectable)
             .fixedSize(horizontal: false, vertical: true)
             .linkPointer(shown, font: theme.typography.nsFont(size: ink.fontSize), lineSpacing: ink.fontSize * 0.2)
             .environment(\.openURL, OpenURLAction { url in
@@ -72,5 +73,25 @@ struct MentionTextView: View {
         }
         out.font = font
         return out
+    }
+}
+
+private struct ChatTextSelectableKey: EnvironmentKey { static let defaultValue = true }
+
+extension EnvironmentValues {
+    /// Whether message text can be selected here. In the message list it turns true for a message once the pointer has
+    /// been on it (`MessageHoverActions`): selectable text costs five times what plain text does to build and lay out
+    /// (measured), and every row scrolling by paid it for a selection that needs the pointer there anyway. It is laid
+    /// out at the very same size either way, so nothing moves when it turns on.
+    var chatTextSelectable: Bool {
+        get { self[ChatTextSelectableKey.self] }
+        set { self[ChatTextSelectableKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// Text selection where `on` (`\.chatTextSelectable`), otherwise the text as it is.
+    @ViewBuilder func chatTextSelection(_ on: Bool) -> some View {
+        if on { textSelection(.enabled) } else { self }
     }
 }
