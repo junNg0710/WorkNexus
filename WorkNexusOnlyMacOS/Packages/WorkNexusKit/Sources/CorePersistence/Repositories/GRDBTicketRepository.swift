@@ -9,7 +9,7 @@ public final class GRDBTicketRepository: TicketRepository {
     ///   markers each list sync stamps only its own of); the composition root passes the rule.
     public init(db: AppDatabase, keepsLabel: @escaping @Sendable (String) -> Bool = { _ in false }) {
         self.db = db; self.keepsLabel = keepsLabel
-        allTickets = SharedObservation(throttle: .milliseconds(300)) {
+        allTickets = SharedObservation(throttle: .milliseconds(300), isSame: { $0 == $1 }) {
             db.observeConstantRegion { d in
                 try PerformanceLog.measureSync("db: read every ticket", slowerThan: 0.3) { try TicketRow.fetchAll(d).compactMap(\.entity) }
             }
@@ -17,7 +17,8 @@ public final class GRDBTicketRepository: TicketRepository {
     }
 
     /// Every ticket, read and decoded once per change for all the boards, counters and panes watching it (each used to
-    /// run its own query: ten watchers decoded the whole table ten times on every write).
+    /// run its own query: ten watchers decoded the whole table ten times on every write). A list equal to the last one
+    /// is not sent, so a watcher is only ever handed a list that differs from the one it has.
     private let allTickets: SharedObservation<[Ticket]>
 
     public func watchTickets() -> AsyncStream<[Ticket]> { allTickets.stream() }

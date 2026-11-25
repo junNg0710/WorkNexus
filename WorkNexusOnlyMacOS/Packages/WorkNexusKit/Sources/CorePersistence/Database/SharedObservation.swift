@@ -19,8 +19,13 @@ final class SharedObservation<T: Sendable>: @unchecked Sendable {
     /// Values arriving faster than this are gathered: the first goes out at once, then only the newest of each interval
     /// (a burst of writes makes every board redraw a few times, not once per write).
     private let throttle: Duration?
+    /// Whether a value is the one last sent: it is then not sent again. Asked where the values are read (never on the
+    /// main thread), once for all the watchers - who therefore need not compare what they get with what they had.
+    private let isSame: (@Sendable (T, T) -> Bool)?
 
-    init(throttle: Duration? = nil, _ start: @escaping @Sendable () -> AsyncStream<T>) { self.throttle = throttle; self.start = start }
+    init(throttle: Duration? = nil, isSame: (@Sendable (T, T) -> Bool)? = nil, _ start: @escaping @Sendable () -> AsyncStream<T>) {
+        self.throttle = throttle; self.isSame = isSame; self.start = start
+    }
 
     func stream() -> AsyncStream<T> {
         let (stream, cont) = AsyncStream<T>.makeStream(bufferingPolicy: .bufferingNewest(1))
@@ -56,6 +61,12 @@ final class SharedObservation<T: Sendable>: @unchecked Sendable {
     }
 
     private func publish(_ value: T, _ gen: Int) {
+        lock.lock()
+        guard gen == generation, source != nil else { lock.unlock(); return }
+        let last = latest
+        lock.unlock()
+        // Outside the lock: comparing a whole table takes a while, and a new watcher must not wait for it.
+        if let last, let isSame, isSame(last, value) { return }
         lock.lock()
         guard gen == generation, source != nil else { lock.unlock(); return }
         latest = value

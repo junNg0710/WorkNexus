@@ -15,7 +15,12 @@ public final class DetailController {
     public let registry: ToolRegistry
     public var extensions: DetailExtensions
 
-    public private(set) var tickets: [String: Ticket] = [:]
+    /// Every ticket by id. Not compared with the one it replaces (see `BoardController.tickets`).
+    public private(set) var tickets: [String: Ticket] {
+        get { access(keyPath: \.tickets); return ticketsById }
+        set { withMutation(keyPath: \.tickets) { ticketsById = newValue } }
+    }
+    @ObservationIgnored private var ticketsById: [String: Ticket] = [:]
     public private(set) var accounts: [String: Account] = [:]
     public private(set) var workspaces: [String: Workspace] = [:]
     public private(set) var projects: [String: Project] = [:]

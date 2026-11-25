@@ -32,6 +32,23 @@ final class SharedObservationTests: XCTestCase {
         XCTAssertEqual(source.starts, 1)
     }
 
+    func testAValueEqualToTheLastOneIsNotSentAgain() async throws {
+        let source = Source()
+        let shared = SharedObservation(isSame: { $0 == $1 }) { source.make() }
+        var watcher = shared.stream().makeAsyncIterator()
+        source.send(1)
+        let first = await watcher.next()
+        XCTAssertEqual(first, 1)
+        // The same value read again (a write that changed nothing a watcher sees): nobody is woken for it.
+        source.send(1); source.send(1); source.send(2)
+        let second = await watcher.next()
+        XCTAssertEqual(second, 2)
+        // A watcher that comes late still gets the current value.
+        var late = shared.stream().makeAsyncIterator()
+        let lateFirst = await late.next()
+        XCTAssertEqual(lateFirst, 2)
+    }
+
     func testASlowWatcherSkipsToTheNewestValue() async throws {
         let source = Source()
         let shared = SharedObservation { source.make() }

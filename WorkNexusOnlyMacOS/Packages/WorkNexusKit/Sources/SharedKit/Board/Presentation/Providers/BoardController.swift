@@ -19,7 +19,15 @@ public final class BoardController {
 
     // MARK: Inputs
     /// Every ticket in the local DB.
-    public private(set) var tickets: [Ticket] = [] { didSet { ticketsChanged() } }
+    /// Every ticket, as the repository last sent them. Not compared with the list it replaces before the observers are
+    /// told (what a stored property of an `@Observable` class does): the repository only sends a list that differs, and
+    /// comparing some twelve thousand tickets here, on the main thread, for every board at every write of a sync, cost
+    /// more than everything else a ticket change did.
+    public private(set) var tickets: [Ticket] {
+        get { access(keyPath: \.tickets); return allTickets }
+        set { withMutation(keyPath: \.tickets) { allTickets = newValue }; ticketsChanged() }
+    }
+    @ObservationIgnored private var allTickets: [Ticket] = []
     public private(set) var accounts: [String: Account] = [:] { didSet { recompute() } }
     public private(set) var workspaces: [String: Workspace] = [:]
     public private(set) var projects: [String: Project] = [:]

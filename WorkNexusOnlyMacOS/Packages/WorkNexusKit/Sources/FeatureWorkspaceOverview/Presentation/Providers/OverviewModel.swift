@@ -28,7 +28,13 @@ public final class OverviewModel {
     public private(set) var workspace: Workspace?
     /// Accounts of the active workspace.
     public private(set) var accounts: [Account] = []
-    public private(set) var tickets: [Ticket] = []
+    /// Every ticket. Not compared with the list it replaces: the repository only sends one that differs, and comparing
+    /// the whole table on the main thread at every write of a sync was most of what a ticket change cost here.
+    public private(set) var tickets: [Ticket] {
+        get { access(keyPath: \.tickets); return allTickets }
+        set { withMutation(keyPath: \.tickets) { allTickets = newValue } }
+    }
+    @ObservationIgnored private var allTickets: [Ticket] = []
     /// Open work assigned to the user or awaiting their review, across all tools of the workspace.
     public private(set) var assignedWork: [AssignedWorkItem] = []
     public private(set) var dashboards: [String: ZenTaoDashboard] = [:]
