@@ -74,12 +74,14 @@ private struct ZentaoTasksBody: View {
             AppStateView(.empty(appString("zentaoPickExecution", "Pick an execution to see its tasks")))
         } else if let failure = state.taskSlice.failure, state.taskBoard.scoped.isEmpty {
             AppStateView(.error(failure.message)) { state.reopenTaskStreams() }
-        } else if state.taskSlice.isLoading && state.taskBoard.scoped.isEmpty {
-            if list { TableSkeleton() } else { BoardSkeleton() }
-        } else if list {
-            ZentaoTaskTableView(state: state)
         } else {
-            ZentaoTaskBoardView(state: state)
+            ZentaoBoardLoadView(loading: state.taskSlice.isLoading && state.taskBoard.scoped.isEmpty, list: list) {
+                if list {
+                    ZentaoTaskTableView(state: state)
+                } else {
+                    ZentaoTaskBoardView(state: state)
+                }
+            }
         }
     }
 }

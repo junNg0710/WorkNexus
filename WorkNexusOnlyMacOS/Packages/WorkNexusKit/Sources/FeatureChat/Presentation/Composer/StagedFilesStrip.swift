@@ -27,31 +27,48 @@ struct StagedFilesStrip: View {
     }
 }
 
-/// The send button (accent disc with a paper plane).
+/// One button keeps focus while its label changes between a quick like and sending the draft.
 struct ComposerSendButton: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let sendLike: Bool
     let action: () -> Void
+
     var body: some View {
         Button(action: action) {
-            Image(systemName: "paperplane.fill").font(.system(size: theme.sizes.icon16))
-                .foregroundStyle(theme.colors.accentTx)
-                .frame(width: theme.sizes.control36, height: theme.sizes.control36)
-                .background(theme.colors.accent, in: Circle())
+            ZStack {
+                if sendLike {
+                    Text(verbatim: "👍").font(.system(size: 26))
+                } else {
+                    Image(systemName: "paperplane.fill").font(.system(size: theme.sizes.icon16))
+                        .foregroundStyle(theme.colors.accentTx)
+                        .frame(width: theme.sizes.control36, height: theme.sizes.control36)
+                        .background(theme.colors.accent, in: Circle())
+                }
+            }
+            .frame(width: theme.sizes.control36, height: theme.sizes.control36)
+            .animation(reduceMotion ? nil : .easeOut(duration: theme.motion.fast), value: sendLike)
         }
         .buttonStyle(.plain)
-        .help("\(appString("chatSend", "Send")) · \(appString("chatSendHint", "Enter to send · Shift+Enter for a new line"))")
+        .accessibilityLabel(sendLike ? appString("chatSendLike", "Send a like") : appString("chatSend", "Send"))
+        .help(sendLike ? appString("chatSendLike", "Send a like") : "\(appString("chatSend", "Send")) · \(appString("chatSendHint", "Enter to send · Shift+Enter for a new line"))")
     }
 }
 
 private struct FlowThumbs: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let files: [StagedFile]
     let onRemove: (UUID) -> Void
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: theme.spacing.s10) {
-                ForEach(files) { f in StagedThumb(file: f) { onRemove(f.id) } }
+                ForEach(files) { file in
+                    StagedThumb(file: file) { onRemove(file.id) }
+                        .transition(reduceMotion ? .identity : .opacity.combined(with: .scale(scale: 0.94)))
+                }
             }
+            .animation(reduceMotion ? nil : .easeOut(duration: theme.motion.fast), value: files.map(\.id))
         }
     }
 }
@@ -59,6 +76,7 @@ private struct FlowThumbs: View {
 /// One waiting file: an image's thumbnail, else its type glyph and name, with a remove button in the corner.
 private struct StagedThumb: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let file: StagedFile
     let onRemove: () -> Void
     @State private var image: NSImage?
@@ -87,7 +105,9 @@ private struct StagedThumb: View {
         .task(id: file.id) {
             guard ChatStaging.isImageName(file.name) else { return }
             let data = file.data, px = side * 2
-            image = await Task.detached { StagedThumb.thumbnail(data, maxPixel: px) }.value
+            let thumbnail = await Task.detached { StagedThumb.thumbnail(data, maxPixel: px) }.value
+            guard !Task.isCancelled else { return }
+            withAnimation(reduceMotion ? nil : .easeOut(duration: theme.motion.fast)) { image = thumbnail }
         }
     }
 

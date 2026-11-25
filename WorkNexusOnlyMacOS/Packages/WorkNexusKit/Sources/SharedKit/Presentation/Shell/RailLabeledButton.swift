@@ -6,6 +6,7 @@ import SwiftUI
 /// (workspace, chat, accounts, mini apps, settings). Public so the composition root can build the mini-app buttons.
 public struct RailLabeledButton<Leading: View>: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hovering = false
     let label: String; let selected: Bool; let badge: Int; let help: String?; let action: () -> Void
     let leading: Leading
@@ -33,7 +34,12 @@ public struct RailLabeledButton<Leading: View>: View {
             .padding(.horizontal, theme.spacing.s2)
             .frame(width: 64, height: 54)
             .foregroundStyle(selected ? theme.colors.accent : theme.colors.tx2)
-            .background(selected ? theme.colors.sel : (hovering ? theme.colors.panel2 : .clear), in: RoundedRectangle(cornerRadius: theme.radii.lg))
+            .background {
+                RoundedRectangle(cornerRadius: theme.radii.lg)
+                    .fill(selected ? theme.colors.sel : (hovering ? theme.colors.panel2 : .clear))
+                    .animation(reduceMotion ? nil : .easeOut(duration: theme.motion.fast), value: selected)
+                    .animation(reduceMotion ? nil : .easeOut(duration: theme.motion.fast), value: hovering)
+            }
             .overlay(alignment: .topTrailing) {
                 AppCountBadge(badge).offset(x: -theme.spacing.s2, y: theme.spacing.s2)
             }

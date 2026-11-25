@@ -33,6 +33,7 @@ struct ThreadRowView: View, Equatable {
             ChatSeparatorView(label: ChatTextLabels.clock(at)).padding(.horizontal, side)
         case .typing:
             ChatTypingRow(ctx: ctx, typing: ctx.model.typing, showSenders: showSenders)
+                .modifier(ChatRowEntrance(fresh: true, rise: theme.spacing.s4))
         case .message(let m) where m.isNotice:
             HighlightedRow(model: ctx.model, serverId: m.serverId, gapAbove: style.groupGap, gapBelow: style.groupGap) {
                 ChatNoticeView(ctx: ctx, message: m).padding(.horizontal, side)
@@ -47,7 +48,7 @@ struct ThreadRowView: View, Equatable {
                 }
             }
             // A message that arrives while the chat is open fades in; loaded pages and rows scrolled back show as they are.
-            .modifier(ChatRowEntrance(fresh: ctx.model.arrivals.isFresh(m.gid)))
+            .modifier(ChatRowEntrance(fresh: ctx.model.arrivals.isFresh(m.gid), rise: theme.spacing.s8))
             // One accessibility element per message (its words read together) instead of one per name, line, badge and
             // button: with an accessibility client running, every element of a row scrolling into view had SwiftUI walk
             // the whole window for focus - a sixth of the main thread while scrolling.

@@ -5,36 +5,45 @@ import SwiftUI
 /// Suggestions while an `@name` is being typed: the chat's members (and "@all" in groups) matching it. Click or Enter/Tab inserts one.
 struct ChatMentionList: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let mentions: MentionAutocomplete
     let onPick: (MentionCandidate) -> Void
 
     var body: some View {
         let people = mentions.visible
-        if mentions.query != nil, !people.isEmpty {
-            ScrollViewReader { reader in
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(people.indices, id: \.self) { i in
-                            MentionRow(candidate: people[i], highlighted: i == mentions.highlight, onHover: { mentions.highlightAt(i) }) { onPick(people[i]) }
+        let presented = mentions.query != nil && !people.isEmpty
+        ZStack {
+            if presented {
+                ScrollViewReader { reader in
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(people.indices, id: \.self) { i in
+                                MentionRow(candidate: people[i], highlighted: i == mentions.highlight, onHover: { mentions.highlightAt(i) }) { onPick(people[i]) }
+                            }
                         }
+                        .padding(.vertical, theme.spacing.s4)
                     }
-                    .padding(.vertical, theme.spacing.s4)
+                    .onChange(of: mentions.highlight) { _, index in reader.scrollTo(index) }
                 }
-                .onChange(of: mentions.highlight) { _, index in reader.scrollTo(index) }
+                .frame(maxHeight: theme.sizes.control36 * 6)
+                .fixedSize(horizontal: false, vertical: true)
+                .background(theme.colors.card, in: RoundedRectangle(cornerRadius: theme.radii.lg))
+                .overlay(RoundedRectangle(cornerRadius: theme.radii.lg).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
+                .shadow(color: theme.colors.scrim.opacity(0.25), radius: 8, y: 2)
+                .padding(.horizontal, theme.spacing.s12)
+                .transition(reduceMotion ? .identity : .opacity.combined(with: .offset(y: theme.spacing.s4)))
             }
-            .frame(maxHeight: theme.sizes.control36 * 6)
-            .fixedSize(horizontal: false, vertical: true)
-            .background(theme.colors.card, in: RoundedRectangle(cornerRadius: theme.radii.lg))
-            .overlay(RoundedRectangle(cornerRadius: theme.radii.lg).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
-            .shadow(color: theme.colors.scrim.opacity(0.25), radius: 8, y: 2)
-            .padding(.horizontal, theme.spacing.s12)
         }
+        .allowsHitTesting(presented)
+        .accessibilityHidden(!presented)
+        .animation(reduceMotion ? nil : .easeOut(duration: theme.motion.fast), value: presented)
     }
 }
 
 /// One suggestion: an avatar and the name; "@all" gets an accent @ disc and "Notify everyone · @All".
 private struct MentionRow: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let candidate: MentionCandidate
     let highlighted: Bool
     let onHover: () -> Void
@@ -60,7 +69,10 @@ private struct MentionRow: View {
             }
             .padding(.horizontal, theme.spacing.s16)
             .padding(.vertical, theme.spacing.s6)
-            .background(highlighted ? theme.colors.sel : .clear)
+            .background {
+                (highlighted ? theme.colors.sel : .clear)
+                    .animation(reduceMotion ? nil : .easeOut(duration: theme.motion.fast), value: highlighted)
+            }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

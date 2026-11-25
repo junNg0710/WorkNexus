@@ -60,9 +60,12 @@ public struct ChatComposerView: View {
                 ReplyDraftBanner(message: draft, state: state) { state.replyDraft = nil; controller.model.requestFocus() }
             }
             // Files dropped, pasted or picked wait above the input, which stays open: a message can go with them.
-            if !state.stagedFiles.isEmpty {
-                StagedFilesStrip(files: state.stagedFiles, onClear: controller.clearStaged, onRemove: controller.removeStaged)
+            ZStack {
+                if !state.stagedFiles.isEmpty {
+                    StagedFilesStrip(files: state.stagedFiles, onClear: controller.clearStaged, onRemove: controller.removeStaged)
+                }
             }
+            .contentArrival(on: state.stagedFiles.isEmpty, backdrop: theme.colors.panel, enabled: !state.stagedFiles.isEmpty)
             ComposerInputRow(controller: controller, state: state, hint: hint, expanded: expanded, height: $inputHeight)
             if controller.markdown { MarkdownToolbar(model: controller.model, expanded: $expanded) }
         }
@@ -127,12 +130,8 @@ private struct ComposerInputRow: View {
                     .alignmentGuide(.top) { $0[.bottom] }
                     .offset(y: -theme.spacing.s4)
             }
-            if model.isBlank && state.stagedFiles.isEmpty {
-                Button(action: controller.sendLike) { Text(verbatim: "👍").font(.system(size: 26)).frame(width: theme.sizes.control36, height: theme.sizes.control36) }
-                    .buttonStyle(.plain).help(appString("chatSendLike", "Send a like"))
-            } else {
-                ComposerSendButton { controller.send() }
-            }
+            let sendLike = model.isBlank && state.stagedFiles.isEmpty
+            ComposerSendButton(sendLike: sendLike, action: sendLike ? controller.sendLike : controller.send)
         }
         // Clear of the content card's rounded bottom corners: the input and 👍 used to sit inside the curve.
         .padding(EdgeInsets(top: theme.spacing.s8, leading: theme.spacing.s16, bottom: theme.spacing.s14, trailing: theme.spacing.s16))

@@ -150,6 +150,10 @@ final class MessageTimelineModel {
     private func apply(_ list: [ChatMessage], window w: ChatMessageWindow) {
         guard w == window else { return }
         let before = messages
+        // An already displayed empty conversation can receive its first bubble without a previous message to anchor it.
+        if loaded, before.isEmpty, list.count == 1, let first = list.first, !w.isAround, state.isOnScreen {
+            arrivals.note([first.gid])
+        }
         // Opening a chat reads its window more than once (the reactions setting restarts the stream): the same messages
         // again change nothing on screen, and re-setting them re-ran the list for nothing.
         if !loaded || list != before {

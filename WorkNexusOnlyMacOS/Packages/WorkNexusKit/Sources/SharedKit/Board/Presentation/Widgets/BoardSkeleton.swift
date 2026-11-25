@@ -23,7 +23,6 @@ public struct TicketCardSkeleton: View {
 /// vertically, and the section around them shrank: an empty band showed above.)
 public struct BoardSkeleton: View {
     @Environment(\.appTheme) private var theme
-    @State private var shown = false
     public init() {}
     public var body: some View {
         HStack(alignment: .top, spacing: theme.spacing.s12) {
@@ -39,15 +38,13 @@ public struct BoardSkeleton: View {
         // As wide as the board's area, not as wide as the columns would like (they run past its right edge, clipped).
         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
         .clipped()
-        .opacity(shown ? 1 : 0)
-        .task { try? await Task.sleep(for: .milliseconds(120)); withAnimation(.easeOut(duration: theme.motion.base)) { shown = true } }
+        .modifier(SkeletonEntrance())
     }
 }
 
 /// Placeholder rows shown while a list (table) loads.
 public struct TableSkeleton: View {
     @Environment(\.appTheme) private var theme
-    @State private var shown = false
     public init() {}
     public var body: some View {
         VStack(spacing: 0) {
@@ -65,7 +62,21 @@ public struct TableSkeleton: View {
         .padding(.top, theme.spacing.s12)
         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
         .clipped()
-        .opacity(shown ? 1 : 0)
-        .task { try? await Task.sleep(for: .milliseconds(120)); withAnimation(.easeOut(duration: theme.motion.base)) { shown = true } }
+        .modifier(SkeletonEntrance())
+    }
+}
+
+private struct SkeletonEntrance: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.appTheme) private var theme
+    @State private var shown = false
+
+    func body(content: Content) -> some View {
+        content.opacity(shown || reduceMotion ? 1 : 0)
+            .task {
+                try? await Task.sleep(for: .seconds(theme.motion.fast))
+                guard !Task.isCancelled else { return }
+                withAnimation(reduceMotion ? nil : .easeOut(duration: theme.motion.base)) { shown = true }
+            }
     }
 }

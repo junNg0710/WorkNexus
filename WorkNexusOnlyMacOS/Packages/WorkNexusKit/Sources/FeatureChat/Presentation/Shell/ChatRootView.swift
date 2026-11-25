@@ -126,6 +126,7 @@ private struct ChatThreadArea: View {
     var body: some View {
         ZStack {
             ChatOpenThreads(model: model)
+                .contentArrival(on: model.thread?.state.chatGid, backdrop: theme.colors.bg, enabled: model.thread != nil)
             if model.thread == nil {
                 Group {
                     if model.selectedGid != nil && !model.conversationsLoaded {

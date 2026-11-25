@@ -55,6 +55,20 @@ final class TimelineArrivalsTests: XCTestCase {
         XCTAssertFalse(model.arrivals.isFresh("m3"))
     }
 
+    func testFirstNewMessageInAnAlreadyLoadedEmptyChatEasesIn() async {
+        let repo = LiveRepo()
+        let state = ChatThreadState(accountId: "a", chat: Make.chat("g"))
+        let model = MessageTimelineModel(state: state, services: ChatServices(chat: repo))
+        let task = Task { await model.run() }
+        defer { task.cancel() }
+        await eventually { !repo.streams.isEmpty }
+        repo.yield([])
+        await eventually { model.loaded }
+        repo.yield([Make.message("first")])
+        await eventually { model.arrivals.isFresh("first") }
+        XCTAssertTrue(model.arrivals.isFresh("first"))
+    }
+
     private func eventually(timeout: Double = 3, _ cond: @MainActor () -> Bool) async {
         let end = Date().addingTimeInterval(timeout)
         while !cond(), Date() < end { try? await Task.sleep(for: .milliseconds(10)) }

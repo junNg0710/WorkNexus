@@ -76,12 +76,14 @@ private struct ZentaoBugsBody: View {
             ZentaoTeamBody(state: state, team: team, bugs: true, list: list, deps: deps)
         } else if let failure = state.bugSlice.failure, state.bugBoard.scoped.isEmpty {
             AppStateView(.error(failure.message)) { state.reopenBugStreams() }
-        } else if state.bugSlice.isLoading && state.bugBoard.scoped.isEmpty {
-            if list { TableSkeleton() } else { BoardSkeleton() }
-        } else if list {
-            ZentaoBugTableView(state: state)
         } else {
-            ZentaoBugBoardView(deps: deps, state: state)
+            ZentaoBoardLoadView(loading: state.bugSlice.isLoading && state.bugBoard.scoped.isEmpty, list: list) {
+                if list {
+                    ZentaoBugTableView(state: state)
+                } else {
+                    ZentaoBugBoardView(deps: deps, state: state)
+                }
+            }
         }
     }
 }

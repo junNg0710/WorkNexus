@@ -16,6 +16,7 @@ struct Viewport: View {
         ZStack {
             KeepAliveStack(activeKey: place.key, visible: !model.miniAppOnScreen, limit: Self.keepAliveLimit,
                            generation: model.activeWorkspaceId.hashValue, content: place.view)
+                .contentArrival(on: place.key, backdrop: theme.colors.bg)
             model.host.miniAppStack()
         }
         .background(theme.colors.bg)

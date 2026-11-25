@@ -16,12 +16,14 @@ struct ZentaoTeamBody: View {
         if team.allFailed, board.scoped.isEmpty {
             let reason: String = { if case .failed(let m)? = team.loads.values.first(where: \.isFailed) { return m } else { return "" } }()
             AppStateView(.error(reason)) { state.loadTeam(bugs: bugs, only: nil) }
-        } else if team.isLoading, board.scoped.isEmpty {
-            if list { TableSkeleton() } else { BoardSkeleton() }
-        } else if bugs {
-            if list { ZentaoBugTableView(state: state) } else if let deps { ZentaoBugBoardView(deps: deps, state: state) }
         } else {
-            if list { ZentaoTaskTableView(state: state) } else { ZentaoTaskBoardView(state: state) }
+            ZentaoBoardLoadView(loading: team.isLoading && board.scoped.isEmpty, list: list) {
+                if bugs {
+                    if list { ZentaoBugTableView(state: state) } else if let deps { ZentaoBugBoardView(deps: deps, state: state) }
+                } else {
+                    if list { ZentaoTaskTableView(state: state) } else { ZentaoTaskBoardView(state: state) }
+                }
+            }
         }
     }
 }

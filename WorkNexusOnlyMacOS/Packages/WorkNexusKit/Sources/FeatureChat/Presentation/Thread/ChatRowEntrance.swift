@@ -24,20 +24,27 @@ final class ChatArrivals {
     }
 }
 
-/// Eases a row in once, when it is first built: it fades in (`AppMotion.base`). Decided once — later redraws of the row never
-/// play it again — and skipped when the system asks for less motion. At rest it is an opacity of 1, which adds nothing.
+/// Eases a row in once, when it is first built: it fades in and rises `rise` points into place (`AppMotion.base`). Decided
+/// once - later redraws of the row never play it again - and skipped when the system asks for less motion. At rest it is
+/// an opacity of 1 and no offset, which add nothing.
 ///
 /// Not ported: the Flutter row also opened from no height, so the ones above glide up. Here that would lay the lazy list
-/// out again on every frame of it; the row fades in where it lands.
+/// out again on every frame of it; the row keeps its height and only moves within it.
 struct ChatRowEntrance: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var shown: Bool
 
-    init(fresh: Bool) { _shown = State(initialValue: !fresh) }
+    let rise: CGFloat
+
+    init(fresh: Bool, rise: CGFloat) {
+        _shown = State(initialValue: !fresh)
+        self.rise = rise
+    }
 
     func body(content: Content) -> some View {
         content
-            .opacity(shown ? 1 : 0)
+            .opacity(shown || reduceMotion ? 1 : 0)
+            .offset(y: shown || reduceMotion ? 0 : rise)
             .onAppear {
                 guard !shown else { return }
                 if reduceMotion { shown = true } else { withAnimation(.easeOut(duration: AppMotion().base)) { shown = true } }
