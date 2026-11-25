@@ -213,7 +213,10 @@ public actor SyncCoordinator: AccountSyncService, TicketDetailService {
     /// Request (url + auth headers) a player can stream an attachment from, or nil.
     public func attachmentStream(_ ticket: Ticket, _ att: TicketAttachment) async -> MediaRequest? {
         guard let url = att.streamUrl, let adapter = await adapterFor(ticket.accountId) else { return nil }
-        return await adapter.streamRequest(url: url)
+        // The address may not say what the file is (ZenTao's has no extension): the attachment does.
+        var request = await adapter.streamRequest(url: url)
+        if request?.fileExtension == nil { request?.fileExtension = AttachmentKinds.ext(of: att) }
+        return request
     }
 
     public func attachmentStorageBytes() -> Outcome<Int> { .success(attachmentCache.sizeBytes()) }

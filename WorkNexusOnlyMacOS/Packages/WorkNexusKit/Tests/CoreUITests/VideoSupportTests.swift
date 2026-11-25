@@ -73,6 +73,50 @@ final class VideoSupportTests: XCTestCase {
         XCTAssertEqual(VideoLoadingText.make(percent: "32", bytesPerSecond: 1_048_576), "Loading 32% · 1.0 MB/s")
     }
 
+    /// ZenTao serves an attachment from an address with no extension and no content type: the player is told the type.
+    func testAStreamWhoseAddressDoesNotSayWhatItIsCarriesItsContentType() {
+        let bare = URL(string: "https://z/zentao/data/upload/1/202609/0911053908794d35")!
+        let told = AppVideoPlayerModel.assetOptions(MediaRequest(url: bare, fileExtension: "MP4"))
+        XCTAssertEqual(told[AVURLAssetOverrideMIMETypeKey] as? String, "video/mp4")
+        XCTAssertEqual(AppVideoPlayerModel.assetOptions(MediaRequest(url: bare, fileExtension: "mov"))[AVURLAssetOverrideMIMETypeKey] as? String,
+                       "video/quicktime")
+        // Left to AVFoundation: an address that says it, a kind it does not play, nothing known.
+        XCTAssertNil(AppVideoPlayerModel.assetOptions(MediaRequest(url: URL(string: "https://z/x.mp4")!, fileExtension: "mp4"))[AVURLAssetOverrideMIMETypeKey])
+        XCTAssertNil(AppVideoPlayerModel.assetOptions(MediaRequest(url: bare, fileExtension: "webm"))[AVURLAssetOverrideMIMETypeKey])
+        XCTAssertNil(AppVideoPlayerModel.assetOptions(MediaRequest(url: bare))[AVURLAssetOverrideMIMETypeKey])
+        XCTAssertEqual(AppVideoFormats.mimeType(forExtension: "m4v"), "video/x-m4v")
+    }
+
+    func testAContainerIsRecognisedFromItsFirstBytes() {
+        func head(_ atom: String, _ brand: String = "") -> Data { Data([0, 0, 0, 24]) + Data(atom.utf8) + Data(brand.utf8) }
+        XCTAssertEqual(AppVideoFormats.sniffedMimeType(head("ftyp", "mp42")), "video/mp4")
+        XCTAssertEqual(AppVideoFormats.sniffedMimeType(head("ftyp", "isom")), "video/mp4")
+        XCTAssertEqual(AppVideoFormats.sniffedMimeType(head("ftyp", "qt  ")), "video/quicktime")
+        XCTAssertEqual(AppVideoFormats.sniffedMimeType(head("moov")), "video/quicktime")
+        XCTAssertNil(AppVideoFormats.sniffedMimeType(Data([0x1A, 0x45, 0xDF, 0xA3, 1, 2, 3, 4, 5, 6, 7, 8])), "a WebM is not one of them")
+        XCTAssertNil(AppVideoFormats.sniffedMimeType(Data([1, 2, 3])))
+    }
+
+    /// A video kept on disk without an extension (a download named after an id) or under another one is a plain MP4
+    /// the player refused: it is told what the file is, from the hint or from the file itself.
+    func testAVideoFileWhoseNameDoesNotSayWhatItIsStillPlays() async throws {
+        let mp4 = try await TestVideo.make(seconds: 1)
+        let bare = mp4.deletingPathExtension()
+        let odd = mp4.deletingPathExtension().appendingPathExtension("bin")
+        try FileManager.default.copyItem(at: mp4, to: bare); try FileManager.default.copyItem(at: mp4, to: odd)
+        defer { for url in [mp4, bare, odd] { try? FileManager.default.removeItem(at: url) } }
+
+        for (path, ext) in [(bare.path, "mp4"), (bare.path, ""), (odd.path, "")] {
+            let model = AppVideoPlayerModel(source: AppVideoSource(title: "clip", fileExtension: ext, download: { path }))
+            await model.start()
+            XCTAssertEqual(model.phase, .ready, "\((path as NSString).lastPathComponent) with hint \"\(ext)\"")
+            model.stop()
+        }
+        let still = await VideoThumbnailer().thumbnail(of: bare.path)
+        XCTAssertNotNil(still, "its still frame is read the same way")
+        try? FileManager.default.removeItem(atPath: bare.path + ".thumb.png")
+    }
+
     func testTheSessionRidesInTheStreamsRequestHeaders() {
         let req = MediaRequest(url: URL(string: "https://z/x.mp4?zentaosid=t")!, headers: ["Cookie": "zentaosid=t", "Token": "t"])
         XCTAssertEqual(AppVideoPlayerModel.asset(req).url, req.url)

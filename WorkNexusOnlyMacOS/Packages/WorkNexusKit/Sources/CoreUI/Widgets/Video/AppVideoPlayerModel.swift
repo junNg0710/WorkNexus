@@ -62,16 +62,35 @@ public final class AppVideoPlayerModel {
         started = true
         if !source.fileExtension.isEmpty, !AppVideoFormats.isNative(source.fileExtension) { phase = .external; return }
         startMeter()
-        if let request = await source.stream(), await use(AVPlayerItem(asset: Self.asset(request)), timeout: streamTimeout) { return }
+        if var request = await source.stream() {
+            // The source knows what the file is even when the stream's address does not say.
+            if request.fileExtension == nil, !source.fileExtension.isEmpty { request.fileExtension = source.fileExtension }
+            if await use(AVPlayerItem(asset: Self.asset(request)), timeout: streamTimeout) { return }
+        }
         guard !Task.isCancelled else { return }
         if let path = await source.download(), !Task.isCancelled,
-           await use(AVPlayerItem(url: URL(fileURLWithPath: path)), timeout: .seconds(10)) { return }
+           await use(AVPlayerItem(asset: AppVideoFormats.asset(forFileAt: URL(fileURLWithPath: path), hint: source.fileExtension)),
+                     timeout: .seconds(10)) { return }
         if !Task.isCancelled { phase = .failed }
     }
 
     /// The asset a player streams from: the session rides in the request headers.
     nonisolated public static func asset(_ request: MediaRequest) -> AVURLAsset {
-        AVURLAsset(url: request.url, options: ["AVURLAssetHTTPHeaderFieldsKey": request.headers])
+        AVURLAsset(url: request.url, options: assetOptions(request))
+    }
+
+    /// The session as request headers, and the file's content type when the address has no video extension of its own.
+    /// AVFoundation tells what a stream is from its extension or the server's content type: ZenTao's attachment
+    /// addresses (`data/upload/1/202609/0911...`) have neither, and the asset failed at once with "Cannot Open" (-11828)
+    /// - the video of a bug or task never played from the stream. Told the type, the same address is ready in under a
+    /// second.
+    nonisolated static func assetOptions(_ request: MediaRequest) -> [String: Any] {
+        var options: [String: Any] = ["AVURLAssetHTTPHeaderFieldsKey": request.headers]
+        if !AppVideoFormats.isVideo(request.url.pathExtension), let ext = request.fileExtension,
+           let mime = AppVideoFormats.mimeType(forExtension: ext) {
+            options[AVURLAssetOverrideMIMETypeKey] = mime
+        }
+        return options
     }
 
     private func use(_ item: AVPlayerItem, timeout: Duration) async -> Bool {

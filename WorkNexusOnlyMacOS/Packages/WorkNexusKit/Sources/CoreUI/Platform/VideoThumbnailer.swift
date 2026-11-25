@@ -48,7 +48,7 @@ public actor VideoThumbnailer {
     }
 
     private static func assetFrame(_ video: URL) async -> Data? {
-        let generator = AVAssetImageGenerator(asset: AVURLAsset(url: video))
+        let generator = AVAssetImageGenerator(asset: AppVideoFormats.asset(forFileAt: video))
         generator.appliesPreferredTrackTransform = true
         generator.maximumSize = CGSize(width: width, height: width)
         generator.requestedTimeToleranceBefore = .positiveInfinity

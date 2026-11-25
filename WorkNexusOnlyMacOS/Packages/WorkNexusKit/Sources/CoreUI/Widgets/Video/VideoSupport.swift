@@ -1,3 +1,4 @@
+import AVFoundation
 import CoreDomain
 import Foundation
 
@@ -30,6 +31,43 @@ public enum AppVideoFormats {
     public static var all: Set<String> { native.union(external) }
     public static func isNative(_ ext: String) -> Bool { native.contains(ext.lowercased()) }
     public static func isVideo(_ ext: String) -> Bool { all.contains(ext.lowercased()) }
+
+    /// The content type of a file AVFoundation plays, by its extension; nil for anything else.
+    public static func mimeType(forExtension ext: String) -> String? {
+        switch ext.lowercased() {
+        case "mp4": "video/mp4"
+        case "m4v": "video/x-m4v"
+        case "mov": "video/quicktime"
+        default: nil
+        }
+    }
+
+    /// The content type of an MP4 or QuickTime file, read from its first bytes; nil for anything else. Both open with
+    /// an `ftyp` box (its brand tells them apart); an older QuickTime movie opens with one of its own atoms.
+    public static func sniffedMimeType(_ head: Data) -> String? {
+        let bytes = [UInt8](head.prefix(12))
+        guard bytes.count >= 8 else { return nil }
+        let atom = String(decoding: bytes[4..<8], as: UTF8.self)
+        if atom == "ftyp" {
+            let brand = bytes.count >= 12 ? String(decoding: bytes[8..<12], as: UTF8.self) : ""
+            return brand == "qt  " ? "video/quicktime" : "video/mp4"
+        }
+        return ["moov", "mdat", "wide", "free", "skip"].contains(atom) ? "video/quicktime" : nil
+    }
+
+    /// The asset of a video file on this Mac. AVFoundation tells what a file is from its name: one kept without an
+    /// extension, or under another one (a download named after an id, a chat file sent as "video"), failed with
+    /// "Cannot Open" although it is a plain MP4. Such a file is told what it is, from `hint` (the extension its owner
+    /// knows it by) or from its first bytes.
+    public static func asset(forFileAt url: URL, hint: String? = nil) -> AVURLAsset {
+        if isNative(url.pathExtension) { return AVURLAsset(url: url) }
+        var mime = hint.flatMap(mimeType(forExtension:))
+        if mime == nil, let handle = try? FileHandle(forReadingFrom: url) {
+            mime = (try? handle.read(upToCount: 12)).flatMap { sniffedMimeType($0) }
+            try? handle.close()
+        }
+        return AVURLAsset(url: url, options: mime.map { [AVURLAssetOverrideMIMETypeKey: $0] })
+    }
 }
 
 /// How much of a video has loaded, 0...1: the end of its furthest buffered range.

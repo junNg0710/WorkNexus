@@ -65,7 +65,7 @@ extension XxdChatRepository {
         guard attachments.isCached(accountId, video), let path = attachments.cachedPath(accountId, video) else { return .failure(.notFound("Video not downloaded")) }
         let cache = URL(fileURLWithPath: path + ".duration")
         if let ms = (try? String(contentsOf: cache, encoding: .utf8)).flatMap({ Int($0.trimmingCharacters(in: .whitespacesAndNewlines)) }) { return .success(Double(ms) / 1000) }
-        guard let d = try? await AVURLAsset(url: URL(fileURLWithPath: path)).load(.duration), d.seconds.isFinite, d.seconds > 0 else {
+        guard let d = try? await AppVideoFormats.asset(forFileAt: URL(fileURLWithPath: path)).load(.duration), d.seconds.isFinite, d.seconds > 0 else {
             return .failure(.notFound("Unknown video length"))
         }
         try? "\(Int(d.seconds * 1000))".write(to: cache, atomically: true, encoding: .utf8)

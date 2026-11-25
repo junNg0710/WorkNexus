@@ -1,6 +1,7 @@
 /// Ported from: lib/features/chat/presentation/providers/chat_video_playback.dart (`openChatVideo`, the player controller)
 import AVFoundation
 import Combine
+import CoreUI
 import CoreDomain
 import Foundation
 import Observation
@@ -54,7 +55,7 @@ final class ChatVideoPlayer {
         }
         let asset: AVURLAsset, loader: ChatVideoSourceLoader?
         switch playback {
-        case .file(let url): asset = AVURLAsset(url: url); loader = nil
+        case .file(let url): asset = AppVideoFormats.asset(forFileAt: url); loader = nil
         case .stream(let source): (asset, loader) = ChatVideoSourceLoader.asset(for: source)
         }
         let item = AVPlayerItem(asset: asset)
