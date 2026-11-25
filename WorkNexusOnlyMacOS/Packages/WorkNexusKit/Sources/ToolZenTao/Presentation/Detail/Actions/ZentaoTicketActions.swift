@@ -4,36 +4,63 @@ import CoreTools
 import CoreUI
 import SwiftUI
 
-/// What the ZenTao toolbar offers on a ticket, as data: Assign, the one main status action, and the rest in "⋯".
-/// A story offers Assign only.
+/// What the ZenTao toolbar offers on a ticket, as data, laid out as ZenTao's own toolbar is: the labelled actions
+/// (a bug's Confirm, Assign, Resolve, Convert to Task; a task's Child Task, Assign, Start, Finish, Cancel, Report bug -
+/// each only while ZenTao allows it), then Edit, Copy and Delete as icons. A story offers Assign only.
+///
+/// Every action is a button of its own: none waits in a "more" menu, where it took a second click to reach.
 struct ZentaoActionsModel {
-    enum Item: Hashable { case bug(ZenTaoBugAction), task(ZenTaoTaskAction), create(ZenTaoCreateAction) }
+    enum Item: Hashable { case assign, bug(ZenTaoBugAction), task(ZenTaoTaskAction), create(ZenTaoCreateAction), edit, delete }
 
-    let canAssign: Bool
+    /// The labelled buttons, in ZenTao's order.
+    let buttons: [Item]
+    /// The one of them that moves the ticket on: drawn filled.
     let primary: Item?
-    let more: [Item]
-    /// The direct "Clone task" button of a task.
-    let cloneTask: Bool
+    /// The icon buttons after them: edit, copy, delete.
+    let tools: [Item]
+
+    var canAssign: Bool { buttons.contains(.assign) }
+
+    /// A task's status actions, as ZenTao's toolbar orders them.
+    private static let taskOrder: [ZenTaoTaskAction] = [.start, .restart, .pause, .finish, .cancel, .close, .activate]
 
     init(_ ticket: Ticket) {
         let kind = zentaoKind(ticket)
-        let bug = kind == "bug" ? ListZenTaoBugActions()(ticket) : nil
-        let task = kind == "task" ? ListZenTaoTaskActions()(ticket) : nil
-        canAssign = bug?.canAssign ?? task?.canAssign ?? true
-        primary = bug?.primary.map(Item.bug) ?? task?.primary.map(Item.task)
-        var rest: [Item] = []
-        for a in bug?.actions ?? [] where a != bug?.primary { rest.append(.bug(a)) }
-        for a in task?.actions ?? [] where a != task?.primary { rest.append(.task(a)) }
-        for a in ListZenTaoCreateActions()(ticket) { rest.append(.create(a)) }
-        more = rest
-        cloneTask = kind == "task"
+        let creates = ListZenTaoCreateActions()(ticket)
+        var buttons: [Item] = []
+        switch kind {
+        case "bug":
+            let menu = ListZenTaoBugActions()(ticket)
+            if menu.actions.contains(.confirm) { buttons.append(.bug(.confirm)) }
+            if menu.canAssign { buttons.append(.assign) }
+            buttons += menu.actions.filter { $0 != .confirm }.map(Item.bug)
+            if creates.contains(.taskFromBug) { buttons.append(.create(.taskFromBug)) }
+            primary = menu.primary.map(Item.bug)
+            tools = [.edit, .create(.copyBug), .delete]
+        case "task":
+            let menu = ListZenTaoTaskActions()(ticket)
+            if creates.contains(.subtask) { buttons.append(.create(.subtask)) }
+            if menu.canAssign { buttons.append(.assign) }
+            buttons += Self.taskOrder.filter(menu.actions.contains).map(Item.task)
+            if creates.contains(.bugFromTask) { buttons.append(.create(.bugFromTask)) }
+            primary = menu.primary.map(Item.task)
+            tools = [.edit, .create(.copyTask), .delete]
+        default:
+            buttons = [.assign]
+            primary = nil
+            tools = []
+        }
+        self.buttons = buttons
     }
 
     static func look(_ item: Item) -> ZentaoActionLook {
         switch item {
+        case .assign: ZentaoActionLooks.assign
         case .bug(let a): ZentaoActionLooks.bug(a)
         case .task(let a): ZentaoActionLooks.task(a)
         case .create(let a): ZentaoActionLooks.create(a)
+        case .edit: ZentaoActionLooks.edit
+        case .delete: ZentaoActionLooks.delete
         }
     }
 }
@@ -46,13 +73,14 @@ enum ZentaoDialog: Identifiable {
     }
 }
 
-/// ZenTao's own toolbar for a bug or task: Assign, a "⋯" menu, and the one status action that moves the ticket on as
-/// the filled main button. The other status actions ZenTao allows, and what can be started from the ticket (a copy, a
-/// subtask, a bug), wait in the menu.
+/// ZenTao's own toolbar for a bug or task (`ZentaoActionsModel`): each action a button, the one that moves the ticket
+/// on filled; Edit, Copy and Delete as icons; deleting asks first.
 public struct ZentaoTicketActions: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.toasts) private var toasts
     let deps: ZentaoDependencies; let state: ZentaoUIState; let ticket: Ticket
     @State private var dialog: ZentaoDialog?
+    @State private var confirmingDelete = false
 
     public init(deps: ZentaoDependencies, state: ZentaoUIState, ticket: Ticket) {
         self.deps = deps; self.state = state; self.ticket = ticket
@@ -60,33 +88,81 @@ public struct ZentaoTicketActions: View {
 
     private func run(_ item: ZentaoActionsModel.Item) {
         switch item {
+        case .assign: dialog = .assign
         case .bug(let a): dialog = a == .resolve ? .resolve : .bug(a)
         case .task(let a): dialog = .task(a)
-        case .create(let a): deps.nav.openEditor(zentaoEditorRoute(for: a, ticket: ticket))
+        case .create(let a):
+            // A task made from a bug starts with the bug's title, as ZenTao's own form does.
+            let prefill = a == .taskFromBug ? TicketEditorPrefill(title: ticket.title, bodyHtml: "") : nil
+            deps.nav.openEditor(zentaoEditorRoute(for: a, ticket: ticket), prefill: prefill)
+        case .edit:
+            deps.nav.openEditor(zentaoKind(ticket) == "bug" ? .editBug(accountId: ticket.accountId, ticketId: ticket.id)
+                                                            : .editTask(accountId: ticket.accountId, ticketId: ticket.id))
+        case .delete: confirmingDelete = true
+        }
+    }
+
+    private func delete() {
+        let ticket = ticket, nav = deps.nav
+        let remove = DeleteZenTaoTicket(workflow: deps.workflow, tickets: deps.services.tickets)
+        Task {
+            let deleted = await ZentaoActionRunner.run(
+                state: state, ticket: ticket, toasts: toasts, label: ZentaoActionLooks.delete.label,
+                successMessage: appFormat("zentaoTicketDeleted", "Deleted #%1$@", ticket.externalKey)) { await remove(ticket) }
+            // Its panel has nothing left to show - unless the reader has gone on to another ticket meanwhile.
+            if deleted, nav.state.ticketHistories[nav.state.rail.key]?.last == ticket.id { nav.closeTicket() }
         }
     }
 
     public var body: some View {
         let model = ZentaoActionsModel(ticket)
-        FlowLayout(spacing: theme.spacing.s8, rowSpacing: theme.spacing.s8) {
-            if model.canAssign {
-                ZentaoActionButton(look: ZentaoActionLook(label: appString("assign", "Assign"), icon: "person.badge.plus")) {
-                    dialog = .assign
-                }
-            }
-            if model.cloneTask {
-                ZentaoActionButton(look: ZentaoActionLooks.create(.copyTask)) { run(.create(.copyTask)) }
-            }
-            if !model.more.isEmpty {
-                ZentaoMoreMenu(items: model.more.filter { $0 != .create(.copyTask) }, onPick: run)
-            }
-            if let primary = model.primary {
-                let look = ZentaoActionsModel.look(primary)
-                AppButton(look.label, systemImage: look.icon, kind: .primary) { run(primary) }
+        // One line whenever it can be: with every label; else with the "start something new" actions (a subtask, a bug,
+        // a task from the bug) as icons; and only when even that is too wide, wrapped.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: theme.spacing.s8) { ZentaoActionItems(model: model, compact: false, run: run) }
+            HStack(spacing: theme.spacing.s8) { ZentaoActionItems(model: model, compact: true, run: run) }
+            FlowLayout(spacing: theme.spacing.s8, rowSpacing: theme.spacing.s8) {
+                ZentaoActionItems(model: model, compact: true, run: run)
             }
         }
         .sheet(item: $dialog) { d in
             ZentaoDialogHost(deps: deps, state: state, ticket: ticket, dialog: d) { dialog = nil }
+        }
+        .appConfirmDialog(isPresented: $confirmingDelete,
+                          title: appFormat("zentaoDeleteTicketTitle", "Delete #%1$@?", ticket.externalKey),
+                          message: appFormat("zentaoDeleteTicketMessage",
+                                             "“%1$@” is removed from ZenTao for everyone. An administrator can bring it back from ZenTao’s recycle bin.",
+                                             ticket.title),
+                          destructive: true) { delete() }
+    }
+}
+
+/// The bar's buttons, in order: the labelled actions (the one that moves the ticket on filled), a hairline, then Edit,
+/// Copy and Delete as icons. `compact` draws the create actions as icons too, their name in the tooltip.
+struct ZentaoActionItems: View {
+    @Environment(\.appTheme) private var theme
+    let model: ZentaoActionsModel
+    let compact: Bool
+    let run: (ZentaoActionsModel.Item) -> Void
+
+    var body: some View {
+        ForEach(model.buttons, id: \.self) { item in
+            let look = ZentaoActionsModel.look(item)
+            if item == model.primary {
+                AppButton(look.label, systemImage: look.icon, kind: .primary) { run(item) }
+            } else if compact, case .create = item {
+                AppIconButton(look.icon, help: look.label, outlined: true) { run(item) }
+            } else {
+                ZentaoActionButton(look: look) { run(item) }
+            }
+        }
+        if !model.tools.isEmpty {
+            Rectangle().fill(theme.colors.line2).frame(width: theme.borders.hairline, height: theme.sizes.icon16)
+                .padding(.horizontal, theme.spacing.s2)
+        }
+        ForEach(model.tools, id: \.self) { item in
+            let look = ZentaoActionsModel.look(item)
+            AppIconButton(look.icon, help: look.label, outlined: true) { run(item) }
         }
     }
 }
@@ -97,26 +173,6 @@ struct ZentaoActionButton: View {
     let look: ZentaoActionLook; let action: () -> Void
     var body: some View {
         AppButton(look.label, systemImage: look.icon, action: action)
-    }
-}
-
-/// The "⋯" button holding the actions that are not the main one.
-struct ZentaoMoreMenu: View {
-    @Environment(\.appTheme) private var theme
-    let items: [ZentaoActionsModel.Item]; let onPick: (ZentaoActionsModel.Item) -> Void
-    var body: some View {
-        AppMenuButton(help: appString("more", "More"), items: {
-            items.map { item in
-                let look = ZentaoActionsModel.look(item)
-                return AppNativeMenu.Item(look.label, icon: look.icon) { onPick(item) }
-            }
-        }) {
-            Image(systemName: "ellipsis").font(.system(size: theme.sizes.icon16)).foregroundStyle(theme.colors.tx)
-                .frame(width: theme.sizes.control32, height: theme.sizes.control32)
-                .background(theme.colors.panel2, in: RoundedRectangle(cornerRadius: theme.radii.md))
-                .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
-        }
-        .fixedSize()
     }
 }
 

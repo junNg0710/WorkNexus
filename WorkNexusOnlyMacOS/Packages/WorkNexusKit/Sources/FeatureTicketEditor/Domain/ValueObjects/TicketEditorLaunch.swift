@@ -5,19 +5,19 @@ import Foundation
 /// Which ZenTao bug or task the editor is open on, with everything the Flutter `TicketEditorRoute` subclasses carry
 /// (the Swift `TicketEditorRoute` in CoreTools only has the four plain cases). `newBug`: product `productId` ("0":
 /// the one ZenTao has current), starting as a copy of `copyOf`, or filed against `executionId` and `taskId`, or as
-/// kept draft `draftId`. `newTask`: execution `executionId`, a subtask of `parentId`, a copy of `copyOf`, or kept
-/// draft `draftId`.
+/// kept draft `draftId`. `newTask`: execution `executionId`, a subtask of `parentId`, a copy of `copyOf`, made from
+/// bug `fromBug`, or kept draft `draftId`.
 public enum TicketEditorLaunch: Hashable, Sendable {
     case newBug(accountId: String, productId: String = "0", copyOf: String? = nil, executionId: String? = nil,
                 taskId: String? = nil, draftId: String? = nil)
     case newTask(accountId: String, executionId: String = "0", parentId: String? = nil, draftId: String? = nil,
-                 copyOf: String? = nil)
+                 copyOf: String? = nil, fromBug: String? = nil)
     case editBug(accountId: String, bugId: String)
     case editTask(accountId: String, taskId: String)
 
     public var accountId: String {
         switch self {
-        case .newBug(let a, _, _, _, _, _), .newTask(let a, _, _, _, _), .editBug(let a, _), .editTask(let a, _): a
+        case .newBug(let a, _, _, _, _, _), .newTask(let a, _, _, _, _, _), .editBug(let a, _), .editTask(let a, _): a
         }
     }
     public var isBug: Bool {
@@ -28,7 +28,7 @@ public enum TicketEditorLaunch: Hashable, Sendable {
     }
     public var draftId: String? {
         switch self {
-        case .newBug(_, _, _, _, _, let d), .newTask(_, _, _, let d, _): d
+        case .newBug(_, _, _, _, _, let d), .newTask(_, _, _, let d, _, _): d
         default: nil
         }
     }

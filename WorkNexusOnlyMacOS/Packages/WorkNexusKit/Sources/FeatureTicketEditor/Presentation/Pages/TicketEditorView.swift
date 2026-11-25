@@ -46,8 +46,8 @@ public struct TicketEditorView: View {
         switch route {
         case .newBug(let account, let product, let execution, let copyOf, let task):
             .newBug(accountId: account, productId: product ?? "0", copyOf: copyOf, executionId: execution, taskId: task)
-        case .newTask(let account, let execution, let copyOf, let parent):
-            .newTask(accountId: account, executionId: execution ?? "0", parentId: parent, copyOf: copyOf)
+        case .newTask(let account, let execution, let copyOf, let parent, let fromBug):
+            .newTask(accountId: account, executionId: execution ?? "0", parentId: parent, copyOf: copyOf, fromBug: fromBug)
         case .editBug(let account, let ticketId): .editBug(accountId: account, bugId: TicketEditorLaunch.zenTaoId(from: ticketId))
         case .editTask(let account, let ticketId): .editTask(accountId: account, taskId: TicketEditorLaunch.zenTaoId(from: ticketId))
         }

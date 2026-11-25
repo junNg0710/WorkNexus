@@ -86,6 +86,8 @@ final class DetailFakeWorkflow: ZenTaoWorkflowService, @unchecked Sendable {
     func runTaskAction(_ ticket: Ticket, _ action: ZenTaoTaskAction, _ input: ZenTaoTaskActionInput) async -> Outcome<Void> {
         taskCalls.append((ticket, action, input)); return result()
     }
+    var deleted: [String] = []
+    func deleteTicket(_ ticket: Ticket) async -> Outcome<Void> { deleted.append(ticket.id); return result() }
 }
 
 final class DetailFakeTicketService: ZenTaoTicketService, ZenTaoTaskBugs, ZenTaoViewPages, @unchecked Sendable {
@@ -124,7 +126,7 @@ struct DetailFakeEditor: ZenTaoTicketEditor {
         .success([FormOption(value: "0", label: "/"), FormOption(value: "7", label: "/Livestream/Share")])
     }
     func saveBug(accountId: String, form: BugForm, draft: BugDraft, uid: String) async -> Outcome<String> { .failure(.unexpected("n/a")) }
-    func newTaskForm(accountId: String, executionId: String, parentId: String?, copyOf: String?) async -> Outcome<TaskForm> { .failure(.unexpected("n/a")) }
+    func newTaskForm(accountId: String, executionId: String, parentId: String?, copyOf: String?, fromBug: String?) async -> Outcome<TaskForm> { .failure(.unexpected("n/a")) }
     func editTaskForm(accountId: String, taskId: String) async -> Outcome<TaskForm> { .failure(.unexpected("n/a")) }
     func taskOptions(accountId: String, executionId: String) async -> Outcome<TaskFormOptions> { .failure(.unexpected("n/a")) }
     func saveTask(accountId: String, form: TaskForm, draft: TaskDraft, uid: String) async -> Outcome<String> { .failure(.unexpected("n/a")) }

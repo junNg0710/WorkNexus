@@ -52302,6 +52302,98 @@
           }
         }
       }
+    },
+    "zentaoConvertToTask": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Convert to Task"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chuyển thành task"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "转任务"
+          }
+        }
+      }
+    },
+    "zentaoDeleteTicketTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete #%1$@?"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xoá #%1$@?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除 #%1$@？"
+          }
+        }
+      }
+    },
+    "zentaoDeleteTicketMessage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” is removed from ZenTao for everyone. An administrator can bring it back from ZenTao’s recycle bin."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” sẽ bị xoá khỏi ZenTao với mọi người. Quản trị viên có thể khôi phục từ thùng rác của ZenTao."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@”将从禅道中删除，所有人都不再可见。管理员可以从禅道回收站中恢复。"
+          }
+        }
+      }
+    },
+    "zentaoTicketDeleted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted #%1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã xoá #%1$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已删除 #%1$@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

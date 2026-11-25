@@ -5,7 +5,7 @@ import Foundation
 public enum ZenTaoBugAction: String, CaseIterable, Sendable, Hashable { case confirm, resolve, close, activate }
 
 /// Something new a ZenTao bug or task can start.
-public enum ZenTaoCreateAction: String, CaseIterable, Sendable, Hashable { case copyBug, copyTask, subtask, bugFromTask }
+public enum ZenTaoCreateAction: String, CaseIterable, Sendable, Hashable { case copyBug, copyTask, subtask, bugFromTask, taskFromBug }
 
 /// What can be done to a ZenTao bug or task now.
 public struct ZenTaoActionMenu<T: Hashable & Sendable>: Sendable, Equatable {

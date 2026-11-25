@@ -85,6 +85,21 @@ public struct ZenTaoWorkflowActions: ZenTaoWorkflowService {
         return await run(ticket, optimistic) { try await $0.runTaskAction(ticket, action, input) }
     }
 
+    /// Nothing is shown ahead of ZenTao's answer: a ticket that could not be deleted stays as it is.
+    public func deleteTicket(_ ticket: Ticket) async -> Outcome<Void> {
+        guard let client = await clients.zenTaoClient(accountId: ticket.accountId) else {
+            return .failure(.auth("ZenTao account is not signed in"))
+        }
+        do {
+            try await ZenTaoWorkflow(client: client).delete(kind: (ticket.externalType ?? "").lowercased(), id: ticket.externalKey)
+            return .success(())
+        } catch let e as ZenTaoError {
+            return .failure(e.workflowFailure)
+        } catch {
+            return .failure(.unexpected("ZenTao delete failed: \(error)"))
+        }
+    }
+
     private func run(_ ticket: Ticket, _ optimistic: Ticket, _ action: @escaping @Sendable (ZenTaoWorkflow) async throws -> Void) async -> Outcome<Void> {
         let clients = self.clients
         return await runner.runOptimisticAction(ticket, optimistic) {

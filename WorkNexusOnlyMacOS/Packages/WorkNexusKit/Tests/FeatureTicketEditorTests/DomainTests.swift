@@ -106,6 +106,8 @@ final class DomainTests: XCTestCase {
     func testNavRoutesBecomeLaunches() {
         XCTAssertEqual(TicketEditorView.launch(for: .newBug(accountId: "a", productId: nil)), .newBug(accountId: "a", productId: "0"))
         XCTAssertEqual(TicketEditorView.launch(for: .newTask(accountId: "a", executionId: "5")), .newTask(accountId: "a", executionId: "5"))
+        XCTAssertEqual(TicketEditorView.launch(for: .newTask(accountId: "a", executionId: "5", fromBug: "9")),
+                       .newTask(accountId: "a", executionId: "5", fromBug: "9"))
         XCTAssertEqual(TicketEditorView.launch(for: .editBug(accountId: "a", ticketId: "a:bug:12")), .editBug(accountId: "a", bugId: "12"))
         XCTAssertEqual(TicketEditorView.launch(for: .editTask(accountId: "a", ticketId: "a:task:13")), .editTask(accountId: "a", taskId: "13"))
     }

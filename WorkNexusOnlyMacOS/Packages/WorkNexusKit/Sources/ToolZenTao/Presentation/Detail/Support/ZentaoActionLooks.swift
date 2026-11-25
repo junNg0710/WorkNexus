@@ -38,8 +38,13 @@ public enum ZentaoActionLooks {
         case .copyTask: ZentaoActionLook(label: appString("zentaoCopyTask", "Clone task"), icon: "doc.on.doc")
         case .subtask: ZentaoActionLook(label: appString("zentaoAddSubtask", "Add subtask"), icon: "arrow.triangle.branch")
         case .bugFromTask: ZentaoActionLook(label: appString("zentaoReportBug", "Report bug"), icon: "ladybug")
+        case .taskFromBug: ZentaoActionLook(label: appString("zentaoConvertToTask", "Convert to Task"), icon: "checklist")
         }
     }
+
+    public static let assign = ZentaoActionLook(label: appString("assign", "Assign"), icon: "person.badge.plus")
+    public static let edit = ZentaoActionLook(label: appString("edit", "Edit"), icon: "square.and.pencil")
+    public static let delete = ZentaoActionLook(label: appString("confirmDelete", "Delete"), icon: "trash")
 
     /// The dialog title: "Finish #12".
     public static func title(_ action: String, _ key: String) -> String {
@@ -55,7 +60,8 @@ public enum ZentaoActionLooks {
     }
 }
 
-/// Where a create action sends the editor: a copy of the ticket, a subtask of it, or a bug filed against a task.
+/// Where a create action sends the editor: a copy of the ticket, a subtask of it, a bug filed against a task, or a task
+/// made from a bug.
 public func zentaoEditorRoute(for action: ZenTaoCreateAction, ticket: Ticket) -> TicketEditorRoute {
     var execution: String?, product: String?
     switch ticket.providerEntity {
@@ -68,5 +74,6 @@ public func zentaoEditorRoute(for action: ZenTaoCreateAction, ticket: Ticket) ->
     case .copyTask: return .newTask(accountId: ticket.accountId, executionId: execution ?? "0", copyOf: ticket.externalKey)
     case .subtask: return .newTask(accountId: ticket.accountId, executionId: execution ?? "0", parentId: ticket.externalKey)
     case .bugFromTask: return .newBug(accountId: ticket.accountId, executionId: execution, taskId: ticket.externalKey)
+    case .taskFromBug: return .newTask(accountId: ticket.accountId, executionId: execution ?? "0", fromBug: ticket.externalKey)
     }
 }

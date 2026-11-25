@@ -103,6 +103,11 @@ struct ZenTaoWorkflow {
         try ensureZenTaoActionOk(try await client.classicPost(action, .form(f)), "confirm")
     }
 
+    /// Deletes bug or task `id` (`kind`: "bug" or "task"). ZenTao keeps it in its recycle bin.
+    func delete(kind: String, id: String) async throws {
+        try await client.deleteV1("/\(kind == "bug" ? "bugs" : "tasks")/\(id)")
+    }
+
     /// Runs `action` on `task` with `input`.
     func runTaskAction(_ task: Ticket, _ action: ZenTaoTaskAction, _ input: ZenTaoTaskActionInput) async throws {
         var fields = ZenTaoForm()

@@ -15,47 +15,82 @@ final class PresentationDetailLogicTests: XCTestCase {
     // MARK: Action bar (zentao_ticket_actions_test)
 
     func testATaskInProgressOffersWhatZenTaoAllows() {
-        let m = ZentaoActionsModel(detailTicket("Task", "doing", entity: .zentaoTask(ZenTaoTaskEntity())))
-        // Finishing moves it on, so it is the main button; the rest wait in "⋯".
+        let m = ZentaoActionsModel(detailTicket("Task", "doing", entity: .zentaoTask(ZenTaoTaskEntity(execution: "31"))))
+        // ZenTao's own toolbar: Child Task, Assign, then the status actions it allows now; finishing moves it on.
+        // Every action is a button: nothing waits in a "more" menu.
+        XCTAssertEqual(labels(m.buttons), ["Add subtask", "Assign", "Pause", "Finish", "Cancel task", "Report bug"])
         XCTAssertEqual(m.primary.map { ZentaoActionsModel.look($0).label }, "Finish")
         XCTAssertTrue(m.canAssign)
-        let more = labels(m.more)
-        for l in ["Pause", "Cancel task"] { XCTAssertTrue(more.contains(l), l) }
-        for l in ["Start", "Close"] { XCTAssertFalse(more.contains(l), l) }
-        XCTAssertTrue(m.cloneTask)
+        XCTAssertEqual(labels(m.tools), ["Edit", "Clone task", "Delete"])
+    }
+
+    func testATaskNotStartedOffersStartFinishAndCancel() {
+        let m = ZentaoActionsModel(detailTicket("Task", "wait", entity: .zentaoTask(ZenTaoTaskEntity(execution: "31"))))
+        XCTAssertEqual(labels(m.buttons), ["Add subtask", "Assign", "Start", "Finish", "Cancel task", "Report bug"])
+        XCTAssertEqual(m.primary, .task(.start))
     }
 
     func testAnUnconfirmedBugIsConfirmedFirst() {
         let m = ZentaoActionsModel(detailTicket("Bug", "active", status: .inbox))
-        XCTAssertEqual(m.primary.map { ZentaoActionsModel.look($0).label }, "Confirm")
-        XCTAssertTrue(labels(m.more).contains("Resolve"))
-        XCTAssertFalse(m.cloneTask)
+        XCTAssertEqual(labels(m.buttons), ["Confirm", "Assign", "Resolve", "Convert to Task"])
+        XCTAssertEqual(m.primary, .bug(.confirm))
+        XCTAssertEqual(labels(m.tools), ["Edit", "Copy", "Delete"])
     }
 
     func testAClosedBugCanOnlyBeReopened() {
         let m = ZentaoActionsModel(detailTicket("Bug", "closed"))
-        XCTAssertEqual(m.primary.map { ZentaoActionsModel.look($0).label }, "Activate")
+        XCTAssertEqual(labels(m.buttons), ["Activate"])
+        XCTAssertEqual(m.primary, .bug(.activate))
         XCTAssertFalse(m.canAssign)
-        XCTAssertFalse(labels(m.more).contains("Resolve"))
+        XCTAssertEqual(labels(m.tools), ["Edit", "Copy", "Delete"], "it can still be edited, copied and deleted")
     }
 
     func testAStoryOffersAssignOnly() {
         let m = ZentaoActionsModel(detailTicket("Story", "active"))
-        XCTAssertTrue(m.canAssign); XCTAssertNil(m.primary); XCTAssertTrue(m.more.isEmpty)
+        XCTAssertEqual(m.buttons, [.assign]); XCTAssertNil(m.primary); XCTAssertTrue(m.tools.isEmpty)
     }
 
     func testATaskStartsASubtaskOfItselfInTheEditor() {
         let t = detailTicket("Task", "doing", entity: .zentaoTask(ZenTaoTaskEntity(execution: "31")))
-        XCTAssertTrue(labels(ZentaoActionsModel(t).more).contains("Report bug"))
         XCTAssertEqual(zentaoEditorRoute(for: .subtask, ticket: t), .newTask(accountId: "zt", executionId: "31", parentId: "12"))
         XCTAssertEqual(zentaoEditorRoute(for: .copyTask, ticket: t), .newTask(accountId: "zt", executionId: "31", copyOf: "12"))
         XCTAssertEqual(zentaoEditorRoute(for: .bugFromTask, ticket: t), .newBug(accountId: "zt", executionId: "31", taskId: "12"))
     }
 
-    func testABugIsCopiedInItsProduct() {
-        let t = detailTicket("Bug", "active", entity: .zentaoBug(ZenTaoBugEntity(product: "4")))
-        XCTAssertTrue(labels(ZentaoActionsModel(t).more).contains("Copy"))
+    func testABugIsCopiedInItsProductAndBecomesATaskInItsExecution() {
+        let t = detailTicket("Bug", "active", entity: .zentaoBug(ZenTaoBugEntity(product: "4", execution: "31")))
         XCTAssertEqual(zentaoEditorRoute(for: .copyBug, ticket: t), .newBug(accountId: "zt", productId: "4", copyOf: "12"))
+        XCTAssertEqual(zentaoEditorRoute(for: .taskFromBug, ticket: t), .newTask(accountId: "zt", executionId: "31", fromBug: "12"))
+        // A bug outside any execution: the editor opens on the one ZenTao has current, to be picked there.
+        let loose = detailTicket("Bug", "active", entity: .zentaoBug(ZenTaoBugEntity(product: "4")))
+        XCTAssertEqual(zentaoEditorRoute(for: .taskFromBug, ticket: loose), .newTask(accountId: "zt", executionId: "0", fromBug: "12"))
+    }
+
+    // MARK: Deleting
+
+    func testDeletingForgetsTheTicketHereOnlyOnceZenTaoDeletedIt() async {
+        final class Tickets: TicketRepository, @unchecked Sendable {
+            var deleted: [String] = []
+            func watchTickets() -> AsyncStream<[Ticket]> { AsyncStream { $0.finish() } }
+            func ticket(id: String) async -> Outcome<Ticket?> { .success(nil) }
+            func upsertTickets(_ tickets: [Ticket]) async -> Outcome<Void> { .success(()) }
+            func moveTicket(id: String, to status: UnifiedStatus) async -> Outcome<Void> { .success(()) }
+            func deleteTicket(id: String) async -> Outcome<Void> { deleted.append(id); return .success(()) }
+        }
+        let workflow = DetailFakeWorkflow(), tickets = Tickets()
+        let bug = detailTicket("Bug", "active")
+        let delete = DeleteZenTaoTicket(workflow: workflow, tickets: tickets)
+
+        workflow.failure = .validation("no permission")
+        let refused = await delete(bug)
+        XCTAssertEqual(refused.failure, .validation("no permission"))
+        XCTAssertTrue(tickets.deleted.isEmpty, "a bug ZenTao kept stays on the boards")
+
+        workflow.failure = nil
+        let done = await delete(bug)
+        XCTAssertNotNil(done.value)
+        XCTAssertEqual(workflow.deleted, [bug.id, bug.id])
+        XCTAssertEqual(tickets.deleted, [bug.id])
     }
 
     // MARK: Task action form (zentao_task_action_dialog)

@@ -23,6 +23,17 @@ final class ZenTaoWorkflowTests: XCTestCase {
         return t
     }
 
+    func testDeletingGoesThroughTheRestApi() async throws {
+        let (workflow, server) = makeWorkflow { _ in .json(["message": "success"]) }
+        try await workflow.delete(kind: "bug", id: "7568")
+        try await workflow.delete(kind: "task", id: "31")
+        let sent = server.requests.filter { $0.method == "DELETE" }.map(\.path)
+        XCTAssertEqual(sent, ["/zentao/api.php/v1/bugs/7568", "/zentao/api.php/v1/tasks/31"])
+
+        let (refusing, _) = makeWorkflow { _ in .json(["error": "no permission"]) }
+        do { try await refusing.delete(kind: "bug", id: "1"); XCTFail("a refusal is a failure") } catch is ZenTaoError {}
+    }
+
     func testClosingABugPostsItsNoteToBugClose() async throws {
         let (workflow, server) = makeWorkflow()
         try await workflow.closeBug("4302", comment: " verified ")

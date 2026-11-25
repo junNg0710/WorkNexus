@@ -6,6 +6,8 @@ import Foundation
 /// Marks, in a form's `kept` fields, that it came from ZenTao 18.x - whose forms differ (field names, which
 /// keys it accepts) from 20+.
 let zentaoLegacyKey = "_legacy"
+/// In a new task form's `kept`: the bug the task is made from.
+let zentaoFromBugKey = "_fromBug"
 
 /// Bug fields an edit must send back unchanged, or ZenTao resets them (and reopens a resolved or closed bug).
 let keptBugFields = ["status", "resolution", "resolvedBy", "resolvedDate", "resolvedBuild", "closedBy", "closedDate",

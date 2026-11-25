@@ -7,6 +7,16 @@ extension ZenTaoClient {
         try await perform(ZenTaoRequest(url: try url("\(v1)\(path)", query: query)))
     }
 
+    /// A REST v1 DELETE at `path` (`/bugs/7`, `/tasks/9`): ZenTao moves the object to its recycle bin.
+    func deleteV1(_ path: String) async throws {
+        let res = try await perform(ZenTaoRequest(method: "DELETE", url: try url("\(v1)\(path)")))
+        try ensureOk(res)
+        // A refusal can come with 200: `{"error": "..."}`.
+        if let refused = str(asMap(res.data)?["error"]), !refused.isEmpty {
+            throw ZenTaoError.http(status: res.status, message: refused, hasResponse: true)
+        }
+    }
+
     /// "Assigned to me" for one kind (`fields` = bug|task|story), one page (`GET /user`).
     func assigned(type: String, fields: String, page: Int, limit: Int) async throws -> ZenTaoAssignedResponse {
         let res = try await getV1("/user", query: [("type", type), ("fields", fields), ("page", "\(page)"), ("limit", "\(limit)")])

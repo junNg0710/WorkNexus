@@ -261,6 +261,26 @@ final class ZenTaoTicketFormsTests: XCTestCase {
 
     // MARK: Tasks
 
+    /// "Convert to Task": the form is asked for and saved with the bug's id, so ZenTao writes the task on the bug.
+    func testATaskMadeFromABugIsAskedForAndSavedWithTheBugsId() async throws {
+        let (forms, server) = makeForms { req in
+            req.method == "GET" ? wrapped(["task": ["type": "devel", "name": "Wrong text"] as JSON] as JSON) : (["result": "success", "id": 77] as JSON)
+        }
+        let form = try await forms.newTask("31", fromBug: "7568")
+        XCTAssertEqual(form.draft.name, "Wrong text", "ZenTao starts the form from the bug")
+        XCTAssertNotNil(try sent(server, "task-create-31-0-0-0-0--7568.json"))
+        var draft = form.draft
+        draft.assignedTo = "long"
+        let id = try await forms.saveTask(form, draft, uid: "u4")
+        XCTAssertEqual(id, "77")
+        XCTAssertEqual(try sent(server, "task-create-31-0-0-0-0--7568.json").method, "POST")
+
+        // A plain new task keeps its short path.
+        let plain = try await forms.newTask("31")
+        _ = try await forms.saveTask(plain, plain.draft, uid: "u5")
+        XCTAssertTrue(try XCTUnwrap(server.requests.last).path.hasSuffix("task-create-31-0-0.json"))
+    }
+
     func testANewTaskOn18SendsItsAssigneeAsAList() async throws {
         let (forms, server) = makeForms { req in
             req.method == "GET"
@@ -333,6 +353,39 @@ final class ZenTaoTicketFormsTests: XCTestCase {
         draft.name = "API"
         let id = try await forms.saveTask(form, draft, uid: "u5")
         XCTAssertEqual(id, "120")
+    }
+
+    /// ZenTao keeps an uploaded picture only when the saved text names it by the link ZenTao gave for it; with the
+    /// absolute URL the app shows it from, the bug was created and its picture deleted on the server.
+    func testThePicturesOfASavedTextAreNamedAsZenTaoNamesThem() {
+        let base = "https://z.example.com:4433/zentao"
+        let shown = #"<p>Steps</p><p><img src="https://z.example.com:4433/zentao/file-read-34487.png" alt="file-read-34487.png" /></p>"#
+        XCTAssertEqual(zentaoOwnImageLinks(shown, baseUrl: base),
+                       #"<p>Steps</p><p><img src="/zentao/file-read-34487.png" alt="file-read-34487.png" /></p>"#)
+        // A server that answers `index.php?m=file&f=read...` links.
+        XCTAssertEqual(zentaoOwnImageLinks(#"<img src="https://z.example.com:4433/zentao/index.php?m=file&amp;f=read&amp;t=png&amp;fileID=7" />"#, baseUrl: base),
+                       #"<img src="/zentao/index.php?m=file&amp;f=read&amp;t=png&amp;fileID=7" />"#)
+        // Left as they are: a picture of another server, a link that is not a picture, one ZenTao already knows.
+        for other in [#"<img src="https://other.example.com/zentao/file-read-1.png" />"#,
+                      #"<a href="https://z.example.com:4433/zentao/file-read-2.png">file</a>"#,
+                      #"<img src="{34475.png}" alt="x" />"#, #"<img src="/zentao/file-read-3.png" />"#, "plain text"] {
+            XCTAssertEqual(zentaoOwnImageLinks(other, baseUrl: base), other)
+        }
+    }
+
+    func testASavedBugSendsItsPicturesByZenTaosOwnLink() async throws {
+        let (forms, server) = makeForms { req in
+            req.method == "GET" ? wrapped(["bug": ["productID": 4] as JSON] as JSON) : (["result": "success", "id": 9] as JSON)
+        }
+        let form = try await forms.newBug("4")
+        var draft = form.draft
+        draft.title = "Wrong text"
+        draft.steps = #"<p><img src="https://z.example.com/zentao/file-read-31.png" alt="file-read-31.png" /></p>"#
+        _ = try await forms.saveBug(form, draft, uid: "u7")
+        let body = try sent(server, "bug-create-4-0-.json").bodyText.replacingOccurrences(of: "+", with: " ").removingPercentEncoding ?? ""
+        XCTAssertTrue(body.contains(#"src="/zentao/file-read-31.png""#), body)
+        XCTAssertFalse(body.contains("https://z.example.com/zentao/file-read-31.png"))
+        XCTAssertTrue(body.contains("uid=u7"), "the pictures were uploaded under this uid")
     }
 
     func testAnUploadedImageIsEmbeddedAtItsAbsoluteUrl() async throws {

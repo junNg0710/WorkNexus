@@ -5,10 +5,12 @@ import Foundation
 /// ZenTao's task forms (`task-create` / `task-edit`, and the batch form for a new subtask).
 extension ZenTaoTicketForms {
     /// A new task's form in execution `executionId` (`'0'`: ZenTao picks its current one); a subtask of task
-    /// `parentId` when given; or a copy of task `copyOf` when given.
-    func newTask(_ executionId: String, parentId: String? = nil, copyOf: String? = nil) async throws -> TaskForm {
+    /// `parentId` when given; or a copy of task `copyOf` when given; or made from bug `fromBug` (ZenTao's "Convert to
+    /// Task": the form starts from the bug, and saving it writes on the bug which task it became).
+    func newTask(_ executionId: String, parentId: String? = nil, copyOf: String? = nil, fromBug: String? = nil) async throws -> TaskForm {
         let copySuffix = (copyOf?.isEmpty == false) ? "-\(copyOf!)" : ""
-        let p = try await page("task-create-\(executionId)-0-0\(copySuffix)")
+        let bug = fromBug?.isEmpty == false ? fromBug : nil
+        let p = try await page(bug.map { taskFromBugPath(executionId, bug: $0) } ?? "task-create-\(executionId)-0-0\(copySuffix)")
         let legacy = p["moduleOptionMenu"] != nil
         let task = asMap(p["task"]) ?? [:]
         var options = taskOptions(page: p)
@@ -31,8 +33,14 @@ extension ZenTaoTicketForms {
         draft.color = zentaoText(task["color"])
         draft.mailto = zentaoCsv(task["mailto"])
         draft.keywords = zentaoText(task["keywords"])
-        return TaskForm(draft: draft, options: options, kept: legacy ? [zentaoLegacyKey: "1"] : [:])
+        var kept: [String: String] = legacy ? [zentaoLegacyKey: "1"] : [:]
+        if let bug { kept[zentaoFromBugKey] = bug }
+        return TaskForm(draft: draft, options: options, kept: kept)
     }
+
+    /// `task-create` for a task made from `bug`: ZenTao reads the bug's id as the seventh argument of the page
+    /// (`executionID, storyID, moduleID, taskID, todoID, extra, bugID`), in 18.x and 20+ alike.
+    func taskFromBugPath(_ executionId: String, bug: String) -> String { "task-create-\(executionId)-0-0-0-0--\(bug)" }
 
     func editTask(_ taskId: String) async throws -> TaskForm {
         let p = try await page("task-edit-\(taskId)")
@@ -113,7 +121,9 @@ extension ZenTaoTicketForms {
             for field in keptTaskFields { if let v = form.kept[field], !v.isEmpty { f.put(field, v) } }
             f.put("deleteFiles[]", list: removedFiles(form.draft.files, draft.files))
         }
-        let path = id == nil ? "task-create-\(draft.execution)-0-0" : "task-edit-\(id!)"
+        let fromBug = form.kept[zentaoFromBugKey]
+        let path = id == nil ? (fromBug.map { taskFromBugPath(draft.execution, bug: $0) } ?? "task-create-\(draft.execution)-0-0")
+                             : "task-edit-\(id!)"
         let saved = try await post(path, f, draft.newFiles)
         if let id { return id }
         if let saved { return saved }

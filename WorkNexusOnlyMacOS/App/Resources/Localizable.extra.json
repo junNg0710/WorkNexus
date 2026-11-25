@@ -2530,5 +2530,25 @@
   "chatSearchAllResults": {
     "en": "Show all {count} results",
     "vi": "Xem tất cả {count} kết quả"
+  },
+  "zentaoConvertToTask": {
+    "en": "Convert to Task",
+    "vi": "Chuyển thành task",
+    "zh-Hans": "转任务"
+  },
+  "zentaoDeleteTicketTitle": {
+    "en": "Delete #%1$@?",
+    "vi": "Xoá #%1$@?",
+    "zh-Hans": "删除 #%1$@？"
+  },
+  "zentaoDeleteTicketMessage": {
+    "en": "“%1$@” is removed from ZenTao for everyone. An administrator can bring it back from ZenTao’s recycle bin.",
+    "vi": "“%1$@” sẽ bị xoá khỏi ZenTao với mọi người. Quản trị viên có thể khôi phục từ thùng rác của ZenTao.",
+    "zh-Hans": "“%1$@”将从禅道中删除，所有人都不再可见。管理员可以从禅道回收站中恢复。"
+  },
+  "zentaoTicketDeleted": {
+    "en": "Deleted #%1$@",
+    "vi": "Đã xoá #%1$@",
+    "zh-Hans": "已删除 #%1$@"
   }
 }

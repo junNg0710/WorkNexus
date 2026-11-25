@@ -6,6 +6,13 @@ public protocol TicketRepository: Sendable {
     func ticket(id: String) async -> Outcome<Ticket?>
     func upsertTickets(_ tickets: [Ticket]) async -> Outcome<Void>
     func moveTicket(id: String, to status: UnifiedStatus) async -> Outcome<Void>
+    /// Forgets the ticket here, with its comments and activity: it was deleted at its provider.
+    func deleteTicket(id: String) async -> Outcome<Void>
+}
+
+public extension TicketRepository {
+    /// A store that cannot forget a ticket says so (the database can).
+    func deleteTicket(id: String) async -> Outcome<Void> { .failure(.unexpected("This store cannot delete a ticket")) }
 }
 
 public protocol WorkspaceRepository: Sendable {

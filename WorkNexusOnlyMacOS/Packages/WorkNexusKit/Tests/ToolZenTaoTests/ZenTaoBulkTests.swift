@@ -178,7 +178,7 @@ final class BulkFakeEditor: ZenTaoTicketEditor, @unchecked Sendable {
     func saveBug(accountId: String, form: BugForm, draft: BugDraft, uid: String) async -> Outcome<String> {
         saved.append("bug pri=\(draft.pri) title=\(draft.title) kept=\(form.kept["keep"] ?? "") uid=\(uid.isEmpty ? "none" : "set")"); return .success("bug-1")
     }
-    func newTaskForm(accountId: String, executionId: String, parentId: String?, copyOf: String?) async -> Outcome<TaskForm> { .failure(.unexpected("n/a")) }
+    func newTaskForm(accountId: String, executionId: String, parentId: String?, copyOf: String?, fromBug: String?) async -> Outcome<TaskForm> { .failure(.unexpected("n/a")) }
     func editTaskForm(accountId: String, taskId: String) async -> Outcome<TaskForm> {
         if let loadFailure { return .failure(loadFailure) }
         var draft = TaskDraft(execution: "5"); draft.name = "Build"; draft.pri = 4; draft.estimate = 8

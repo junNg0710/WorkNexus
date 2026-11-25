@@ -25,6 +25,8 @@ public protocol ZenTaoWorkflowService: Sendable {
     func resolveBug(_ ticket: Ticket, resolution: String, build: String?, assignee: String?, comment: String?) async -> Outcome<Void>
     func closeBug(_ ticket: Ticket, comment: String?) async -> Outcome<Void>
     func runTaskAction(_ ticket: Ticket, _ action: ZenTaoTaskAction, _ input: ZenTaoTaskActionInput) async -> Outcome<Void>
+    /// Deletes the bug or task in ZenTao (it goes to ZenTao's recycle bin).
+    func deleteTicket(_ ticket: Ticket) async -> Outcome<Void>
 }
 
 /// Shows `optimistic` for `original` at once (writing it to the local DB), runs `action`, then refreshes the
@@ -44,7 +46,8 @@ public protocol ZenTaoTicketEditor: Sendable {
     func bugModules(accountId: String, productId: String) async -> Outcome<[FormOption]>
     /// Saves `draft` (a new bug when its id is nil); returns the bug's WorkNexus ticket id.
     func saveBug(accountId: String, form: BugForm, draft: BugDraft, uid: String) async -> Outcome<String>
-    func newTaskForm(accountId: String, executionId: String, parentId: String?, copyOf: String?) async -> Outcome<TaskForm>
+    /// `fromBug`: the task is made from that bug (ZenTao's "Convert to Task"), which then names the task it became.
+    func newTaskForm(accountId: String, executionId: String, parentId: String?, copyOf: String?, fromBug: String?) async -> Outcome<TaskForm>
     func editTaskForm(accountId: String, taskId: String) async -> Outcome<TaskForm>
     func taskOptions(accountId: String, executionId: String) async -> Outcome<TaskFormOptions>
     func saveTask(accountId: String, form: TaskForm, draft: TaskDraft, uid: String) async -> Outcome<String>

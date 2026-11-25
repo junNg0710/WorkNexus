@@ -21,6 +21,28 @@ final class CorePersistenceTests: XCTestCase {
         XCTAssertEqual(got.priority, .high)
     }
 
+    /// A ticket deleted at its provider is forgotten here, with what hangs on it; the others stay.
+    func testDeletingATicketForgetsItAndItsComments() async throws {
+        let db = try AppDatabase.inMemory()
+        let repo = GRDBTicketRepository(db: db)
+        func ticket(_ id: String) -> Ticket {
+            Ticket(id: id, accountId: "a1", projectId: "p", providerType: .zentao, externalKey: id, title: id, body: "",
+                   priority: .low, status: .todo, providerStatus: "active", sourceHash: "h")
+        }
+        _ = await repo.upsertTickets([ticket("t1"), ticket("t2")])
+        try await db.writer.write { d in
+            try d.execute(sql: "INSERT INTO comments (id, ticketId, authorName, body, createdAt, origin, synced) VALUES ('c1', 't1', 'An', 'x', ?, 'remote', 1)",
+                          arguments: [Date()])
+        }
+        let deleted = await repo.deleteTicket(id: "t1")
+        XCTAssertNotNil(deleted.value)
+        let gone = await repo.ticket(id: "t1"), kept = await repo.ticket(id: "t2")
+        XCTAssertNil(gone.value ?? nil)
+        XCTAssertNotNil(kept.value ?? nil)
+        let comments = try await db.writer.read { try Int.fetchOne($0, sql: "SELECT count(*) FROM comments WHERE ticketId = 't1'") }
+        XCTAssertEqual(comments, 0)
+    }
+
     /// A list page brings a ticket's new status / assignee / priority while its title and body (its hash) stay the same.
     func testUpsertWritesChangesTheHashDoesNotSee() async throws {
         let repo = GRDBTicketRepository(db: try AppDatabase.inMemory())

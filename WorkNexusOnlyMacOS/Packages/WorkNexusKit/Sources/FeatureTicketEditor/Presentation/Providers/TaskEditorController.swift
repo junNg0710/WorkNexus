@@ -37,7 +37,7 @@ public final class TaskEditorController {
         isLoading = true; loadFailure = nil
         guard case .success(let editor) = gateway.requireEditor() else { return fail(TicketEditorGateway.unavailable) }
         let accountId = launch.accountId
-        if case .newTask(_, _, _, let draftId?, _) = launch, let drafts = gateway.drafts {
+        if case .newTask(_, _, _, let draftId?, _, _) = launch, let drafts = gateway.drafts {
             switch await drafts.read(id: draftId) {
             case .failure(let f): return fail(f)
             case .success(let kept):
@@ -46,8 +46,8 @@ public final class TaskEditorController {
         }
         let res: Outcome<TaskForm>
         switch launch {
-        case .newTask(_, let execution, let parent, _, let copyOf):
-            res = await editor.newTaskForm(accountId: accountId, executionId: execution, parentId: parent, copyOf: copyOf)
+        case .newTask(_, let execution, let parent, _, let copyOf, let fromBug):
+            res = await editor.newTaskForm(accountId: accountId, executionId: execution, parentId: parent, copyOf: copyOf, fromBug: fromBug)
         case .editTask(_, let taskId): res = await editor.editTaskForm(accountId: accountId, taskId: taskId)
         default: return fail(.unexpected("Not a task launch: \(launch)"))
         }
@@ -64,7 +64,7 @@ public final class TaskEditorController {
     /// The form of `kept`'s execution (and parent), filled in as the draft was left.
     private func restore(_ kept: ZenTaoSavedDraft, _ draft: TaskDraft, _ editor: ZenTaoTicketEditor) async {
         switch await editor.newTaskForm(accountId: launch.accountId, executionId: draft.execution,
-                                        parentId: draft.parent == "0" ? nil : draft.parent, copyOf: nil) {
+                                        parentId: draft.parent == "0" ? nil : draft.parent, copyOf: nil, fromBug: nil) {
         case .failure(let f): fail(f)
         case .success(let form):
             begin(TaskEditorState(form: form, draft: draft, uid: kept.uid, draftId: kept.id, draftSavedAt: kept.updatedAt))

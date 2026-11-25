@@ -51,7 +51,7 @@ final class FakeEditor: ZenTaoTicketEditor, @unchecked Sendable {
     func saveBug(accountId: String, form: BugForm, draft: BugDraft, uid: String) async -> Outcome<String> {
         lock.lock(); savedBugs.append(draft); lock.unlock(); return saveResult
     }
-    func newTaskForm(accountId: String, executionId: String, parentId: String?, copyOf: String?) async -> Outcome<TaskForm> {
+    func newTaskForm(accountId: String, executionId: String, parentId: String?, copyOf: String?, fromBug: String?) async -> Outcome<TaskForm> {
         lock.lock(); newTaskParents.append(parentId); lock.unlock()
         log("newTaskForm:\(executionId)")
         var f = taskForm; f.draft.execution = executionId == "0" ? f.draft.execution : executionId

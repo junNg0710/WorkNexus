@@ -50,8 +50,8 @@ public struct ZenTaoTicketEditorService: ZenTaoTicketEditor {
         }
     }
 
-    public func newTaskForm(accountId: String, executionId: String, parentId: String?, copyOf: String?) async -> Outcome<TaskForm> {
-        await run(accountId) { try await $0.newTask(executionId, parentId: parentId, copyOf: copyOf) }
+    public func newTaskForm(accountId: String, executionId: String, parentId: String?, copyOf: String?, fromBug: String?) async -> Outcome<TaskForm> {
+        await run(accountId) { try await $0.newTask(executionId, parentId: parentId, copyOf: copyOf, fromBug: fromBug) }
     }
 
     public func editTaskForm(accountId: String, taskId: String) async -> Outcome<TaskForm> {

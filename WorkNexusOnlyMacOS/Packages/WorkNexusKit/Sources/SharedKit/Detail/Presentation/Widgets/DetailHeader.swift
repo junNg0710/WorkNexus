@@ -24,10 +24,19 @@ public struct DetailHeader: View {
             DetailHeaderTopBar(controller: controller, ticket: ticket, wsColor: wsColor, model: model, onClose: onClose)
             if let extras = tool?.buildDetailHeaderExtras(ticket: ticket) { extras }
             DetailHeaderTitle(ticket: ticket)
-            HStack(alignment: .bottom, spacing: s.s20) {
-                DetailPeople(ticket: ticket)
-                Spacer(minLength: 0)
-                if let actions = tool?.buildActions(ticket: ticket) { actions }
+            // The actions beside the people while both fit on the line; a long bar (a ZenTao task has nine buttons) gets
+            // the line below to itself, from the leading edge, instead of being squeezed into what the people leave.
+            let actions = tool?.buildActions(ticket: ticket)
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .bottom, spacing: s.s20) {
+                    DetailPeople(ticket: ticket)
+                    Spacer(minLength: s.s20)
+                    if let actions { actions.fixedSize() }
+                }
+                VStack(alignment: .leading, spacing: s.s12) {
+                    DetailPeople(ticket: ticket)
+                    if let actions { actions }
+                }
             }
         }
         .padding(EdgeInsets(top: s.s14, leading: s.s24, bottom: s.s16, trailing: s.s24))

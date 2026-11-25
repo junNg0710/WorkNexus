@@ -36,8 +36,8 @@ public enum TicketEditorRoute: Hashable, Sendable {
     /// A new bug in `productId`, optionally a copy of bug `copyOf`, or filed against `executionId` / task `taskId`.
     /// The trailing payload defaults to nil, so `.newBug(accountId:productId:)` keeps compiling.
     case newBug(accountId: String, productId: String? = nil, executionId: String? = nil, copyOf: String? = nil, taskId: String? = nil)
-    /// A new task in `executionId`, optionally a copy of task `copyOf` or a subtask of `parentId`.
-    case newTask(accountId: String, executionId: String? = nil, copyOf: String? = nil, parentId: String? = nil)
+    /// A new task in `executionId`, optionally a copy of task `copyOf`, a subtask of `parentId`, or made from bug `fromBug`.
+    case newTask(accountId: String, executionId: String? = nil, copyOf: String? = nil, parentId: String? = nil, fromBug: String? = nil)
     case editBug(accountId: String, ticketId: String)
     case editTask(accountId: String, ticketId: String)
 }

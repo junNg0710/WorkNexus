@@ -62,7 +62,8 @@ public struct ListZenTaoCreateActions: Sendable {
     public func callAsFunction(_ ticket: Ticket) -> [ZenTaoCreateAction] {
         let raw = ticket.providerStatus.trimmingCharacters(in: .whitespaces).lowercased()
         switch (ticket.externalType ?? "").lowercased() {
-        case "bug": return [.copyBug]
+        // ZenTao turns a bug into a task only while the bug is active (`bugModel::isClickable`, `totask`).
+        case "bug": return raw == "active" ? [.copyBug, .taskFromBug] : [.copyBug]
         case "task":
             var out: [ZenTaoCreateAction] = [.copyTask]
             if case .zentaoTask(let t) = ticket.providerEntity, t.parentId == nil, t.execution != nil,
@@ -73,5 +74,19 @@ public struct ListZenTaoCreateActions: Sendable {
             return out
         default: return []
         }
+    }
+}
+
+/// Deletes a bug or task in ZenTao, then forgets it here: ZenTao no longer lists it, so nothing would take it off the
+/// boards. A ticket ZenTao refused to delete stays as it is.
+public struct DeleteZenTaoTicket: Sendable {
+    private let workflow: ZenTaoWorkflowService
+    private let tickets: TicketRepository
+
+    public init(workflow: ZenTaoWorkflowService, tickets: TicketRepository) { self.workflow = workflow; self.tickets = tickets }
+
+    public func callAsFunction(_ ticket: Ticket) async -> Outcome<Void> {
+        if case .failure(let refused) = await workflow.deleteTicket(ticket) { return .failure(refused) }
+        return await tickets.deleteTicket(id: ticket.id)
     }
 }

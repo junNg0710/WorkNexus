@@ -21,12 +21,11 @@ public struct DetailOverlayHost: View {
 
 struct DetailSlideOver: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let controller: DetailController; var railInset: CGFloat?
     /// The ticket each place's panel shows. Every place keeps its own panel (built, so its scroll and tab stay): going
-    /// elsewhere hides it at once and coming back shows it as it was left. The place on screen stays here while it slides closed.
+    /// elsewhere hides it at once and coming back shows it as it was left.
     @State private var shown: [String: String] = [:]
-    /// Whether the place on screen's panel is slid in.
-    @State private var visible = false
     @FocusState private var focusedPlace: String?
 
     init(controller: DetailController, railInset: CGFloat?) { self.controller = controller; self.railInset = railInset }
@@ -46,49 +45,45 @@ struct DetailSlideOver: View {
     /// Called when a history changed (a ticket opened, closed, went back).
     private func sync() {
         let now = tops
-        if let id = now[here] {
-            if shown[here] != id { controller.model(for: id).tab = .original }
-            shown = now
-            withAnimation(.easeOut(duration: theme.motion.slow)) { visible = true }
-            focusedPlace = here
-        } else if visible, let old = shown[here] {
-            shown = now.merging([here: old]) { a, _ in a }
-            withAnimation(.easeOut(duration: theme.motion.slow)) { visible = false }
-            Task {
-                try? await Task.sleep(for: .seconds(theme.motion.slow + 0.05))
-                if tops[here] == nil { shown = tops }
-            }
-        } else {
-            shown = now
-        }
+        let openingOrClosing = (shown[here] == nil) != (now[here] == nil)
+        if let id = now[here], shown[here] != id { controller.model(for: id).tab = .original }
+        let animation: Animation? = openingOrClosing && !reduceMotion ? .easeOut(duration: theme.motion.slow) : nil
+        withAnimation(animation) { shown = now }
+        if shown[here] != nil { focusedPlace = here }
     }
 
     /// Another place came on screen: its panel (if it has one) is there at once, none slides.
     private func placeChanged() {
         shown = tops
-        visible = shown[here] != nil
-        if visible { focusedPlace = here }
+        if shown[here] != nil { focusedPlace = here }
     }
 
     var body: some View {
         let inset = railInset ?? theme.sizes.rail
+        // The editor takes the whole area beside the rail: a ticket's panel (Edit, Copy, a subtask... are started from
+        // it) steps aside while the editor is open, and is back as it was when the editor closes.
+        let editing = controller.nav.state.editor != nil
         GeometryReader { geo in
             let w = width(geo.size.width, inset: inset)
             ZStack(alignment: .trailing) {
                 if shown[here] != nil {
-                    theme.colors.scrim.opacity(visible ? 0.5 : 0).padding(.leading, inset)
+                    theme.colors.scrim.opacity(0.5).padding(.leading, inset)
                         .contentShape(Rectangle()).onTapGesture { controller.nav.closeTicket() }
-                        .allowsHitTesting(visible)
+                        .transition(reduceMotion ? .identity : .opacity)
                 }
                 ForEach(shown.keys.sorted(), id: \.self) { place in
                     if let id = shown[place] {
                         panel(place: place, id: id, width: w)
+                            .transition(reduceMotion || place != here ? .identity : .move(edge: .trailing))
                     }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
         }
-        .allowsHitTesting(shown[here] != nil)
+        .opacity(editing ? 0 : 1)
+        .allowsHitTesting(shown[here] != nil && !editing)
+        .disabled(editing)
+        .accessibilityHidden(editing)
         .onChange(of: controller.nav.state.ticketHistories) { _, h in
             controller.prune(keeping: Set(h.values.flatMap { $0 }))
             sync()
@@ -103,15 +98,16 @@ struct DetailSlideOver: View {
     private func panel(place: String, id: String, width w: CGFloat) -> some View {
         let isHere = place == here
         return DetailPanel(controller: controller, ticketId: id) { controller.nav.closeTicket() }
+            .contentArrival(on: id, backdrop: theme.colors.card, enabled: isHere)
             .clipShape(RoundedRectangle(cornerRadius: theme.radii.xl, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: theme.radii.xl, style: .continuous).stroke(theme.colors.line, lineWidth: theme.borders.hairline))
             .shadow(color: theme.colors.scrim.opacity(0.28), radius: 24, x: -4, y: 6)
             .padding(theme.spacing.s8)
-            .frame(width: w + theme.spacing.s16).offset(x: isHere && !visible ? w + theme.spacing.s16 : 0)
-            .opacity(isHere ? 1 : 0).allowsHitTesting(isHere && visible).disabled(!isHere)
+            .frame(width: w + theme.spacing.s16)
+            .opacity(isHere ? 1 : 0).allowsHitTesting(isHere).disabled(!isHere)
             .focusable().focused($focusedPlace, equals: place).focusEffectDisabled()
             .onKeyPress(.escape) { controller.nav.closeTicket(); return .handled }
-            .onBackMouseButton(enabled: isHere && visible) { controller.nav.goBackTicket() }
+            .onBackMouseButton(enabled: isHere) { controller.nav.goBackTicket() }
             .background {
                 if isHere { Button("") { controller.nav.goBackTicket() }.keyboardShortcut("[", modifiers: .command).opacity(0) }
             }

@@ -25,6 +25,16 @@ public final class GRDBTicketRepository: TicketRepository {
     public func ticket(id: String) async -> Outcome<Ticket?> {
         await guarded { try await self.db.writer.read { try TicketRow.fetchOne($0, key: id)?.entity } }
     }
+    public func deleteTicket(id: String) async -> Outcome<Void> {
+        await guarded {
+            try await self.db.writer.write { d in
+                try d.execute(sql: "DELETE FROM comments WHERE ticketId = ?", arguments: [id])
+                try d.execute(sql: "DELETE FROM activities WHERE ticketId = ?", arguments: [id])
+                try d.execute(sql: "DELETE FROM tickets WHERE id = ?", arguments: [id])
+            }
+        }
+    }
+
     /// Inserts or replaces each ticket, as the Flutter store does (`insert ... onConflict: DoUpdate`). A ticket's status,
     /// assignee, priority or labels change without its title or body (its `sourceHash`) changing, so the hash alone
     /// must not decide. A row that already reads the same is left alone, so the watchers are not woken for nothing.

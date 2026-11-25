@@ -130,7 +130,8 @@ final class ZenTaoDomainTests: XCTestCase {
 
     func testCreateActions() {
         let list = ListZenTaoCreateActions()
-        XCTAssertEqual(list(ticket("Bug", "active")), [.copyBug])
+        XCTAssertEqual(list(ticket("Bug", "active")), [.copyBug, .taskFromBug])
+        XCTAssertEqual(list(ticket("Bug", "resolved")), [.copyBug], "ZenTao turns only an active bug into a task")
         XCTAssertEqual(list(ticket("Task", "doing", entity: .zentaoTask(ZenTaoTaskEntity(execution: "31")))), [.copyTask, .subtask, .bugFromTask])
         let none: [(String, ZenTaoTaskEntity)] = [
             ("doing", ZenTaoTaskEntity(parentId: "7", execution: "31")), ("closed", ZenTaoTaskEntity(execution: "31")), ("doing", ZenTaoTaskEntity()),
