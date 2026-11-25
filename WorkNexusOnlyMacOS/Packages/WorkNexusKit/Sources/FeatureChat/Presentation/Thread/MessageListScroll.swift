@@ -93,11 +93,11 @@ struct MessageListScroll: View {
             // A right-click on text anywhere in the list gets the app's menu, even on a message the pointer was not seen over.
             .background { MessageListRightClick() }
             .onScrollPhaseChange { _, phase in
-                activity.isScrolling = phase.isScrolling
-                activity.shield.on = phase.isScrolling
+                activity.scrolling(phase.isScrolling)
                 if phase == .tracking || phase == .interacting { activity.userScrolls += 1 }
             }
             .environment(\.chatScrollActivity, activity)
+            .keptAwake(while: activity.motion)
             .onScrollTargetVisibilityChange(idType: String.self, threshold: 0.1) { ids in
                 visible.ids = Set(ids)
                 if PerformanceLog.isEnabled { PerformanceLog.setContext("chat", ChatRowsOnScreen.describe(model.rows, visible: visible.ids)) }

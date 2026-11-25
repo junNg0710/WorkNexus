@@ -18,7 +18,27 @@ public final class KeepAlivePresence {
     /// On screen: shown by its stack, and so is every kept view around it.
     public var isAwake: Bool { isShown && (around?.isAwake ?? true) }
 
-    func show(_ shown: Bool) { if shown != isShown { isShown = shown } }
+    public func show(_ shown: Bool) { if shown != isShown { isShown = shown } }
+
+    /// Puts this presence inside `outer`. Not observed: it is set while the view that hands the presence down is drawn,
+    /// before anything below reads it.
+    func nest(in outer: KeepAlivePresence?) { if around !== outer { around = outer } }
+}
+
+public extension View {
+    /// What is inside reads `presence` for `@KeptAwake`, within the kept view it already sits in: asleep when either is.
+    /// For a part of a view that should stop its endless animations for a while - a list while it scrolls.
+    func keptAwake(while presence: KeepAlivePresence) -> some View { modifier(NestedPresence(presence: presence)) }
+}
+
+private struct NestedPresence: ViewModifier {
+    @Environment(KeepAlivePresence.self) private var around: KeepAlivePresence?
+    let presence: KeepAlivePresence
+
+    func body(content: Content) -> some View {
+        let _ = presence.nest(in: around)
+        content.environment(presence)
+    }
 }
 
 /// The presence of each view a `KeptAlive` stack keeps. A class so the stack's body can hand them out without a state

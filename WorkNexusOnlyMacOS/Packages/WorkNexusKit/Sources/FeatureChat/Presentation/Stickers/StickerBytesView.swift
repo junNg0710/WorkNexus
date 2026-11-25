@@ -11,10 +11,16 @@ import SwiftUI
 /// broken-image glyph.
 struct StickerBytesView: View {
     @Environment(\.appTheme) private var theme
-    /// False in a chat kept open behind another one: nothing plays there.
+    /// False in a chat kept open behind another one and while the message list scrolls: nothing plays there.
     @KeptAwake private var animationsRun
+    /// The animation has run here. Until it has, a paused one shows a frame from its middle: many start from nothing,
+    /// and a sticker scrolled into view would be a blank square until the list stops.
+    @State private var hasPlayed = false
     let data: Data
     var animated = true
+
+    /// Where a Lottie sticker that does not play is held.
+    static let stillProgress: CGFloat = 0.4
 
     var body: some View {
         let plays = animated && animationsRun
@@ -22,9 +28,12 @@ struct StickerBytesView: View {
         case .lottie(let animation):
             if animated {
                 LottieView(animation: animation)
-                    .playbackMode(animationsRun ? .playing(.toProgress(1, loopMode: .loop)) : .paused(at: .currentFrame)).resizable()
+                    .playbackMode(animationsRun ? .playing(.toProgress(1, loopMode: .loop))
+                                  : .paused(at: hasPlayed ? .currentFrame : .progress(StickerBytesView.stillProgress)))
+                    .resizable()
+                    .onChange(of: animationsRun, initial: true) { _, runs in if runs { hasPlayed = true } }
             } else {
-                LottieView(animation: animation).playbackMode(.paused(at: .progress(0.4))).resizable()
+                LottieView(animation: animation).playbackMode(.paused(at: .progress(StickerBytesView.stillProgress))).resizable()
             }
         case .image(let image):
             // `NSImage` sees the frames of a GIF only: an animated WebP showed its first frame for ever.
@@ -145,8 +154,11 @@ final class FramePlayerView: NSView {
 
     func show(_ data: Data, animated: Bool) {
         guard data != self.data || animated != self.animated else { return }
+        let pausing = data == self.data && !animated
         self.data = data; self.animated = animated
-        restart()
+        // Paused, it keeps the frame it is on: going back to the first one decoded it again, for every animated picture
+        // on screen at the moment a scroll starts.
+        if pausing { generation += 1; isPlaying = false } else { restart() }
     }
 
     override func viewDidMoveToWindow() {

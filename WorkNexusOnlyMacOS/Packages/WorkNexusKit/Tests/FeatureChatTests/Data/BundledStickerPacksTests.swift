@@ -125,6 +125,30 @@ final class AnimatedStickerPlaybackTests: XCTestCase {
         XCTAssertNotNil(view.layer?.contents)
     }
 
+    /// Paused (the list scrolls), an animated picture holds the frame it is on instead of going back to its first one.
+    func testPausedItHoldsItsFrameAndPlaysAgainWhenResumed() async throws {
+        let webp = try Data(contentsOf: rabbit)
+        let view = FramePlayerView(frame: NSRect(x: 0, y: 0, width: 120, height: 120))
+        let window = NSWindow(contentRect: view.frame, styleMask: [.borderless], backing: .buffered, defer: false)
+        window.contentView = view
+        defer { window.contentView = nil }
+        view.show(webp, animated: true)
+        let first = view.layer?.contents as AnyObject?
+        XCTAssertTrue(view.isPlaying)
+        try await Task.sleep(for: .milliseconds(400))
+        let reached = view.layer?.contents as AnyObject?
+        XCTAssertFalse(reached === first, "it played")
+
+        view.show(webp, animated: false)
+        XCTAssertFalse(view.isPlaying)
+        XCTAssertTrue((view.layer?.contents as AnyObject?) === reached, "pausing does not go back to the first frame")
+        try await Task.sleep(for: .milliseconds(300))
+        XCTAssertTrue((view.layer?.contents as AnyObject?) === reached, "and nothing moves while paused")
+
+        view.show(webp, animated: true)
+        XCTAssertTrue(view.isPlaying)
+    }
+
     func testAStillImageIsNotAnimated() {
         let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 4, pixelsHigh: 4, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true,
                                    isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
