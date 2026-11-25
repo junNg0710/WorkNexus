@@ -5,6 +5,10 @@ import XCTest
 /// The chats last opened stay open behind the one on screen, and a chat behind another one is not read.
 @MainActor
 final class ChatOpenThreadsTests: XCTestCase {
+    /// No chat is built ahead while these run, unless a test asks for it.
+    override func setUp() { super.setUp(); ChatShellModel.warmPause = .seconds(3600) }
+    override func tearDown() { ChatShellModel.warmPause = .milliseconds(1500); super.tearDown() }
+
     private func make(_ gids: [String], unread: [String: Int] = [:]) -> (ChatShellModel, ShellFakeRepository) {
         let repo = ShellFakeRepository()
         let model = ChatShellModel(accountId: "a", selfAccount: "me", repository: repo)
@@ -31,22 +35,91 @@ final class ChatOpenThreadsTests: XCTestCase {
     }
 
     func testOnlyTheLastFewChatsStayOpen() {
-        let gids = (1...6).map { "g\($0)" }
+        let limit = ChatShellModel.openThreadLimit
+        let gids = (1...(limit + 2)).map { "g\($0)" }
         let (model, _) = make(gids)
         gids.forEach { model.select($0) }
-        XCTAssertEqual(model.openThreads.count, ChatShellModel.openThreadLimit)
-        XCTAssertEqual(model.openThreads.map(\.state.chatGid), ["g3", "g4", "g5", "g6"])
-        XCTAssertEqual(model.thread?.state.chatGid, "g6")
+        XCTAssertEqual(model.openThreads.count, limit)
+        XCTAssertEqual(model.openThreads.map(\.state.chatGid), Array(gids.suffix(limit)))
+        XCTAssertEqual(model.thread?.state.chatGid, gids.last)
 
         // A chat that was dropped opens as new.
         let kept = model.openThreads
         model.select("g1")
         XCTAssertFalse(kept.contains { $0 === model.thread })
-        XCTAssertEqual(model.openThreads.map(\.state.chatGid), ["g4", "g5", "g6", "g1"])
+        XCTAssertEqual(model.openThreads.map(\.state.chatGid), Array(gids.suffix(limit - 1)) + ["g1"])
 
         // Going back to the oldest kept one drops nothing.
-        model.select("g4")
-        XCTAssertEqual(model.openThreads.map(\.state.chatGid), ["g5", "g6", "g1", "g4"])
+        let oldest = gids[gids.count - limit + 1]
+        model.select(oldest)
+        XCTAssertEqual(model.openThreads.count, limit)
+        XCTAssertEqual(model.openThreads.last?.state.chatGid, oldest)
+        XCTAssertTrue(model.openThreads.contains { $0.state.chatGid == "g1" })
+    }
+
+    // MARK: chats built ahead of a visit
+
+    func testAChatBuiltAheadIsBehindUnreadAndFirstToGo() async {
+        let limit = ChatShellModel.openThreadLimit
+        let gids = (1...(limit + 2)).map { "g\($0)" }
+        let (model, repo) = make(gids, unread: ["g2": 3])
+        model.select("g1")
+        XCTAssertTrue(model.warm("g2"))
+        XCTAssertFalse(model.warm("g2"), "kept already")
+        XCTAssertFalse(model.warm("nope"))
+        XCTAssertEqual(model.openThreads.map(\.state.chatGid), ["g2", "g1"], "least recently shown: the first to go")
+        let built = model.openThreads[0]
+        XCTAssertFalse(built.state.isOnScreen)
+        XCTAssertFalse(built.wasOpened)
+        XCTAssertTrue(model.thread?.state.chatGid == "g1")
+        try? await Task.sleep(for: .milliseconds(50))
+        XCTAssertEqual(repo.refreshCalls, ["g1"], "nothing is asked of the server for a chat nobody opened")
+        XCTAssertFalse(repo.markReadCalls.contains("g2"))
+
+        // The visit opens it: the session built ahead, read from then on.
+        model.select("g2")
+        XCTAssertTrue(model.thread === built)
+        XCTAssertTrue(built.state.isOnScreen)
+        XCTAssertTrue(built.wasOpened)
+        await ShellMake.expectEventually { repo.refreshCalls == ["g1", "g2"] && repo.markReadCalls.contains("g2") }
+
+        // Room is made from the chats built ahead before the ones the user went to.
+        XCTAssertTrue(model.warm("g3"))
+        gids.dropFirst(3).forEach { model.select($0) }
+        XCTAssertEqual(model.openThreads.count, limit)
+        XCTAssertFalse(model.openThreads.contains { $0.state.chatGid == "g3" })
+        XCTAssertFalse(model.warm("g3"), "no room: nothing the user opened is dropped for it")
+    }
+
+    func testTheNextChatToBuildIsAnUnreadOneThenDownTheList() {
+        let (model, _) = make(["g1", "g2", "g3", "g4", "g5", "g6"], unread: ["g4": 2])
+        model.select("g1")
+        XCTAssertEqual(model.nextToWarm, "g4")
+        model.warm("g4")
+        XCTAssertEqual(model.nextToWarm, "g2")
+        model.warm("g2"); model.warm("g3")
+        XCTAssertNil(model.nextToWarm, "enough built ahead")
+        // One of them was visited: the next one down the list may be built.
+        model.select("g2")
+        XCTAssertEqual(model.nextToWarm, "g5")
+        model.setSearch("g")
+        XCTAssertNil(model.nextToWarm, "not while the list is being searched")
+    }
+
+    func testChatsAreBuiltAheadOnlyOnceTheUserHasStopped() async {
+        ChatShellModel.warmPause = .milliseconds(20)
+        let (model, _) = make(["g1", "g2", "g3", "g4", "g5", "g6"])
+        model.select("g1")
+        var quiet = false
+        model.scheduleWarming(isQuiet: { quiet })
+        try? await Task.sleep(for: .milliseconds(120))
+        XCTAssertEqual(model.openThreads.count, 1, "typing or scrolling: nothing is built")
+        quiet = true
+        await ShellMake.expectEventually { model.openThreads.count == 1 + ChatShellModel.warmAhead }
+        try? await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(model.openThreads.count, 1 + ChatShellModel.warmAhead, "and no more than that")
+        XCTAssertEqual(model.thread?.state.chatGid, "g1")
+        model.stop()
     }
 
     func testAChatBehindAnotherCatchesUpWhenItComesBack() {
@@ -104,20 +177,24 @@ final class ChatOpenThreadsTests: XCTestCase {
     func testAChatBehindAnotherIsNotMarkedRead() async {
         let repo = ShellFakeRepository()
         let session = session(repo)
+        session.open()
+        await ShellMake.expectEventually { repo.refreshCalls == ["g"] }
+        try? await Task.sleep(for: .milliseconds(50))
+        let readAtOpen = repo.markReadCalls.count
         session.hide()
         session.state.chat.unreadCount = 2
         session.unreadChanged(2)
         try? await Task.sleep(for: .milliseconds(50))
-        XCTAssertTrue(repo.markReadCalls.isEmpty)
+        XCTAssertEqual(repo.markReadCalls.count, readAtOpen)
 
         // Back on screen it reads the newest messages again; marking them read is left to the message list.
         session.show()
-        await ShellMake.expectEventually { repo.refreshCalls == ["g"] }
+        await ShellMake.expectEventually { repo.refreshCalls == ["g", "g"] }
         try? await Task.sleep(for: .milliseconds(50))
-        XCTAssertTrue(repo.markReadCalls.isEmpty)
+        XCTAssertEqual(repo.markReadCalls.count, readAtOpen)
         // New messages while it is on screen are read as before.
         session.unreadChanged(3)
-        await ShellMake.expectEventually { repo.markReadCalls == ["g"] }
+        await ShellMake.expectEventually { repo.markReadCalls.count == readAtOpen + 1 }
     }
 
     func testAChatHiddenWhileItOpensIsNotMarkedRead() async {

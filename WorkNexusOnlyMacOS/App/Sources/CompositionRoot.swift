@@ -219,6 +219,19 @@ final class CompositionRoot {
         }
         panic.start()
         await chat.start()
+        #if DEBUG
+        // `WN_LIVE_BENCH=<seconds>`: the switch benches (`WN_DEMO_PLACE_CYCLE`, `WN_DEMO_CHAT_CYCLE`, `WN_DEMO_SPAM`) on the
+        // real accounts, started that long after launch - signed in, the first sync under way - to measure what a switch
+        // costs with the API behind it, which a demo run (offline) cannot show. The installed app must not be running.
+        if let after = ProcessInfo.processInfo.environment["WN_LIVE_BENCH"].flatMap(Double.init) {
+            Task { @MainActor [chat, shell, services] in
+                try? await Task.sleep(for: .seconds(after))
+                print("BENCH live start"); fflush(stdout)
+                ChatSwitchBench.start(chat: chat)
+                PlaceSwitchBench.start(shell: shell, services: services)
+            }
+        }
+        #endif
     }
 
     /// A fresh database starts with the personal workspace.

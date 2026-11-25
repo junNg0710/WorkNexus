@@ -28,6 +28,9 @@ final class ChatThreadSession {
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
     @ObservationIgnored private var refreshing: Task<Void, Never>?
     @ObservationIgnored private var markingRead = false
+    /// `open()` has run: false for a chat built ahead of its first visit (`ChatShellModel.warm`).
+    @ObservationIgnored private var opened = false
+    var wasOpened: Bool { opened }
     @ObservationIgnored private var lastUnreadMarked = 0
 
     init(accountId: String, chat: ChatConversation, selfAccount: String?, repository: ChatRepository,
@@ -52,6 +55,7 @@ final class ChatThreadSession {
 
     /// Pulls the newest page, marks the chat read and counts the members.
     func open() {
+        opened = true
         let gid = state.chatGid, id = state.accountId
         // What was unread before opening marks it read, for the AI catch-up.
         assistant.opened(unread: state.chat.unreadCount)
@@ -73,6 +77,8 @@ final class ChatThreadSession {
     /// and marks the chat read once that is in view.
     func show() {
         guard !state.isOnScreen else { return }
+        // Built ahead of its first visit: this is the visit that opens it.
+        guard opened else { state.isOnScreen = true; open(); return }
         assistant.catchUpDismissed = false
         assistant.opened(unread: state.chat.unreadCount)
         state.isOnScreen = true

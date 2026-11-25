@@ -31,11 +31,14 @@ public final class ChatShellModel {
     private(set) var selectedGid: String?
     /// The open chat's session; nil when none is selected or the chat is not known yet.
     private(set) var thread: ChatThreadSession?
-    /// The chats kept open, least recently shown first: the one on screen (`thread`) and the last few before it, which
-    /// stay built behind it so going back to one shows it at once, where it was left. Only `thread` is on screen
-    /// (`ChatThreadState.isOnScreen`).
+    /// The chats kept open, least recently shown first: the one on screen (`thread`), the last few before it, and the
+    /// ones built ahead of a visit (`warm`), which stay built behind it so going to one shows it at once. Only `thread`
+    /// is on screen (`ChatThreadState.isOnScreen`).
     private(set) var openThreads: [ChatThreadSession] = []
-    static let openThreadLimit = 4
+    /// Opening a chat that is not kept builds its header, input and messages: three or four late frames, 150 ms in all
+    /// on a real account. Eight covers the groups someone goes round in a working day.
+    static let openThreadLimit = 8
+    @ObservationIgnored var warming: Task<Void, Never>?
 
     /// The list's tab, "unread only" and the picked categories (see `listFilter` for the one applied).
     var filter = ChatListFilter()
@@ -101,6 +104,7 @@ public final class ChatShellModel {
     func stop() {
         tasks.forEach { $0.cancel() }; tasks = []
         typingLapse?.cancel(); typingLapse = nil
+        warming?.cancel(); warming = nil
         openThreads.forEach { $0.close() }; openThreads = []; thread = nil
         events.reportOpenChat(accountId: accountId, chatGid: nil)
     }
@@ -118,9 +122,11 @@ public final class ChatShellModel {
     }
 
     func apply(conversations list: [ChatConversation]) {
+        let first = !conversationsLoaded
         conversations = list; conversationsLoaded = true
         dropThreads { session in session !== thread && chat(session.state.chatGid) == nil }
         if let gid = selectedGid { syncThread(gid) }
+        if first { scheduleWarming() }
     }
 
     func apply(users list: [ChatUser]) {
@@ -161,6 +167,27 @@ public final class ChatShellModel {
         selectedGid = gid
         events.reportOpenChat(accountId: accountId, chatGid: gid)
         if let gid { syncThread(gid) }
+        scheduleWarming()
+    }
+
+    /// Builds `gid`'s chat behind the one on screen, ahead of a visit: unread, unplayed, and the first to go when room is
+    /// needed. False when it is kept already, unknown, or there is no room.
+    @discardableResult
+    func warm(_ gid: String) -> Bool {
+        guard openThreads.count < Self.openThreadLimit, let chat = chat(gid),
+              !openThreads.contains(where: { $0.state.chatGid == gid }) else { return false }
+        let session = makeSession(chat)
+        session.state.isOnScreen = false
+        openThreads.insert(session, at: 0)
+        return true
+    }
+
+    private func makeSession(_ chat: ChatConversation) -> ChatThreadSession {
+        let session = ChatThreadSession(accountId: accountId, chat: chat, selfAccount: selfAccount, repository: repository,
+                                        period: { [weak self] in self?.searchPeriod ?? .all },
+                                        onFailure: { [weak self] in self?.report($0) })
+        session.state.users = users; session.state.selfUserId = selfUserId; session.state.roleNames = roleNames
+        return session
     }
 
     /// Puts the selected chat's session on screen once its conversation is known — the one kept from an earlier visit, or
@@ -183,10 +210,7 @@ public final class ChatShellModel {
             kept.show()
             return
         }
-        let session = ChatThreadSession(accountId: accountId, chat: chat, selfAccount: selfAccount, repository: repository,
-                                        period: { [weak self] in self?.searchPeriod ?? .all },
-                                        onFailure: { [weak self] in self?.report($0) })
-        session.state.users = users; session.state.selfUserId = selfUserId; session.state.roleNames = roleNames
+        let session = makeSession(chat)
         openThreads.append(session)
         thread = session
         session.open()
