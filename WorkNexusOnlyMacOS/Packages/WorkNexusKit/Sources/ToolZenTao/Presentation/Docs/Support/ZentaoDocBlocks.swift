@@ -208,6 +208,14 @@ public enum ZentaoDocBlocks {
         mutating func walk(_ n: HtmlNode, _ st: Style, aligned: Bool = false) {
             if n.kind == .text { append(n.text, st); return }
             let name = n.name
+            // An embedded video is a link to its file (see `HtmlBlocks.mediaSource`).
+            if let source = HtmlBlocks.mediaSource(of: n) {
+                flush()
+                var link = st; link.link = source
+                append(HtmlBlocks.mediaLabel(source), link)
+                flush()
+                return
+            }
             if ZentaoDocBlocks.skipped.contains(name) { return }
             var s = st
             let css = ZentaoCssStyle(n)

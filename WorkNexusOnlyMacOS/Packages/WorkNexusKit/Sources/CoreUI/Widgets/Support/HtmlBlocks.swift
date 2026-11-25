@@ -21,6 +21,31 @@ public enum HtmlBlocks {
     private static let blockTags: Set<String> = ["p", "div", "section", "article", "header", "footer", "main", "aside", "figure", "figcaption", "dl", "dt", "dd", "center"]
     private static let skipped: Set<String> = ["script", "style", "head", "iframe", "video", "audio", "object", "embed", "svg", "canvas"]
 
+    /// The file an embedded player plays: a `<video>` / `<audio>` (its `src`, or its first `<source>`), or an `<embed>` /
+    /// `<object>` of a video or sound file (ZenTao's editor inserts media as `<embed>`). Nil for anything else embedded.
+    public static func mediaSource(of n: HtmlNode) -> String? {
+        let own = (n.attr("src") ?? n.attr("data"))?.trimmingCharacters(in: .whitespaces) ?? ""
+        switch n.name {
+        case "video", "audio":
+            if !own.isEmpty { return own }
+            return n.children.first { $0.isElement && $0.name == "source" }?.attr("src").flatMap { $0.isEmpty ? nil : $0 }
+        case "embed", "object":
+            let type = (n.attr("type") ?? "").lowercased()
+            let ext = (URL(string: own)?.pathExtension ?? (own as NSString).pathExtension).lowercased()
+            let media = type.hasPrefix("video/") || type.hasPrefix("audio/") || mediaExtensions.contains(ext)
+            return media && !own.isEmpty ? own : nil
+        default: return nil
+        }
+    }
+
+    private static let mediaExtensions: Set<String> = ["mp4", "m4v", "mov", "webm", "mkv", "avi", "wmv", "flv", "mp3", "m4a", "wav", "ogg"]
+
+    /// What the link to an embedded file reads: a play mark and the file's name.
+    public static func mediaLabel(_ source: String) -> String {
+        let name = (URL(string: source)?.lastPathComponent ?? (source as NSString).lastPathComponent).removingPercentEncoding ?? ""
+        return "\u{25B6} " + (name.isEmpty || name == "/" ? source : name)
+    }
+
     private struct Builder {
         var blocks: [BodyBlock] = []
         var current = AttributedString()
@@ -84,6 +109,15 @@ public enum HtmlBlocks {
         mutating func walk(_ n: HtmlNode, _ st: Style) {
             if n.kind == .text { append(n.text, st); return }
             let name = n.name
+            // An embedded video is a link to its file on a line of its own: dropped, as it used to be, nothing said the
+            // text had one.
+            if let source = HtmlBlocks.mediaSource(of: n) {
+                flush()
+                var link = st; link.link = source
+                append(HtmlBlocks.mediaLabel(source), link)
+                flush()
+                return
+            }
             if HtmlBlocks.skipped.contains(name) { return }
             var s = st
             switch name {

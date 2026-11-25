@@ -104,6 +104,28 @@ final class WidgetLogicTests: XCTestCase {
         XCTAssertEqual(start, 3); XCTAssertEqual(items.count, 2)
     }
 
+    /// A video embedded in a description or a comment used to be dropped without a trace: it is a link to its file.
+    func testAnEmbeddedVideoIsALinkToItsFile() {
+        func link(_ html: String) -> (text: String, url: String?)? {
+            for block in HtmlBlocks.parse(html) {
+                if case .text(let s, _) = block, let url = s.runs.compactMap(\.link).first { return (String(s.characters), url.absoluteString) }
+            }
+            return nil
+        }
+        let video = link(#"<p>Steps</p><video controls src="https://z/zentao/file-read-9.mp4"></video>"#)
+        XCTAssertEqual(video?.url, "https://z/zentao/file-read-9.mp4")
+        XCTAssertEqual(video?.text, "\u{25B6} file-read-9.mp4")
+        XCTAssertEqual(link(#"<video controls><source src="https://z/a%20b.mov" type="video/quicktime"></video>"#)?.text, "\u{25B6} a b.mov")
+        // ZenTao's editor inserts media as an <embed>.
+        XCTAssertEqual(link(#"<embed src="https://z/data/upload/1/clip.mp4" type="video/x-ms-asf-plugin" width="550" height="400" />"#)?.url,
+                       "https://z/data/upload/1/clip.mp4")
+        XCTAssertEqual(link(#"<embed src="https://z/data/upload/1/0911" type="video/mp4" />"#)?.url, "https://z/data/upload/1/0911")
+        // Still left out: a player with nothing to play, and an embed that is no video or sound.
+        XCTAssertNil(link("<video controls></video>"))
+        XCTAssertNil(link(#"<embed src="https://z/widget.swf" type="application/x-shockwave-flash" />"#))
+        XCTAssertNil(link(#"<iframe src="https://z/page"></iframe>"#))
+    }
+
     func testHtmlBlocks() {
         let blocks = HtmlBlocks.parse("<p>Hello <b>there</b> <a href=\"https://a.dev\">link</a></p><ul><li>one</li><li>two</li></ul>"
             + "<p><img src=\"https://z/file-read-1.png\" width=\"320\"></p><table><tr><th>A</th></tr><tr><td>1</td></tr></table><pre>x\ny</pre>")
