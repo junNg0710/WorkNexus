@@ -58,6 +58,7 @@ final class CompositionRoot {
     /// The diagnostics log; set up first so everything after it can report.
     let diagnostics: DiagnosticsWiring
     let autoUpdate: AutoUpdatePreference
+    private var startupTask: Task<Void, Never>?
 
     /// What every release since the last version run brought, shown once after an update.
     let whatsNew: WhatsNewModel
@@ -176,8 +177,13 @@ final class CompositionRoot {
         HostWiring(root: self).install()
     }
 
-    /// Starts everything that runs for the life of the app (after the window exists).
-    func start() async {
+    /// SwiftUI can start the window task again as the root view changes. Its services belong to the app's lifetime.
+    func start() {
+        guard startupTask == nil else { return }
+        startupTask = Task { await startServices() }
+    }
+
+    private func startServices() async {
         diagnostics.follow(nav: shell.nav)
         shell.start()
         connections.model.start()

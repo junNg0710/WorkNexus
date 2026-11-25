@@ -58,7 +58,7 @@ private struct RootView: View {
             .overlay(alignment: .bottomTrailing) { FpsBadge().environment(\.appTheme, theme).padding(theme.spacing.s6) }
             .preferredColorScheme(shell.settings.themeFollowsSystem ? nil : theme.colorScheme)
             .background(WindowConfigurator { root.platform.attach(window: $0) })
-            .task { await root.start() }
+            .task { root.start() }
             // One source of truth: the shell's selection drives which mini app page is on screen (and clears it when a
             // rail section, account or settings is picked).
             .onChange(of: shell.nav.state.miniAppId, initial: true) { _, id in root.miniApps.model.show(id) }
