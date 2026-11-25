@@ -170,7 +170,8 @@ extension ZenTaoClient {
             method: "POST",
             url: try url("\(baseUrl)/\(actionPath).json", query: [("zentaosid", token)]),
             headers: classicHeaders(token),
-            body: body))
+            // A picture uploaded for a text is kept only if the text names it as ZenTao does (`zentaoOwnImageLinks`).
+            body: body.withOwnImageLinks(baseUrl: baseUrl)))
     }
 
     /// GETs classic page `path` as JSON (`{base}/{path}.json`).
