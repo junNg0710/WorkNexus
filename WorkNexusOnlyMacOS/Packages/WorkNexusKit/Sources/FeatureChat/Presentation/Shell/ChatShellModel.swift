@@ -14,12 +14,6 @@ public final class ChatShellModel {
     @ObservationIgnored let repository: ChatRepository
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
     @ObservationIgnored private var typingLapse: Task<Void, Never>?
-    /// Where the chat list is in the window, told by the list: a click waiting there is another chat being picked.
-    @ObservationIgnored var listArea = CGRect.zero
-    @ObservationIgnored private lazy var selectGate = CatchUpGate { [weak self] in
-        guard let area = self?.listArea, !area.isEmpty else { return false }
-        return ClickBacklog.hasClick { area.contains($0) }
-    }
 
     var status: ChatConnectionStatus?
     private(set) var conversations: [ChatConversation] = []
@@ -39,6 +33,10 @@ public final class ChatShellModel {
     /// on a real account. Eight covers the groups someone goes round in a working day.
     static let openThreadLimit = 8
     @ObservationIgnored var warming: Task<Void, Never>?
+    /// Set by the view: a chat that has to be built is built a frame after its row lights up (see `select`).
+    @ObservationIgnored var rowLightsFirst = false
+    @ObservationIgnored private var showing: Task<Void, Never>?
+    @ObservationIgnored private let clicks = ChatClickTiming()
 
     /// The list's tab, "unread only" and the picked categories (see `listFilter` for the one applied).
     var filter = ChatListFilter()
@@ -105,6 +103,7 @@ public final class ChatShellModel {
         tasks.forEach { $0.cancel() }; tasks = []
         typingLapse?.cancel(); typingLapse = nil
         warming?.cancel(); warming = nil
+        showing?.cancel(); showing = nil
         openThreads.forEach { $0.close() }; openThreads = []; thread = nil
         events.reportOpenChat(accountId: accountId, chatGid: nil)
     }
@@ -156,18 +155,33 @@ public final class ChatShellModel {
 
     // MARK: selection
 
-    /// A click on a chat of the list. Clicked through faster than the chats can be opened, only the last one is: a chat
-    /// whose click has another click on the list waiting behind it is skipped (`CatchUpGate`) instead of being built for
-    /// nothing while the window stands still.
-    func tap(_ gid: String) { selectGate.run { [weak self] in self?.select(gid) } }
+    /// A click on a chat of the list: answered at once, never held back for the click behind it. Clicked through faster
+    /// than chats can be built, the ones overtaken are still not built - their row lights up and the click after it
+    /// cancels the build (`select`).
+    func tap(_ gid: String) { clicks.tapped(); select(gid) }
 
     func select(_ gid: String?) {
         guard gid != selectedGid else { return }
-        thread?.hide(); thread = nil
         selectedGid = gid
         events.reportOpenChat(accountId: accountId, chatGid: gid)
-        if let gid { syncThread(gid) }
+        showing?.cancel(); showing = nil
+        // Building a chat holds its frame up, 60 ms and more: its row lights up in this frame and the chat is built in
+        // the next, so the click is answered at once. A chat kept built is shown in the same frame as its row.
+        if let gid, rowLightsFirst, !openThreads.contains(where: { $0.state.chatGid == gid }) {
+            showing = Task { [weak self] in
+                await NextDisplayFrame.wait()
+                guard let self, !Task.isCancelled, selectedGid == gid else { return }
+                show(gid)
+            }
+        } else {
+            show(gid)
+        }
         scheduleWarming()
+    }
+
+    private func show(_ gid: String?) {
+        if thread?.state.chatGid != gid { thread?.hide(); thread = nil }
+        if let gid { syncThread(gid) }
     }
 
     /// Builds `gid`'s chat behind the one on screen, ahead of a visit: unread, unplayed, and the first to go when room is
@@ -206,13 +220,17 @@ public final class ChatShellModel {
             if state.selfUserId != selfUserId { state.selfUserId = selfUserId }
             if state.roleNames != roleNames { state.roleNames = roleNames }
             openThreads.removeAll { $0 === kept }; openThreads.append(kept)
+            thread?.hide()
             thread = kept
+            clicks.shown(kept.wasOpened ? "kept" : "built ahead")
             kept.show()
             return
         }
         let session = makeSession(chat)
         openThreads.append(session)
+        thread?.hide()
         thread = session
+        clicks.shown("built")
         session.open()
         // The least recently shown beyond the limit go (the new one is last, so never the chat on screen).
         let extra = openThreads.count - Self.openThreadLimit
@@ -246,53 +264,5 @@ public final class ChatShellModel {
         // Work given up because the user moved on (another chat opened) is not a failure to show.
         if case .cancelled = f { return }
         toasts.show(ChatShellLabels.failureText(f), kind: { if case .expired = f { .warning } else { .error } }())
-    }
-
-    func connect() { Task { if case .failure(let f) = await ConnectChat(repository)(accountId) { report(f) } } }
-
-    /// Trusts the pending certificate; returns the failure's text for the dialog to show.
-    func trust(fingerprint: String) async -> String? {
-        switch await TrustChatCertificate(repository)(accountId: accountId, fingerprint: fingerprint) {
-        case .success: showTrust = false; return nil
-        case .failure(let f): return ChatShellLabels.failureText(f)
-        }
-    }
-
-    /// Opens (creating on first use) the one-to-one chat with `userId` and selects it.
-    @discardableResult
-    func openDirectChat(userId: Int) async -> Bool {
-        switch await OpenDirectChat(repository)(accountId: accountId, userId: userId) {
-        case .success(let gid): tab = .all; setSearch(""); select(gid); return true
-        case .failure(let f): report(f); return false
-        }
-    }
-
-    func createGroup(name: String, memberIds: [Int], isPublic: Bool = false) async -> Bool {
-        switch await CreateGroupChat(repository)(accountId: accountId, name: name, memberIds: memberIds, isPublic: isPublic) {
-        case .success(let gid): tab = .all; setSearch(""); select(gid); return true
-        case .failure(let f): report(f); return false
-        }
-    }
-
-    func setStarred(_ chat: ChatConversation, _ starred: Bool) {
-        Task { if case .failure(let f) = await repository.setChatStarred(accountId: accountId, chatGid: chat.gid, starred: starred) { report(f) } }
-    }
-
-    func setMuted(_ chat: ChatConversation, _ muted: Bool) {
-        Task { if case .failure(let f) = await repository.setChatMuted(accountId: accountId, chatGid: chat.gid, muted: muted) { report(f) } }
-    }
-
-    /// Forwards each message (in the order given) to each chat; reports the first failure. True when every chat got all.
-    func forward(_ messages: [ChatMessage], to chatGids: [String]) async -> Bool {
-        var first: Failure?
-        for message in messages {
-            if case .failure(let f) = await ForwardChatMessage(repository)(message, toChatGids: chatGids) { first = first ?? f }
-        }
-        if let first { report(first); return false }
-        return true
-    }
-
-    func setPresence(_ p: ChatPresence) {
-        Task { if case .failure(let f) = await repository.setMyPresence(accountId: accountId, presence: p) { report(f) } }
     }
 }

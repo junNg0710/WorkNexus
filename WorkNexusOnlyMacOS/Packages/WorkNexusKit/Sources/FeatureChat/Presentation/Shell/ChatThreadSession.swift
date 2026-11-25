@@ -49,6 +49,8 @@ final class ChatThreadSession {
 
     /// One session, one pane: a chat closed and opened again is built anew.
     nonisolated var identity: ObjectIdentifier { ObjectIdentifier(self) }
+    /// The key of this session's pane among the kept ones (`KeptHosts`): a chat closed and opened again gets a new pane.
+    let hostKey = UUID().uuidString
 
     var canSend: Bool { CanSendToChat()(state.chat, selfUserId: state.selfUserId, selfAccount: state.selfAccount) }
     var canPin: Bool { PinChatMessage(repository).canPin(state.chat, selfUserId: state.selfUserId, selfAccount: state.selfAccount) }

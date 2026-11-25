@@ -19,7 +19,7 @@ struct NavRail: View {
             RailLabeledButton(appString("dashboard", "Dashboard"), systemImage: "square.grid.2x2",
                               selected: onScreen && nav.state.rail == .workspace,
                               help: tip(appString("dashboard", "Dashboard"), onScreen && nav.state.rail == .workspace, keys[RailPlace.workspace])) {
-                model.railTap(isCurrent: nav.state.rail == .workspace) { nav.select(.workspace) }
+                model.railTap("workspace", isCurrent: nav.state.rail == .workspace) { nav.select(.workspace) }
             }
             .railKeyHint(model.railKeyHint(RailPlace.workspace, keys: keys))
             if model.chatAccount != nil {
@@ -27,7 +27,7 @@ struct NavRail: View {
                                   selected: onScreen && nav.state.rail == .chat, badge: host.chatTotalUnread(),
                                   help: tip(appString("chat", "Chat"), onScreen && nav.state.rail == .chat, keys[RailPlace.chat]),
                                   brand: model.chatAccount?.providerType) {
-                    model.railTap(isCurrent: nav.state.rail == .chat) { nav.select(.chat) }
+                    model.railTap("chat", isCurrent: nav.state.rail == .chat) { nav.select(.chat) }
                 }
                 .railKeyHint(model.railKeyHint(RailPlace.chat, keys: keys))
             }
@@ -38,7 +38,7 @@ struct NavRail: View {
                                       selected: current,
                                       help: tip(appString(section.label, section.label.capitalized), current, keys[RailPlace.section(entry.module.providerType, section.id)]),
                                       brand: entry.module.providerType) {
-                        model.railTap(isCurrent: current) { model.openRailSection(section.id, tool: entry.module, accounts: entry.accounts) }
+                        model.railTap("section:\(entry.module.providerType.rawValue):\(section.id.rawValue)", isCurrent: current) { model.openRailSection(section.id, tool: entry.module, accounts: entry.accounts) }
                     }
                     .railKeyHint(model.railKeyHint(RailPlace.section(entry.module.providerType, section.id), keys: keys))
                 }
@@ -51,7 +51,7 @@ struct NavRail: View {
                                           selected: onScreen && nav.state.rail == .account(a.id), badge: host.chatUnread(a.id),
                                           folded: onScreen && nav.state.rail == .account(a.id) ? model.currentPaneFolded : nil,
                                           keys: keys[RailPlace.account(a.id)]) {
-                            model.railTap(isCurrent: nav.state.rail == .account(a.id)) { nav.select(.account(a.id)) }
+                            model.railTap("account:\(a.id)", isCurrent: nav.state.rail == .account(a.id)) { nav.select(.account(a.id)) }
                         }
                         .railKeyHint(model.railKeyHint(RailPlace.account(a.id), keys: keys))
                     }
@@ -69,13 +69,12 @@ struct NavRail: View {
             RailLabeledButton(appString("settings", "Settings"), systemImage: "gearshape",
                               selected: onScreen && nav.state.rail == .settings,
                               help: tip(appString("settings", "Settings"), onScreen && nav.state.rail == .settings, keys[RailPlace.settings])) {
-                model.railTap(isCurrent: nav.state.rail == .settings) { nav.select(.settings) }
+                model.railTap("settings", isCurrent: nav.state.rail == .settings) { nav.select(.settings) }
             }
             .railKeyHint(model.railKeyHint(RailPlace.settings, keys: keys))
         }
         .padding(.bottom, theme.spacing.s12).padding(.top, theme.sizes.titleBar - theme.spacing.s8)
         .frame(width: theme.sizes.rail).frame(maxHeight: .infinity)
-        .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).maxX } action: { model.railEdge = $0 }
     }
 
     /// The tooltip of a place's button: its name and, for the place on screen, what a second click does to its side panel.

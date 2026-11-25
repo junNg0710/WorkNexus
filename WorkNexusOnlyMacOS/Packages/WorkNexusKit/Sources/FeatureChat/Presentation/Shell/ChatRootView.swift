@@ -90,7 +90,7 @@ struct ChatShellView: View {
         }
         .appDialog(item: $model.forwardRequest) { ForwardMessageDialog(model: model, request: $0) }
         .modifier(ChatGroupDialogHost(model: model))
-        .task { model.start() }
+        .task { model.rowLightsFirst = true; model.start() }
         .onDisappear { model.stop() }
         .onChange(of: model.events.pendingChatGid, initial: true) { _, gid in
             guard let gid else { return }
@@ -151,6 +151,23 @@ private struct ChatOpenThreads: View {
 
     var body: some View {
         let shown = model.thread
+        if KeptHostsExperiment.isOn {
+            // Each chat a tree of its own under a hidden AppKit view (see `KeptHosts`).
+            KeptHosts(shown: shown?.hostKey, keys: model.openThreads.map(\.hostKey)) { key in
+                if let session = model.openThreads.first(where: { $0.hostKey == key }) { ChatThreadPane(model: model, session: session) }
+            }
+        } else {
+            ChatKeptThreads(model: model, shown: shown)
+        }
+    }
+}
+
+/// The kept chats in the window's own view tree (`KeptAlive`).
+private struct ChatKeptThreads: View {
+    let model: ChatShellModel
+    let shown: ChatThreadSession?
+
+    var body: some View {
         KeptAlive(shown: shown?.state.chatGid, keys: model.openThreads.map(\.state.chatGid)) { wake in
             ForEach(model.openThreads, id: \.identity) { session in
                 let gid = session.state.chatGid, active = session === shown

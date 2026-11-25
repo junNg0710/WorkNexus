@@ -7,6 +7,11 @@ import XCTest
 /// A second click on the rail button of the place on screen folds that place's side panel away; the next brings it back.
 @MainActor
 final class RailPaneToggleTests: XCTestCase {
+    /// The clicks here are deliberate ones, however close together the test makes them: no repeat is dropped, except
+    /// where a test is about that.
+    override func setUp() { super.setUp(); ShellModel.railRepeat = 0 }
+    override func tearDown() { ShellModel.railRepeat = TapGuard.defaultCooldown; super.tearDown() }
+
     private func shell() -> ShellModel {
         let fake = FakeStore()
         let services = AppServices(tickets: fake, workspaces: fake, comments: fake, activity: fake, syncStatus: SyncTests.RecordingStatus(),
@@ -44,47 +49,46 @@ final class RailPaneToggleTests: XCTestCase {
         var went = 0
         s.nav.select(.settings)
         // A click on another place goes there and folds nothing.
-        s.railTap(isCurrent: false) { went += 1; s.nav.select(.workspace) }
+        s.railTap("place", isCurrent: false) { went += 1; s.nav.select(.workspace) }
         XCTAssertEqual(went, 1)
         XCTAssertFalse(s.currentPaneFolded)
         XCTAssertTrue(ToolPaneHost.isVisible(s))
         // A click on the place on screen folds its pane, and does not navigate.
-        s.railTap(isCurrent: true) { went += 1 }
+        s.railTap("place", isCurrent: true) { went += 1 }
         XCTAssertEqual(went, 1)
         XCTAssertTrue(s.currentPaneFolded)
         XCTAssertFalse(ToolPaneHost.isVisible(s), "a folded pane takes no room")
-        s.railTap(isCurrent: true) { went += 1 }
+        s.railTap("place", isCurrent: true) { went += 1 }
         XCTAssertFalse(s.currentPaneFolded)
         XCTAssertTrue(ToolPaneHost.isVisible(s))
     }
 
-    /// Clicked through faster than the places can be shown: only where the user ended up is built.
-    func testAPlaceIsNotBuiltWhileAnotherRailClickWaits() async throws {
+    /// A rail click is answered at once, however fast the clicks come: none waits for the one behind it.
+    func testEveryRailClickIsAnsweredAtOnce() {
         let s = shell()
-        var behind = true
-        s.railGate = CatchUpGate(recheck: 0.01) { behind }
         s.nav.select(.settings)
         var went: [String] = []
-        s.railTap(isCurrent: false) { went.append("workspace") }
-        s.railTap(isCurrent: false) { went.append("chat") }
-        XCTAssertEqual(went, [])
-        behind = false
-        try await Task.sleep(for: .milliseconds(120))
-        XCTAssertEqual(went, ["chat"])
+        s.railTap("workspace", isCurrent: false) { went.append("workspace") }
+        s.railTap("chat", isCurrent: false) { went.append("chat") }
+        XCTAssertEqual(went, ["workspace", "chat"])
     }
 
-    func testComingBackToThePlaceOnScreenDropsThePlaceAskedForAndFoldsNothing() async throws {
+    /// A double click goes to the place once: the second click is not taken for "fold the pane of the place on screen".
+    func testARepeatedClickOnTheSameRailButtonIsDropped() async throws {
+        ShellModel.railRepeat = 0.08
+        defer { ShellModel.railRepeat = TapGuard.defaultCooldown }
         let s = shell()
-        var behind = true
-        s.railGate = CatchUpGate(recheck: 0.01) { behind }
         s.nav.select(.settings)
         var went = 0
-        s.railTap(isCurrent: false) { went += 1 }
-        s.railTap(isCurrent: true) { went += 1 }
-        behind = false
-        try await Task.sleep(for: .milliseconds(120))
-        XCTAssertEqual(went, 0)
-        XCTAssertFalse(s.currentPaneFolded)
+        s.railTap("workspace", isCurrent: false) { went += 1; s.nav.select(.workspace) }
+        s.railTap("workspace", isCurrent: true) { went += 1 }
+        XCTAssertEqual(went, 1)
+        XCTAssertFalse(s.currentPaneFolded, "the second click of a double click folds nothing")
+        // A deliberate second click, a moment later, does fold it.
+        try await Task.sleep(for: .milliseconds(200))
+        s.railTap("workspace", isCurrent: true) { went += 1 }
+        XCTAssertEqual(went, 1)
+        XCTAssertTrue(s.currentPaneFolded)
     }
 
     /// The chat's accounts are switched at the top of its own list: no column beside it, however many accounts there are.
@@ -118,7 +122,7 @@ final class RailPaneToggleTests: XCTestCase {
         s.nav.openMiniApp("jenkins")
         var went = 0
         // The rail still says "workspace", but the mini app is what is on screen: the click leaves it for the dashboard.
-        s.railTap(isCurrent: true) { went += 1 }
+        s.railTap("place", isCurrent: true) { went += 1 }
         XCTAssertEqual(went, 1)
         XCTAssertFalse(s.currentPaneFolded)
     }
@@ -136,11 +140,11 @@ final class RailPaneToggleTests: XCTestCase {
         let folded = s.currentPaneFolded
         s.activatedAt = Date()
         var went = 0
-        s.railTap(isCurrent: true) { went += 1 }
+        s.railTap("place", isCurrent: true) { went += 1 }
         XCTAssertEqual(went, 1, "it only shows the place")
         XCTAssertEqual(s.currentPaneFolded, folded)
         // A second click a moment later folds it as usual.
-        s.railTap(isCurrent: true, now: Date().addingTimeInterval(ShellModel.activationGrace + 0.1)) { went += 1 }
+        s.railTap("place", isCurrent: true, now: Date().addingTimeInterval(ShellModel.activationGrace + 0.1)) { went += 1 }
         XCTAssertEqual(went, 1)
         XCTAssertNotEqual(s.currentPaneFolded, folded)
     }

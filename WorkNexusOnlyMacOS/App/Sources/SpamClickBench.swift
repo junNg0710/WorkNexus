@@ -25,11 +25,6 @@ enum SpamClickBench {
         let rounds = env["WN_DEMO_SPAM_ROUNDS"].flatMap(Int.init) ?? 5
         let after = env["WN_DEMO_SPAM_AFTER"].flatMap(Double.init) ?? 9
         let frames = FrameGaps()
-        // The system knows nothing of clicks posted to the app's own queue: this run tells the app when and where its
-        // last one was, as the system does for a hand on the mouse.
-        let posted = PostedClicks()
-        ClickBacklog.source = .init(lastPress: { posted.last.time }, pointer: { posted.last.at })
-        ClickBacklog.start()
         // How late each click was handled: the time it spent waiting behind the ones before it.
         var handled = 0, worstLate = 0.0
         NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { e in
@@ -49,7 +44,6 @@ enum SpamClickBench {
                 let number = w.windowNumber, height = w.frame.height
                 for (i, p) in points.enumerated() {
                     DispatchQueue.global(qos: .userInteractive).asyncAfter(deadline: .now() + Double(i) * gap) {
-                        posted.note(time: ProcessInfo.processInfo.systemUptime, at: CGPoint(x: p.x, y: p.y))
                         post(NSPoint(x: p.x, y: height - p.y), window: number)
                     }
                 }
@@ -100,11 +94,4 @@ enum SpamClickBench {
     }
 }
 
-/// When and where the last click of the run was posted (window points from the top-left corner).
-final class PostedClicks: @unchecked Sendable {
-    private let lock = NSLock()
-    private var value: (time: TimeInterval, at: CGPoint?) = (0, nil)
-    var last: (time: TimeInterval, at: CGPoint?) { lock.withLock { value } }
-    func note(time: TimeInterval, at: CGPoint) { lock.withLock { value = (time, at) } }
-}
 #endif

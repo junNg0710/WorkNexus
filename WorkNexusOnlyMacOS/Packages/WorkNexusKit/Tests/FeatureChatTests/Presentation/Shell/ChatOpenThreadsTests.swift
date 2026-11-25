@@ -57,6 +57,64 @@ final class ChatOpenThreadsTests: XCTestCase {
         XCTAssertTrue(model.openThreads.contains { $0.state.chatGid == "g1" })
     }
 
+    // MARK: the row lights up before its chat is built
+
+    func testAChatThatMustBeBuiltLightsItsRowFirst() async {
+        let (model, _) = make(["g1", "g2"])
+        model.rowLightsFirst = true
+        model.select("g1")
+        XCTAssertEqual(model.selectedGid, "g1", "the row is lit at once")
+        XCTAssertNil(model.thread, "the chat is built in the next frame")
+        await ShellMake.expectEventually { model.thread?.state.chatGid == "g1" }
+
+        // Another chat to build: the one on screen stays until the new one takes its place.
+        let first = model.thread
+        model.select("g2")
+        XCTAssertEqual(model.selectedGid, "g2")
+        XCTAssertTrue(model.thread === first)
+        XCTAssertEqual(first?.state.isOnScreen, true)
+        await ShellMake.expectEventually { model.thread?.state.chatGid == "g2" }
+        XCTAssertEqual(first?.state.isOnScreen, false)
+
+        // A chat kept built is shown in the same frame as its row.
+        model.select("g1")
+        XCTAssertTrue(model.thread === first)
+        XCTAssertEqual(first?.state.isOnScreen, true)
+        XCTAssertEqual(model.openThreads.filter(\.state.isOnScreen).count, 1)
+    }
+
+    func testAClickOvertakenBeforeItsChatIsBuiltBuildsOnlyTheLast() async {
+        let (model, repo) = make(["g1", "g2", "g3"])
+        model.rowLightsFirst = true
+        model.select("g1"); model.select("g2"); model.select("g3")
+        await ShellMake.expectEventually { model.thread?.state.chatGid == "g3" }
+        try? await Task.sleep(for: .milliseconds(150))
+        XCTAssertEqual(model.openThreads.map(\.state.chatGid), ["g3"])
+        XCTAssertEqual(repo.refreshCalls, ["g3"])
+    }
+
+    func testTheChatListArrivingBeforeTheChatIsBuiltLeavesOneChatOnScreen() async {
+        let (model, _) = make(["g1", "g2"])
+        model.rowLightsFirst = true
+        model.select("g1")
+        await ShellMake.expectEventually { model.thread?.state.chatGid == "g1" }
+        let first = model.thread
+        model.select("g2")
+        // The list is read again in the frame between the click and the build.
+        model.apply(conversations: ["g1", "g2"].map { ShellMake.chat($0, name: $0) })
+        XCTAssertEqual(model.thread?.state.chatGid, "g2")
+        XCTAssertEqual(first?.state.isOnScreen, false)
+        try? await Task.sleep(for: .milliseconds(150))
+        XCTAssertEqual(model.openThreads.filter(\.state.isOnScreen).count, 1)
+        XCTAssertEqual(model.openThreads.count, 2)
+    }
+
+    func testTheLineOfAClickSaysWhereTheTimeWent() {
+        let line = ChatClickTiming.line("built", clicked: 10, tapped: 10.012, shown: 10.212, first: 10.290, settled: 10.410)
+        XCTAssertEqual(line, "Chat click (built): 410 ms until the window was free again - waited 12 ms to be handled, "
+            + "held back 200 ms, first frame 78 ms, later frames 120 ms")
+    }
+
     // MARK: chats built ahead of a visit
 
     func testAChatBuiltAheadIsBehindUnreadAndFirstToGo() async {

@@ -50,21 +50,24 @@ extension ShellModel {
         nav.setPane(key, collapsed: !nav.isPaneCollapsed(key))
     }
 
-    /// A click on a rail button: it goes to its place, or - when that place is the one on screen - folds / unfolds its pane.
-    /// A click that also brought the app back from another app only shows the place: coming back to Chat must not fold its list.
+    /// A click on the rail button `place`: it goes to its place, or - when that place is the one on screen - folds /
+    /// unfolds its pane. A click that also brought the app back from another app only shows the place: coming back to
+    /// Chat must not fold its list.
     ///
-    /// Clicked through faster than the places can be shown, only the last one is built: a place whose click has another
-    /// rail click waiting behind it is skipped (`CatchUpGate`). The app used to build every one in turn, each for
-    /// nothing, and stood still for seconds meanwhile.
-    public func railTap(isCurrent: Bool, now: Date = Date(), go: @escaping () -> Void) {
-        let bringsAppBack = now.timeIntervalSince(activatedAt) < Self.activationGrace
-        if isCurrent && !miniAppOnScreen && !bringsAppBack {
-            // Back on the place still on screen before the one asked for was built: that is where the user is; nothing folds.
-            if railGate.hasPending { railGate.cancel() } else { toggleCurrentPane() }
-        } else {
-            railGate.run(go)
+    /// The click is answered at once, always (`TapGuard`): it is never held back for the click behind it. Only a
+    /// repeat of the same button while its own click is still being answered, and for a moment after, is dropped - so
+    /// a double click goes to a place once instead of going there and folding its pane.
+    public func railTap(_ place: String, isCurrent: Bool, now: Date = Date(), go: () -> Void) {
+        let tap = railGuards[place] ?? TapGuard(cooldown: Self.railRepeat)
+        railGuards[place] = tap
+        tap.run {
+            let bringsAppBack = now.timeIntervalSince(activatedAt) < Self.activationGrace
+            if isCurrent && !miniAppOnScreen && !bringsAppBack { toggleCurrentPane() } else { go() }
         }
     }
+
+    /// How long a repeated click on the same rail button is dropped.
+    public static var railRepeat: TimeInterval = TapGuard.defaultCooldown
 
     /// How soon after the app came to the front a click still counts as the one that brought it back.
     public static let activationGrace: TimeInterval = 0.6

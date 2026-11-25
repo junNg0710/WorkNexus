@@ -57,7 +57,6 @@ private struct ListBody: View {
                     .onChange(of: model.highlightedGid) { _, gid in if let gid { proxy.scrollTo(gid) } }
                 }
             }
-            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { model.listArea = $0 }
         }
     }
 }

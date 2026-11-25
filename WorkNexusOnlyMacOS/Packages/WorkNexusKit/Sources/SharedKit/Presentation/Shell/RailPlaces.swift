@@ -56,7 +56,7 @@ public extension ShellModel {
         let places = railPlaces
         let byPlace = ResolveRailShortcuts()(places: places.map(\.id), settings: settings.railShortcuts)
         guard let place = places.first(where: { byPlace[$0.id] == keys }) else { return false }
-        railGate.run(place.open)
+        place.open()
         return true
     }
 }

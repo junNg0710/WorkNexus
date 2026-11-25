@@ -57,13 +57,8 @@ public final class ShellModel {
     /// When the app last came to the front: a rail click that did that only shows its place (`railTap`).
     @ObservationIgnored public var activatedAt = Date.distantPast
     @ObservationIgnored private var activationObserver: NSObjectProtocol?
-    /// The rail's right edge in the window, told by the rail itself: a click waiting left of it is another rail click.
-    @ObservationIgnored public var railEdge: CGFloat = 0
-    /// Keeps a place asked for from being built while the next rail click is already waiting (`railTap`).
-    @ObservationIgnored public internal(set) lazy var railGate = CatchUpGate { [weak self] in
-        guard let edge = self?.railEdge, edge > 0 else { return false }
-        return ClickBacklog.hasClick { $0.x <= edge }
-    }
+    /// One guard per rail button (`railTap`): a repeated click on the same button is dropped, none is ever delayed.
+    @ObservationIgnored var railGuards: [String: TapGuard] = [:]
     @ObservationIgnored let workspaceStore: ActiveWorkspaceStoring
     @ObservationIgnored var statusTasks: [String: Task<Void, Never>] = [:]
     @ObservationIgnored var knownAccountIds: Set<String>?

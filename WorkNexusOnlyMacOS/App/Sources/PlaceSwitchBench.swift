@@ -88,6 +88,14 @@ enum MouseSweep {
     private static var timer: Timer?
     private static var step = 0
     static func start() {
+        // `WN_DEMO_FRONT=1`: the app comes to the front first. Tracking areas (hover, the pointer's shape) are only
+        // handed moves in the active app, so without it the sweep costs - and measures - nothing.
+        if ProcessInfo.processInfo.environment["WN_DEMO_FRONT"] == "1" {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                NSApp.activate(ignoringOtherApps: true)
+                NSApp.windows.first(where: { $0.canBecomeMain })?.makeKeyAndOrderFront(nil)
+            }
+        }
         timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60, repeats: true) { _ in
             MainActor.assumeIsolated {
                 guard let w = NSApp.windows.first(where: { $0.canBecomeMain && $0.isVisible }), let view = w.contentView else { return }
@@ -98,7 +106,9 @@ enum MouseSweep {
                 guard let e = NSEvent.mouseEvent(with: .mouseMoved, location: NSPoint(x: x, y: y), modifierFlags: [],
                                                  timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: w.windowNumber,
                                                  context: nil, eventNumber: 0, clickCount: 0, pressure: 0) else { return }
-                w.sendEvent(e)
+                // Through the app, as a real move is: that is where it is handed to the tracking areas (hover, the
+                // pointer's shape). Sent to the window it only reached the first responder, and measured nothing.
+                NSApp.sendEvent(e)
             }
         }
     }
