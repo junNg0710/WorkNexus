@@ -1,7 +1,7 @@
 import CorePersistence
 import GRDB
 
-/// The chat tables (`ChatAccounts`, `ChatConversations`, `ChatMessages` (+3 indexes), `ChatMessageTranslations`,
+/// The chat tables (`ChatAccounts`, `ChatConversations`, `ChatMessages`, `ChatMessageTranslations`,
 /// `ChatUsers`, `ChatLinkPreviews`, `ChatSavedFiles`). The module owns its schema: the composition root passes
 /// `ChatMigrations.registrar` to `AppDatabase.open(registrars:)`.
 /// Ported from: lib/core/database/database.dart (chat tables; schema 64–65 as `chat_v2_groups`)
@@ -121,5 +121,11 @@ public enum ChatMigrations {
         }
         // Read-only views under the Flutter app's table names, for the bundled MCP server.
         McpCompatMigration.register(&migrator)
+        migrator.registerMigration("chat_replies_by_chat") { db in
+            try db.execute(sql: """
+                CREATE INDEX chat_messages_by_reply ON chatMessages (accountId, cgid, sentAt)
+                WHERE replyToId IS NOT NULL
+                """)
+        }
     }
 }

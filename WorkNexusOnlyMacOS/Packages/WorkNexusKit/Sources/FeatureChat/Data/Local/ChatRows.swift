@@ -88,14 +88,21 @@ struct ColumnValues {
     func bool(_ c: String) -> Bool? { raw[c] as? Bool }
 
     /// `INSERT … ON CONFLICT(keys) DO UPDATE SET <present non-key columns>`; `merge` overrides a column's update expression.
-    func upsertSQL(table: String, keys: [String], merge: [String: String] = [:], insertOrIgnore: Bool = false) -> (sql: String, args: StatementArguments) {
+    func upsertSQL(table: String, keys: [String], merge: [String: String] = [:], insertOrIgnore: Bool = false,
+                   skipUnchanged: Bool = false) -> (sql: String, args: StatementArguments) {
         let cols = pairs.map(\.0)
         let marks = cols.map { _ in "?" }.joined(separator: ",")
         if insertOrIgnore {
             return ("INSERT OR IGNORE INTO \(table) (\(cols.joined(separator: ","))) VALUES (\(marks))", StatementArguments(pairs.map(\.1)))
         }
-        let updates = cols.filter { !keys.contains($0) }.map { c in "\(c) = \(merge[c] ?? "excluded.\(c)")" }
-        let tail = updates.isEmpty ? "DO NOTHING" : "DO UPDATE SET \(updates.joined(separator: ", "))"
+        let updatedColumns = cols.filter { !keys.contains($0) }
+        let values = updatedColumns.map { merge[$0] ?? "excluded.\($0)" }
+        let updates = zip(updatedColumns, values).map { "\($0) = \($1)" }
+        var tail = updates.isEmpty ? "DO NOTHING" : "DO UPDATE SET \(updates.joined(separator: ", "))"
+        if skipUnchanged, !updates.isEmpty {
+            let differences = zip(updatedColumns, values).map { "\(table).\($0) IS NOT (\($1))" }
+            tail += " WHERE " + differences.joined(separator: " OR ")
+        }
         return ("INSERT INTO \(table) (\(cols.joined(separator: ","))) VALUES (\(marks)) ON CONFLICT(\(keys.joined(separator: ","))) \(tail)",
                 StatementArguments(pairs.map(\.1)))
     }

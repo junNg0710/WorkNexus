@@ -34,7 +34,7 @@ final class ChatLocalDatasourceTests: XCTestCase {
              try String.fetchAll(d, sql: "SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'chat_messages_by_%'"))
         }
         XCTAssertEqual(Set(tables), ["chatAccounts", "chatConversations", "chatMessages", "chatMessageTranslations", "chatUsers", "chatLinkPreviews", "chatSavedFiles"])
-        XCTAssertEqual(Set(indexes), ["chat_messages_by_chat", "chat_messages_by_server_id", "chat_messages_by_index"])
+        XCTAssertEqual(Set(indexes), ["chat_messages_by_chat", "chat_messages_by_server_id", "chat_messages_by_index", "chat_messages_by_reply"])
         XCTAssertEqual(ChatMigrations.migrationId, "chat_v1")
     }
 
@@ -164,6 +164,25 @@ final class ChatLocalDatasourceTests: XCTestCase {
 
     private func timelineIds() async throws -> [Int] {
         try await db.writer.read { try Int.fetchAll($0, sql: "SELECT serverId FROM chatMessages WHERE detached=0 ORDER BY serverId") }
+    }
+
+    func testRefreshingTheSamePageOnlyWritesChangedMessages() async throws {
+        let row = msgValues(1)
+        let changes = try await db.writer.write { d in
+            try ChatLocalDatasource.upsertMessages(d, [row], link: .linked)
+            try ChatLocalDatasource.upsertMessages(d, [row], link: .linked)
+            let unchanged = d.changesCount
+
+            var reply = row
+            reply.set("replyToId", 99)
+            try ChatLocalDatasource.upsertMessages(d, [reply], link: .linked)
+            let addedReply = d.changesCount
+
+            reply.set("replyToId", nil)
+            try ChatLocalDatasource.upsertMessages(d, [reply], link: .linked)
+            return [unchanged, addedReply, d.changesCount]
+        }
+        XCTAssertEqual(changes, [0, 1, 1])
     }
 
     func testDetachedWindowsStayOutOfTheTimelineUntilJoined() async throws {

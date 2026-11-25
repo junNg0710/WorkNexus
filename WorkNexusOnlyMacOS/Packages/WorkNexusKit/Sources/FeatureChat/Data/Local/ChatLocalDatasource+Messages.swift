@@ -24,7 +24,8 @@ extension ChatLocalDatasource {
                 let (sql, args) = fresh.upsertSQL(table: "chatMessages", keys: ["accountId", "gid"], insertOrIgnore: true)
                 try d.execute(sql: sql, arguments: args)
             }
-            let (sql, args) = r.upsertSQL(table: "chatMessages", keys: ["accountId", "gid"])
+            // Revisiting a chat fetches its newest page again. Identical rows must not wake the live queries.
+            let (sql, args) = r.upsertSQL(table: "chatMessages", keys: ["accountId", "gid"], skipUnchanged: true)
             try d.execute(sql: sql, arguments: args)
         }
     }
