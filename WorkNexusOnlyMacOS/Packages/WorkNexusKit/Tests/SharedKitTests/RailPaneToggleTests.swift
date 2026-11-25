@@ -63,6 +63,26 @@ final class RailPaneToggleTests: XCTestCase {
         XCTAssertTrue(ToolPaneHost.isVisible(s))
     }
 
+    /// The notifications panel lies over the place: a rail click puts it away.
+    func testARailClickPutsTheNotificationsPanelAway() {
+        let s = shell()
+        var panelOpen = true, went = 0
+        s.host.dismissOverlay = { if panelOpen { panelOpen = false; return true } else { return false } }
+        s.nav.select(.settings)
+        s.railTap("place", isCurrent: false) { went += 1; s.nav.select(.workspace) }
+        XCTAssertFalse(panelOpen, "going to another place closes the panel")
+        XCTAssertEqual(went, 1)
+
+        // On the place the panel lies over, the click closes the panel and folds nothing; the next one folds the pane.
+        panelOpen = true
+        s.railTap("place", isCurrent: true) { went += 1 }
+        XCTAssertFalse(panelOpen)
+        XCTAssertFalse(s.currentPaneFolded, "the pane is not folded behind the panel")
+        XCTAssertEqual(went, 1)
+        s.railTap("place", isCurrent: true) { went += 1 }
+        XCTAssertTrue(s.currentPaneFolded)
+    }
+
     /// A rail click is answered at once, however fast the clicks come: none waits for the one behind it.
     func testEveryRailClickIsAnsweredAtOnce() {
         let s = shell()

@@ -57,12 +57,16 @@ extension ShellModel {
     /// The click is answered at once, always (`TapGuard`): it is never held back for the click behind it. Only a
     /// repeat of the same button while its own click is still being answered, and for a moment after, is dropped - so
     /// a double click goes to a place once instead of going there and folding its pane.
+    ///
+    /// The notifications panel lies over the place: picking a place puts the panel away, and a click on the place it
+    /// was lying over does only that (its pane is not folded behind the panel).
     public func railTap(_ place: String, isCurrent: Bool, now: Date = Date(), go: () -> Void) {
         let tap = railGuards[place] ?? TapGuard(cooldown: Self.railRepeat)
         railGuards[place] = tap
         tap.run {
             let bringsAppBack = now.timeIntervalSince(activatedAt) < Self.activationGrace
-            if isCurrent && !miniAppOnScreen && !bringsAppBack { toggleCurrentPane() } else { go() }
+            let closedPanel = host.dismissOverlay()
+            if isCurrent && !miniAppOnScreen && !bringsAppBack { if !closedPanel { toggleCurrentPane() } } else { go() }
         }
     }
 

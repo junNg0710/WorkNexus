@@ -56,6 +56,8 @@ public extension ShellModel {
         let places = railPlaces
         let byPlace = ResolveRailShortcuts()(places: places.map(\.id), settings: settings.railShortcuts)
         guard let place = places.first(where: { byPlace[$0.id] == keys }) else { return false }
+        // As a click on the rail does: the notifications panel does not stay over the place gone to.
+        _ = host.dismissOverlay()
         place.open()
         return true
     }
