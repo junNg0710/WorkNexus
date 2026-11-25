@@ -10,7 +10,8 @@ final class TimelineRepo: StubChatRepository, @unchecked Sendable {
     var ranges: [(from: Int, to: Int)] = []
     var around: Outcome<(from: Int, to: Int)?> = .success(nil)
     var typingSignals: [ChatTypingSignal] = []
-    var unread = 0
+    var replies: [ChatMessage] = []
+    var replyWatches = 0
     var messageWatchers: [AsyncStream<[ChatMessage]>.Continuation] = []
     var markReads = 0
 
@@ -33,9 +34,10 @@ final class TimelineRepo: StubChatRepository, @unchecked Sendable {
         let m = all.first { $0.serverId == serverId }
         return AsyncStream { $0.yield(m) }
     }
-    override func watchConversations(accountId: String) -> AsyncStream<[ChatConversation]> {
-        let c = Make.chat("g", unread: unread)
-        return AsyncStream { $0.yield([c]) }
+    override func watchReplies(accountId: String, chatGid: String) -> AsyncStream<[ChatMessage]> {
+        replyWatches += 1
+        let page = replies
+        return AsyncStream { $0.yield(page) }
     }
     override func watchTyping(accountId: String) -> AsyncStream<ChatTypingSignal> {
         let signals = typingSignals
@@ -241,14 +243,22 @@ final class MessageTimelineModelTests: XCTestCase {
 
     func testReactionsSettingRestartsTheStreamAndClearsWhenOff() async {
         let repo = TimelineRepo(count: 5)
+        repo.replies = [
+            Make.message("reply", serverId: 6, replyTo: 5),
+            Make.message("reaction", content: .emoji("👍"), serverId: 7, replyTo: 5),
+        ]
         let (model, task) = make(repo)
         defer { task.cancel() }
-        await eventually("first page") { model.loaded }
+        await eventually("first page and replies") { model.loaded && model.summaries[5]?.count == 2 }
         let before = repo.liveLimits.count
         model.reactionsOn = true
         await eventually("re-read with reactions") { repo.liveLimits.count > before }
+        XCTAssertEqual(model.summaries[5]?.count, 1)
+        XCTAssertEqual(model.reactions[5]?.map(\.emoji), ["👍"])
         model.reactionsOn = false
+        XCTAssertEqual(model.summaries[5]?.count, 2)
         XCTAssertTrue(model.reactions.isEmpty)
+        XCTAssertEqual(repo.replyWatches, 1)
     }
 
     /// Opening a chat reads its window again when the reactions setting arrives: the same messages must not set the

@@ -61,6 +61,8 @@ struct MessageListContent: View {
         }
         // Back on screen after a stay behind another chat: what came in meanwhile is read now, if its end is in view.
         .onChange(of: state.isOnScreen) { _, shown in if shown { model.markReadIfSeen() } }
+        // The shell already watches the conversation list and updates the visible thread.
+        .onChange(of: state.chat.unreadCount, initial: true) { _, _ in model.markReadIfSeen() }
         // A jump asked for while shown, or before the list existed (tapping a notification opens the chat first): taken once.
         .onChange(of: state.jump, initial: true) { _, request in
             guard let request else { return }

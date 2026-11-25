@@ -13,22 +13,34 @@ import SwiftUI
 struct ChatColumn: Layout {
     var trailing = false
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+    struct Cache {
+        var width: CGFloat?
+        var sizes: [CGSize] = []
+    }
+
+    func makeCache(subviews: Subviews) -> Cache { Cache() }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) -> CGSize {
+        cache.width = proposal.width
+        cache.sizes.removeAll(keepingCapacity: true)
         var width: CGFloat = 0, height: CGFloat = 0
         for child in subviews {
             let size = child.sizeThatFits(ProposedViewSize(width: proposal.width, height: nil))
+            cache.sizes.append(size)
             width = max(width, size.width); height += size.height
         }
         return CGSize(width: width, height: height)
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) {
         // Each child at the very width it was measured with (the stack's own offer), so it is laid out as measured: a
         // text offered its own rounded width again could wrap one word sooner.
         let offer = ProposedViewSize(width: proposal.width.flatMap { $0.isFinite ? $0 : nil } ?? bounds.width, height: nil)
+        // A finite proposal usually matches the sizing pass. An ideal-width probe may have used another width.
+        let reuseSizes = cache.width == offer.width && cache.sizes.count == subviews.count
         var y = bounds.minY
-        for child in subviews {
-            let size = child.sizeThatFits(offer)
+        for (index, child) in subviews.enumerated() {
+            let size = reuseSizes ? cache.sizes[index] : child.sizeThatFits(offer)
             child.place(at: CGPoint(x: trailing ? bounds.maxX - size.width : bounds.minX, y: y), anchor: .topLeading, proposal: offer)
             y += size.height
         }
@@ -63,10 +75,12 @@ struct ChatRowSides: Layout {
         let avatar = p.avatar?.sizeThatFits(.unspecified) ?? .zero
         let taken = p.avatar == nil ? 0 : avatar.width + gap
         let offer = ProposedViewSize(width: max(0, bounds.width - taken), height: nil)
-        let content = p.content?.sizeThatFits(offer) ?? .zero
-        func y(_ height: CGFloat) -> CGFloat { bottom ? bounds.maxY - height : bounds.minY }
-        p.avatar?.place(at: CGPoint(x: alignEnd ? bounds.maxX - avatar.width : bounds.minX, y: y(avatar.height)), anchor: .topLeading, proposal: .unspecified)
-        p.content?.place(at: CGPoint(x: alignEnd ? bounds.maxX - taken - content.width : bounds.minX + taken, y: y(content.height)),
-                         anchor: .topLeading, proposal: offer)
+        let edgeY = bottom ? bounds.maxY : bounds.minY
+        let leading: UnitPoint = bottom ? .bottomLeading : .topLeading
+        let trailing: UnitPoint = bottom ? .bottomTrailing : .topTrailing
+        p.avatar?.place(at: CGPoint(x: alignEnd ? bounds.maxX : bounds.minX, y: edgeY),
+                        anchor: alignEnd ? trailing : leading, proposal: .unspecified)
+        p.content?.place(at: CGPoint(x: alignEnd ? bounds.maxX - taken : bounds.minX + taken, y: edgeY),
+                         anchor: alignEnd ? trailing : leading, proposal: offer)
     }
 }

@@ -285,7 +285,6 @@ final class ChatOpenThreadsTests: XCTestCase {
 
     func testTheMessageListMarksNothingReadBehindAnotherChat() async {
         let repo = TimelineRepo(count: 20)
-        repo.unread = 2
         let state = ChatThreadState(accountId: "a", chat: Make.chat("g", unread: 2))
         state.isOnScreen = false
         let model = MessageTimelineModel(state: state, services: ChatServices(chat: repo))

@@ -42,7 +42,7 @@ final class MessageTimelineModel {
     private(set) var summaries: [Int: ThreadSummary] = [:]
     private(set) var reactions: [Int: [MessageReaction]] = [:]
     private(set) var typing: [Int] = []
-    private(set) var unread = 0
+    var unread: Int { state.chat.unreadCount }
     private(set) var rows: [ChatListRow] = []
 
     // MARK: paging
@@ -77,10 +77,9 @@ final class MessageTimelineModel {
     let arrivals = ChatArrivals()
 
     var typingRoster = TypingRoster()
-    var replies: [ChatMessage] = []
+    @ObservationIgnored private var replies: [ChatMessage] = []
     let windowEvents: AsyncStream<ChatMessageWindow>.Continuation
     private let windowStream: AsyncStream<ChatMessageWindow>
-    var reactionsTask: Task<Void, Never>?
     var messagesTask: Task<Void, Never>?
     var markingRead = false
     /// The message that was first before older rows were added above it (the list keeps it in place).
@@ -99,12 +98,10 @@ final class MessageTimelineModel {
 
     /// Runs the timeline's watchers until the task is cancelled (the view's `.task`).
     func run() async {
-        defer { messagesTask?.cancel(); reactionsTask?.cancel() }
-        reactionsSettingChanged()
+        defer { messagesTask?.cancel() }
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.observeWindows() }
             group.addTask { await self.observeReplies() }
-            group.addTask { await self.observeUnread() }
             group.addTask { await self.observeTyping() }
             group.addTask { await self.pruneTyping() }
         }
@@ -130,39 +127,23 @@ final class MessageTimelineModel {
     private func observeReplies() async {
         for await list in services.chat.watchReplies(accountId: accountId, chatGid: chatGid) {
             replies = list
-            rebuildSummaries()
+            rebuildReplyDetails()
         }
     }
 
-    private func observeUnread() async {
-        for await chats in services.chat.watchConversations(accountId: accountId) {
-            let now = chats.first { $0.gid == chatGid }?.unreadCount ?? 0
-            let grew = now > unread
-            unread = now
-            if grew || now > 0 { markReadIfSeen() }
-        }
-    }
-
-    /// Every message row reads the summaries: set only when they changed.
-    func rebuildSummaries() {
-        let next = BuildReplyThread().summariesByRoot(replies, reactions: reactionsOn)
-        if next != summaries { summaries = next }
+    /// Replies and emoji reactions come from the same stored rows.
+    private func rebuildReplyDetails() {
+        let nextSummaries = BuildReplyThread().summariesByRoot(replies, reactions: reactionsOn)
+        let nextReactions = reactionsOn ? BuildReactions()(replies) : [:]
+        if nextSummaries != summaries { summaries = nextSummaries }
+        if nextReactions != reactions { reactions = nextReactions }
     }
 
     /// Reactions and reply summaries follow the user's setting; the message streams re-read with the new filter.
     private func reactionsSettingChanged() {
-        reactionsTask?.cancel()
-        rebuildSummaries()
-        guard reactionsOn else { reactions = [:]; restartMessages(); return }
-        let chat = services.chat, account = accountId, gid = chatGid
-        reactionsTask = Task { [weak self] in
-            for await map in chat.watchReactions(accountId: account, chatGid: gid) where self?.reactions != map { self?.reactions = map }
-        }
-        restartMessages()
+        rebuildReplyDetails()
+        windowEvents.yield(window)
     }
-
-    /// Re-reads the current window (its stream is built with the reactions flag).
-    private func restartMessages() { windowEvents.yield(window) }
 
     // MARK: messages
 
