@@ -59,17 +59,34 @@ final class ChatVideoPlayer {
         }
         let item = AVPlayerItem(asset: asset)
         let player = ChatVideoPlayer(item: item, loader: loader)
-        for await status in item.publisher(for: \.status).values {
-            if status == .readyToPlay { return .success(player) }
-            if status == .failed {
-                player.close()
-                return .failure(.unexpected(item.error?.localizedDescription ?? "Couldn't play this video"))
-            }
-            if Task.isCancelled { player.close(); return .failure(.cancelled("cancelled")) }
+        switch await settled(item) {
+        case .readyToPlay: return .success(player)
+        case .failed:
+            player.close()
+            return .failure(.unexpected(item.error?.localizedDescription ?? "Couldn't play this video"))
+        default:
+            player.close()
+            return .failure(Task.isCancelled ? .cancelled("cancelled") : .network("The video did not start in time"))
         }
-        // The loop also ends when the task is cancelled while waiting.
-        if Task.isCancelled { player.close(); return .failure(.cancelled("cancelled")) }
-        return .success(player)
+    }
+
+    /// How long a video may take to become playable before opening it is given up.
+    static let openTimeout: TimeInterval = 60
+    /// How often the item is asked whether it can play yet.
+    static let openPoll: Duration = .milliseconds(50)
+
+    /// Waits until `item` can play or has failed: its status, `.unknown` when the wait was cancelled or ran out of time.
+    ///
+    /// The status is asked for, not listened to. Listening (`item.publisher(for: \.status).values`) lost the change when
+    /// it came while nothing was waiting for the next value - this code runs on the main actor, busy drawing the chat
+    /// just then - and the change comes once: the wait never ended, the frame stayed black with its spinner, and no
+    /// other video of the chat could be started either. The player itself was ready within two seconds.
+    static func settled(_ item: AVPlayerItem, timeout: TimeInterval = openTimeout) async -> AVPlayerItem.Status {
+        let deadline = Date().addingTimeInterval(timeout)
+        while item.status == .unknown, !Task.isCancelled, Date() < deadline {
+            try? await Task.sleep(for: openPoll)
+        }
+        return item.status
     }
 
     func play() { userWantsPlaying = true; if position >= duration - 0.05, duration > 0 { seek(to: 0) }; player.rate = Float(speed) }

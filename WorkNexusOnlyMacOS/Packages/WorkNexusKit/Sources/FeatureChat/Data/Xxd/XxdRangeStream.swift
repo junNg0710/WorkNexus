@@ -16,6 +16,12 @@ final class XxdRangeStream: XxdPinningDelegate, URLSessionDataDelegate, @uncheck
     }
 
     private let state = Locked(State())
+    #if DEBUG
+    /// DEBUG: told each transfer's range and the server's answer (`ChatVideoProbe`).
+    nonisolated(unsafe) static var trace: (@Sendable (String) -> Void)?
+    /// DEBUG: bytes handed on by every transfer since the app started.
+    static let delivered = Locked(Int64(0))
+    #endif
     private var start: Int64 = 0
     private var end: Int64?
     private var onChunk: (@Sendable (Data) -> Void)?
@@ -54,6 +60,9 @@ final class XxdRangeStream: XxdPinningDelegate, URLSessionDataDelegate, @uncheck
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse,
                     completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
         guard let http = response as? HTTPURLResponse else { completionHandler(.cancel); fail(.network("Video download failed")); return }
+        #if DEBUG
+        Self.trace?("range \(start)-\(end.map(String.init) ?? "end") -> HTTP \(http.statusCode), Content-Range \(http.value(forHTTPHeaderField: "Content-Range") ?? "-"), Accept-Ranges \(http.value(forHTTPHeaderField: "Accept-Ranges") ?? "-"), length \(http.expectedContentLength)")
+        #endif
         switch http.statusCode {
         case 206: state.with { $0.position = start }
         case 200: state.with { $0.position = 0; $0.skip = start }
@@ -78,12 +87,18 @@ final class XxdRangeStream: XxdPinningDelegate, URLSessionDataDelegate, @uncheck
             from -= first; to -= first
             return (data.subdata(in: Int(from)..<Int(to)), done)
         }
+        #if DEBUG
+        if let slice { Self.delivered.with { $0 += Int64(slice.count) } }
+        #endif
         if let slice, !slice.isEmpty { onChunk?(slice) }
         if done { state.with { $0.finishedEarly = true }; dataTask.cancel() }
     }
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         let (early, failure) = state.with { ($0.finishedEarly, $0.failure) }
+        #if DEBUG
+        Self.trace?("range \(start)-\(end.map(String.init) ?? "end") ended: \(error.map { ($0 as NSError).localizedDescription } ?? "complete")\(early ? " (stopped by us)" : "")")
+        #endif
         if let failure { finish(.failure(failure)); return }
         if let error, !early {
             if (error as? URLError)?.code == .cancelled { finish(.failure(.cancelled("Download cancelled"))) }

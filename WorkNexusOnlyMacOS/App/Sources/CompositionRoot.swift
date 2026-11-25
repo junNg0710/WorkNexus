@@ -229,6 +229,15 @@ final class CompositionRoot {
                 print("BENCH live start"); fflush(stdout)
                 ChatSwitchBench.start(chat: chat)
                 PlaceSwitchBench.start(shell: shell, services: services)
+                // `WN_LIVE_VIDEO=<accountId>|<fileId>|<name>|<size>|<time>|<mime>`: opens that chat video and prints what
+                // the player asked of the server and what came back (`ChatVideoProbe`).
+                if let spec = ProcessInfo.processInfo.environment["WN_LIVE_VIDEO"]?.split(separator: "|").map(String.init), spec.count == 6,
+                   let id = Int(spec[1]), let size = Int(spec[3]), let time = Int(spec[4]) {
+                    await ChatVideoProbe.run(repository: chat.repository, accountId: spec[0],
+                                             file: FileContent(fileId: id, name: spec[2], size: size, time: time, mimeType: spec[5])) { line in
+                        print("VIDEO \(line)"); fflush(stdout)
+                    }
+                }
             }
         }
         #endif
