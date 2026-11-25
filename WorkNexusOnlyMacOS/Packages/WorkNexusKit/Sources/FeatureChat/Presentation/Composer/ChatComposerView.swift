@@ -36,7 +36,6 @@ public struct ChatComposerView: View {
         .onDisappear { controller.keepDraft(); controller.stopTyping() }
         // Kept open behind another chat: the same as leaving it.
         .onChange(of: state.isOnScreen) { _, shown in if !shown { controller.keepDraft(); controller.stopTyping() } }
-        .task(id: state.chatGid) { await controller.loadMembers() }
         .task(id: state.chatGid) { await controller.stickerSuggestions.load(services?.stickers) }
         .task(id: state.chatGid) {
             guard let repository = services?.chat else { return }
@@ -89,6 +88,7 @@ public struct ChatComposerView: View {
 private struct ComposerInputRow: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.chatSettings) private var settings
+    @Environment(\.chatServices) private var services
     let controller: ChatComposerController
     let state: ChatThreadState
     let hint: String?
@@ -136,6 +136,12 @@ private struct ComposerInputRow: View {
         }
         // Clear of the content card's rounded bottom corners: the input and 👍 used to sit inside the curve.
         .padding(EdgeInsets(top: theme.spacing.s8, leading: theme.spacing.s16, bottom: theme.spacing.s14, trailing: theme.spacing.s16))
+        .task(id: controller.mentions.active?.start) {
+            if controller.mentions.active != nil { await controller.loadMembers(from: services?.chat) }
+        }
+        .onChange(of: controller.mentions.active == nil ? nil : state.users) { _, _ in controller.updateSuggestions() }
+        .onChange(of: state.selfUserId) { _, _ in controller.updateSuggestions() }
+        .onChange(of: state.chat.peerUserId) { _, _ in controller.updateSuggestions() }
     }
 }
 

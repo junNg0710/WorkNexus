@@ -24,7 +24,8 @@ final class ComposerNSTextView: NSTextView {
     }
 
     private static func composerKey(_ e: NSEvent) -> ComposerKeyEvent? {
-        let flags = e.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        // AppKit also marks ordinary arrow keys as numeric-pad and function keys.
+        let flags = e.modifierFlags.intersection([.shift, .control, .option, .command])
         switch e.keyCode {
         case 36, 76: return flags.contains(.shift) || flags.contains(.option) ? nil : .enter
         case 48: return flags.isEmpty ? .tab : nil

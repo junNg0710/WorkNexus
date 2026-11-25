@@ -12,7 +12,8 @@ struct MentionCandidate: Hashable, Sendable {
 /// Composer state for @mentions: the `@query` typed right before the caret and the highlighted suggestion.
 @MainActor @Observable
 final class MentionAutocomplete {
-    private static let queryPattern = try! NSRegularExpression(pattern: #"(?:^|\s)@([^\s@]{0,30})$"#)
+    // A name can contain spaces. Keep the query on one line and stop at an already inserted mention.
+    private static let queryPattern = try! NSRegularExpression(pattern: #"(?:^|\s)@((?:[^\s@\uFFFC](?:[^\s@\uFFFC]| ){0,63})?)\z"#)
 
     private(set) var active: (start: Int, query: String)?
     private(set) var highlight = 0
@@ -58,7 +59,7 @@ final class MentionAutocomplete {
     func insert(into model: ChatComposerModel, _ candidate: MentionCandidate) {
         guard let active else { return }
         model.insertMention(start: active.start, end: model.selection.location, id: candidate.userId, name: candidate.name)
-        self.active = nil
+        dismiss()
     }
 
     /// Types "@" at the caret (after a space if needed): starts a mention.
@@ -84,12 +85,19 @@ final class MentionAutocomplete {
         return true
     }
 
-    /// `all` filtered by the query (name or account, case-insensitive), prefix matches first, at most `limit`.
-    nonisolated static func filter(_ all: [MentionCandidate], _ query: String, limit: Int = 8) -> [MentionCandidate] {
-        let q = query.lowercased()
-        func has(_ c: MentionCandidate, _ test: (String) -> Bool) -> Bool { test(c.name.lowercased()) || test((c.account ?? "").lowercased()) }
-        let prefix = all.filter { has($0) { $0.hasPrefix(q) } }
-        let contains = all.filter { c in !has(c) { $0.hasPrefix(q) } && has(c) { $0.contains(q) } }
-        return Array((prefix + contains).prefix(limit))
+    /// Match both the display name and the account using the same spelling rules as chat search.
+    nonisolated static func filter(_ all: [MentionCandidate], _ query: String) -> [MentionCandidate] {
+        // A trailing space finishes the word for Enter. Typing the next word can still match a full name.
+        if query.last == " " { return [] }
+        let fold = FoldSearchText()
+        let q = fold(query)
+        guard !q.isEmpty else { return all }
+        var prefix: [MentionCandidate] = [], contains: [MentionCandidate] = []
+        for person in all {
+            let name = fold(person.name), account = person.account.map(fold.callAsFunction) ?? ""
+            if name.hasPrefix(q) || account.hasPrefix(q) { prefix.append(person) }
+            else if name.contains(q) || account.contains(q) { contains.append(person) }
+        }
+        return prefix + contains
     }
 }

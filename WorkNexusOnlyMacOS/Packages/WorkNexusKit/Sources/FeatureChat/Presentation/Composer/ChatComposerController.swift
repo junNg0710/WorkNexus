@@ -75,9 +75,11 @@ final class ChatComposerController {
 
     // MARK: mentions
 
-    func loadMembers() async {
-        guard let repo = services?.chat, state.chat.type != .one2one else { members = []; return }
-        if case .success(let ids) = await repo.members(accountId: state.accountId, chatGid: state.chatGid) { members = ids }
+    func loadMembers(from repo: ChatRepository?) async {
+        guard let repo, state.chat.type != .one2one else { return }
+        guard case .success(let ids) = await repo.members(accountId: state.accountId, chatGid: state.chatGid),
+              !Task.isCancelled else { return }
+        members = ids
         updateSuggestions()
     }
 

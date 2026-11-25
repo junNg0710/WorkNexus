@@ -9,14 +9,18 @@ struct ChatMentionList: View {
     let onPick: (MentionCandidate) -> Void
 
     var body: some View {
-        if mentions.query != nil, !mentions.visible.isEmpty {
-            ScrollView {
-                VStack(spacing: 0) {
-                    ForEach(Array(mentions.visible.enumerated()), id: \.offset) { i, c in
-                        MentionRow(candidate: c, highlighted: i == mentions.highlight, onHover: { mentions.highlightAt(i) }) { onPick(c) }
+        let people = mentions.visible
+        if mentions.query != nil, !people.isEmpty {
+            ScrollViewReader { reader in
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(people.indices, id: \.self) { i in
+                            MentionRow(candidate: people[i], highlighted: i == mentions.highlight, onHover: { mentions.highlightAt(i) }) { onPick(people[i]) }
+                        }
                     }
+                    .padding(.vertical, theme.spacing.s4)
                 }
-                .padding(.vertical, theme.spacing.s4)
+                .onChange(of: mentions.highlight) { _, index in reader.scrollTo(index) }
             }
             .frame(maxHeight: theme.sizes.control36 * 6)
             .fixedSize(horizontal: false, vertical: true)
