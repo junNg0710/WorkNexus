@@ -17,9 +17,40 @@ enum ChatMessageExport {
                                      text: text(of: message) ?? ChatTextLabels.preview(message))
     }
 
-    @MainActor static func seed(_ messages: [ChatMessage], state: ChatThreadState) -> ChatTicketSeed {
-        DraftTicketFromMessages()(messages.map { line($0, users: state.users) },
-                                  source: L.ticketSource(ChatShellLabels.title(state.chat, state.users)), clock: stamp)
+    /// How many pictures one ticket takes along; the ones past it are quoted by their preview, as a file is.
+    static let pictureLimit = 9
+
+    /// The start of a ticket quoting `messages`. With `pictures` (a bug or a task, whose body can show them) the picture
+    /// messages are fetched and taken along; one that cannot be fetched is quoted by its preview.
+    @MainActor static func seed(_ messages: [ChatMessage], state: ChatThreadState, pictures repo: ChatRepository? = nil) async -> ChatTicketSeed {
+        var lines: [DraftTicketFromMessages.Line] = [], taken: [ChatTicketPicture] = []
+        let users = state.users
+        for message in messages.sorted(by: { $0.sentAt < $1.sentAt }) {
+            var quoted = line(message, users: users)
+            if let repo, taken.count < pictureLimit, let picture = await picture(of: message, index: taken.count, repo) {
+                quoted.pictureToken = picture.token
+                taken.append(picture)
+            }
+            lines.append(quoted)
+        }
+        var seed = DraftTicketFromMessages()(lines, source: L.ticketSource(ChatShellLabels.title(state.chat, users)), clock: stamp)
+        seed.pictures = taken
+        return seed
+    }
+
+    /// The bytes of a picture message (not a sticker, which is a reaction); nil for any other message.
+    private static func picture(of message: ChatMessage, index: Int, _ repo: ChatRepository) async -> ChatTicketPicture? {
+        guard !message.deleted, case .image(let image) = message.content, !IsStickerImage()(image) else { return nil }
+        let data: Data?
+        if let inline = image.inlineBase64.flatMap({ Data(base64Encoded: $0, options: .ignoreUnknownCharacters) }) {
+            data = inline
+        } else if image.fileId > 0 {
+            data = await repo.loadAttachment(accountId: message.accountId, content: message.content, thumbnail: false).value
+        } else {
+            data = nil
+        }
+        guard let data, !data.isEmpty else { return nil }
+        return ChatTicketPicture(token: ChatTicketPicture.token(index), name: image.name, data: data)
     }
 
     /// Several messages as one text, oldest first: "[time] Name: text".

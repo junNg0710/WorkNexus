@@ -1,3 +1,4 @@
+import CoreDomain
 import XCTest
 @testable import FeatureChat
 
@@ -30,6 +31,42 @@ final class DraftTicketFromMessagesTests: XCTestCase {
         XCTAssertEqual(title.count, DraftTicketFromMessages.titleLimit)
         XCTAssertTrue(title.hasSuffix("…"))
         XCTAssertEqual(DraftTicketFromMessages.title("a   b\tc"), "a b c")
+    }
+
+    func testAPictureStandsAsItsTokenUnderWhoSentItAndWordsNameTheTicket() {
+        var shot = line("An", "Image"); shot.pictureToken = "{{chat-picture-1}}"
+        let seed = draft([shot, line("Binh", "Login <fails>", 60)])
+        XCTAssertEqual(seed.title, "Login <fails>", "the first message with words, not the picture's preview")
+        XCTAssertEqual(seed.text, "An (T+0): Image\n\nBinh (T+60): Login <fails>\n\nFrom chat: Team")
+        XCTAssertEqual(seed.html, "<p>An (T+0):</p><p>{{chat-picture-1}}</p><p>Binh (T+60): Login &lt;fails&gt;</p><p><em>From chat: Team</em></p>")
+        let alone = draft([shot])
+        XCTAssertEqual(alone.title, "Image")
+        XCTAssertEqual(alone.html, "<p>{{chat-picture-1}}</p><p><em>From chat: Team · An, T+0</em></p>")
+    }
+
+    @MainActor func testATicketTakesThePicturesOfItsMessagesAlongButNoStickerAndATodoNone() async {
+        final class Repo: StubChatRepository, @unchecked Sendable {
+            override func loadAttachment(accountId: String, content: MessageContent, thumbnail: Bool) async -> Outcome<Data> {
+                guard case .image(let image) = content, image.name != "lost.png", !thumbnail else { return .failure(.network("down")) }
+                return .success(Data(image.name.utf8))
+            }
+        }
+        func image(_ gid: String, _ name: String, _ offset: TimeInterval, side: Int? = nil) -> ChatMessage {
+            Make.message(gid, at: Make.t0.addingTimeInterval(offset),
+                         content: .image(ImageContent(fileId: 5, name: name, size: 3, time: 0, width: side, height: side)), serverId: 1)
+        }
+        let state = ChatThreadState(accountId: "a", chat: Make.chat("g"))
+        let words = Make.message("m2", at: Make.t0.addingTimeInterval(60), content: .text("Login fails"), serverId: 2)
+        let picked = [words, image("m1", "shot.png", 0), image("m3", "wave.webp", 120, side: 200), image("m4", "lost.png", 180)]
+        let seed = await ChatMessageExport.seed(picked, state: state, pictures: Repo())
+        XCTAssertEqual(seed.pictures, [ChatTicketPicture(token: "{{chat-picture-1}}", name: "shot.png", data: Data("shot.png".utf8))])
+        XCTAssertEqual(seed.title, "Login fails")
+        XCTAssertEqual(seed.html.components(separatedBy: "{{chat-picture-").count, 2, "one picture: the sticker and the lost one stay words")
+        XCTAssertTrue(seed.html.contains("<p>{{chat-picture-1}}</p>"))
+        let todo = await ChatMessageExport.seed(picked, state: state)
+        XCTAssertTrue(todo.pictures.isEmpty)
+        XCTAssertFalse(todo.html.contains("{{"))
+        XCTAssertEqual(todo.text, seed.text)
     }
 
     func testNothingToQuoteGivesAnEmptySeed() {

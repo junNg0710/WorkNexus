@@ -64,8 +64,12 @@ extension ChatThreadPane {
                                         forward: { model.forwardRequest = ChatForwardRequest(messages: [$0]) })
         if let open = model.events.onCreateTicket {
             let accountId = model.accountId
+            let repo = model.repository
             actions.createTicket = { kind, messages in
-                open(ChatTicketRequest(kind: kind, accountId: accountId, seed: ChatMessageExport.seed(messages, state: state)))
+                Task { @MainActor in
+                    let seed = await ChatMessageExport.seed(messages, state: state, pictures: kind == .todo ? nil : repo)
+                    open(ChatTicketRequest(kind: kind, accountId: accountId, seed: seed))
+                }
             }
         }
         if let chat = services?.chat, let stickers = services?.stickers {

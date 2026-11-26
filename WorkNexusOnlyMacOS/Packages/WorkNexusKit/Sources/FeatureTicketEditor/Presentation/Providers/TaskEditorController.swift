@@ -56,8 +56,13 @@ public final class TaskEditorController {
         case .success(let form):
             let uid = FormValueFormat.newFormUid()
             var draft = form.draft
-            if launch.isNew, let prefill { draft.name = prefill.title; draft.desc = prefill.bodyHtml + draft.desc }
+            if launch.isNew, let prefill {
+                let body = await PlacePrefillPictures()(prefill) { await editor.uploadImage(accountId: accountId, uid: uid, bytes: $0, fileName: $1).value }
+                draft.name = prefill.title; draft.desc = body + draft.desc
+            }
             begin(TaskEditorState(form: form, draft: draft, uid: uid, draftId: launch.isNew ? (launch.draftId ?? uid) : nil))
+            // Already written, by the messages it quotes: kept from the start.
+            if launch.isNew, prefill != nil { keepDraft() }
         }
     }
 

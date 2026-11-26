@@ -57,8 +57,13 @@ public final class BugEditorController {
             var draft = form.draft
             // A new bug made from a chat message: ZenTao's form (product, defaults) with the message as title, and quoted
             // above the form's own steps template (steps / result / expected), which stays to be filled in.
-            if launch.isNew, let prefill { draft.title = prefill.title; draft.steps = prefill.bodyHtml + draft.steps }
+            if launch.isNew, let prefill {
+                let body = await PlacePrefillPictures()(prefill) { await editor.uploadImage(accountId: accountId, uid: uid, bytes: $0, fileName: $1).value }
+                draft.title = prefill.title; draft.steps = body + draft.steps
+            }
             begin(BugEditorState(form: form, draft: draft, uid: uid, draftId: launch.isNew ? (launch.draftId ?? uid) : nil))
+            // Already written, by the messages it quotes: kept from the start.
+            if launch.isNew, prefill != nil { keepDraft() }
         }
     }
 

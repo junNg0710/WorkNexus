@@ -31,8 +31,12 @@ struct ChatSelectionBar: View {
             .disabled(forwardable.isEmpty)
             if let open = model.events.onCreateTicket {
                 SelectionCreateMenu(disabled: picked.isEmpty) { kind in
-                    open(ChatTicketRequest(kind: kind, accountId: model.accountId, seed: ChatMessageExport.seed(picked, state: state)))
-                    state.endSelection()
+                    // A todo is text only; a bug or a task takes the picked pictures along (fetched first).
+                    Task { @MainActor in
+                        let seed = await ChatMessageExport.seed(picked, state: state, pictures: kind == .todo ? nil : model.repository)
+                        open(ChatTicketRequest(kind: kind, accountId: model.accountId, seed: seed))
+                        state.endSelection()
+                    }
                 }
             }
         }

@@ -42,11 +42,26 @@ public enum TicketEditorRoute: Hashable, Sendable {
     case editTask(accountId: String, ticketId: String)
 }
 
-/// What a new bug or task opens filled in with (a ticket made from a chat message): its title and its body as HTML.
+/// What a new bug or task opens filled in with (a ticket made from a chat message): its title and its body as HTML,
+/// and the pictures the body shows - each stands in `bodyHtml` as its `token` until the editor has uploaded it.
 public struct TicketEditorPrefill: Hashable, Sendable {
+    public struct Picture: Hashable, Sendable {
+        public var token: String
+        public var name: String
+        public var data: Data
+        public init(token: String, name: String, data: Data) { self.token = token; self.name = name; self.data = data }
+
+        // By what names it: the navigation state is compared on every change, megabytes of picture are not.
+        public static func == (a: Picture, b: Picture) -> Bool { a.token == b.token && a.name == b.name && a.data.count == b.data.count }
+        public func hash(into hasher: inout Hasher) { hasher.combine(token); hasher.combine(name); hasher.combine(data.count) }
+    }
+
     public var title: String
     public var bodyHtml: String
-    public init(title: String, bodyHtml: String) { self.title = title; self.bodyHtml = bodyHtml }
+    public var pictures: [Picture]
+    public init(title: String, bodyHtml: String, pictures: [Picture] = []) {
+        self.title = title; self.bodyHtml = bodyHtml; self.pictures = pictures
+    }
 }
 
 public struct AppNavState: Equatable, Sendable {

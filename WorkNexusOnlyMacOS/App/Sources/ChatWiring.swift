@@ -72,13 +72,13 @@ final class ChatWiring {
         // todo is small enough for a dialog.
         events.onCreateTicket = { request in
             let seed = request.seed
+            // The pictures among the messages go along; the editor uploads them into the new ticket's body.
+            let prefill = TicketEditorPrefill(title: seed.title, bodyHtml: seed.html, pictures: seed.pictures.map {
+                TicketEditorPrefill.Picture(token: $0.token, name: $0.name, data: $0.data)
+            })
             switch request.kind {
-            case .bug:
-                nav.openEditor(.newBug(accountId: request.accountId, productId: "0"),
-                               prefill: TicketEditorPrefill(title: seed.title, bodyHtml: seed.html))
-            case .task:
-                nav.openEditor(.newTask(accountId: request.accountId, executionId: "0"),
-                               prefill: TicketEditorPrefill(title: seed.title, bodyHtml: seed.html))
+            case .bug: nav.openEditor(.newBug(accountId: request.accountId, productId: "0"), prefill: prefill)
+            case .task: nav.openEditor(.newTask(accountId: request.accountId, executionId: "0"), prefill: prefill)
             case .todo:
                 todoPrompt.open(accountId: request.accountId, name: seed.title, desc: seed.text)
             }
