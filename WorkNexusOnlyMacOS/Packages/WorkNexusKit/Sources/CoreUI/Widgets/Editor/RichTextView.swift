@@ -59,6 +59,8 @@ final class RichNSTextView: NSTextView {
     var onPasteImage: (() async -> Bool)?
     /// Takes files dragged in or pasted (copied in Finder, or a screenshot on the clipboard); nil leaves them to the text view.
     var onFiles: (([ClipboardAttachment]) -> Void)?
+    /// The clipboard pastes are read from (another one in tests).
+    var pasteboard: NSPasteboard = .general
     /// Hint drawn while the editor is empty.
     var placeholder: String?
     var placeholderColor: NSColor = .secondaryLabelColor
@@ -111,10 +113,27 @@ final class RichNSTextView: NSTextView {
         super.concludeDragOperation(sender)
     }
 
+    /// A text view offers Paste for what it reads itself, which is text: with a screenshot or files copied in Finder on
+    /// the clipboard, Edit > Paste and Cmd-V stayed disabled and `paste(_:)` never ran - a picture could not be pasted
+    /// into a description, nor a file attached that way. What the editor takes enables Paste too.
+    private var takesClipboardFiles: Bool {
+        (onFiles != nil || onPasteImage != nil) && PasteboardKit(pasteboard: pasteboard).hasAttachments()
+    }
+
+    override func validateMenuItem(_ item: NSMenuItem) -> Bool {
+        if item.action == #selector(paste(_:)), takesClipboardFiles { return true }
+        return super.validateMenuItem(item)
+    }
+
+    override func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {
+        if item.action == #selector(paste(_:)), takesClipboardFiles { return true }
+        return super.validateUserInterfaceItem(item)
+    }
+
     override func paste(_ sender: Any?) {
         // Files copied in Finder go in as files (an image into the text, the rest attached), not as their names.
         if let onFiles {
-            let kit = PasteboardKit()
+            let kit = PasteboardKit(pasteboard: pasteboard)
             if !kit.readFilePaths().isEmpty, let files = kit.readAttachments(), !files.isEmpty { onFiles(files); return }
         }
         guard let onPasteImage else { return super.paste(sender) }

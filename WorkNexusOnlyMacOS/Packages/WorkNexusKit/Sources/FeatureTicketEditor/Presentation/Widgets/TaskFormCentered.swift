@@ -75,7 +75,16 @@ struct TaskFormCentered: View {
                 if !isEditing {
                     EditorField(label: appString("taskFormNext", "After saving")) { TaskNextActionSelector(action: next) { next = $0 } }
                 }
-                if !simple { TaskOptionalFields(controller: controller, state: state) }
+                if !simple {
+                    TaskOptionalFields(controller: controller, state: state)
+                } else if !draft.files.isEmpty || !draft.newFiles.isEmpty {
+                    // A file pasted or dropped in simple mode is attached all the same: it shows, so that is seen.
+                    EditorField(label: appString("attachments", "Attachments")) {
+                        AttachmentsInput(files: draft.files, newFiles: draft.newFiles,
+                                         onFilesChanged: { v in controller.edit { $0.files = v } },
+                                         onNewFilesChanged: { v in controller.edit { $0.newFiles = v } })
+                    }
+                }
                 HStack(spacing: theme.spacing.s10) {
                     Spacer()
                     if state.saving { ProgressView().controlSize(.small) } else {
