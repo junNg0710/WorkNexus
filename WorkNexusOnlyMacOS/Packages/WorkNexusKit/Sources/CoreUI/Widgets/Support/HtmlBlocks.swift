@@ -106,6 +106,32 @@ public enum HtmlBlocks {
             return b.finish()
         }
 
+        /// A table: its caption as a line above it, then its own rows (not those of a table inside one of its cells). A
+        /// cell is read as blocks of its own: ZenTao's editor writes every cell's text in paragraphs, which read as one
+        /// run of text came out empty, and a cell may hold pictures or a list.
+        mutating func table(_ n: HtmlNode, _ st: Style) {
+            var rows: [[BodyTableCell]] = []
+            for part in n.children where part.isElement {
+                switch part.name {
+                case "caption": blocks += sub(part, st)
+                case "tr": row(part, st, into: &rows)
+                case "thead", "tbody", "tfoot": for tr in part.children where tr.isElement && tr.name == "tr" { row(tr, st, into: &rows) }
+                default: break
+                }
+            }
+            if !rows.isEmpty { blocks.append(.table(rows)) }
+        }
+
+        private mutating func row(_ tr: HtmlNode, _ st: Style, into rows: inout [[BodyTableCell]]) {
+            let cells = tr.children.filter { $0.isElement && ($0.name == "th" || $0.name == "td") }.map { cell -> BodyTableCell in
+                var s = st
+                if cell.name == "th" { s.bold = true }
+                return BodyTableCell(sub(cell, s), head: cell.name == "th",
+                                     columns: Int(cell.attr("colspan") ?? "") ?? 1, rows: Int(cell.attr("rowspan") ?? "") ?? 1)
+            }
+            if !cells.isEmpty { rows.append(cells) }
+        }
+
         mutating func walk(_ n: HtmlNode, _ st: Style) {
             if n.kind == .text { append(n.text, st); return }
             let name = n.name
@@ -142,14 +168,7 @@ public enum HtmlBlocks {
                 blocks.append(.code(raw))
             case "table":
                 flush()
-                let rows = n.elements(named: ["tr"]).map { tr in tr.elements(named: ["th", "td"]).map { cell -> AttributedString in
-                    var b = Builder(); b.children(cell, st)
-                    return b.trimmed(b.current)
-                } }
-                let hasHeader = n.elements(named: ["th"]).isEmpty == false
-                if let first = rows.first {
-                    blocks.append(.table(header: hasHeader ? first : [], rows: hasHeader ? Array(rows.dropFirst()) : rows))
-                }
+                table(n, st)
             case "strong", "b": s.bold = true; children(n, s)
             case "em", "i": s.italic = true; children(n, s)
             case "u": s.underline = true; children(n, s)

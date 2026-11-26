@@ -81,8 +81,9 @@ private struct LoadedInlineImage: View {
 
     var body: some View {
         Image(nsImage: image).resizable().scaledToFit()
-            // A chosen width is honoured as is; otherwise tall images are capped.
-            .frame(width: width, alignment: .leading).frame(maxHeight: width == nil ? 400 : nil)
+            // A chosen width is honoured where there is room for it (in less - a narrow panel, a table cell - the picture
+            // is as wide as the room, never cut off); otherwise tall images are capped.
+            .frame(maxWidth: width, alignment: .leading).frame(maxHeight: width == nil ? 400 : nil)
             .clipShape(RoundedRectangle(cornerRadius: theme.radii.md))
             .padding(.vertical, theme.spacing.s6)
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -98,8 +98,9 @@ final class WidgetLogicTests: XCTestCase {
 
     func testMarkdownTableAndOrderedList() {
         let blocks = MarkdownBlocks.parse("| a | b |\n|---|---|\n| 1 | 2 |\n\n3. x\n4. y")
-        guard case .table(let header, let rows) = blocks[0] else { return XCTFail("table") }
-        XCTAssertEqual(header.count, 2); XCTAssertEqual(rows.count, 1)
+        guard case .table(let rows) = blocks[0] else { return XCTFail("table") }
+        XCTAssertEqual(rows.count, 2); XCTAssertEqual(rows[0].map(\.head), [true, true]); XCTAssertEqual(rows[1].map(\.head), [false, false])
+        XCTAssertEqual(rows[1][1].blocks, [.text(AttributedString("2"), level: 0)])
         guard case .list(true, let start, let items) = blocks[1] else { return XCTFail("ol") }
         XCTAssertEqual(start, 3); XCTAssertEqual(items.count, 2)
     }
@@ -136,8 +137,8 @@ final class WidgetLogicTests: XCTestCase {
         guard case .list(false, _, let items) = blocks[1] else { return XCTFail("list") }
         XCTAssertEqual(items.count, 2)
         XCTAssertEqual(blocks[2], .image(url: "https://z/file-read-1.png", alt: "", width: 320))
-        guard case .table(let h, let r) = blocks[3] else { return XCTFail("table") }
-        XCTAssertEqual(h.count, 1); XCTAssertEqual(r.count, 1)
+        guard case .table(let r) = blocks[3] else { return XCTFail("table") }
+        XCTAssertEqual(r.count, 2); XCTAssertEqual(r.map { $0.count }, [1, 1]); XCTAssertTrue(r[0][0].head)
         XCTAssertEqual(blocks[4], .code("x\ny"))
     }
 

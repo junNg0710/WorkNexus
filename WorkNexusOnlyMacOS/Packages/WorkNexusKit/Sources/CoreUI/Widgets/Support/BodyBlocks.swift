@@ -10,8 +10,27 @@ public indirect enum BodyBlock: Equatable {
     case code(String)
     case quote([BodyBlock])
     case list(ordered: Bool, start: Int, items: [[BodyBlock]])
-    case table(header: [AttributedString], rows: [[AttributedString]])
+    case table([[BodyTableCell]])
     case rule
+}
+
+/// One cell of a table: blocks of its own - a provider's editor writes a cell's text in paragraphs, and a cell may hold
+/// a picture or a list - and the columns and rows it spans.
+public struct BodyTableCell: Equatable {
+    public var blocks: [BodyBlock]
+    /// A heading cell.
+    public var head: Bool
+    public var columns: Int
+    public var rows: Int
+
+    public init(_ blocks: [BodyBlock], head: Bool = false, columns: Int = 1, rows: Int = 1) {
+        self.blocks = blocks; self.head = head; self.columns = max(columns, 1); self.rows = max(rows, 1)
+    }
+
+    /// A cell of one run of text (a Markdown table's).
+    public init(text: AttributedString, head: Bool = false) {
+        self.init(text.characters.isEmpty ? [] : [.text(text, level: 0)], head: head)
+    }
 }
 
 /// A GitHub-flavoured Markdown subset parser: headings, fences, quotes, (nested) lists, tables, rules, images
@@ -70,7 +89,7 @@ public enum MarkdownBlocks {
                 i += 2
                 var rows: [[AttributedString]] = []
                 while i < lines.count, lines[i].trimmingCharacters(in: .whitespaces).hasPrefix("|") { rows.append(cells(lines[i]).map(inline)); i += 1 }
-                out.append(.table(header: header, rows: rows))
+                out.append(.table([header.map { BodyTableCell(text: $0, head: true) }] + rows.map { $0.map { BodyTableCell(text: $0) } }))
             } else if let m = item.firstMatch(in: line) {
                 i = list(lines, from: i, first: m, into: &out)
             } else {

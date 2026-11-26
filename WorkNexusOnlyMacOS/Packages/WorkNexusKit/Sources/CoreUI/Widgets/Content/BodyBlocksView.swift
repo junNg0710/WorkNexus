@@ -33,8 +33,8 @@ struct BodyBlocksView: View {
     }
 }
 
-/// Nested block content (list items, quotes); type-erased because the model is recursive.
-private struct NestedBlocks: View {
+/// Nested block content (list items, quotes, table cells); type-erased because the model is recursive.
+struct NestedBlocks: View {
     let blocks: [BodyBlock]; let fontSize: CGFloat; let lineHeight: CGFloat; let ink: Color; let images: BodyImageHooks
     var body: AnyView { AnyView(BodyBlocksView(blocks: blocks, fontSize: fontSize, lineHeight: lineHeight, ink: ink, images: images)) }
 }
@@ -88,40 +88,11 @@ struct BodyBlockView: View {
                     .fixedSize(horizontal: false, vertical: true)
                 }
             }
-        case .table(let header, let rows):
-            TableBlock(header: header, rows: rows, fontSize: fontSize, ink: ink)
+        case .table(let rows):
+            BodyTableBlock(rows: rows, fontSize: fontSize, lineHeight: lineHeight, ink: ink, images: images)
         case .rule:
             Divider().overlay(theme.colors.line).padding(.vertical, theme.spacing.s4)
         }
-    }
-}
-
-private struct TableBlock: View {
-    @Environment(\.appTheme) private var theme
-    let header: [AttributedString]; let rows: [[AttributedString]]; let fontSize: CGFloat; let ink: Color
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            Grid(alignment: .leading, horizontalSpacing: 0, verticalSpacing: 0) {
-                if !header.isEmpty { GridRow { ForEach(Array(header.enumerated()), id: \.offset) { _, c in TableCell(text: c, head: true, fontSize: fontSize, ink: ink) } } }
-                ForEach(Array(rows.enumerated()), id: \.offset) { _, r in
-                    GridRow { ForEach(Array(r.enumerated()), id: \.offset) { _, c in TableCell(text: c, head: false, fontSize: fontSize, ink: ink) } }
-                }
-            }
-            .overlay(Rectangle().stroke(theme.colors.line, lineWidth: theme.borders.hairline))
-        }
-    }
-}
-
-private struct TableCell: View {
-    @Environment(\.appTheme) private var theme
-    let text: AttributedString; let head: Bool; let fontSize: CGFloat; let ink: Color
-    var body: some View {
-        Text(text).font(theme.typography.font(size: fontSize, weight: head ? .semibold : .regular)).foregroundStyle(ink)
-            .linkPointer(text, font: theme.typography.nsFont(size: fontSize, weight: head ? .semibold : .regular))
-            .padding(.horizontal, theme.spacing.s10).padding(.vertical, theme.spacing.s6)
-            .frame(minWidth: 60, maxWidth: .infinity, alignment: .leading)
-            .background(head ? theme.colors.panel2 : .clear)
-            .overlay(Rectangle().stroke(theme.colors.line, lineWidth: theme.borders.hairline))
     }
 }
 
