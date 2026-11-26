@@ -17,14 +17,13 @@ enum PlaceSwitchBench {
         DemoKeys.start(shell: shell)
         DemoType.start()
         SpamClickBench.start()
+        // `WN_DEMO_MOUSE=1`: mouse moves sweep across the window (see `MouseSweep`), with or without a place cycle.
+        if env["WN_DEMO_MOUSE"] == "1" { MouseSweep.start() }
         guard let spec = env["WN_DEMO_PLACE_CYCLE"] else { return }
         let places = spec.split(separator: ",").map { $0.split(separator: ":").map(String.init) }
         let pause = env["WN_DEMO_PLACE_CYCLE_SECONDS"].flatMap(Double.init) ?? 3
         guard !places.isEmpty else { return }
         let frames = FrameGaps()
-        // `WN_DEMO_MOUSE=1`: mouse moves sweep across the window 60 times a second, sent to the window itself (the real
-        // pointer does not move), as a hand resting on the mouse makes them.
-        if env["WN_DEMO_MOUSE"] == "1" { MouseSweep.start() }
         // `WN_DEMO_TICKET_CHURN=<n>`: rewrites n tickets every half second, as a sync does, so the switches are measured
         // while the ticket list keeps changing.
         if let churn = env["WN_DEMO_TICKET_CHURN"].flatMap(Int.init), churn > 0 {
@@ -79,38 +78,6 @@ enum MainCPU {
         let now = Double(t.tv_sec) * 1000 + Double(t.tv_nsec) / 1_000_000
         defer { last = now }
         return Int(now - last)
-    }
-}
-
-/// Synthetic mouse moves over the main window, for measuring what hovering costs.
-@MainActor
-enum MouseSweep {
-    private static var timer: Timer?
-    private static var step = 0
-    static func start() {
-        // `WN_DEMO_FRONT=1`: the app comes to the front first. Tracking areas (hover, the pointer's shape) are only
-        // handed moves in the active app, so without it the sweep costs - and measures - nothing.
-        if ProcessInfo.processInfo.environment["WN_DEMO_FRONT"] == "1" {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                NSApp.activate(ignoringOtherApps: true)
-                NSApp.windows.first(where: { $0.canBecomeMain })?.makeKeyAndOrderFront(nil)
-            }
-        }
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60, repeats: true) { _ in
-            MainActor.assumeIsolated {
-                guard let w = NSApp.windows.first(where: { $0.canBecomeMain && $0.isVisible }), let view = w.contentView else { return }
-                step += 1
-                let size = view.bounds.size
-                let x = 80 + CGFloat(step * 7 % Int(max(size.width - 160, 1)))
-                let y = 80 + CGFloat(step * 3 % Int(max(size.height - 160, 1)))
-                guard let e = NSEvent.mouseEvent(with: .mouseMoved, location: NSPoint(x: x, y: y), modifierFlags: [],
-                                                 timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: w.windowNumber,
-                                                 context: nil, eventNumber: 0, clickCount: 0, pressure: 0) else { return }
-                // Through the app, as a real move is: that is where it is handed to the tracking areas (hover, the
-                // pointer's shape). Sent to the window it only reached the first responder, and measured nothing.
-                NSApp.sendEvent(e)
-            }
-        }
     }
 }
 #endif

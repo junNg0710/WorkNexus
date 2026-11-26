@@ -16,6 +16,7 @@ struct WindowConfigurator: NSViewRepresentable {
             Self.configure(v.window)
             // Scrolling anywhere in the app is not slowed by the pointer lying over what scrolls.
             ScrollPointerPause.shared.start()
+            PointerMovePace.shared.start()
             if let w = v.window { keeper.watch(w); onWindow(w) }
         }
         return v

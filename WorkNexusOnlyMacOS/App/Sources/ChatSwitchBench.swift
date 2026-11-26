@@ -16,11 +16,13 @@ enum ChatSwitchBench {
         let gids = spec[spec.index(after: colon)...].split(separator: ",").map(String.init)
         let pause = env["WN_DEMO_CHAT_CYCLE_SECONDS"].flatMap(Double.init) ?? 3
         guard !gids.isEmpty else { return }
+        // `WN_DEMO_CHAT_CYCLE_COUNT=<n>`: stops after n switches, leaving those chats kept and the last one open.
+        let count = env["WN_DEMO_CHAT_CYCLE_COUNT"].flatMap(Int.init) ?? Int.max
         let frames = FrameGaps()
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(2))
             var i = 0
-            while !Task.isCancelled {
+            while !Task.isCancelled, i < count {
                 // The first opens the Chat place on the account; then only the chat changes, as a click in the list does.
                 if i == 0 { chat.show(accountId: accountId, chatGid: gids[0]) } else { chat.events.open(chatGid: gids[i % gids.count]) }
                 frames.reset()
