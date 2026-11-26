@@ -10,20 +10,21 @@ import MetricKit
 @MainActor
 final class DiagnosticsWiring: NSObject {
     let log: FileDiagnosticsLog
-    private let marker: URL
+    private let marker: SessionMarker
     private var quitObserver: NSObjectProtocol?
+    private var heartbeat: Timer?
+    private var memory = MemoryLogPolicy()
 
     override init() {
         log = FileDiagnosticsLog(directory: PlatformPaths.applicationSupport().appendingPathComponent("Logs", isDirectory: true))
         Diagnostics.install(log)
-        marker = log.directory.appendingPathComponent(".running")
+        marker = SessionMarker(url: log.directory.appendingPathComponent(".running"))
         super.init()
-        let fm = FileManager.default
-        if fm.fileExists(atPath: marker.path) {
-            Diagnostics.warning("app", "The previous session ended without quitting (a crash, a forced quit or a restart)")
+        if let previous = marker.previous() {
+            Diagnostics.warning("app", SessionMarker.describe(started: previous.started, lastSeen: previous.lastSeen))
+            Self.explainEnd(of: previous.started)
         }
-        try? fm.createDirectory(at: log.directory, withIntermediateDirectories: true)
-        fm.createFile(atPath: marker.path, contents: nil)
+        marker.begin()
         Diagnostics.info("app", "Started · " + DiagnosticsArchive.about().replacingOccurrences(of: "\n", with: " · "))
         NSSetUncaughtExceptionHandler { exception in
             Diagnostics.error("crash", "Uncaught exception \(exception.name.rawValue): \(exception.reason ?? "")")
@@ -32,12 +33,41 @@ final class DiagnosticsWiring: NSObject {
         quitObserver = NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { [marker] _ in
             Diagnostics.info("app", "Quit")
             Diagnostics.flush()
-            try? FileManager.default.removeItem(at: marker)
+            marker.end()
         }
+        // Every minute: the marker says the session is still alive, and the memory in use is noted when it is time.
+        let beat = Timer(timeInterval: Self.heartbeatEvery, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.beat() } }
+        beat.tolerance = Self.heartbeatEvery / 6
+        RunLoop.main.add(beat, forMode: .common)
+        heartbeat = beat
         MXMetricManager.shared.add(self)
         NetworkWatcher.shared.start()
         if Self.performanceLogOn { Self.setPerformanceLog(true) }
         if Self.showFpsOn { FpsMeter.shared.setOn(true) }
+    }
+
+    // MARK: How a session ended
+
+    private static let heartbeatEvery: TimeInterval = 60
+    /// How long after launch the crash report is looked for: macOS takes a few seconds to write one, and a user opens
+    /// the app again at once.
+    private static let reportDelay: Duration = .seconds(20)
+
+    private func beat() {
+        marker.touch()
+        if let bytes = ProcessMemory.footprint(), let line = memory.line(bytes: bytes, now: Date()) { Diagnostics.info("app", line) }
+    }
+
+    /// Says in the log what macOS recorded about the session started at `started` that never quit: its crash report in
+    /// short, or that there is none.
+    private static func explainEnd(of started: Date) {
+        let process = ProcessInfo.processInfo.processName
+        Task.detached(priority: .utility) {
+            try? await Task.sleep(for: reportDelay)
+            let lines = CrashReports.describeEnd(process: process, since: started)
+            if lines.count > 1 { Diagnostics.error("crash", lines.joined(separator: "\n")) } else { Diagnostics.info("app", lines.joined()) }
+            Diagnostics.flush()
+        }
     }
 
     // MARK: FPS badge
