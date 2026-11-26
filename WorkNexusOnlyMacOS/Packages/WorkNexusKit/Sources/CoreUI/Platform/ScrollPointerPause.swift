@@ -32,7 +32,13 @@ public final class ScrollPointerPause {
         var wasMovable = true
     }
 
+    /// Run when a window's scrolling is over, after its bookkeeping is back on.
+    public var onResume: ((NSWindow) -> Void)?
+
     init(settle: TimeInterval = 0.15) { self.settle = settle }
+
+    /// Whether something in `window` is scrolling now (its pointer bookkeeping is off).
+    public func isPaused(_ window: NSWindow) -> Bool { paused[ObjectIdentifier(window)] != nil }
 
     /// Starts watching, once.
     public func start() {
@@ -62,7 +68,21 @@ public final class ScrollPointerPause {
         // drag it - a walk through every view, a twentieth of the main thread in a scrolling chat. Nobody drags a
         // window in the middle of a scroll.
         window.isMovable = false
+        endHover(in: window)
         checkLater(id, after: settle)
+    }
+
+    /// Tells the window's SwiftUI content the pointer has left. Every hover area that moves makes SwiftUI ask again what
+    /// is under the pointer once the frame is laid out - and in a scrolling list all of them move on every frame: a tenth
+    /// of the main thread in a scrolling chat with the pointer lying still over it (sampled in the installed app; leaving
+    /// the mouse moves out did not stop it). With no pointer over the content there is nothing to ask. Whoever listens
+    /// for `onResume` brings the pointer back (`PointerMovePace`), as its next real move does anyway.
+    private func endHover(in window: NSWindow) {
+        guard let content = window.contentView,
+              let event = NSEvent.enterExitEvent(with: .mouseExited, location: window.mouseLocationOutsideOfEventStream, modifierFlags: [],
+                                                 timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
+                                                 context: nil, eventNumber: 0, trackingNumber: 0, userData: nil) else { return }
+        content.mouseExited(with: event)
     }
 
     private func checkLater(_ id: ObjectIdentifier, after delay: TimeInterval) {
@@ -90,5 +110,6 @@ public final class ScrollPointerPause {
         window.enableCursorRects()
         // What is under the pointer now: the cursor and the hover of the views there.
         if let content = window.contentView { window.invalidateCursorRects(for: content) }
+        onResume?(window)
     }
 }

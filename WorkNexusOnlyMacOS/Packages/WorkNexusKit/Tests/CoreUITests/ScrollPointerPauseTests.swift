@@ -18,6 +18,21 @@ final class ScrollPointerPauseTests: XCTestCase {
         XCTAssertTrue(w.areCursorRectsEnabled)
     }
 
+    func testAWindowIsPausedForTheScrollAndSaysWhenItIsOver() async throws {
+        let pause = ScrollPointerPause(settle: 0.05)
+        let w = window()
+        var resumed: [NSWindow] = []
+        pause.onResume = { resumed.append($0) }
+        XCTAssertFalse(pause.isPaused(w))
+        pause.scrolled(in: w)
+        XCTAssertTrue(pause.isPaused(w))
+        XCTAssertTrue(resumed.isEmpty)
+        try await Task.sleep(for: .milliseconds(300))
+        XCTAssertFalse(pause.isPaused(w))
+        XCTAssertEqual(resumed.count, 1)
+        XCTAssertTrue(resumed.first === w)
+    }
+
     func testItStaysPausedWhileTheScrollGoesOn() async throws {
         let pause = ScrollPointerPause(settle: 0.15)
         let w = window()

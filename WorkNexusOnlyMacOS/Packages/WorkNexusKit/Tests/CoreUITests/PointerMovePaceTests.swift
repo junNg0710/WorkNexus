@@ -64,4 +64,38 @@ final class PointerMovePaceTests: XCTestCase {
         try await Task.sleep(for: .milliseconds(200))
         XCTAssertTrue(sent.isEmpty)
     }
+
+    func testMovesAreLeftOutWhileTheWindowScrollsAndThePointersPlaceComesWhenItEnds() async throws {
+        var sent: [NSEvent] = [], scrolling = true
+        let pace = PointerMovePace(rate: 10, send: { sent.append($0) }, isScrolling: { _ in scrolling })
+        let w = window()
+        let t = ProcessInfo.processInfo.systemUptime
+        XCTAssertFalse(pace.admits(moveAt: t, in: w), "not even the first: the content is moving under the pointer")
+        XCTAssertFalse(pace.admits(moveAt: t + 0.5, in: w))
+        try await Task.sleep(for: .milliseconds(250))
+        XCTAssertTrue(sent.isEmpty, "and no turn is kept for later")
+        XCTAssertEqual(pace.leftOutScrolling, 2)
+        scrolling = false
+        pace.catchUp(in: w)
+        XCTAssertEqual(sent.map(\.type), [.mouseMoved], "where the pointer is, once")
+        XCTAssertTrue(pace.admits(moveAt: ProcessInfo.processInfo.systemUptime + 0.2, in: w), "and moves are handled again")
+    }
+
+    func testATurnThatComesDueInAScrollIsGivenUp() async throws {
+        var sent: [NSEvent] = [], scrolling = false
+        let pace = PointerMovePace(rate: 10, send: { sent.append($0) }, isScrolling: { _ in scrolling })
+        let w = window()
+        let t = ProcessInfo.processInfo.systemUptime
+        XCTAssertTrue(pace.admits(moveAt: t, in: w))
+        XCTAssertFalse(pace.admits(moveAt: t + 0.01, in: w))
+        scrolling = true
+        try await Task.sleep(for: .milliseconds(300))
+        XCTAssertTrue(sent.isEmpty)
+    }
+
+    func testWithTheHoldOffMovesAreHandledDuringAScrollToo() {
+        let pace = PointerMovePace(rate: 10, send: { _ in }, isScrolling: { _ in true })
+        pace.holdsWhileScrolling = false
+        XCTAssertTrue(pace.admits(moveAt: ProcessInfo.processInfo.systemUptime, in: window()))
+    }
 }
