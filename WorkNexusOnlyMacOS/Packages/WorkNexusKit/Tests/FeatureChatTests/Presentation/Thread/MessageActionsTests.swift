@@ -204,4 +204,33 @@ final class MessageActionsTests: XCTestCase {
         XCTAssertFalse(ctx.canReact(to: Make.message(content: .emoji("👍"), serverId: 5, replyTo: 2)), "a reaction itself")
         XCTAssertFalse(ctx.canReact(to: Make.message(serverId: 5, deleted: true)))
     }
+
+    func testARetractedTextOfOnesOwnIsKeptToEditAgain() {
+        let state = ChatThreadState(accountId: "a", chat: Make.chat("g"))
+        let mine = Make.message("m1", at: Date(), content: .text("meet at 3 [@Ann](@#7)"), mine: true, serverId: 5, replyTo: 2)
+        state.keepRetracted(mine)
+        XCTAssertEqual(state.retracted["m1"], ChatThreadState.RetractedText(text: "meet at 3 [@Ann](@#7)", replyToId: 2))
+        state.keepRetracted(Make.message("m2", content: .text("theirs"), serverId: 6))
+        state.keepRetracted(Make.message("m3", content: .emoji("👍"), mine: true, serverId: 7))
+        XCTAssertNil(state.retracted["m2"], "only one's own")
+        XCTAssertNil(state.retracted["m3"], "only text")
+
+        let quoted = Make.message("q", content: .text("when?"), serverId: 2)
+        state.editAgain("m1", quoted: quoted)
+        XCTAssertEqual(state.pendingRewrite, "meet at 3 [@Ann](@#7)")
+        XCTAssertEqual(state.replyDraft?.gid, "q", "it answers the same message again")
+        state.pendingRewrite = nil
+        state.editAgain("m2")
+        XCTAssertNil(state.pendingRewrite, "nothing kept, nothing put back")
+    }
+
+    func testOnlyTheLastFewRetractedTextsAreKept() {
+        let state = ChatThreadState(accountId: "a", chat: Make.chat("g"))
+        for i in 0..<(ChatThreadState.retractedKept + 3) {
+            state.keepRetracted(Make.message("m\(i)", content: .text("t\(i)"), mine: true, serverId: i + 1))
+        }
+        XCTAssertEqual(state.retracted.count, ChatThreadState.retractedKept)
+        XCTAssertNil(state.retracted["m0"])
+        XCTAssertNotNil(state.retracted["m\(ChatThreadState.retractedKept + 2)"])
+    }
 }

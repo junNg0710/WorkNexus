@@ -45,6 +45,9 @@ public final class ChatThreadState {
     public var sidePanel: ChatSidePanel?
     /// Text the composer should insert at the caret (a mention picked from the list or "@name" from a profile).
     public var pendingInsertion: String?
+    /// The text of a retracted message for the composer to put back as it was typed (`editAgain`): in the form it was
+    /// sent in, mentions as `[@Name](@#id)`.
+    public var pendingRewrite: String?
     public var searchQuery = ""
     /// The chat video playing in a message's frame (or floating over the list); at most one.
     let video = ChatVideoPlaybackModel()
@@ -59,6 +62,37 @@ public final class ChatThreadState {
     }
 
     public func requestJump(to serverId: Int) { jump = ChatJumpRequest(serverId: serverId) }
+
+    // MARK: retracted, to write again
+
+    /// What a message retracted here said, and what it answered.
+    public struct RetractedText: Equatable, Sendable {
+        public var text: String
+        public var replyToId: Int?
+    }
+
+    /// The user's own text messages retracted in this chat while it is open, by message: each can be put back into the
+    /// input, changed and sent again. Kept in memory only - the server no longer shows them to anyone - and only the
+    /// last few.
+    public private(set) var retracted: [String: RetractedText] = [:]
+    @ObservationIgnored private var retractedOrder: [String] = []
+    public static let retractedKept = 20
+
+    /// `message` was just retracted: its text is kept for `editAgain`. Only a text of the user's own.
+    public func keepRetracted(_ message: ChatMessage) {
+        guard message.isMine, let text = message.content.asText?.text, !text.isEmpty else { return }
+        retracted[message.gid] = RetractedText(text: text, replyToId: message.replyToId)
+        retractedOrder.removeAll { $0 == message.gid }
+        retractedOrder.append(message.gid)
+        while retractedOrder.count > Self.retractedKept { retracted[retractedOrder.removeFirst()] = nil }
+    }
+
+    /// Puts the retracted message's text back into the input, answering `quoted` again when it answered a message.
+    public func editAgain(_ gid: String, quoted: ChatMessage? = nil) {
+        guard let kept = retracted[gid] else { return }
+        if let quoted, !quoted.deleted { replyDraft = quoted }
+        pendingRewrite = kept.text
+    }
 
     // MARK: multiple select
 

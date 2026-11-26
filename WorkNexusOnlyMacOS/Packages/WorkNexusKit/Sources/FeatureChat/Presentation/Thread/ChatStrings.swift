@@ -55,6 +55,7 @@ enum L {
     static var pin: String { appString("chatPin", "Pin") }
     static var unpin: String { appString("chatUnpin", "Unpin") }
     static var retract: String { appString("chatRetract", "Retract") }
+    static var editAgain: String { appString("chatEditAgain", "Edit again") }
     static var react: String { appString("chatReact", "React") }
     static var reactMore: String { appString("chatReactMore", "More emoji") }
     static var moreActions: String { appString("chatMoreActions", "More") }

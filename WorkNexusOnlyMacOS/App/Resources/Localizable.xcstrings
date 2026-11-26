@@ -19643,6 +19643,29 @@
         }
       }
     },
+    "chatEditAgain": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit again"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sửa lại"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新编辑"
+          }
+        }
+      }
+    },
     "chatRetracted": {
       "extractionState": "manual",
       "localizations": {

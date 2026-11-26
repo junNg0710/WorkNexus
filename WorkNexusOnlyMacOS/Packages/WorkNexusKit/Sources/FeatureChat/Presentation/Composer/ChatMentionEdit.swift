@@ -17,6 +17,26 @@ struct ChatTextEdit: Equatable, Sendable {
 }
 
 enum ChatMentionEdit {
+    private static let wireMention = try? NSRegularExpression(pattern: #"\[@([^\]]+)\]\(@#(\d+)\)"#)
+
+    /// A sent message's text as it was typed: each `[@Name](@#id)` reads `@Name`, with where those mentions lie in it.
+    static func typed(_ wire: String) -> (text: String, mentions: [ChatTextMention]) {
+        let ns = wire as NSString
+        var text = "", mentions: [ChatTextMention] = [], at = 0
+        for match in wireMention?.matches(in: wire, range: NSRange(location: 0, length: ns.length)) ?? [] {
+            text += ns.substring(with: NSRange(location: at, length: match.range.location - at))
+            let label = "@" + ns.substring(with: match.range(at: 1))
+            let start = (text as NSString).length
+            text += label
+            if let id = Int(ns.substring(with: match.range(at: 2))) {
+                mentions.append(ChatTextMention(start: start, end: start + (label as NSString).length, id: id))
+            }
+            at = NSMaxRange(match.range)
+        }
+        text += ns.substring(from: at)
+        return (text, mentions)
+    }
+
     /// The changed range between `previous` and `next`: what they share at both ends is unchanged. A typed run ends at the
     /// caret, which settles where it began when the same letter repeats ("@An" -> "@Ann").
     static func between(_ previous: String, _ next: String, caret: Int?) -> ChatTextEdit {

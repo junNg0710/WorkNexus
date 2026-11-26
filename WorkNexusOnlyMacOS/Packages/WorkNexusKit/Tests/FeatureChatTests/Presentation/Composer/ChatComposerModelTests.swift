@@ -120,4 +120,24 @@ final class ChatComposerModelTests: XCTestCase {
         XCTAssertEqual(c.mentions, [ChatTextMention(start: 6, end: 9, id: 7)])
         XCTAssertEqual(c.messageText, "**a** [@Xu](@#7)  b")
     }
+
+    func testASentMessagesTextGoesBackAsItWasTypedWithItsMentions() {
+        let c = ChatComposerModel()
+        c.insertMessageText("hi [@Ann](@#7), ask [@Bao Tran](@#12) too")
+        XCTAssertEqual(c.plainText, "hi @Ann, ask @Bao Tran too")
+        XCTAssertEqual(c.mentions, [ChatTextMention(start: 3, end: 7, id: 7), ChatTextMention(start: 13, end: 22, id: 12)])
+        XCTAssertEqual(c.selection, NSRange(location: 26, length: 0), "the caret after it, to go on typing")
+        XCTAssertEqual(c.messageText, "hi [@Ann](@#7), ask [@Bao Tran](@#12) too", "sent again, it mentions the same people")
+    }
+
+    func testItGoesInAtTheCaretOfWhatIsAlreadyTyped() {
+        let c = ChatComposerModel()
+        c.insertText("so: ")
+        c.insertMessageText("[@Ann](@#7) ok")
+        XCTAssertEqual(c.plainText, "so: @Ann ok")
+        XCTAssertEqual(c.mentions, [ChatTextMention(start: 4, end: 8, id: 7)])
+        let plain = ChatMentionEdit.typed("no mention here")
+        XCTAssertEqual(plain.text, "no mention here")
+        XCTAssertTrue(plain.mentions.isEmpty)
+    }
 }

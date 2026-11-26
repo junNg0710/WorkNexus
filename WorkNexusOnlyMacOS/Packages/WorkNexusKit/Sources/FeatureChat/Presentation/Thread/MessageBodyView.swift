@@ -27,7 +27,7 @@ private struct MessageBodyContent: View {
 
     var body: some View {
         if message.deleted {
-            Text(L.retracted).font(theme.typography.body).italic().foregroundStyle(ink.meta.color)
+            RetractedBody(ctx: ctx, message: message)
         } else {
             switch message.content {
             case .text(let text, let markdown):
@@ -50,6 +50,30 @@ private struct MessageBodyContent: View {
             case .unsupported(let type):
                 Text(L.unsupported(type)).font(theme.typography.paragraph).italic().foregroundStyle(ink.meta.color)
             }
+        }
+    }
+}
+
+/// A retracted message: the note that it was, and for one of the user's own retracted in this chat just now, "Edit
+/// again" - its text goes back into the input, to change and send.
+private struct RetractedBody: View {
+    @Environment(\.appTheme) private var theme
+    @Environment(\.chatBubbleInk) private var ink
+    let ctx: ThreadContext
+    let message: ChatMessage
+
+    var body: some View {
+        let note = Text(L.retracted).font(theme.typography.body).italic().foregroundStyle(ink.meta.color)
+        if let kept = ctx.state.retracted[message.gid] {
+            HStack(spacing: theme.spacing.s8) {
+                note
+                Button(L.editAgain) {
+                    ctx.state.editAgain(message.gid, quoted: kept.replyToId.flatMap { ctx.model.shownMessage(serverId: $0) })
+                }
+                .buttonStyle(.plain).font(theme.typography.body).foregroundStyle(ink.link.color).pointerStyle(.link)
+            }
+        } else {
+            note
         }
     }
 }

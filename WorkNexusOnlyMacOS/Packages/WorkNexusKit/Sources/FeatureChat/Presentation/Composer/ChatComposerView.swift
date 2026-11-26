@@ -74,10 +74,18 @@ public struct ChatComposerView: View {
         .onChange(of: controller.model.revision) { _, _ in controller.textChanged() }
         .onChange(of: controller.model.text) { _, _ in controller.keepDraft() }
         .onChange(of: state.pendingInsertion) { _, text in takeInsertion(text) }
+        .onChange(of: state.pendingRewrite) { _, text in takeRewrite(text) }
         .onChange(of: state.replyDraft?.gid) { _, gid in if gid != nil { controller.model.requestFocus() } }
         // Files just added (dropped, pasted, picked): the caret goes to the input, to type what goes with them.
         .onChange(of: state.stagedFiles.count) { old, new in controller.keepDraft(); if new > old { controller.model.requestFocus() } }
-        .onAppear { takeInsertion(state.pendingInsertion) }
+        .onAppear { takeInsertion(state.pendingInsertion); takeRewrite(state.pendingRewrite) }
+    }
+
+    /// A retracted message's text, back in the input as it was typed.
+    private func takeRewrite(_ text: String?) {
+        guard let text, !text.isEmpty else { return }
+        state.pendingRewrite = nil
+        controller.insertMessageText(text)
     }
 
     private func takeInsertion(_ text: String?) {

@@ -103,6 +103,17 @@ final class ChatComposerModel {
         }
     }
 
+    /// Puts the text of a sent message in place of the selection as it was typed: each `[@Name](@#id)` of it reads
+    /// `@Name` and is a mention again.
+    func insertMessageText(_ wire: String) {
+        let typed = ChatMentionEdit.typed(wire)
+        let length = (text as NSString).length
+        let at = selection.location <= length ? selection.location : length
+        insertText(typed.text)
+        mentions += typed.mentions.map { ChatTextMention(start: $0.start + at, end: $0.end + at, id: $0.id) }
+        mentions.sort { $0.start < $1.start }
+    }
+
     func isOn(_ format: MarkdownFormat) -> Bool { MarkdownFormatter.isOn(format, text: text, selection: selection) }
 
     /// Applies `format` to the selection, or takes it off when it is on.

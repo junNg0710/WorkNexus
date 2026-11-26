@@ -62,7 +62,13 @@ extension ThreadContext {
         }
         if RetractMessage(chat).canRetract(message) {
             out.append(MessageAction(id: "retract", icon: "arrow.uturn.backward", title: L.retract, destructive: true) {
-                Task { @MainActor in if case .failure(let f) = await RetractMessage(chat)(message) { report(f.message) } }
+                Task { @MainActor in
+                    switch await RetractMessage(chat)(message) {
+                    // Its text stays at hand, to change and send again ("Edit again" on the retracted message).
+                    case .success: state.keepRetracted(message)
+                    case .failure(let f): report(f.message)
+                    }
+                }
             })
         }
         return out

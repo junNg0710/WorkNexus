@@ -162,6 +162,12 @@ final class ChatComposerController {
         model.requestFocus()
     }
 
+    /// Puts the text of a sent message (mentions as `[@Name](@#id)`) at the caret, its mentions mentions again.
+    func insertMessageText(_ text: String) {
+        model.insertMessageText(text)
+        model.requestFocus()
+    }
+
     // MARK: files
 
     func stage(_ files: [StagedFile]) {
