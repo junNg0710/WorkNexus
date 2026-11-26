@@ -54,11 +54,15 @@ struct TranslationTabView: View {
                         }
                         .padding(.top, theme.spacing.s16)
                     }
+                    TranslatedNotes(ticket: ticket, shell: shell, texts: model.notes, images: images)
+                        .opacity(state == .outdated ? 0.62 : 1)
                 }
             }
             .frame(maxWidth: .infinity, alignment: state == .none ? .center : .leading)
         }
         .task { model.start() }
+        // The translations kept for the comments, read again as comments load or the language changes.
+        .task(id: "\(hub.notes(ticket).map(\.id).joined(separator: ","))|\(model.targetLang)") { model.loadNotes(ticket) }
     }
 
     /// What made the record: its model when one was recorded, else OpenCode (whose default records no model).
@@ -136,5 +140,26 @@ private struct TranslatedRecord: View {
                 .textSelection(.enabled)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// The ticket's comments and history under its translation, each in the translation kept for it; one not translated yet
+/// (a comment newer than the last run) shows as it was written, until the ticket is translated again.
+private struct TranslatedNotes: View {
+    @Environment(\.appTheme) private var theme
+    let ticket: Ticket
+    let shell: ShellModel
+    let texts: [String: String]
+    let images: BodyImageHooks
+
+    var body: some View {
+        let detail = shell.detail.model(for: ticket.id)
+        if !detail.comments.isEmpty || !detail.activity.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                DetailSectionTitle("\(appString("comments", "Comments")) & \(appString("activity", "Activity"))")
+                CommentsSection(controller: shell.detail, ticket: ticket, model: detail, images: images, texts: texts, showsComposer: false)
+            }
+            .padding(.top, theme.spacing.s24)
+        }
     }
 }

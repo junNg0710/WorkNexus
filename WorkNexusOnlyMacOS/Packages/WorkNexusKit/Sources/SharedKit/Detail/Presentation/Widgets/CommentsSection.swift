@@ -8,9 +8,35 @@ import SwiftUI
 public struct CommentsSection: View {
     @Environment(\.appTheme) private var theme
     let controller: DetailController; let ticket: Ticket; let model: TicketDetailModel; let images: BodyImageHooks
+    /// Texts shown in place of an entry's own (a translation), by `noteId`; an entry without one shows as it is.
+    var texts: [String: String] = [:]
+    /// Off: the timeline alone, to read (a translation is not answered).
+    var showsComposer = true
 
-    public init(controller: DetailController, ticket: Ticket, model: TicketDetailModel, images: BodyImageHooks) {
+    public init(controller: DetailController, ticket: Ticket, model: TicketDetailModel, images: BodyImageHooks,
+                texts: [String: String] = [:], showsComposer: Bool = true) {
         self.controller = controller; self.ticket = ticket; self.model = model; self.images = images
+        self.texts = texts; self.showsComposer = showsComposer
+    }
+
+    /// What a comment and a history entry go by among a ticket's notes (`texts`).
+    public static func noteId(_ comment: Comment) -> String { "c\(comment.id)" }
+    public static func noteId(_ event: ActivityEvent) -> String { "e\(event.id)" }
+
+    /// The comments and history notes of a ticket that carry text, in the order they are shown.
+    public static func notes(comments: [Comment], activity: [ActivityEvent]) -> [(id: String, text: String)] {
+        comments.filter { $0.origin == .provider }.map { (noteId($0), $0.body) }
+            + activity.filter { $0.action != "commented" }.compactMap { event in event.detail.map { (noteId(event), $0) } }
+    }
+
+    private func shown(_ comment: Comment) -> Comment {
+        guard let text = texts[Self.noteId(comment)] else { return comment }
+        var copy = comment; copy.body = text; return copy
+    }
+
+    private func shown(_ event: ActivityEvent) -> ActivityEvent {
+        guard let text = texts[Self.noteId(event)] else { return event }
+        var copy = event; copy.detail = text; return copy
     }
 
     private enum Entry: Identifiable {
@@ -40,10 +66,12 @@ public struct CommentsSection: View {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
                     switch item {
-                    case .comment(let c):
+                    case .comment(let original):
+                        let c = shown(original)
                         CommentTile(c, html: isHtmlBody(ticket.providerType, c.body), isFirst: i == 0, isLast: i == items.count - 1,
                                     images: images, dateFormat: df)
-                    case .event(let e):
+                    case .event(let original):
+                        let e = shown(original)
                         ActivityRow(e, isFirst: i == 0, isLast: i == items.count - 1, files: files,
                                     onOpenFile: { f in controller.openAttachment(ticket, f) }, dateFormat: df,
                                     loadStill: { f in await controller.attachmentThumbnail(ticket, f) })
@@ -51,7 +79,7 @@ public struct CommentsSection: View {
                 }
             }
             .textSelection(.enabled)
-            CommentComposer(controller: controller, ticket: ticket, model: model).padding(.top, theme.spacing.s8)
+            if showsComposer { CommentComposer(controller: controller, ticket: ticket, model: model).padding(.top, theme.spacing.s8) }
         }
     }
 }

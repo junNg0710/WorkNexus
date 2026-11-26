@@ -158,7 +158,17 @@ struct HostWiring {
     private func installDetailExtensions() {
         let r = root, shell = root.shell
         var ext = DetailExtensions()
-        let hub = TranslationHub(feature: r.translation, aiSetup: r.aiSetup, settings: { shell.settings }, gate: .shared)
+        let hub = TranslationHub(feature: r.translation, aiSetup: r.aiSetup, settings: { shell.settings }, gate: .shared) { ticket in
+            let detail = shell.detail.model(for: ticket.id)
+            return CommentsSection.notes(comments: detail.comments, activity: detail.activity).map { TicketNote(id: $0.id, text: $0.text) }
+        }
+        // On the translation tab the panel's own title is the translated one too.
+        ext.translatedTitle = { ticket in
+            let model = hub.model(for: ticket.id)
+            guard let record = model.record, record.targetLang == model.targetLang, !record.translatedTitle.isEmpty else { return nil }
+            let state = model.state(ticket)
+            return state == .done || state == .outdated ? record.translatedTitle : nil
+        }
         ext.translationTabLabel = { ticket in
             let l = translationLanguage(for: hub.model(for: ticket.id).targetLang)
             return "\(l.flag) \(l.nativeName)"

@@ -12,6 +12,8 @@ public struct DetailExtensions {
     public var translationFooter: ((Ticket) -> AnyView)?
     /// Label of a ticket's translation tab, e.g. "🇻🇳 Tiếng Việt" (the language it is translated into). nil hides the tab.
     public var translationTabLabel: ((Ticket) -> String?)?
+    /// A ticket's translated title, shown at the top of the panel while its translation tab is open; nil: the title as it is.
+    public var translatedTitle: ((Ticket) -> String?)?
     /// The languages a ticket can be translated into, for the header's translate button: picking one translates the
     /// ticket into it (and the panel shows the translation tab). nil hides the button.
     public var translateInto: ((Ticket) -> [AppNativeMenu.Item])?

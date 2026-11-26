@@ -15,6 +15,8 @@ public struct TranslationFeature: Sendable {
     public let openCodeCli: OpenCodeCli
     public let claudeCodeCli: ClaudeCodeCli
     public let resolveState = ResolveTranslationState()
+    /// Translates a ticket's comments and history notes (see `TranslateTicketNotes`).
+    public var translateNotes: TranslateTicketNotes { TranslateTicketNotes(service: service, repository: repository) }
 
     public init(service: TranslationService, repository: TranslationRepository, aiSetup: AiSetupRepository,
                 openCodeKeys: OpenCodeKeyRepository, modelCatalog: TranslationApiModelCatalog, openCodeCli: OpenCodeCli,

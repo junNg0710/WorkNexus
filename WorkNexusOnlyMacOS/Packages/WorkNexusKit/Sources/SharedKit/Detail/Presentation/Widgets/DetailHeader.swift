@@ -23,7 +23,7 @@ public struct DetailHeader: View {
         VStack(alignment: .leading, spacing: s.s12) {
             DetailHeaderTopBar(controller: controller, ticket: ticket, wsColor: wsColor, model: model, onClose: onClose)
             if let extras = tool?.buildDetailHeaderExtras(ticket: ticket) { extras }
-            DetailHeaderTitle(ticket: ticket)
+            DetailHeaderTitle(ticket: ticket, title: model.tab == .translation ? controller.extensions.translatedTitle?(ticket) : nil)
             // The actions beside the people while both fit on the line; a long bar (a ZenTao task has nine buttons) gets
             // the line below to itself, from the leading edge, instead of being squeezed into what the people leave.
             let actions = tool?.buildActions(ticket: ticket)
@@ -130,8 +130,10 @@ struct DetailCopyTitleButton: View {
 struct DetailHeaderTitle: View {
     @Environment(\.appTheme) private var theme
     let ticket: Ticket
+    /// Shown in place of the ticket's own title (its translation, on the translation tab).
+    var title: String?
     var body: some View {
-        (Text(ticketShortRef(ticket.providerType, ticket.externalKey)).foregroundColor(theme.colors.tx3) + Text(verbatim: " \(ticket.title)").foregroundColor(theme.colors.tx))
+        (Text(ticketShortRef(ticket.providerType, ticket.externalKey)).foregroundColor(theme.colors.tx3) + Text(verbatim: " \(title ?? ticket.title)").foregroundColor(theme.colors.tx))
             .font(theme.typography.title).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
     }
 }

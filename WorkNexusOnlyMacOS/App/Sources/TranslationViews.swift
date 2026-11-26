@@ -14,8 +14,11 @@ final class TranslationTabModel {
     private(set) var failure: String?
     /// The language picked for this ticket (the header's translate button, the footer's picker); nil: Settings' language.
     private(set) var pickedLang: String?
+    /// The translations of the ticket's comments and history notes, by note id (`CommentsSection.noteId`): the ones kept
+    /// from earlier runs that still match their text, and those of the last run.
+    private(set) var notes: [String: String] = [:]
     let ticketId: String
-    private let hub: TranslationHub
+    fileprivate let hub: TranslationHub
     @ObservationIgnored private var watcher: Task<Void, Never>?
     @ObservationIgnored private var run: Task<Void, Never>?
 
@@ -42,6 +45,15 @@ final class TranslationTabModel {
         }
     }
 
+    /// Reads the kept translations of the ticket's comments and notes (the tab calls it as they load or change).
+    func loadNotes(_ ticket: Ticket) {
+        let all = hub.notes(ticket), use = hub.feature.translateNotes, target = targetLang, id = ticketId
+        Task { [weak self] in
+            let kept = await use.kept(ticketId: id, notes: all, targetLang: target)
+            if self?.targetLang == target { self?.notes = kept }
+        }
+    }
+
     /// Translates through the provider chosen for translation, first making sure it is set up; a run in flight is left alone.
     /// `language` translates this ticket into it from now on (Settings' language is left as it is).
     func translate(_ ticket: Ticket, into language: String? = nil) {
@@ -57,7 +69,18 @@ final class TranslationTabModel {
             switch await feature.service.translate(ticketId: ticket.id, source: src, sourceHash: feature.service.contentHash(src),
                                                    targetLang: target, model: model) {
             case .success(let rec): _ = await feature.repository.saveTranslation(rec)
-            case .failure(let f): if case .cancelled = f {} else { self?.failure = f.message }
+            case .failure(let f):
+                if case .cancelled = f {} else { self?.failure = f.message }
+                return
+            }
+            // Then its comments and history notes: only the ones not translated yet, in one request.
+            let all = self?.hub.notes(ticket) ?? []
+            guard !all.isEmpty else { return }
+            switch await feature.translateNotes(ticketId: ticket.id, notes: all, targetLang: target, model: model) {
+            case .success(let done): self?.notes = done
+            case .failure(let f):
+                if case .cancelled = f {} else { self?.failure = f.message }
+                self?.loadNotes(ticket)
             }
         }
     }
@@ -75,10 +98,13 @@ final class TranslationHub {
     let aiSetup: AiSetupStore
     let settings: () -> AppSettings
     let gate: OpenCodeLinkGate
+    /// The comments and history notes of a ticket as the detail panel has them now.
+    let notes: (Ticket) -> [TicketNote]
     private var models: [String: TranslationTabModel] = [:]
 
-    init(feature: TranslationFeature, aiSetup: AiSetupStore, settings: @escaping () -> AppSettings, gate: OpenCodeLinkGate) {
-        self.feature = feature; self.aiSetup = aiSetup; self.settings = settings; self.gate = gate
+    init(feature: TranslationFeature, aiSetup: AiSetupStore, settings: @escaping () -> AppSettings, gate: OpenCodeLinkGate,
+         notes: @escaping (Ticket) -> [TicketNote] = { _ in [] }) {
+        self.feature = feature; self.aiSetup = aiSetup; self.settings = settings; self.gate = gate; self.notes = notes
     }
 
     /// The translation backend's name: `OpenAI (gpt-5-mini)`, `OpenCode`.
