@@ -2,6 +2,7 @@ import AppKit
 import Foundation
 import CoreDomain
 import CoreTools
+import CoreUI
 import SharedKit
 
 /// DEBUG builds only: `WN_DEMO_PLACE_CYCLE=chat,account:<id>:<section>,…` walks the rail through those places in turn, one
@@ -19,6 +20,7 @@ enum PlaceSwitchBench {
         SpamClickBench.start()
         // `WN_DEMO_MOUSE=1`: mouse moves sweep across the window (see `MouseSweep`), with or without a place cycle.
         if env["WN_DEMO_MOUSE"] == "1" { MouseSweep.start() }
+        LayoutCountBench.start()
         guard let spec = env["WN_DEMO_PLACE_CYCLE"] else { return }
         let places = spec.split(separator: ",").map { $0.split(separator: ":").map(String.init) }
         let pause = env["WN_DEMO_PLACE_CYCLE_SECONDS"].flatMap(Double.init) ?? 3
@@ -100,9 +102,15 @@ final class ChatScrollBench: NSObject {
     private weak var found: NSScrollView?
     private var carry: CGFloat = 0
     private let upOnly = ProcessInfo.processInfo.environment["WN_DEMO_CHAT_SCROLL_UP"].flatMap(Double.init)
+    /// `WN_DEMO_WHEEL=<notches per second>`: the list is scrolled as a notched mouse wheel scrolls it, three seconds up and
+    /// three down - gliding (`SmoothWheelScroll`), or with `WN_DEMO_WHEEL_PLAIN=1` in the jumps AppKit makes of a notch.
+    private let wheel = ProcessInfo.processInfo.environment["WN_DEMO_WHEEL"].flatMap(Double.init)
+    private let wheelPlain = ProcessInfo.processInfo.environment["WN_DEMO_WHEEL_PLAIN"] == "1"
+    private var nextNotch: CFTimeInterval = 0
 
     static func start() {
-        guard let speed = ProcessInfo.processInfo.environment["WN_DEMO_CHAT_SCROLL"].flatMap(Double.init), speed > 0 else { return }
+        let speed = ProcessInfo.processInfo.environment["WN_DEMO_CHAT_SCROLL"].flatMap(Double.init) ?? 0
+        guard speed > 0 || (shared.wheel ?? 0) > 0 else { return }
         shared.speed = CGFloat(speed)
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(7))
@@ -150,6 +158,19 @@ final class ChatScrollBench: NSObject {
         if found == nil { found = list; NSApp.windows.first(where: { $0.canBecomeMain })?.orderFrontRegardless() }
         if let s = found {
             let up = upOnly != nil || Int((now - began) / 3) % 2 == 0
+            if let wheel, wheel > 0 {
+                if now >= nextNotch {
+                    nextNotch = now + 1 / wheel
+                    // One notch: a line to the system (ten points), which is what `SmoothWheelScroll` makes its distance from.
+                    let points = SmoothWheelScroll.distance(system: up ? 10 : -10, lines: up ? 1 : -1, travel: SmoothWheelScroll.shared.travel)
+                    if wheelPlain {
+                        if let cg = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1, wheel1: Int32(points), wheel2: 0, wheel3: 0),
+                           let event = NSEvent(cgEvent: cg) { s.scrollWheel(with: event) }
+                    } else {
+                        SmoothWheelScroll.shared.turn(points: points, in: s)
+                    }
+                }
+            } else {
             // A real wheel event, handled as one from the mouse is (setting the clip view's origin instead was undone by
             // the scroll view's own state): pixels, positive scrolls toward older messages.
             if upOnly.map({ now - began < $0 }) ?? true { carry += (up ? 1 : -1) * speed * CGFloat(dt) }
@@ -157,6 +178,7 @@ final class ChatScrollBench: NSObject {
             if whole != 0, let cg = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1, wheel1: Int32(whole), wheel2: 0, wheel3: 0),
                let event = NSEvent(cgEvent: cg) {
                 s.scrollWheel(with: event)
+            }
             }
         }
         let s = Int(now - began)

@@ -78,7 +78,7 @@ private struct TypingOthers: View {
 }
 
 /// Three dots rising one after another, the familiar "someone is typing" cue. They hold still when the system asks for
-/// reduced motion.
+/// reduced motion, and while their chat is kept behind another one. Drawn by Core Animation (`TypingDotsLayers`).
 struct ThreadTypingDots: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @KeptAwake private var animationsRun
@@ -90,6 +90,9 @@ struct ThreadTypingDots: View {
     /// The share of the period each dot spends rising and falling, and how far behind its left neighbour it starts.
     static let riseShare = 0.4
     static let stagger = 0.15
+    /// How high a dot rises, in dots, and how faint it is at rest (it is solid at the top of its rise).
+    static let riseHeight = 0.6
+    static let restOpacity = 0.4
 
     /// 0 at rest, 1 at the top of the rise, for dot `i` at wave position `t` (0...1).
     static func lift(_ i: Int, _ t: Double) -> Double {
@@ -99,17 +102,6 @@ struct ThreadTypingDots: View {
     }
 
     var body: some View {
-        TimelineView(.animation(paused: reduceMotion || !animationsRun)) { timeline in
-            let t = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: Self.period) / Self.period
-            HStack(spacing: size * 0.5) {
-                ForEach(0..<3, id: \.self) { i in
-                    let lift = Self.lift(i, t)
-                    Circle().fill(color).frame(width: size, height: size)
-                        .offset(y: -size * 0.6 * lift).opacity(0.4 + 0.6 * lift)
-                }
-            }
-            // Room above the dots for the rise, so it never overlaps the line above.
-            .padding(.top, size * 0.6)
-        }
+        TypingDotsLayers(color: color, size: size, running: animationsRun && !reduceMotion)
     }
 }

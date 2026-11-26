@@ -62,6 +62,9 @@ struct ChatRowSides: Layout {
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        #if DEBUG
+        ChatLayoutProbe.rowSizings += 1
+        #endif
         let p = parts(subviews)
         let avatar = p.avatar?.sizeThatFits(.unspecified) ?? .zero
         let taken = p.avatar == nil ? 0 : avatar.width + gap
@@ -71,6 +74,9 @@ struct ChatRowSides: Layout {
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        #if DEBUG
+        ChatLayoutProbe.rowPlacements += 1
+        #endif
         let p = parts(subviews)
         let avatar = p.avatar?.sizeThatFits(.unspecified) ?? .zero
         let taken = p.avatar == nil ? 0 : avatar.width + gap
@@ -84,3 +90,12 @@ struct ChatRowSides: Layout {
                          anchor: alignEnd ? trailing : leading, proposal: offer)
     }
 }
+
+#if DEBUG
+/// DEBUG builds only: how often message rows were built, measured and placed since launch, for the benches to print.
+public enum ChatLayoutProbe {
+    nonisolated(unsafe) public static var rowBodies = 0
+    nonisolated(unsafe) public static var rowSizings = 0
+    nonisolated(unsafe) public static var rowPlacements = 0
+}
+#endif

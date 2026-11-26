@@ -73,10 +73,22 @@ final class MessageTimelineModel {
     var notify: (String) -> Void = { _ in }
     /// Translations shown under messages.
     let translation: MessageTranslationController
-    /// Messages that just arrived while the chat is open: their rows ease in (`ChatRowEntrance`).
-    let arrivals = ChatArrivals()
 
     var typingRoster = TypingRoster()
+
+    // MARK: behind another chat
+    /// The messages that came in while the chat was kept behind another one (`heldBack`), for `backOnScreen()`.
+    @ObservationIgnored private var held: [ChatMessage]?
+    /// Replies or reactions, or what the rows are built from, changed meanwhile.
+    @ObservationIgnored private var heldDetails = false
+    @ObservationIgnored private var heldRows = false
+    /// The window whose messages are the ones shown.
+    @ObservationIgnored private var shownWindow: ChatMessageWindow?
+    /// Whether what comes in waits: the chat has its messages and is kept behind another one, where nobody sees it. A
+    /// message taken in there rebuilt its rows, measured them and drew them all the same - some 25 ms of the main thread
+    /// a message on an optimized build, for each chat kept - so a busy group behind the open chat made the open one
+    /// stutter. What waited is taken in at once when the chat is shown again.
+    private var heldBack: Bool { loaded && !state.isOnScreen }
     @ObservationIgnored private var replies: [ChatMessage] = []
     let windowEvents: AsyncStream<ChatMessageWindow>.Continuation
     private let windowStream: AsyncStream<ChatMessageWindow>
@@ -94,6 +106,14 @@ final class MessageTimelineModel {
         translation = MessageTranslationController(services: services)
         (windowStream, windowEvents) = AsyncStream<ChatMessageWindow>.makeStream(bufferingPolicy: .bufferingNewest(1))
         windowEvents.yield(window)
+        state.onBackOnScreen = { [weak self] in self?.backOnScreen() }
+    }
+
+    /// The chat is on screen again: what came in behind the other chat is shown.
+    func backOnScreen() {
+        if let list = held { held = nil; apply(list, window: window, arrivedNow: false) }
+        if heldDetails { heldDetails = false; rebuildReplyDetails() }
+        if heldRows { heldRows = false; rebuildRows() }
     }
 
     /// Runs the timeline's watchers until the task is cancelled (the view's `.task`).
@@ -127,7 +147,7 @@ final class MessageTimelineModel {
     private func observeReplies() async {
         for await list in services.chat.watchReplies(accountId: accountId, chatGid: chatGid) {
             replies = list
-            rebuildReplyDetails()
+            if heldBack { heldDetails = true } else { rebuildReplyDetails() }
         }
     }
 
@@ -147,29 +167,29 @@ final class MessageTimelineModel {
 
     // MARK: messages
 
-    private func apply(_ list: [ChatMessage], window w: ChatMessageWindow) {
+    private func apply(_ list: [ChatMessage], window w: ChatMessageWindow, arrivedNow: Bool = true) {
         guard w == window else { return }
+        // Behind another chat only a change of window is taken in (the list going back to its newest messages, so the
+        // chat comes back there): more of the same window waits.
+        if heldBack, w == shownWindow { held = list; return }
+        held = nil
+        shownWindow = w
         let before = messages
-        // An already displayed empty conversation can receive its first bubble without a previous message to anchor it.
-        if loaded, before.isEmpty, list.count == 1, let first = list.first, !w.isAround, state.isOnScreen {
-            arrivals.note([first.gid])
-        }
         // Opening a chat reads its window more than once (the reactions setting restarts the stream): the same messages
         // again change nothing on screen, and re-setting them re-ran the list for nothing.
         if !loaded || list != before {
             messages = list
             if !loaded { loaded = true }
-            rebuildRows()
+            buildRows()
         }
         notePrepended(before, list)
         if awaitingGrowth { awaitingGrowth = false; loadingOlder = false; loadingNewer = false }
         // Back from a jump window to the latest messages.
         markReadIfSeen()
-        if window.isAround { return }
+        if window.isAround || !arrivedNow { return }
         guard let newest = before.last?.gid, let last = list.last, last.gid != newest,
               let at = list.firstIndex(where: { $0.gid == newest }) else { return }
         let arrived = list[(at + 1)...]
-        arrivals.note(arrived.map(\.gid))
         let selfId = state.selfUserId
         // Own message: from far up, an animated trip down; at the bottom already, the list's bottom anchor keeps it in view,
         // and an extra animated scroll only made the newest bubble jump at the bottom edge.
@@ -177,7 +197,12 @@ final class MessageTimelineModel {
         else if away { unseen += arrived.count }
     }
 
+    /// The rows again, from the messages, the time-marker gap and who is typing - once the chat is seen, when it is not now.
     func rebuildRows() {
+        if heldBack { heldRows = true } else { buildRows() }
+    }
+
+    private func buildRows() {
         let typingRow = !window.isAround && !away && !typing.isEmpty, messages = messages, gap = markerGap
         let next = PerformanceLog.measureSync("chat: build \(messages.count) rows") { ChatListRows.rows(messages, markerGap: gap, typing: typingRow) }
         // The list redraws when `rows` is set, also to the same rows (scrolling away and back, the style re-applied).

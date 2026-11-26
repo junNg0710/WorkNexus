@@ -19,6 +19,29 @@ enum ChatSwitchBench {
         // `WN_DEMO_CHAT_CYCLE_COUNT=<n>`: stops after n switches, leaving those chats kept and the last one open.
         let count = env["WN_DEMO_CHAT_CYCLE_COUNT"].flatMap(Int.init) ?? Int.max
         let frames = FrameGaps()
+        // `WN_DEMO_CHAT_ARRIVALS=<per second>[:shown|:hidden|:closed]`: from second 12 on, messages are written into the cycle's
+        // chats in turn (all of them, only the one left on screen, or only the ones kept behind it) - a demo is offline,
+        // so they stay local and are never sent. What a busy day of messages coming in costs, with nobody clicking.
+        if let spec = env["WN_DEMO_CHAT_ARRIVALS"], let rate = Double(spec.split(separator: ":")[0]), rate > 0 {
+            let which = spec.split(separator: ":").dropFirst().first.map(String.init)
+            // With a cycle that never stops every chat is a target, shown and hidden in turn.
+            let opened = Array(gids.prefix(min(count, gids.count)))
+            let shown = count == Int.max ? "" : gids[(count - 1) % gids.count]
+            // `:closed`: the chats of the list that were not opened (the list's own cost, no chat built for them).
+            let targets = which == "shown" ? [shown] : which == "hidden" ? opened.filter { $0 != shown }
+                : which == "closed" ? gids.filter { !opened.contains($0) } : opened
+            let repository = chat.repository
+            Task.detached {
+                try? await Task.sleep(for: .seconds(12))
+                var n = 0
+                while !Task.isCancelled, !targets.isEmpty {
+                    n += 1
+                    let text = "Bench message \(n) " + String(repeating: "lorem ipsum dolor sit amet ", count: n % 4)
+                    _ = await repository.sendText(accountId: accountId, chatGid: targets[n % targets.count], text: text, replyToId: nil, markdown: false)
+                    try? await Task.sleep(for: .milliseconds(Int(1000 / rate)))
+                }
+            }
+        }
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(2))
             var i = 0

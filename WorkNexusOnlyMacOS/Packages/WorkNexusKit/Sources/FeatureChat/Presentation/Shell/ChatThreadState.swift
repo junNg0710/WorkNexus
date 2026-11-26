@@ -50,7 +50,9 @@ public final class ChatThreadState {
     let video = ChatVideoPlaybackModel()
     /// False while the chat is kept open behind another one (`ChatShellModel.openThreads`): nothing in it is being read,
     /// so it marks nothing read, sends no typing signal and plays nothing.
-    public internal(set) var isOnScreen = true
+    public internal(set) var isOnScreen = true { didSet { if isOnScreen, !oldValue { onBackOnScreen?() } } }
+    /// Run as the chat comes back on screen, before it is drawn: the message list takes in what it held back.
+    @ObservationIgnored var onBackOnScreen: (() -> Void)?
 
     public init(accountId: String, chat: ChatConversation, selfAccount: String? = nil) {
         self.accountId = accountId; self.chatGid = chat.gid; self.chat = chat; self.selfAccount = selfAccount

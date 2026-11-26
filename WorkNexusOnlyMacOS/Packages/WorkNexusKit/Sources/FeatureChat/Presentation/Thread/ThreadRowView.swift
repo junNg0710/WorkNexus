@@ -25,6 +25,9 @@ struct ThreadRowView: View, Equatable {
     }
 
     var body: some View {
+        #if DEBUG
+        let _ = ChatLayoutProbe.rowBodies += 1
+        #endif
         let side = theme.spacing.s24
         switch row.item {
         case .day(let day):
@@ -33,7 +36,6 @@ struct ThreadRowView: View, Equatable {
             ChatSeparatorView(label: ChatTextLabels.clock(at)).padding(.horizontal, side)
         case .typing:
             ChatTypingRow(ctx: ctx, typing: ctx.model.typing, showSenders: showSenders)
-                .modifier(ChatRowEntrance(fresh: true, rise: theme.spacing.s4))
         case .message(let m) where m.isNotice:
             HighlightedRow(model: ctx.model, serverId: m.serverId, gapAbove: style.groupGap, gapBelow: style.groupGap) {
                 ChatNoticeView(ctx: ctx, message: m).padding(.horizontal, side)
@@ -47,8 +49,9 @@ struct ThreadRowView: View, Equatable {
                         .padding(.horizontal, side)
                 }
             }
-            // A message that arrives while the chat is open fades in; loaded pages and rows scrolled back show as they are.
-            .modifier(ChatRowEntrance(fresh: ctx.model.arrivals.isFresh(m.gid), rise: theme.spacing.s8))
+            // No easing in for a message that arrives: a SwiftUI fade or rise on its row had the whole window drawn again
+            // on every frame of it, which doubled what an arriving message costs the main thread and made late frames
+            // (70-90 ms a second against 7 at two messages a second, measured on an optimized build).
             // One accessibility element per message (its words read together) instead of one per name, line, badge and
             // button: with an accessibility client running, every element of a row scrolling into view had SwiftUI walk
             // the whole window for focus - a sixth of the main thread while scrolling.
