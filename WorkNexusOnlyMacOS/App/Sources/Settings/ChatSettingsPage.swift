@@ -33,6 +33,18 @@ struct ChatSettingsPage: View {
                                   hint: appString("chatReactionsHint", "Show a reply that is just an emoji as a reaction under the message it answers, and react to messages."),
                                   isOn: s.chatReactions) { on in shell.updateSettings { $0.chatReactions = on } }
             }
+            SettingsCard(title: appString("chatScrolling", "Scrolling")) {
+                SettingsToggleRow(label: appString("chatSmoothWheel", "Smooth mouse wheel"),
+                                  hint: appString("chatSmoothWheelHint", "A wheel that turns in notches glides through the messages instead of jumping. A trackpad or a Magic Mouse already scrolls smoothly and stays as it is."),
+                                  isOn: s.chatSmoothWheel) { on in shell.updateSettings { $0.chatSmoothWheel = on } }
+                SettingsRow(label: appString("chatWheelTravel", "Wheel scroll distance"),
+                            hint: appString("chatWheelTravelHint", "How far one turn of the wheel goes. 4× is what a browser scrolls.")) {
+                    SettingsSlider(value: s.chatWheelTravel, range: AppSettings.chatWheelTravelRange, step: 0.5, format: { String(format: "%.1f×", $0) }) { v in
+                        shell.updateSettings { $0.chatWheelTravel = v }
+                    }
+                }
+                .disabled(!s.chatSmoothWheel)
+            }
             // The privacy mode (hiding chats on screen, ⌘⇧H) and whether others see you typing.
             SettingsCard(title: appString("chatPrivacy", "Privacy")) { ChatPrivacySettingsRows(shell: shell) }
             SettingsCard(title: appString("notifications", "Notifications")) {

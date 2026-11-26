@@ -79,6 +79,8 @@ struct MessageListScroll: View {
                     Color.clear.frame(height: theme.spacing.s16).id(Self.bottomId)
                 }
                 .scrollTargetLayout()
+                // A notched mouse wheel glides instead of jumping a few lines at a time (a trackpad already does).
+                .smoothWheelScrolling(onTurn: { activity.userScrolls += 1 }, onMoving: { activity.scrolling($0) })
                 // While the list scrolls, a clear sheet lies over the rows (inside the scrolled content, so the wheel
                 // still lands in the scroll view): what is under the still pointer is asked on every frame of a scroll,
                 // and without it the answer was looked for through every row's hover areas - a twelfth of the main

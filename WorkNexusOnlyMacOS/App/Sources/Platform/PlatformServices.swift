@@ -37,6 +37,13 @@ final class PlatformServices {
             lifecycle.updateStrings(Self.trayStrings)
             lifecycle.setTrayToggle(Self.petToggle(shell))
         }
+        // The mouse wheel in a chat glides, and as far a turn, as Settings › Chat says.
+        let wheel: @MainActor () -> Void = {
+            SmoothWheelScroll.shared.isOn = shell.settings.chatSmoothWheel
+            SmoothWheelScroll.shared.travel = CGFloat(shell.settings.chatWheelTravel)
+        }
+        wheel()
+        observeChanges({ [shell.settings.chatSmoothWheel ? 1 : 0, shell.settings.chatWheelTravel] }) { _ in wheel() }
         // "Show the pet" / "Hide the pet" in the tray menu, following the setting (also when it changes in Settings).
         lifecycle.setTrayToggle(Self.petToggle(shell))
         observeChanges({ shell.settings.showPet }) { [lifecycle] _ in lifecycle.setTrayToggle(Self.petToggle(shell)) }

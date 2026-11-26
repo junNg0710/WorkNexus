@@ -91,3 +91,17 @@ final class PetBehaviorTests: XCTestCase {
         XCTAssertEqual(s, fresh, "only the pet's settings go back; the pet chosen and everything else stay")
     }
 }
+
+final class ChatWheelSettingsTests: XCTestCase {
+    func testTheWheelGlidesAtABrowsersDistanceUnlessSetOtherwise() throws {
+        let fresh = try JSONDecoder().decode(AppSettings.self, from: Data("{}".utf8))
+        XCTAssertTrue(fresh.chatSmoothWheel, "settings saved before the choice existed")
+        XCTAssertEqual(fresh.chatWheelTravel, 4)
+        XCTAssertTrue(AppSettings.chatWheelTravelRange.contains(fresh.chatWheelTravel))
+        var chosen = AppSettings()
+        chosen.chatSmoothWheel = false; chosen.chatWheelTravel = 2.5
+        let back = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(chosen))
+        XCTAssertFalse(back.chatSmoothWheel)
+        XCTAssertEqual(back.chatWheelTravel, 2.5)
+    }
+}

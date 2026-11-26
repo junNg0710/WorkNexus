@@ -15756,6 +15756,121 @@
         }
       }
     },
+    "chatScrolling": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrolling"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuộn"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "滚动"
+          }
+        }
+      }
+    },
+    "chatSmoothWheel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smooth mouse wheel"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuộn mượt bằng con lăn chuột"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "鼠标滚轮平滑滚动"
+          }
+        }
+      }
+    },
+    "chatSmoothWheelHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A wheel that turns in notches glides through the messages instead of jumping. A trackpad or a Magic Mouse already scrolls smoothly and stays as it is."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con lăn có nấc sẽ lướt qua tin nhắn thay vì nhảy từng đoạn. Trackpad hoặc Magic Mouse vốn đã cuộn mượt nên không thay đổi."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "带刻度的滚轮会平滑滑过消息，而不是一段一段地跳动。触控板和妙控鼠标本身已是平滑滚动，保持不变。"
+          }
+        }
+      }
+    },
+    "chatWheelTravel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wheel scroll distance"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quãng cuộn của con lăn"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "滚轮滚动距离"
+          }
+        }
+      }
+    },
+    "chatWheelTravelHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How far one turn of the wheel goes. 4× is what a browser scrolls."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mỗi lần lăn đi được bao xa. 4× là mức của trình duyệt."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每次滚动滚轮移动的距离。4× 与浏览器相同。"
+          }
+        }
+      }
+    },
     "chatTextSizeSmall": {
       "extractionState": "manual",
       "localizations": {

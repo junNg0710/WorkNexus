@@ -37,6 +37,12 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var chatAutoDownloadVideos = true
     public var chatAutoDownloadVideoMb = 20
     public var chatTextScale: Double = 1
+    /// Whether a mouse wheel that turns in notches glides through the chat's messages instead of jumping (macOS only).
+    public var chatSmoothWheel = true
+    /// How far one turn of such a wheel scrolls the chat's messages, against the distance macOS gives it (macOS only).
+    public var chatWheelTravel: Double = 4
+    /// The distances the wheel can be set to (`chatWheelTravel`).
+    public static let chatWheelTravelRange: ClosedRange<Double> = 1...8
     /// Hiding chats on screen; see `ChatPrivacy`.
     public var chatPrivacy = ChatPrivacy()
     /// Stickers offered over the composer while typing and to answer the newest message (turned on and off in its ✨ menu).
@@ -107,6 +113,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         s.chatAutoDownloadVideoMb = v(.chatAutoDownloadVideoMb, s.chatAutoDownloadVideoMb)
         s.chatTextScale = v(.chatTextScale, s.chatTextScale); s.chatPrivacy = v(.chatPrivacy, s.chatPrivacy)
         s.chatLocalApi = v(.chatLocalApi, s.chatLocalApi)
+        s.chatSmoothWheel = v(.chatSmoothWheel, s.chatSmoothWheel); s.chatWheelTravel = v(.chatWheelTravel, s.chatWheelTravel)
         s.chatStickerSuggestions = v(.chatStickerSuggestions, s.chatStickerSuggestions); s.chatAiReplyRole = v(.chatAiReplyRole, s.chatAiReplyRole); s.miniAppLiveLimit = v(.miniAppLiveLimit, s.miniAppLiveLimit)
         s.miniAppNotifyInBackground = v(.miniAppNotifyInBackground, s.miniAppNotifyInBackground)
         s.miniAppBarsCollapsed = v(.miniAppBarsCollapsed, s.miniAppBarsCollapsed)
