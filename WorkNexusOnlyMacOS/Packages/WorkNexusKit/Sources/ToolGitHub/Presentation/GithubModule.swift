@@ -84,7 +84,7 @@ public final class GithubModule: ToolModule {
 
     public func scopeTickets(location: ToolLocation, tickets: [Ticket]) -> [Ticket] {
         var accountId: String?
-        if case .account(let id) = ctx.nav.state.rail { accountId = id }
+        if case .account(let id) = ctx.nav.rail { accountId = id }
         return scopeGitHubTickets(tickets, accountId: accountId, scopeId: location.scopeId)
     }
 

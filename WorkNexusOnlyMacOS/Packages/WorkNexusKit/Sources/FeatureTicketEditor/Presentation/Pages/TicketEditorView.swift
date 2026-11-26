@@ -15,7 +15,7 @@ public extension EnvironmentValues {
 
 /// Ported from: lib/features/ticket_editor/presentation/pages/ticket_editor_page.dart
 /// The full-screen page that adds or edits a ZenTao bug or task - what the shell shows while
-/// `AppNavController.state.editor` is set. Services come from `\.services` (the optional `zentaoEditor`,
+/// `AppNavController.editor` is set. Services come from `\.services` (the optional `zentaoEditor`,
 /// `zentaoDrafts`, `zentaoTeamMembers` hooks); without an editor the page shows its error state. Cancel, a finished
 /// save and "discard draft" call `nav.closeEditor()`; a saved ticket is opened with `nav.openTicket`.
 public struct TicketEditorView: View {
@@ -28,7 +28,7 @@ public struct TicketEditorView: View {
     private let explicitNav: AppNavController?
 
     /// - Parameters:
-    ///   - route: `AppNavController.state.editor`.
+    ///   - route: `AppNavController.editor`.
     ///   - nav: defaults to `\.ticketEditorNav`.
     public init(route: TicketEditorRoute, nav: AppNavController? = nil) {
         self.init(launch: Self.launch(for: route), nav: nav)
@@ -56,7 +56,7 @@ public struct TicketEditorView: View {
     private struct FormKey: Hashable { let launch: TicketEditorLaunch; let epoch: Int }
 
     /// What the new ticket starts filled in with (made from a chat message), from the nav state that opened the editor.
-    private var prefill: TicketEditorPrefill? { (explicitNav ?? environmentNav)?.state.editorPrefill }
+    private var prefill: TicketEditorPrefill? { (explicitNav ?? environmentNav)?.editorPrefill }
 
     private var actions: EditorActions {
         let nav = explicitNav ?? environmentNav

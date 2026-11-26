@@ -23,7 +23,7 @@ public struct AppShell: View {
                 ContentCard {
                     ZStack {
                         Viewport(model: model).frame(maxWidth: .infinity, maxHeight: .infinity)
-                        if let route = model.nav.state.editor {
+                        if let route = model.nav.editor {
                             model.host.editor(route).frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.colors.bg)
                         }
                     }
@@ -31,7 +31,7 @@ public struct AppShell: View {
             }
         }
         .padding(.leading, gap).padding(.trailing, gap).padding(.bottom, gap).padding(.top, gap)
-        .onChange(of: model.nav.state.rail) { _, r in model.noteRail(r) }
+        .onChange(of: model.nav.rail) { _, r in model.noteRail(r) }
         .background(WindowBackdrop())
         .overlay { model.host.overlay(theme.sizes.rail) }
         .detailOverlay(model.detail, railInset: theme.sizes.rail + theme.spacing.s8)

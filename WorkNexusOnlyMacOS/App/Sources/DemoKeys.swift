@@ -31,7 +31,7 @@ enum DemoKeys {
                     NSApp.postEvent(e, atStart: false)
                 }
                 try? await Task.sleep(for: .seconds(1))
-                print("DEMOKEYS \(code.map(String.init) ?? "flags") \(flags.rawValue): rail \(shell.nav.state.rail), mini app \(shell.nav.state.miniAppId ?? "-"), hints \(shell.railHints.held.map { String($0.rawValue) } ?? "-")"); fflush(stdout)
+                print("DEMOKEYS \(code.map(String.init) ?? "flags") \(flags.rawValue): rail \(shell.nav.rail), mini app \(shell.nav.miniAppId ?? "-"), hints \(shell.railHints.held.map { String($0.rawValue) } ?? "-")"); fflush(stdout)
                 try? await Task.sleep(for: .seconds(1))
             }
         }

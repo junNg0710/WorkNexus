@@ -25,16 +25,16 @@ struct WorkspaceBreadcrumb: View {
     }
 
     @ViewBuilder private var trail: some View {
-        if let id = model.nav.state.miniAppId {
+        if let id = model.nav.miniAppId {
             segment(appString("miniApps", "Mini apps"), link: nil)
             segment(model.host.miniAppName(id) ?? appString("miniApps", "Mini apps"), link: nil)
         } else {
-            switch model.nav.state.rail {
+            switch model.nav.rail {
             case .workspace:
-                segment(ShellSections.label(ShellSections.workspace, model.nav.state.workspaceSection), link: nil)
+                segment(ShellSections.label(ShellSections.workspace, model.nav.workspaceSection), link: nil)
             case .settings:
                 segment(appString("settings", "Settings"), link: nil)
-                segment(ShellSections.label(ShellSections.settings, model.nav.state.settingsSection), link: nil)
+                segment(ShellSections.label(ShellSections.settings, model.nav.settingsSection), link: nil)
             case .chat:
                 if let provider = model.chatAccount?.providerType { TrailLogo(provider: provider) }
                 segment(appString("chat", "Chat"), link: nil)

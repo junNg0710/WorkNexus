@@ -14,7 +14,7 @@ public struct WorkspaceOverviewHost<Accounts: View>: View {
     }
 
     public var body: some View {
-        switch model.nav.state.workspaceSection {
+        switch model.nav.workspaceSection {
         case "integrations": IntegrationsPage(workspaceName: model.workspace?.name ?? "", onConnect: onConnect) { accounts }
         case "members": MembersPage()
         default: OverviewPage(model: model, onConnect: onConnect)

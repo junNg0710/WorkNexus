@@ -34,7 +34,7 @@ extension ShellModel {
     /// Opens `section` of a rail-section tool on the remembered (else first) account.
     /// The key of the nav pane of the place on screen (`AppNavController.collapsedPanes`): each place folds on its own.
     public var currentPaneKey: String {
-        switch nav.state.rail {
+        switch nav.rail {
         case .workspace: "workspace"
         case .settings: "settings"
         case .chat: "chat"

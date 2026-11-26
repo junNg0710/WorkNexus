@@ -6,9 +6,10 @@ import Observation
 /// when something opens is decided here rather than by each caller.
 @MainActor @Observable
 public final class AppNavController {
-    /// The whole state. Reading it follows every change of it: a view kept alive behind the place on screen reads the
-    /// part it shows instead (`rail`, `locations`, `ticketHistories`, `toolAccountId`), or it would be drawn again on
-    /// every trip between places — every card of a board was.
+    /// The whole state. Reading it follows every change of it, so a view reads the part it shows instead (`rail`,
+    /// `locations`, `ticketHistories`, `editor`, `miniAppId`, …): read whole, the rail, the viewport and the breadcrumb
+    /// were worked out again each time a ticket opened or an account went to another section — and every card of a board
+    /// kept alive behind the place on screen was on every trip between places.
     public private(set) var state: AppNavState {
         get { access(keyPath: \.state); return store }
         set { apply(newValue) }
@@ -16,6 +17,12 @@ public final class AppNavController {
     public var rail: RailTarget { access(keyPath: \.rail); return store.rail }
     public var locations: [String: ToolLocation] { access(keyPath: \.locations); return store.locations }
     public var ticketHistories: [String: [String]] { access(keyPath: \.ticketHistories); return store.ticketHistories }
+    public var workspaceSection: String { access(keyPath: \.workspaceSection); return store.workspaceSection }
+    public var settingsSection: String { access(keyPath: \.settingsSection); return store.settingsSection }
+    public var editor: TicketEditorRoute? { access(keyPath: \.editor); return store.editor }
+    public var editorPrefill: TicketEditorPrefill? { access(keyPath: \.editorPrefill); return store.editorPrefill }
+    public var miniAppId: String? { access(keyPath: \.miniAppId); return store.miniAppId }
+    public var userSelectedWorkspace: Bool { access(keyPath: \.userSelectedWorkspace); return store.userSelectedWorkspace }
     /// The account whose place is on the rail — or was last, while the rail is on the chat, the dashboard or Settings.
     /// What an account's kept place shows hangs on this, not on `rail`, so it stays as it is behind those.
     public var toolAccountId: String? { access(keyPath: \.toolAccountId); return lastAccount }
@@ -54,15 +61,21 @@ public final class AppNavController {
         guard new != old else { return }
         var account = lastAccount
         if case .account(let id) = new.rail { account = id }
-        changing(\.state) {
-            changing(\.rail, if: new.rail != old.rail) {
-                changing(\.locations, if: new.locations != old.locations) {
-                    changing(\.ticketHistories, if: new.ticketHistories != old.ticketHistories) {
-                        changing(\.toolAccountId, if: account != lastAccount) { store = new; lastAccount = account }
-                    }
-                }
-            }
-        }
+        var changes = [NavChange(self, \.state)]
+        func part<T>(_ path: KeyPath<AppNavController, T>, _ changed: Bool) { if changed { changes.append(NavChange(self, path)) } }
+        part(\.rail, new.rail != old.rail)
+        part(\.locations, new.locations != old.locations)
+        part(\.ticketHistories, new.ticketHistories != old.ticketHistories)
+        part(\.workspaceSection, new.workspaceSection != old.workspaceSection)
+        part(\.settingsSection, new.settingsSection != old.settingsSection)
+        part(\.editor, new.editor != old.editor)
+        part(\.editorPrefill, new.editorPrefill != old.editorPrefill)
+        part(\.miniAppId, new.miniAppId != old.miniAppId)
+        part(\.userSelectedWorkspace, new.userSelectedWorkspace != old.userSelectedWorkspace)
+        part(\.toolAccountId, account != lastAccount)
+        for change in changes { change.will() }
+        store = new; lastAccount = account
+        for change in changes.reversed() { change.did() }
         guard new.locations != old.locations else { return }
         for scope in sectionScopes.values {
             let now = new.locations[scope.accountId]?.scope(of: scope.section)
@@ -70,8 +83,14 @@ public final class AppNavController {
         }
     }
 
-    private func changing<T>(_ part: KeyPath<AppNavController, T>, if changed: Bool = true, _ body: () -> Void) {
-        if changed { withMutation(keyPath: part, body) } else { body() }
+    /// One observed part about to change: what its observers are told before and after the new state is stored.
+    private struct NavChange {
+        let will: () -> Void
+        let did: () -> Void
+        @MainActor init<T>(_ nav: AppNavController, _ path: KeyPath<AppNavController, T>) {
+            will = { nav._$observationRegistrar.willSet(nav, keyPath: path) }
+            did = { nav._$observationRegistrar.didSet(nav, keyPath: path) }
+        }
     }
 
     private func forgetToolAccount(_ gone: (String) -> Bool) {

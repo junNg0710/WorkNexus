@@ -26,7 +26,7 @@ struct GlobalSearchField: View {
     @FocusState private var focused: Bool
 
     /// The place on screen's own search (the Chat page), if it has one.
-    private var place: PlaceSearch? { model.host.placeSearch(model.nav.state.rail) }
+    private var place: PlaceSearch? { model.host.placeSearch(model.nav.rail) }
     private var count: Int { place == nil ? results.count : hits.count }
     /// The tab the search is on: the one picked, else the place's first ("all").
     private var scopeId: String? { scope.isEmpty ? place?.scopes.first?.id : scope }
@@ -61,7 +61,7 @@ struct GlobalSearchField: View {
         .onChange(of: chosen) { _, _ in all = false; search(text) }
         .onChange(of: model.searchFocusTick) { _, _ in focused = true; search(text) }
         // Another place searches other things: start over.
-        .onChange(of: model.nav.state.rail) { _, _ in clear(); scope = ""; chosen = [:] }
+        .onChange(of: model.nav.rail) { _, _ in clear(); scope = ""; chosen = [:] }
         .task { model.detail.start() }
         .overlay(alignment: .topTrailing) {
             if showing {
@@ -168,7 +168,7 @@ struct GlobalSearchField: View {
 
     /// Goes to the ticket's account (so the panel sits over its own place) and opens it.
     private func open(_ t: Ticket) {
-        if model.nav.state.rail != .account(t.accountId) { model.nav.select(.account(t.accountId)) }
+        if model.nav.rail != .account(t.accountId) { model.nav.select(.account(t.accountId)) }
         model.nav.openTicket(t.id)
         clear(); focused = false
     }

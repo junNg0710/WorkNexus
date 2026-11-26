@@ -164,6 +164,27 @@ final class NavControllerTests: XCTestCase {
         XCTAssertTrue(isTold(n, of: { n.select(.settings) }, reading: { _ = n.rail }))
     }
 
+    func testEachPartOfTheStateIsReadOnItsOwn() {
+        let n = nav()
+        n.select(.account("zt"))
+        let rail = { _ = n.rail }, covers = { _ = n.editor; _ = n.miniAppId }
+        let sections = { _ = n.workspaceSection; _ = n.settingsSection }
+        // The rail and what covers a place are not told about a ticket, a section of the account or a Settings page.
+        XCTAssertFalse(isTold(n, of: { n.openTicket("t1") }, reading: rail))
+        XCTAssertFalse(isTold(n, of: { n.openTicket("t2") }, reading: covers))
+        XCTAssertFalse(isTold(n, of: { n.setSection("zentao.bugs", accountId: "zt") }, reading: rail))
+        XCTAssertFalse(isTold(n, of: { n.setSettingsSection("about") }, reading: rail))
+        XCTAssertFalse(isTold(n, of: { n.openTicket("t3") }, reading: sections))
+        XCTAssertFalse(isTold(n, of: { n.openEditor(.newBug(accountId: "zt")) }, reading: { _ = n.ticketHistories; _ = n.locations }))
+        // Each is told about its own.
+        XCTAssertTrue(isTold(n, of: { n.openEditor(.newTask(accountId: "zt")) }, reading: covers))
+        XCTAssertTrue(isTold(n, of: { n.openMiniApp("m") }, reading: covers))
+        XCTAssertTrue(isTold(n, of: { n.setSettingsSection("general") }, reading: sections))
+        XCTAssertTrue(isTold(n, of: { n.setWorkspaceSection("members") }, reading: sections))
+        XCTAssertTrue(isTold(n, of: { n.select(.chat) }, reading: rail))
+        XCTAssertTrue(isTold(n, of: { n.openTicket("t4") }, reading: { _ = n.state }), "the whole state follows every change")
+    }
+
     func testAPlaceMarksItsOwnOpenTicket() {
         let n = nav()
         n.select(.account("a")); n.openTicket("1")

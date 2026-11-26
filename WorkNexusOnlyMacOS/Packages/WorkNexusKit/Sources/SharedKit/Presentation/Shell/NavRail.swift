@@ -17,17 +17,17 @@ struct NavRail: View {
         VStack(spacing: theme.spacing.s2) {
             NewTicketRailButton(model: model)
             RailLabeledButton(appString("dashboard", "Dashboard"), systemImage: "square.grid.2x2",
-                              selected: onScreen && nav.state.rail == .workspace,
-                              help: tip(appString("dashboard", "Dashboard"), onScreen && nav.state.rail == .workspace, keys[RailPlace.workspace])) {
-                model.railTap("workspace", isCurrent: nav.state.rail == .workspace) { nav.select(.workspace) }
+                              selected: onScreen && nav.rail == .workspace,
+                              help: tip(appString("dashboard", "Dashboard"), onScreen && nav.rail == .workspace, keys[RailPlace.workspace])) {
+                model.railTap("workspace", isCurrent: nav.rail == .workspace) { nav.select(.workspace) }
             }
             .railKeyHint(model.railKeyHint(RailPlace.workspace, keys: keys))
             if model.chatAccount != nil {
                 RailLabeledButton(appString("chat", "Chat"), systemImage: "bubble.left.and.bubble.right",
-                                  selected: onScreen && nav.state.rail == .chat, badge: host.chatTotalUnread(),
-                                  help: tip(appString("chat", "Chat"), onScreen && nav.state.rail == .chat, keys[RailPlace.chat]),
+                                  selected: onScreen && nav.rail == .chat, badge: host.chatTotalUnread(),
+                                  help: tip(appString("chat", "Chat"), onScreen && nav.rail == .chat, keys[RailPlace.chat]),
                                   brand: model.chatAccount?.providerType) {
-                    model.railTap("chat", isCurrent: nav.state.rail == .chat) { nav.select(.chat) }
+                    model.railTap("chat", isCurrent: nav.rail == .chat) { nav.select(.chat) }
                 }
                 .railKeyHint(model.railKeyHint(RailPlace.chat, keys: keys))
             }
@@ -48,10 +48,10 @@ struct NavRail: View {
                 VStack(spacing: theme.spacing.s2) {
                     ForEach(model.railAccounts) { a in
                         RailAccountButton(account: a, duplicate: model.railAccounts.filter { $0.providerType == a.providerType }.count > 1,
-                                          selected: onScreen && nav.state.rail == .account(a.id), badge: host.chatUnread(a.id),
-                                          folded: onScreen && nav.state.rail == .account(a.id) ? model.currentPaneFolded : nil,
+                                          selected: onScreen && nav.rail == .account(a.id), badge: host.chatUnread(a.id),
+                                          folded: onScreen && nav.rail == .account(a.id) ? model.currentPaneFolded : nil,
                                           keys: keys[RailPlace.account(a.id)]) {
-                            model.railTap("account:\(a.id)", isCurrent: nav.state.rail == .account(a.id)) { nav.select(.account(a.id)) }
+                            model.railTap("account:\(a.id)", isCurrent: nav.rail == .account(a.id)) { nav.select(.account(a.id)) }
                         }
                         .railKeyHint(model.railKeyHint(RailPlace.account(a.id), keys: keys))
                     }
@@ -67,9 +67,9 @@ struct NavRail: View {
             host.bell()
             host.updateButton()
             RailLabeledButton(appString("settings", "Settings"), systemImage: "gearshape",
-                              selected: onScreen && nav.state.rail == .settings,
-                              help: tip(appString("settings", "Settings"), onScreen && nav.state.rail == .settings, keys[RailPlace.settings])) {
-                model.railTap("settings", isCurrent: nav.state.rail == .settings) { nav.select(.settings) }
+                              selected: onScreen && nav.rail == .settings,
+                              help: tip(appString("settings", "Settings"), onScreen && nav.rail == .settings, keys[RailPlace.settings])) {
+                model.railTap("settings", isCurrent: nav.rail == .settings) { nav.select(.settings) }
             }
             .railKeyHint(model.railKeyHint(RailPlace.settings, keys: keys))
         }
@@ -84,7 +84,7 @@ struct NavRail: View {
 
     /// A rail section button is selected when the open account belongs to its tool and sits on that section.
     private func sectionSelected(_ module: any ToolModule, _ section: ToolSection) -> Bool {
-        guard !model.miniAppOnScreen, case .account(let id) = model.nav.state.rail,
+        guard !model.miniAppOnScreen, case .account(let id) = model.nav.rail,
               model.account(id)?.providerType == module.providerType else { return false }
         return model.nav.location(for: id).section == section.id
     }

@@ -54,7 +54,7 @@ struct DetailHeaderTopBar: View {
         let c = theme.colors
         let ws = controller.workspace(of: ticket)
         let url = ticket.url ?? ""
-        let canGoBack = (controller.nav.state.ticketHistories[controller.nav.state.rail.key]?.count ?? 0) > 1
+        let canGoBack = (controller.nav.ticketHistories[controller.nav.rail.key]?.count ?? 0) > 1
         HStack(spacing: theme.spacing.s8) {
             if canGoBack { AppIconButton("arrow.left", help: appString("back", "Back")) { controller.nav.goBackTicket() } }
             WorkspaceBadge(wsColor, ws?.shortCode ?? "?", iconKey: ws?.iconKey)

@@ -135,7 +135,7 @@ final class ChatWiring {
             // Only the chat open on screen counts as looked at (the Chat place showing, the app in front is checked by the
             // rule); a notification for any other chat comes through even while the Chat place is focused.
             visibleChat: { [events, shell] in
-                onMain { shell.nav.state.rail == .chat && !shell.miniAppOnScreen } ? events.openChat : nil
+                onMain { shell.nav.rail == .chat && !shell.miniAppOnScreen } ? events.openChat : nil
             })
         watcher = Task { [weak self] in
             guard let accounts = self?.appServices.workspaces.watchAccounts() else { return }
@@ -172,7 +172,7 @@ final class ChatWiring {
     /// Shows a chat from a person chip: a detail open over the chat would stay on top of the chat it opens, so it closes;
     /// one on another place waits there (lib/features/chat/presentation/widgets/chat_person_chip.dart `openDirectChatWith`).
     func show(accountId: String, chatGid: String) {
-        if shell.nav.state.rail == .chat { shell.nav.closeTicket() }
+        if shell.nav.rail == .chat { shell.nav.closeTicket() }
         shell.chatAccountId = accountId
         shell.nav.select(.chat)
         events.open(chatGid: chatGid)

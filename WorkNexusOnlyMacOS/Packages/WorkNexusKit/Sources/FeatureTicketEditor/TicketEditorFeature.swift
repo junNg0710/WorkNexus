@@ -6,7 +6,7 @@ import SwiftUI
 /// register anything; it only needs what is listed here.
 ///
 /// ### Views
-/// - `TicketEditorView(route:)` - the full-screen bug / task editor for `AppNavController.state.editor`. Services are
+/// - `TicketEditorView(route:)` - the full-screen bug / task editor for `AppNavController.editor`. Services are
 ///   read from `\.services` (`AppServices.zentaoEditor`, `.zentaoDrafts`, `.zentaoTeamMembers`; all optional - without
 ///   `zentaoEditor` the page shows a retryable error state). Navigation comes from `.environment(\.ticketEditorNav, nav)`
 ///   or `TicketEditorView(route:nav:)`.

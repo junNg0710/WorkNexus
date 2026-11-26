@@ -61,7 +61,7 @@ private struct RootView: View {
             .task { root.start() }
             // One source of truth: the shell's selection drives which mini app page is on screen (and clears it when a
             // rail section, account or settings is picked).
-            .onChange(of: shell.nav.state.miniAppId, initial: true) { _, id in root.miniApps.model.show(id) }
+            .onChange(of: shell.nav.miniAppId, initial: true) { _, id in root.miniApps.model.show(id) }
             // A second click on Chat in the rail folds the conversation list away (and brings it back): the rail's "chat"
             // pane and the chat's own list are one switch. The chat remembers it across launches, so it leads at start.
             .onAppear { shell.nav.setPane("chat", collapsed: ChatPanelVisibility.shared.listHidden) }
@@ -135,7 +135,7 @@ private struct AppCommands: Commands {
     @FocusedValue(\.boardRefresh) private var boardRefresh
 
     private var accountId: String? {
-        if case .account(let id)? = root?.shell.nav.state.rail { return id }
+        if case .account(let id)? = root?.shell.nav.rail { return id }
         return nil
     }
 

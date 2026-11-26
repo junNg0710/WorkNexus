@@ -110,7 +110,7 @@ public struct ZentaoTicketActions: View {
                 state: state, ticket: ticket, toasts: toasts, label: ZentaoActionLooks.delete.label,
                 successMessage: appFormat("zentaoTicketDeleted", "Deleted #%1$@", ticket.externalKey)) { await remove(ticket) }
             // Its panel has nothing left to show - unless the reader has gone on to another ticket meanwhile.
-            if deleted, nav.state.ticketHistories[nav.state.rail.key]?.last == ticket.id { nav.closeTicket() }
+            if deleted, nav.ticketHistories[nav.rail.key]?.last == ticket.id { nav.closeTicket() }
         }
     }
 

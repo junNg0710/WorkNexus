@@ -17,7 +17,7 @@ struct ToolPaneHost: View {
     /// Whether the pane takes any room: a mini app replaces it, the chat has none, and a folded one is away.
     static func isVisible(_ model: ShellModel) -> Bool {
         if model.miniAppOnScreen { return false }
-        if model.nav.state.rail == .chat { return false }
+        if model.nav.rail == .chat { return false }
         return !model.currentPaneFolded
     }
 
@@ -37,7 +37,7 @@ struct ToolPaneHost: View {
     }
 
     private var place: Place {
-        switch model.nav.state.rail {
+        switch model.nav.rail {
         case .workspace: Place(key: "workspace", view: AnyView(WorkspacePane(model: model)))
         case .settings: Place(key: "settings", view: AnyView(SettingsPane(model: model)))
         case .chat: Place(key: "chat", view: AnyView(EmptyView()))
@@ -64,7 +64,7 @@ private struct WorkspacePane: View {
             VStack(spacing: theme.spacing.s2) {
                 ForEach(ShellSections.workspace, id: \.id) { r in
                     ScopeRow(title: appString(r.key, r.fallback), systemImage: r.icon,
-                             selected: model.nav.state.workspaceSection == r.id,
+                             selected: model.nav.workspaceSection == r.id,
                              trailing: r.id == "integrations" && !model.workspaceAccounts.isEmpty ? "\(model.workspaceAccounts.count)" : nil) {
                         model.nav.setWorkspaceSection(r.id)
                     }
@@ -82,7 +82,7 @@ private struct SettingsPane: View {
         ToolPaneScaffold(title: appString("settings", "Settings")) {
             VStack(spacing: theme.spacing.s2) {
                 ForEach(ShellSections.settings.filter { model.host.settingsSectionVisible($0.id) }, id: \.id) { r in
-                    ScopeRow(title: appString(r.key, r.fallback), systemImage: r.icon, selected: model.nav.state.settingsSection == r.id) {
+                    ScopeRow(title: appString(r.key, r.fallback), systemImage: r.icon, selected: model.nav.settingsSection == r.id) {
                         model.nav.setSettingsSection(r.id)
                     }
                 }

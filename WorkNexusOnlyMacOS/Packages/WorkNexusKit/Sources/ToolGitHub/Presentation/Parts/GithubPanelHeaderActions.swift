@@ -26,7 +26,7 @@ struct GithubPanelHeaderActions: View {
 struct GithubBackButton: View {
     let nav: AppNavController
     var body: some View {
-        if (nav.state.ticketHistories[nav.state.rail.key]?.count ?? 0) > 1 {
+        if (nav.ticketHistories[nav.rail.key]?.count ?? 0) > 1 {
             AppIconButton("arrow.left", help: appString("back", "Back")) { nav.goBackTicket() }
         }
     }

@@ -68,7 +68,7 @@ public final class GitlabModule: ToolModule {
 
     public func scopeTickets(location: ToolLocation, tickets: [Ticket]) -> [Ticket] {
         var accountId: String?
-        if case .account(let id) = ctx.nav.state.rail { accountId = id }
+        if case .account(let id) = ctx.nav.rail { accountId = id }
         return scopeGitLabTickets(tickets, accountId: accountId, scopeId: location.scopeId)
     }
 

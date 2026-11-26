@@ -26,7 +26,7 @@ struct Viewport: View {
 
     /// The cache key of the place on screen and its view: `account:section`, `workspace:section`, `settings:section`, `chat`.
     private var place: (key: String, view: AnyView) {
-        switch model.nav.state.rail {
+        switch model.nav.rail {
         case .account(let id):
             guard let a = model.account(id), let tool = model.registry.module(for: a.providerType) else {
                 return ("account:\(id):missing", AnyView(SectionErrorBoundary(message: appString("noToolForAccount", "No tool for this account")) {
@@ -37,10 +37,10 @@ struct Viewport: View {
             return ("\(id):\(location.section.rawValue)",
                     AnyView(AccountSectionView(model: model, account: a, section: tool.buildSection(account: a, location: location))))
         case .workspace:
-            let s = model.nav.state.workspaceSection
+            let s = model.nav.workspaceSection
             return ("workspace:\(s)", model.host.workspacePage(s))
         case .settings:
-            let s = model.nav.state.settingsSection
+            let s = model.nav.settingsSection
             return ("settings:\(s)", model.host.settingsPage(s))
         case .chat:
             guard let a = model.chatAccount else {

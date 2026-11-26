@@ -134,14 +134,14 @@ public final class ShellModel {
         chatAccounts.first { $0.id == chatAccountId } ?? chatAccounts.first
     }
     /// A mini app is on screen (it replaces the nav pane and the viewport, like the Dart shell).
-    public var miniAppOnScreen: Bool { nav.state.miniAppId != nil }
+    public var miniAppOnScreen: Bool { nav.miniAppId != nil }
     /// The title bar is folded away: a mini app is on screen with its bars collapsed (`AppSettings.miniAppBarsCollapsed`), so
     /// the page reaches the top of the window. Every other place keeps the title bar.
     public var titleBarHidden: Bool { miniAppOnScreen && settings.miniAppBarsCollapsed }
     /// The title bar's search has something to search here: tickets, or the place's own items (chat). A mini app (a web
     /// page with its own search), Settings and the ticket editor have none, so the field is not shown there.
     public var showsGlobalSearch: Bool {
-        !miniAppOnScreen && nav.state.editor == nil && nav.state.rail != .settings
+        !miniAppOnScreen && nav.editor == nil && nav.rail != .settings
     }
 }
 

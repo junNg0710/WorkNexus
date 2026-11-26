@@ -19,7 +19,7 @@ struct ZentaoExecutionPopover: View {
     /// select ids of some other server).
     private var accountId: String? {
         if let account { return account.id }
-        if case .account(let id) = state.deps.nav.state.rail { return id }
+        if case .account(let id) = state.deps.nav.rail { return id }
         return nil
     }
 

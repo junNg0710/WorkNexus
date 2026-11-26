@@ -38,9 +38,9 @@ struct DetailSlideOver: View {
 
     /// The ticket open at each place (the last of its history).
     private var tops: [String: String] {
-        controller.nav.state.ticketHistories.compactMapValues { $0.last }
+        controller.nav.ticketHistories.compactMapValues { $0.last }
     }
-    private var here: String { controller.nav.state.rail.key }
+    private var here: String { controller.nav.rail.key }
 
     /// Called when a history changed (a ticket opened, closed, went back).
     private func sync() {
@@ -62,7 +62,7 @@ struct DetailSlideOver: View {
         let inset = railInset ?? theme.sizes.rail
         // The editor takes the whole area beside the rail: a ticket's panel (Edit, Copy, a subtask... are started from
         // it) steps aside while the editor is open, and is back as it was when the editor closes.
-        let editing = controller.nav.state.editor != nil
+        let editing = controller.nav.editor != nil
         GeometryReader { geo in
             let w = width(geo.size.width, inset: inset)
             ZStack(alignment: .trailing) {
@@ -84,11 +84,11 @@ struct DetailSlideOver: View {
         .allowsHitTesting(shown[here] != nil && !editing)
         .disabled(editing)
         .accessibilityHidden(editing)
-        .onChange(of: controller.nav.state.ticketHistories) { _, h in
+        .onChange(of: controller.nav.ticketHistories) { _, h in
             controller.prune(keeping: Set(h.values.flatMap { $0 }))
             sync()
         }
-        .onChange(of: controller.nav.state.rail) { _, _ in placeChanged() }
+        .onChange(of: controller.nav.rail) { _, _ in placeChanged() }
         .task {
             controller.start()
             placeChanged()

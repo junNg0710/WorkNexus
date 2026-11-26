@@ -57,7 +57,7 @@ struct MiniAppRailSection: View {
                           message: appString("miniAppRemoveMessage", "It only leaves the rail. The website itself is not affected."),
                           confirmLabel: appString("miniAppRemove", "Remove from rail"), destructive: true) {
             guard let item = removing else { return }
-            if nav.state.miniAppId == item.id { nav.select(.workspace) }
+            if nav.miniAppId == item.id { nav.select(.workspace) }
             Task { await feature.model.remove(item.id) }
         }
     }
@@ -85,7 +85,7 @@ private struct MiniAppRailButton: View {
             Button(appString("miniAppEdit", "Edit mini app"), action: onEdit)
             if item.running {
                 Button(appString("miniAppClose", "Close page (free memory)")) {
-                    if nav.state.miniAppId == item.id { nav.select(.workspace) }
+                    if nav.miniAppId == item.id { nav.select(.workspace) }
                     rail.miniApps.close(item.id)
                 }
             }

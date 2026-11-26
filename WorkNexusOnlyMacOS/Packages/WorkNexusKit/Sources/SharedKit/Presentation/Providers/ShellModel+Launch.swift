@@ -21,11 +21,11 @@ extension ShellModel {
     private func launchChatIfNeeded() {
         guard chatLaunchPending, chatAccount != nil else { return }
         chatLaunchPending = false
-        guard opensChatAtLaunch, nav.state.editor == nil, nav.state.miniAppId == nil else { return }
+        guard opensChatAtLaunch, nav.editor == nil, nav.miniAppId == nil else { return }
         let first = Account.sort(workspaceAccounts).first
         let pickedByApp: Bool
-        switch nav.state.rail {
-        case .workspace: pickedByApp = !nav.state.userSelectedWorkspace
+        switch nav.rail {
+        case .workspace: pickedByApp = !nav.userSelectedWorkspace
         case .account(let id): pickedByApp = id == first?.id
         case .chat, .settings: pickedByApp = false
         }
