@@ -105,11 +105,11 @@ public final class ZenTaoProviderAdapter: ZenTaoMessagesAdapter, @unchecked Send
             for a in entity.actions {
                 // Only pure comments are bubbles; notes attached to a state change (e.g. "activated" + a
                 // message) are shown inline on the activity row.
-                guard a.actionType == "commented", !a.commentText.isEmpty else { continue }
+                let body = zentaoCommentBody(a, baseUrl: client.baseUrl)        // HTML, as written in ZenTao's editor, and its files
+                guard a.actionType == "commented", !body.isEmpty else { continue }
                 comments.append(Comment(
                     id: "\(ticket.id):\(str(a.id) ?? "\(comments.count)")", ticketId: ticket.id,
-                    authorName: accountName(a.actor) ?? "unknown",
-                    body: a.commentText,                                        // HTML, as written in ZenTao's editor
+                    authorName: accountName(a.actor) ?? "unknown", body: body,
                     createdAt: parseZenTaoDate(a.date) ?? Date()))
             }
             return comments
@@ -138,7 +138,7 @@ public final class ZenTaoProviderAdapter: ZenTaoMessagesAdapter, @unchecked Send
                     id: "\(ticket.id):\(str(a.id) ?? "\(events.count)")", ticketId: ticket.id,
                     actor: accountName(a.actor) ?? "unknown", action: zentaoActionText(a),
                     at: parseZenTaoDate(a.date) ?? Date(), detail: parsed.note.isEmpty ? nil : parsed.note,
-                    attachments: parsed.files))
+                    attachments: zentaoActivityFileNames(a, noted: parsed.files, baseUrl: client.baseUrl)))
             }
             return events
         }

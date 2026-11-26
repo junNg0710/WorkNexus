@@ -226,10 +226,12 @@ private func zentaoBugEntity(_ e: ZenTaoEntity, resolution: String, baseUrl: Str
 /// Maps ZenTao's id-keyed `files` map onto domain `TicketAttachment`s. Prefers the payload's absolute `url`;
 /// falls back to the classic `{base}/file-download-{id}.{ext}` when it's missing. `webPath` becomes the
 /// attachment's stream URL.
-func zentaoAttachments(_ e: ZenTaoEntity, baseUrl: String) -> [TicketAttachment] {
+func zentaoAttachments(_ e: ZenTaoEntity, baseUrl: String) -> [TicketAttachment] { zentaoAttachments(e.files, baseUrl: baseUrl) }
+
+func zentaoAttachments(_ files: [ZenTaoFile], baseUrl: String) -> [TicketAttachment] {
     let base = trimTrailingSlash(baseUrl)
     var out: [TicketAttachment] = []
-    for f in e.files {
+    for f in files {
         let id = str(f.id) ?? ""
         if id.isEmpty { continue }
         let ext = trimmedText(f.extension)?.lowercased()
