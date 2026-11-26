@@ -20,7 +20,8 @@ public struct AppTheme: Sendable {
         if settings.themeFollowsSystem { variant = systemIsDark ? (variant == .light ? .dark : variant) : .light }
         colors = AppPalette.of(variant).withAccent(settings.accentColorValue)
         radii = AppRadii(component: settings.componentRadius)
-        typography = AppTypography(family: settings.fontFamily)
+        // A terminal is set in one width: the Hacker theme takes the system's monospaced face unless a font was chosen.
+        typography = AppTypography(family: settings.fontFamily, monospaced: variant == .hacker)
         density = settings.density
         surface = settings.surface
     }
@@ -70,7 +71,9 @@ public struct AppMotion: Sendable {
 
 public struct AppTypography: Sendable {
     public var family: String
-    public init(family: String) { self.family = family }
+    /// The system's monospaced face stands in for the system font (no family chosen).
+    public var monospaced: Bool
+    public init(family: String, monospaced: Bool = false) { self.family = family; self.monospaced = monospaced }
 
     /// Geist Mono is not bundled (Flutter downloads it through google_fonts): when it is not installed the monospaced
     /// system face stands in, so the choice still reads as a monospace UI.
@@ -78,7 +81,7 @@ public struct AppTypography: Sendable {
     private static let geistMonoAvailable = NSFont(name: "GeistMono-Regular", size: 12) != nil || NSFont(name: "Geist Mono", size: 12) != nil
 
     private func f(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        if family.isEmpty { return .system(size: size, weight: weight) }
+        if family.isEmpty { return .system(size: size, weight: weight, design: monospaced ? .monospaced : .default) }
         if family == Self.geistMono, !Self.geistMonoAvailable { return .system(size: size, weight: weight, design: .monospaced) }
         return .custom(family, size: size).weight(weight)
     }

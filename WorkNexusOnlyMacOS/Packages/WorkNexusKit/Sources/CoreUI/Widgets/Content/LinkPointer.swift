@@ -102,7 +102,7 @@ public extension AppTypography {
         guard !family.isEmpty,
               let custom = NSFontManager.shared.font(withFamily: family, traits: weight >= .semibold ? .boldFontMask : [],
                                                      weight: 5, size: size) else {
-            return .systemFont(ofSize: size, weight: weight)
+            return family.isEmpty && monospaced ? .monospacedSystemFont(ofSize: size, weight: weight) : .systemFont(ofSize: size, weight: weight)
         }
         return custom
     }

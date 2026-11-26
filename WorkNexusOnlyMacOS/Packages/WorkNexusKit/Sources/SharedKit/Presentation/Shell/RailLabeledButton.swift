@@ -29,7 +29,9 @@ public struct RailLabeledButton<Leading: View>: View {
                                 .offset(x: theme.spacing.s8, y: theme.spacing.s4)
                         }
                     }
-                Text(label).font(theme.typography.caption).lineLimit(1).truncationMode(.tail)
+                // A little smaller rather than cut short: a monospaced face (the Hacker theme, Geist Mono) is wider, and
+                // "Dashboard" lost its end.
+                Text(label).font(theme.typography.caption).lineLimit(1).minimumScaleFactor(0.8).truncationMode(.tail)
             }
             .padding(.horizontal, theme.spacing.s2)
             .frame(width: 64, height: 54)

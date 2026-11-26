@@ -1,7 +1,8 @@
 import Foundation
 
 /// Ported from: lib/core/settings/app_settings.dart (+ chat_appearance.dart). Persisted as one JSON row.
-public enum ThemeVariant: String, Codable, CaseIterable, Sendable { case light, dark, midnight }
+/// `hacker` (green on black, as a terminal) is not in the Flutter app.
+public enum ThemeVariant: String, Codable, CaseIterable, Sendable { case light, dark, midnight, hacker }
 public enum SurfaceStyle: String, Codable, CaseIterable, Sendable { case flat, outline }
 public enum AppDensity: String, Codable, CaseIterable, Sendable { case comfortable, compact }
 public enum DetailLayout: String, Codable, CaseIterable, Sendable { case twoPane, tabbed }

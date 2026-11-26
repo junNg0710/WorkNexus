@@ -4,7 +4,7 @@ import SharedKit
 import SwiftUI
 
 /// The appearance controls shared by the Appearance page and the quick-settings popover (lib/core/widgets/quick_settings_panel.dart):
-/// theme (light / dark / midnight / system), primary colour, surface, font, corner radius and company tint.
+/// theme (light / dark / midnight / hacker / system), primary colour, surface, font, corner radius and company tint.
 struct AppearanceControls: View {
     @Environment(\.appTheme) private var theme
     let shell: ShellModel
@@ -17,7 +17,8 @@ struct AppearanceControls: View {
             SettingsRow(label: appString("theme", "Theme")) {
                 // nil follows the OS light / dark mode.
                 SettingsSegmented(values: [(.light, appString("themeLight", "Light")), (.dark, appString("themeDark", "Dark")),
-                                           (.midnight, appString("themeMidnight", "Midnight")), (nil, appString("themeSystem", "System"))] as [(ThemeVariant?, String)],
+                                           (.midnight, appString("themeMidnight", "Midnight")), (.hacker, appString("themeHacker", "Hacker")),
+                                           (nil, appString("themeSystem", "System"))] as [(ThemeVariant?, String)],
                                   value: s.themeFollowsSystem ? nil : s.variant) { v in
                     shell.updateSettings { if let v { $0.variant = v; $0.themeFollowsSystem = false } else { $0.themeFollowsSystem = true } }
                 }

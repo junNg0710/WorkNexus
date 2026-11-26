@@ -49,7 +49,7 @@ enum DemoSeed {
 
 extension DemoSeed {
     /// Initial place for screenshots: `WN_DEMO_NAV` = `workspace[:section]`, `account:<id>[:<section>]`, `settings[:section]`, `chat`,
-    /// `editor:<bug|task>`, `ticket:<id>`, `connect`; `WN_DEMO_THEME` = `light|dark|midnight`.
+    /// `editor:<bug|task>`, `ticket:<id>`, `connect`; `WN_DEMO_THEME` = `light|dark|midnight|hacker`.
     @MainActor
     static func applyEnvironment(shell: ShellModel) {
         let env = ProcessInfo.processInfo.environment

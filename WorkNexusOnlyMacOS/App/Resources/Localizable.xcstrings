@@ -7039,6 +7039,29 @@
         }
       }
     },
+    "themeHacker": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hacker"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hacker"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "黑客"
+          }
+        }
+      }
+    },
     "surface": {
       "extractionState": "manual",
       "localizations": {

@@ -53,8 +53,19 @@ public struct AppPalette: Sendable {
         violet: c(0xFF9D8CFF), skel: rgba(255, 255, 255, 0.05), skel2: rgba(255, 255, 255, 0.10), scrim: c(0xFF000000),
         onScrim: c(0xFFFFFFFF), onColorInk: c(0xFF0B0D11), workspaceFallback: c(0xFF888888))
 
+    /// Not in the Flutter app: a terminal's green on black. Text, lines and the accent are greens of one phosphor;
+    /// what has to stand out from them keeps a colour of its own (an error is still red, a warning still amber).
+    public static let hacker = AppPalette(
+        variant: .hacker, isDark: true, bg: c(0xFF020703), panel: c(0xFF05100A), panel2: c(0xFF0A1A10), card: c(0xFF0B1E13),
+        line: c(0xFF165C2E), line2: c(0xFF1F8A43), tx: c(0xFF4DF57C), tx2: c(0xFF32C25C), tx3: c(0xFF279648),
+        accent: c(0xFF00FF66), accentTx: c(0xFF021006), titlebar: c(0xFF010502),
+        sel: rgba(0, 255, 102, 0.14), selLine: rgba(0, 255, 102, 0.55),
+        red: c(0xFFFF5F56), orange: c(0xFFFFA24A), yellow: c(0xFFE8E04A), green: c(0xFF4DF57C), amber: c(0xFFFFC14A),
+        violet: c(0xFFB48CFF), skel: rgba(0, 255, 102, 0.05), skel2: rgba(0, 255, 102, 0.10), scrim: c(0xFF000000),
+        onScrim: c(0xFFC8FFD8), onColorInk: c(0xFF021006), workspaceFallback: c(0xFF2E8B4A))
+
     public static func of(_ v: ThemeVariant) -> AppPalette {
-        switch v { case .light: .light; case .dark: .dark; case .midnight: .midnight }
+        switch v { case .light: .light; case .dark: .dark; case .midnight: .midnight; case .hacker: .hacker }
     }
     public func withAccent(_ argb: Int?) -> AppPalette {
         guard let argb else { return self }
