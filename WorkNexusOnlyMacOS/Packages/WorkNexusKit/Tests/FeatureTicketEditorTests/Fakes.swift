@@ -69,7 +69,13 @@ final class FakeEditor: ZenTaoTicketEditor, @unchecked Sendable {
         lock.lock(); savedTasks.append(draft); lock.unlock(); return saveResult
     }
     func loadImage(accountId: String, url: String) async -> Data? { nil }
-    func uploadImage(accountId: String, uid: String, bytes: Data, fileName: String) async -> Outcome<String> { .success("/file-read-1.png") }
+    /// The upload id and file name of each image uploaded; names in `refusedUploads` are refused.
+    private(set) var uploads: [String] = []
+    var refusedUploads: Set<String> = []
+    func uploadImage(accountId: String, uid: String, bytes: Data, fileName: String) async -> Outcome<String> {
+        lock.lock(); uploads.append("\(uid):\(fileName)"); let n = uploads.count; lock.unlock()
+        return refusedUploads.contains(fileName) ? .failure(.network("down")) : .success("/file-read-\(n).png")
+    }
 }
 
 /// An in-memory draft repository.
@@ -84,7 +90,15 @@ final class FakeDrafts: ZenTaoTicketDraftRepository, @unchecked Sendable {
 
     func watchAll() -> AsyncStream<[ZenTaoSavedDraft]> { let v = all; return AsyncStream { $0.yield(v); $0.finish() } }
     func read(id: String) async -> Outcome<ZenTaoSavedDraft?> { lock.lock(); defer { lock.unlock() }; return .success(items[id]) }
-    func save(_ draft: ZenTaoSavedDraft) async -> Outcome<Void> { lock.lock(); items[draft.id] = draft; saves += 1; lock.unlock(); return .success(()) }
+    /// As the database does: a write from a cancelled task is refused. `saveFailures` more saves fail first.
+    var saveFailures = 0
+    func save(_ draft: ZenTaoSavedDraft) async -> Outcome<Void> {
+        if Task.isCancelled { return .failure(.storage("cancelled")) }
+        lock.lock(); defer { lock.unlock() }
+        if saveFailures > 0 { saveFailures -= 1; return .failure(.storage("full")) }
+        items[draft.id] = draft; saves += 1
+        return .success(())
+    }
     func delete(id: String) async -> Outcome<Void> {
         if let f = deleteFailure { return .failure(f) }
         lock.lock(); items[id] = nil; lock.unlock(); return .success(())

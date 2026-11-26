@@ -28,7 +28,7 @@ public final class DraftAutosave {
         timer = Task { [weak self, delay] in
             try? await Task.sleep(for: delay)
             guard !Task.isCancelled else { return }
-            await self?.flush()
+            await self?.keepPending()
         }
     }
 
@@ -36,10 +36,19 @@ public final class DraftAutosave {
     public func flush() async {
         timer?.cancel()
         timer = nil
+        await keepPending()
+    }
+
+    /// Writes the waiting change in a task of its own: the database refuses a write from a cancelled task, and the
+    /// caller is one whenever the next change restarts the timer or the editor's view goes away while this runs. A
+    /// change that could not be kept waits for the next try (the next change, or the editor closing).
+    private func keepPending() async {
         guard let draft = pending else { return }
         let callback = onKept
         pending = nil
-        let res = await repository.save(draft)
+        let repository = repository
+        let res = await Task { await repository.save(draft) }.value
+        if case .failure = res, pending == nil { pending = draft; onKept = callback }
         callback?(res.map { _ in draft.updatedAt })
     }
 
