@@ -21,6 +21,7 @@ enum PlaceSwitchBench {
         // `WN_DEMO_MOUSE=1`: mouse moves sweep across the window (see `MouseSweep`), with or without a place cycle.
         if env["WN_DEMO_MOUSE"] == "1" { MouseSweep.start() }
         LayoutCountBench.start()
+        HitProbe.start()
         guard let spec = env["WN_DEMO_PLACE_CYCLE"] else { return }
         let places = spec.split(separator: ",").map { $0.split(separator: ":").map(String.init) }
         let pause = env["WN_DEMO_PLACE_CYCLE_SECONDS"].flatMap(Double.init) ?? 3

@@ -17,6 +17,8 @@ struct WindowConfigurator: NSViewRepresentable {
             // Scrolling anywhere in the app is not slowed by the pointer lying over what scrolls.
             ScrollPointerPause.shared.start()
             PointerMovePace.shared.start()
+            // A button that had to be clicked twice leaves a line in the log, to find what took the first click.
+            RepeatedClickLog.shared.start()
             if let w = v.window { keeper.watch(w); onWindow(w) }
         }
         return v
