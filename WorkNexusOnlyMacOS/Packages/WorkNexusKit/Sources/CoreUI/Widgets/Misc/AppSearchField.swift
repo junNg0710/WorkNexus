@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Ported from: lib/core/widgets/app_search_field.dart
@@ -24,7 +25,7 @@ public struct AppSearchField: View {
             Image(systemName: "magnifyingglass").font(.system(size: theme.sizes.icon14)).foregroundStyle(theme.colors.tx3)
             TextField(hint, text: $text)
                 .textFieldStyle(.plain).font(theme.typography.body).foregroundStyle(theme.colors.tx)
-                .focused($focused).onSubmit { onSubmit?() }
+                .focused($focused).onSubmit { takeTypedText(); onSubmit?() }
                 .onKeyPress(.escape) { text.isEmpty ? .ignored : { text = ""; return .handled }() }
                 .onKeyPress(.upArrow) { onMove.map { $0(-1); return .handled } ?? .ignored }
                 .onKeyPress(.downArrow) { onMove.map { $0(1); return .handled } ?? .ignored }
@@ -39,5 +40,12 @@ public struct AppSearchField: View {
         .background(theme.colors.panel2, in: RoundedRectangle(cornerRadius: theme.radii.md))
         .overlay(RoundedRectangle(cornerRadius: theme.radii.md).stroke(focused ? theme.colors.accent : theme.colors.line, lineWidth: theme.borders.hairline))
         .onAppear { if autofocus { focused = true } }
+    }
+
+    /// Return can come before the last letters reached `text` (an input method still holding them): what the box shows
+    /// is what is searched.
+    private func takeTypedText() {
+        guard focused, let editor = NSApp.keyWindow?.firstResponder as? NSText, editor.string != text else { return }
+        text = editor.string
     }
 }

@@ -10,6 +10,8 @@ public struct SearchableDropdownField<T: Hashable>: View {
     @State private var open = false
     @State private var query = ""
     @State private var highlighted = 0
+    /// The search the highlighted row belongs to: a highlight left from another search does not count (`submit`).
+    @State private var highlightedFor = ""
     @State private var fieldWidth: CGFloat = 260
     /// One option row as drawn, measured: the list's height is worked out from it.
     @State private var rowHeight: CGFloat = 30
@@ -30,10 +32,14 @@ public struct SearchableDropdownField<T: Hashable>: View {
         self.onChanged = onChanged
     }
 
-    private var filtered: [T] {
-        guard !query.isEmpty else { return items }
-        let q = query.lowercased()
-        return items.filter { (searchTextOf ?? labelOf)($0).lowercased().contains(q) }
+    private var filtered: [T] { SearchableDropdownPick.matching(items, query: query, text: searchTextOf ?? labelOf) }
+
+    /// Return in the search box picks the highlighted match of what is typed now. Worked out here, not taken from the
+    /// list as it was last drawn: Return can come in the same turn as the last letter (typed fast, or an input method
+    /// handing over its text), and the list still drawn for "vi" gave its first row - someone else - for "vic".
+    private func submit() {
+        if let item = SearchableDropdownPick.choice(items, query: query, highlighted: highlighted, highlightedFor: highlightedFor,
+                                                    text: searchTextOf ?? labelOf) { pick(item) }
     }
 
     public var body: some View {
@@ -55,7 +61,7 @@ public struct SearchableDropdownField<T: Hashable>: View {
     }
 
     private func toggle() {
-        query = ""
+        query = ""; highlightedFor = ""
         highlighted = value.flatMap { items.firstIndex(of: $0) } ?? 0
         open.toggle()
     }
@@ -72,8 +78,8 @@ public struct SearchableDropdownField<T: Hashable>: View {
         let list = filtered
         return VStack(spacing: 0) {
             AppSearchField(text: $query, hint: searchHint, autofocus: true,
-                           onSubmit: { if list.indices.contains(highlighted) { pick(list[highlighted]) } },
-                           onMove: { highlighted = min(max(highlighted + $0, 0), max(list.count - 1, 0)) })
+                           onSubmit: submit,
+                           onMove: { highlighted = min(max(highlighted + $0, 0), max(list.count - 1, 0)); highlightedFor = query })
                 .padding(theme.spacing.s8)
             Divider().overlay(theme.colors.line)
             if list.isEmpty {
@@ -100,8 +106,24 @@ public struct SearchableDropdownField<T: Hashable>: View {
         }
         .frame(width: max(fieldWidth, popoverMinWidth ?? 0))
         .background(theme.colors.card)
-        .onChange(of: query) { _, _ in highlighted = 0 }
+        .onChange(of: query) { _, now in highlighted = 0; highlightedFor = now }
         .onExitCommand { open = false }
+    }
+}
+
+/// What a searchable dropdown lists for a search, and what Return picks from it.
+enum SearchableDropdownPick {
+    static func matching<T>(_ items: [T], query: String, text: (T) -> String) -> [T] {
+        guard !query.isEmpty else { return items }
+        let q = query.lowercased()
+        return items.filter { text($0).lowercased().contains(q) }
+    }
+
+    /// The match Return picks: the highlighted one when the highlight was made for this very search, else the first.
+    static func choice<T>(_ items: [T], query: String, highlighted: Int, highlightedFor: String, text: (T) -> String) -> T? {
+        let now = matching(items, query: query, text: text)
+        let at = highlightedFor == query ? highlighted : 0
+        return now.indices.contains(at) ? now[at] : nil
     }
 }
 
