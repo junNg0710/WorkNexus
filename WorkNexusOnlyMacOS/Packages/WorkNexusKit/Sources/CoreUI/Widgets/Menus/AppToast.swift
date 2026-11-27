@@ -134,6 +134,7 @@ public struct AppToastHost: ViewModifier {
                 .padding(.top, theme.sizes.titleBar + theme.spacing.s10)
                 .animation(.easeOut(duration: theme.motion.base), value: controller.toasts)
             }
+            .onChange(of: controller.toasts.count, initial: true) { _, n in RepeatedClickLog.shared.mark("toast", up: n > 0) }
     }
 }
 

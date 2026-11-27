@@ -28,6 +28,7 @@ public struct NotificationsPanel: View {
         }
         .padding(.leading, leftInset)
         .animation(.easeOut(duration: theme.motion.slow), value: model.panelOpen)
+        .onChange(of: model.panelOpen, initial: true) { _, up in RepeatedClickLog.shared.mark("notifications panel", up: up) }
     }
 
     /// Dims what the panel covers; a tap on it closes the panel.

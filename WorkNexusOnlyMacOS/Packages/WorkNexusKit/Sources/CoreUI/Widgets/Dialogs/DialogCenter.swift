@@ -46,6 +46,7 @@ struct DialogHost: ViewModifier {
                 }
             }
             .animation(.easeOut(duration: theme.motion.base), value: center.stack.map(\.id))
+            .onChange(of: center.stack.count, initial: true) { _, n in RepeatedClickLog.shared.mark("dialog", up: n > 0) }
     }
 }
 

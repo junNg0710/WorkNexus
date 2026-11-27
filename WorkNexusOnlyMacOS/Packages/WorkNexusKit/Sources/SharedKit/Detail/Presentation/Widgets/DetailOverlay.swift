@@ -89,6 +89,7 @@ struct DetailSlideOver: View {
             sync()
         }
         .onChange(of: controller.nav.rail) { _, _ in placeChanged() }
+        .onChange(of: shown[here] != nil, initial: true) { _, up in RepeatedClickLog.shared.mark("ticket panel", up: up) }
         .task {
             controller.start()
             placeChanged()

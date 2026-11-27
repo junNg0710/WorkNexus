@@ -80,6 +80,7 @@ struct GlobalSearchField: View {
             }
         }
         .zIndex(showing ? 10 : 0)
+        .onChange(of: showing, initial: true) { _, up in RepeatedClickLog.shared.mark("title bar search results", up: up) }
     }
 
     private func search(_ query: String) {

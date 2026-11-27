@@ -36,6 +36,14 @@ public final class RepeatedClickLog {
     public static let shared = RepeatedClickLog()
     private var gate = RepeatedClickGate()
     private var monitor: Any?
+    /// What lies over the app's content now (a search's results, a toast, a dialog, a ticket's panel), as its owners say.
+    private var up: Set<String> = []
+
+    /// `what` came up over the content, or went away: named in the line of a click made again while it is up, since a
+    /// layer of SwiftUI's own that takes a click is not an AppKit view the click's target would show.
+    public func mark(_ what: String, up isUp: Bool) {
+        if isUp { up.insert(what) } else { up.remove(what) }
+    }
 
     /// Starts watching, once.
     public func start() {
@@ -51,7 +59,7 @@ public final class RepeatedClickLog {
         let at = event.locationInWindow
         // From the window's top-left, as the eye reads a screenshot.
         let point = CGPoint(x: at.x, y: window.frame.height - at.y)
-        let what = Self.target(of: event, in: window)
+        let what = Self.target(of: event, in: window) + (up.isEmpty ? "" : " {over the content: \(up.sorted().joined(separator: ", "))}")
         guard let earlier = gate.note(point, window: window.windowNumber, time: event.timestamp, what: what) else { return }
         Diagnostics.info("clicks", "Clicked again at \(Int(point.x)),\(Int(point.y)) after \(Int(earlier.gap * 1000)) ms. First: \(earlier.first). Now: \(what)")
     }

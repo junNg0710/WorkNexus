@@ -87,6 +87,7 @@ public struct ContextualSearchField: View {
             }
         }
         .zIndex(showing ? 10 : 0)
+        .onChange(of: showing, initial: true) { _, up in RepeatedClickLog.shared.mark("board search results", up: up) }
         // A click outside the field and its results closes them (the typed text stays).
         .onOutsideClick(isActive: showing, extra: CGRect(x: 0, y: theme.sizes.control32 + theme.spacing.s4, width: 480, height: overlayHeight)) { showing = false }
         // The menu's ⌘K reaches the board on screen first (a hidden, kept-alive board must not answer it).
