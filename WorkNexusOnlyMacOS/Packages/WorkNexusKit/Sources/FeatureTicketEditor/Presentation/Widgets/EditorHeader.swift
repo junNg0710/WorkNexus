@@ -25,13 +25,14 @@ struct EditorHeader: View {
             HStack(spacing: theme.spacing.s14) {
                 Text(title).font(theme.typography.titleSm).foregroundStyle(theme.colors.tx).lineLimit(1)
                 if draftSaved { DraftSavedNote() }
-                if let draftPicker { draftPicker }
                 Spacer(minLength: 0)
             }
             if let error {
                 Text(appFormat("ticketEditorSaveFailed", "Couldn't save: %1$@", error)).font(theme.typography.paragraph)
                     .foregroundStyle(theme.colors.red).lineLimit(2).multilineTextAlignment(.trailing).help(error)
             }
+            // With the actions, not after the title: there it went unseen.
+            if let draftPicker { draftPicker }
             if let onDiscardDraft {
                 AppButton(appString("ticketDraftDiscard", "Discard draft"), systemImage: "trash", kind: .ghost, action: onDiscardDraft)
             }

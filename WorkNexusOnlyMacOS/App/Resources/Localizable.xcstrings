@@ -52579,25 +52579,25 @@
         }
       }
     },
-    "ticketDraftDelete": {
+    "ticketDraftInMenu": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delete draft"
+            "value": "Draft: %1$@"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Xoá nháp"
+            "value": "Nháp: %1$@"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "删除草稿"
+            "value": "草稿：%1$@"
           }
         }
       }

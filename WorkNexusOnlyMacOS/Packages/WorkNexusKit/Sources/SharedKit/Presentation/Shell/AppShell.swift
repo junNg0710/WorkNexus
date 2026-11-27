@@ -24,7 +24,9 @@ public struct AppShell: View {
                     ZStack {
                         Viewport(model: model).frame(maxWidth: .infinity, maxHeight: .infinity)
                         if let route = model.nav.editor {
-                            model.host.editor(route).frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.colors.bg)
+                            // Another route (a draft picked from the "+" menu while the editor is open) is another editor:
+                            // the one on screen kept the ticket it was opened on.
+                            model.host.editor(route).id(route).frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.colors.bg)
                         }
                     }
                 }

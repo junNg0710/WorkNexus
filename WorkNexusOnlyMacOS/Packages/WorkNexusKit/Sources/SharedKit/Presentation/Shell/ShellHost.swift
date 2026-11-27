@@ -42,6 +42,9 @@ public struct ShellHost {
     /// execution); nil, or an empty list, hides the button. Closures run in a view body, so reading the nav state in one makes
     /// the menu follow it.
     public var newTicketTargets: (() -> [NewTicketTarget])?
+    /// The bugs and tasks left unfinished, listed under those choices: picking one opens the editor on it again. Runs in a
+    /// view body, like `newTicketTargets`.
+    public var newTicketDrafts: (() -> [NewTicketDraft])?
     /// What the title bar's search looks through on `rail` when that place has a search of its own (the Chat page);
     /// nil: the workspace's tickets.
     public var placeSearch: (RailTarget) -> PlaceSearch? = { _ in nil }
@@ -68,6 +71,19 @@ public struct ShellHost {
     /// body, like `petDemo`.
     public var settingsSectionVisible: (_ section: String) -> Bool = { _ in true }
     public init() {}
+}
+
+/// A kept draft in the rail's "+" menu: what names it (its title and when it was written), the route that opens it, and
+/// what discards it.
+public struct NewTicketDraft: Identifiable {
+    public let id: String
+    public let label: String
+    public let isBug: Bool
+    public let route: TicketEditorRoute
+    public let discard: @MainActor () -> Void
+    public init(id: String, label: String, isBug: Bool, route: TicketEditorRoute, discard: @escaping @MainActor () -> Void) {
+        self.id = id; self.label = label; self.isBug = isBug; self.route = route; self.discard = discard
+    }
 }
 
 /// One entry of the rail's "+" menu: a new bug or task of a ZenTao account, as the editor route that opens it.

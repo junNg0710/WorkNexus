@@ -77,5 +77,7 @@ struct TaskEditorView: View {
                           message: appString("ticketDraftDiscardMessage", "What you wrote will be deleted."),
                           confirmLabel: appString("ticketDraftDiscard", "Discard draft"), destructive: true, onConfirm: discard)
         .task { await controller.load() }
+        // Closed from outside (another place, another draft picked from the "+" menu): what was typed last is kept too.
+        .onDisappear { Task { await controller.close() } }
     }
 }

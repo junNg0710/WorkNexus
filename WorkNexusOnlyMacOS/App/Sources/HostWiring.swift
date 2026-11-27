@@ -124,6 +124,21 @@ struct HostWiring {
         }
         host.miniAppName = { id in r.miniApps.model.apps.first { $0.id == id }?.name }
         host.newTicketTargets = { Self.newTicketTargets(shell) }
+        // The bugs and tasks left unfinished, under them: the way back to a draft from anywhere in the app.
+        if let stored = r.services.zentaoDrafts {
+            let kept = KeptTicketDrafts()
+            Task { await kept.run(stored) }
+            host.newTicketDrafts = {
+                let accounts = Set(shell.workspaceAccounts.filter { $0.providerType == .zentao }.map(\.id))
+                return kept.offered(accounts: accounts).map {
+                    draft in
+                    NewTicketDraft(id: draft.id, label: TicketDraftMenu.label(draft), isBug: KeptTicketDrafts.isBug(draft),
+                                   route: KeptTicketDrafts.route(draft)) {
+                        Task { if let f = await KeptTicketDrafts.discard([draft], from: stored) { shell.toasts.show(f.message, kind: .error) } }
+                    }
+                }
+            }
+        }
         shell.host = host
         installDetailExtensions()
         r.miniApps.model.requestShow = { shell.nav.openMiniApp($0) }
