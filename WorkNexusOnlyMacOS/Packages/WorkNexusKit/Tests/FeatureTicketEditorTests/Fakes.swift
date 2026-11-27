@@ -110,4 +110,6 @@ final class FakeMembers: ZenTaoTeamMembers, @unchecked Sendable {
     func executionMembers(accountId: String, executionId: String) async -> Outcome<[ProviderUser]> {
         .success([ProviderUser(account: "ryan", displayName: "Ryan")])
     }
+    func bugAssignees(accountId: String, bugId: String) async -> Outcome<[ProviderUser]> { .success([]) }
+    func taskAssignees(accountId: String, taskId: String, executionId: String) async -> Outcome<[ProviderUser]> { .success([]) }
 }

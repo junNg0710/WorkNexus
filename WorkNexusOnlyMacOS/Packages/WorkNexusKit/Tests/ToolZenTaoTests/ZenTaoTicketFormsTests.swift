@@ -81,6 +81,21 @@ final class ZenTaoTicketFormsTests: XCTestCase {
         XCTAssertEqual(zentaoIntOr("x", 3), 3)
     }
 
+    /// The assign forms' own lists: a bug's `users`, a task's `members` (asked for with its execution first).
+    func testAssigneesAreReadFromTheAssignForms() async throws {
+        let (forms, server) = makeForms { req in
+            req.path.contains("bug-assignTo")
+                ? wrapped(["users": ["": "", "dante": "D:Dante-HK-Flutter", "dany": "D:Dany_VN_VUE", "closed": "Closed"] as JSON] as JSON)
+                : wrapped(["users": ["x": "X:Everyone"] as JSON, "members": ["dany": "D:Dany_VN_VUE"] as JSON] as JSON)
+        }
+        let bug = try await forms.bugAssignees("7626")
+        XCTAssertEqual(Set(bug.map(\.value)), ["dante", "dany"])
+        XCTAssertNotNil(try? sent(server, "bug-assignTo-7626.json"))
+        let task = try await forms.taskAssignees("14655", executionId: "7")
+        XCTAssertEqual(task, [FormOption(value: "dany", label: "D:Dany_VN_VUE")])
+        XCTAssertNotNil(try? sent(server, "task-assignTo-7-14655.json"))
+    }
+
     // MARK: Bugs
 
     func testANewBugOn18ReadsItsFlatDefaultsAndChoices() async throws {

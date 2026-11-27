@@ -47,6 +47,18 @@ struct ZenTaoTicketForms {
         zentaoOptions(try await page("task-create-\(executionId)-0-0")["members"])
     }
 
+    /// The people the assign form of bug `bugId` lists (`bug-assignTo`): everyone a bug can go to on the web, which is
+    /// more than the product's members.
+    func bugAssignees(_ bugId: String) async throws -> [FormOption] {
+        zentaoOptions(try await page("bug-assignTo-\(bugId)")["users"])
+    }
+
+    /// The people the assign form of task `taskId` lists (`task-assignTo`, which takes the execution before the task):
+    /// the execution's team. Without the execution ZenTao lists only who the task is with now.
+    func taskAssignees(_ taskId: String, executionId: String) async throws -> [FormOption] {
+        zentaoOptions(try await page("task-assignTo-\(executionId)-\(taskId)")["members"])
+    }
+
     // MARK: Bugs
 
     /// A new bug's form in product `productId` (`'0'`: ZenTao picks its current one), filled in by ZenTao from

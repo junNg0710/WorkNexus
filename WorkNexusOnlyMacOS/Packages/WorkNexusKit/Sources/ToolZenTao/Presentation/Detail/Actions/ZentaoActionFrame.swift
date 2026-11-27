@@ -89,10 +89,19 @@ struct ZentaoNoteField: View {
     }
 }
 
-/// The people a ZenTao ticket can be handed to: the members of its execution (task) or product (bug) when ZenTao
-/// lists them, else the account's whole user list.
+/// The people a ZenTao ticket can be handed to: those its own assign form on the web lists (for a bug that is everyone,
+/// not only its product's members, who were all the app offered). Where that form cannot be read: the members of its
+/// execution (task) or product (bug) when ZenTao lists them, else the account's whole user list.
 enum ZentaoAssignees {
     static func load(_ deps: ZentaoDependencies, _ ticket: Ticket) async -> Outcome<[ProviderUser]> {
+        var listed: Outcome<[ProviderUser]>?
+        switch ticket.providerEntity {
+        case .zentaoTask(let t):
+            if let e = zentaoLinkId(t.execution) { listed = await deps.teamMembers.taskAssignees(accountId: ticket.accountId, taskId: ticket.externalKey, executionId: e) }
+        case .zentaoBug: listed = await deps.teamMembers.bugAssignees(accountId: ticket.accountId, bugId: ticket.externalKey)
+        default: break
+        }
+        if let list = listed?.value, !list.isEmpty { return .success(list) }
         var members: Outcome<[ProviderUser]>?
         switch ticket.providerEntity {
         case .zentaoTask(let t): if let e = zentaoLinkId(t.execution) { members = await deps.teamMembers.executionMembers(accountId: ticket.accountId, executionId: e) }

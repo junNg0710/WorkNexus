@@ -77,4 +77,8 @@ public protocol ZenTaoTicketService: Sendable {
 public protocol ZenTaoTeamMembers: Sendable {
     func productMembers(accountId: String, productId: String) async -> Outcome<[ProviderUser]>
     func executionMembers(accountId: String, executionId: String) async -> Outcome<[ProviderUser]>
+    /// The people ZenTao's own assign form of bug `bugId` offers: more than its product's members.
+    func bugAssignees(accountId: String, bugId: String) async -> Outcome<[ProviderUser]>
+    /// The people ZenTao's own assign form of task `taskId` offers (the team of its execution `executionId`).
+    func taskAssignees(accountId: String, taskId: String, executionId: String) async -> Outcome<[ProviderUser]>
 }

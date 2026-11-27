@@ -187,6 +187,16 @@ final class PresentationDetailLogicTests: XCTestCase {
         XCTAssertEqual(b.value?.map(\.account), ["ann"])
     }
 
+    /// The assign form on the web lists more people than a product has members: its list is the one offered.
+    func testAssigneesAreThoseTheAssignFormLists() async {
+        let everyone = [ProviderUser(account: "dante", displayName: "Dante"), ProviderUser(account: "dany", displayName: "Dany")]
+        let env = DetailEnv(members: [ProviderUser(account: "dany", displayName: "Dany")], assignees: everyone)
+        let bug = await ZentaoAssignees.load(env.deps, detailTicket("Bug", "active", entity: .zentaoBug(ZenTaoBugEntity(product: "4"))))
+        XCTAssertEqual(bug.value?.map(\.account), ["dante", "dany"])
+        let task = await ZentaoAssignees.load(env.deps, detailTicket("Task", "doing", entity: .zentaoTask(ZenTaoTaskEntity(execution: "7"))))
+        XCTAssertEqual(task.value?.map(\.account), ["dante", "dany"])
+    }
+
     // MARK: Linked tickets (parent_task_link_test)
 
     func testASyncedParentOpensWithoutFetching() async {

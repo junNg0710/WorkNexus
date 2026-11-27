@@ -93,6 +93,14 @@ public struct ClassicZenTaoTeamMembers: ZenTaoTeamMembers {
         await run(accountId) { try await $0.executionMembers(executionId) }
     }
 
+    public func bugAssignees(accountId: String, bugId: String) async -> Outcome<[ProviderUser]> {
+        await run(accountId) { try await $0.bugAssignees(bugId) }
+    }
+
+    public func taskAssignees(accountId: String, taskId: String, executionId: String) async -> Outcome<[ProviderUser]> {
+        await run(accountId) { try await $0.taskAssignees(taskId, executionId: executionId) }
+    }
+
     /// The initial ZenTao puts before each name in its member lists (`T:Thanh`) to sort them; a bug names its
     /// opener and resolver without it.
     private static let initial = #"^\p{L}:"#

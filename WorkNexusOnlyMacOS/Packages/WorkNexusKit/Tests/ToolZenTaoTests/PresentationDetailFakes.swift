@@ -136,8 +136,16 @@ struct DetailFakeEditor: ZenTaoTicketEditor {
 
 struct DetailFakeTeam: ZenTaoTeamMembers {
     var members: [ProviderUser] = []
+    /// Who the assign form lists; empty: the form could not be read.
+    var assignees: [ProviderUser] = []
     func productMembers(accountId: String, productId: String) async -> Outcome<[ProviderUser]> { .success(members) }
     func executionMembers(accountId: String, executionId: String) async -> Outcome<[ProviderUser]> { .success(members) }
+    func bugAssignees(accountId: String, bugId: String) async -> Outcome<[ProviderUser]> {
+        assignees.isEmpty ? .failure(.notFound("no form")) : .success(assignees)
+    }
+    func taskAssignees(accountId: String, taskId: String, executionId: String) async -> Outcome<[ProviderUser]> {
+        assignees.isEmpty ? .failure(.notFound("no form")) : .success(assignees)
+    }
 }
 
 struct DetailFakeDocs: ZenTaoDocRepository {
@@ -170,7 +178,7 @@ struct DetailEnv {
     let state: ZentaoUIState
     let sync: DetailFakeSync
 
-    init(members: [ProviderUser] = []) {
+    init(members: [ProviderUser] = [], assignees: [ProviderUser] = []) {
         let adapter = self.adapter, store = self.store, service = self.service
         sync = DetailFakeSync(adapter: adapter)
         store.accounts["zt"] = Account(id: "zt", workspaceId: "w1", providerType: .zentao, handle: "thanh", baseUrl: "https://zentao.example.com/zentao")
@@ -180,7 +188,7 @@ struct DetailEnv {
                                    credentials: store, sync: sync, ticketDetail: sync, adapters: DetailFakeRegistry())
         let docs = DetailFakeDocs()
         deps = ZentaoDependencies(services: services, nav: nav, registry: { ToolRegistry() }, tickets: service, viewPages: service, taskBugs: service,
-                                  editor: DetailFakeEditor(), teamMembers: DetailFakeTeam(members: members), workflow: workflow, docs: docs,
+                                  editor: DetailFakeEditor(), teamMembers: DetailFakeTeam(members: members, assignees: assignees), workflow: workflow, docs: docs,
                                   exportDoc: ExportZenTaoDoc(docs))
         state = ZentaoUIState(deps: deps)
     }
