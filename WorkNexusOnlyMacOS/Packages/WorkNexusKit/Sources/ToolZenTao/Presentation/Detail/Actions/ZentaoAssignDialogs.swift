@@ -22,6 +22,8 @@ struct ZentaoAssignDialog: View {
     @State private var note: ZentaoNoteModel
     @State private var assignee: String?
     @State private var busy = false
+    /// Someone was just picked: Return assigns, until the user goes on with the form (`returnSubmits`).
+    @State private var returnAssigns = false
 
     init(deps: ZentaoDependencies, state: ZentaoUIState, ticket: Ticket, onClose: @escaping () -> Void) {
         self.deps = deps; self.state = state; self.ticket = ticket; self.onClose = onClose
@@ -46,11 +48,12 @@ struct ZentaoAssignDialog: View {
         ZentaoActionFrame(title: ZentaoActionLooks.title(title, ticket.externalKey), icon: "person.badge.plus", submitLabel: title,
                           busy: busy, canSubmit: assignee != nil, onSubmit: submit, onClose: onClose) {
             ZentaoFieldLabel(appString("fieldAssignTo", "Assign to"))
-            ZentaoAssigneeDropdown(deps: deps, ticket: ticket, value: assignee) { assignee = $0 }
+            ZentaoAssigneeDropdown(deps: deps, ticket: ticket, value: assignee) { assignee = $0; returnAssigns = true }
             ZentaoFieldGap()
             ZentaoFieldLabel(appString("zentaoNote", "Note"))
             ZentaoNoteField(deps: deps, ticket: ticket, note: note)
         }
+        .returnSubmits(armed: $returnAssigns, ready: assignee != nil && !busy, perform: submit)
     }
 }
 
@@ -64,6 +67,8 @@ struct ZentaoTaskAssignDialog: View {
     @State private var left: String
     @State private var assignee: String?
     @State private var busy = false
+    /// Someone was just picked: Return assigns, until the user goes on with the form (`returnSubmits`).
+    @State private var returnAssigns = false
 
     init(deps: ZentaoDependencies, state: ZentaoUIState, ticket: Ticket, onClose: @escaping () -> Void) {
         self.deps = deps; self.state = state; self.ticket = ticket; self.onClose = onClose
@@ -94,7 +99,7 @@ struct ZentaoTaskAssignDialog: View {
         ZentaoActionFrame(title: ZentaoActionLooks.title(title, ticket.externalKey), icon: "person.badge.plus", submitLabel: title,
                           busy: busy, canSubmit: assignee != nil && problem == nil, onSubmit: submit, onClose: onClose) {
             ZentaoFieldLabel(appString("fieldAssignTo", "Assign to"))
-            ZentaoAssigneeDropdown(deps: deps, ticket: ticket, value: assignee) { assignee = $0 }
+            ZentaoAssigneeDropdown(deps: deps, ticket: ticket, value: assignee) { assignee = $0; returnAssigns = true }
             ZentaoFieldGap()
             if asksLeft {
                 ZentaoTaskHoursField(label: appString("zentaoHoursLeft", "Hours left"), text: $left)
@@ -104,5 +109,6 @@ struct ZentaoTaskAssignDialog: View {
             ZentaoFieldLabel(appString("zentaoNote", "Note"))
             ZentaoNoteField(deps: deps, ticket: ticket, note: note)
         }
+        .returnSubmits(armed: $returnAssigns, ready: assignee != nil && problem == nil && !busy, perform: submit)
     }
 }
