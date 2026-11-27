@@ -49,6 +49,19 @@ final class MiniAppTabsPersistenceTests: XCTestCase {
         XCTAssertEqual(tabs.snapshot.urls.count, 3)
     }
 
+    /// Closing the tab in front leaves its neighbour on screen with a page - also one kept from the last run and never
+    /// shown yet, which has none until then. Tab after tab, down to the last one.
+    func testClosingDownToATabNeverShownStillShowsItsPage() {
+        let tabs = MiniAppTabsModel(appId: "a", restoring: ["https://x.io/1", "https://x.io/2", "https://x.io/3"], selected: 0, apps: FakeMiniAppRepo())
+        XCTAssertEqual(tabs.tabs.map(\.activated), [true, false, false])
+        XCTAssertTrue(tabs.close(tabs.selectedId))
+        XCTAssertTrue(tabs.selected.activated)
+        XCTAssertTrue(tabs.close(tabs.selectedId))
+        XCTAssertTrue(tabs.selected.activated)
+        XCTAssertEqual(tabs.tabs.count, 1)
+        XCTAssertEqual(tabs.tabs.filter(\.activated).count, 1, "the app always has a page to show")
+    }
+
     func testOpeningAndClosingTabsAreSaved() async throws {
         let repo = FakeMiniAppRepo()
         let tabs = MiniAppTabsModel(appId: "a", initialUrl: "https://x.io/1", apps: repo)

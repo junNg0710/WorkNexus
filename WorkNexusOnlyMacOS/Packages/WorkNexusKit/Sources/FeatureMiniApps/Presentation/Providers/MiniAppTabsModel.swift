@@ -99,6 +99,9 @@ final class MiniAppTabsModel {
         let gone = tabs.remove(at: at)
         if id == selectedId {
             selectedId = tabs[min(at, tabs.count - 1)].id
+            // As picking it does: a tab kept from the last run has no page until it is first shown. Left like that, the
+            // app had no page at all on screen - blank, with the tab strip dropped to the middle of it.
+            selected.activate()
             selected.setPersists(true)
         }
         gone.flush()

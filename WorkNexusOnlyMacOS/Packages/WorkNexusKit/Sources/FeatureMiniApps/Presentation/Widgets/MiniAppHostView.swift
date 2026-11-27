@@ -55,6 +55,8 @@ private struct MiniAppPageBody: View {
                         .opacity(shown ? 1 : 0).allowsHitTesting(shown).accessibilityHidden(!shown)
                 }
             }
+            // The page's room is the page's whatever it holds: with no page in it the bars above floated to the middle.
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .onAppear { address = browser.address }
         .onChange(of: browser.address) { _, new in if !addressFocused { address = new } }
