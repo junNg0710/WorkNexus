@@ -90,6 +90,20 @@ final class ChatShellLabelsTests: XCTestCase {
         XCTAssertEqual(split.files.map(\.gid), ["f4"])
     }
 
+    /// Stickers are reactions, not photos: a sticker-sized WebP / GIF, a Telegram sticker, or a picture named like a
+    /// sticker this Mac knows stays out of "Photos & videos". A photo of the same format at full size stays in.
+    func testStickersAreLeftOutOfTheSharedPhotos() {
+        func image(_ gid: String, _ name: String, _ side: Int?) -> ChatMessage {
+            Make.message(gid, content: .image(ImageContent(fileId: 2, name: name, size: 1, time: 1, width: side, height: side)))
+        }
+        let all = [image("sticker", "053.webp", 512), image("gif", "wave.gif", 240), image("tgs", "hi.tgs", nil), image("mine", "pepe.png", 320),
+                   image("photo", "shot.png", 320), image("big", "photo.webp", 1600), image("unknown", "old.webp", nil)]
+        let split = ChatShellLabels.splitAttachments(all, stickerNames: ["pepe.png"])
+        XCTAssertEqual(split.media.map(\.gid), ["photo", "big", "unknown"])
+        XCTAssertTrue(split.files.isEmpty)
+        XCTAssertEqual(ChatShellLabels.splitAttachments(all).media.map(\.gid), ["mine", "photo", "big", "unknown"], "no names known: only by format and size")
+    }
+
     func testAvatarStylePerChatKind() {
         let users = [2: ChatUser(accountId: "a", userId: 2, account: "b", realname: "B", avatarUrl: "https://x/b.png")]
         var cloud = ShellMake.chat("c", type: .one2one, peer: 2); cloud.isMyCloud = true

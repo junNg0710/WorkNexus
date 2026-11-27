@@ -5,6 +5,7 @@ import SwiftUI
 /// Beside the chat: every photo/video (grid) and file (list) shared in it, newest first, from the messages loaded here.
 /// Ported from: lib/features/chat/presentation/widgets/chat_files_panel.dart
 struct ChatFilesPanel: View {
+    @Environment(\.chatServices) private var services
     @Environment(\.appTheme) private var theme
     @Environment(\.chatShellLayout) private var layout
     let model: ChatShellModel
@@ -15,8 +16,7 @@ struct ChatFilesPanel: View {
         ChatSidePanelFrame(title: shellString("chatFilesAndMedia", "Files & media"),
                            onBack: { session.state.backToInfo(infoRoom: layout.infoRoom) },
                            onClose: { session.state.closePanel() }) {
-            if let all = session.attachments {
-                let split = ChatShellLabels.splitAttachments(all)
+            if let split = session.shared {
                 VStack(spacing: 0) {
                     AppSegmentedTabs([
                         AppSegmentedTab(label: "\(shellString("chatMedia", "Photos & videos")) (\(split.media.count))", active: tab == 0) { tab = 0 },
@@ -45,5 +45,6 @@ struct ChatFilesPanel: View {
             }
         }
         .task { await session.watchAttachments() }
+        .task { await session.loadStickerNames(services?.stickers) }
     }
 }

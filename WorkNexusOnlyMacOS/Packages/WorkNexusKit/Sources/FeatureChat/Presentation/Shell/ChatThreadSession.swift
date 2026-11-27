@@ -18,6 +18,12 @@ final class ChatThreadSession {
     private(set) var memberCount: Int?
     /// The chat's image and file messages stored locally, newest first; nil until the first read.
     private(set) var attachments: [ChatMessage]?
+    /// The names of the stickers this Mac knows: a picture named like one, at sticker size, is a sticker.
+    private(set) var stickerNames: Set<String> = []
+    /// The chat's photos and videos, and its files; nil until loaded. Stickers are left out of both.
+    var shared: (media: [ChatMessage], files: [ChatMessage])? {
+        attachments.map { ChatShellLabels.splitAttachments($0, stickerNames: stickerNames) }
+    }
     /// A group's member ids; nil until loaded.
     private(set) var memberIds: [Int]?
     private(set) var membersFailed = false
@@ -45,6 +51,11 @@ final class ChatThreadSession {
         search.onQuery = { state.searchQuery = $0 }
         search.onJump = { state.requestJump(to: $0) }
         history.onProgress = { [weak search] in search?.reload() }
+    }
+
+    /// Reads the known stickers' names, for `shared`.
+    func loadStickerNames(_ stickers: StickerRepository?) async {
+        if case .success(let known)? = await stickers?.stickers() { stickerNames = Set(known.map(\.name)) }
     }
 
     /// One session, one pane: a chat closed and opened again is built anew.

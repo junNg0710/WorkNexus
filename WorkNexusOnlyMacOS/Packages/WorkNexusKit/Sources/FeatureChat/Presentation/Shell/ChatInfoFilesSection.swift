@@ -5,6 +5,7 @@ import SwiftUI
 /// The info panel's "Photos & videos" and "Files" cards: a preview of the newest ones and "See all", which opens the files panel.
 /// Ported from: lib/features/chat/presentation/widgets/chat_info_files_section.dart
 struct ChatInfoFilesSection: View {
+    @Environment(\.chatServices) private var services
     @Environment(\.chatShellLayout) private var layout
     let model: ChatShellModel
     let session: ChatThreadSession
@@ -13,7 +14,7 @@ struct ChatInfoFilesSection: View {
     private static let previewFiles = 3
 
     var body: some View {
-        let split = session.attachments.map(ChatShellLabels.splitAttachments)
+        let split = session.shared
         let seeAll = { session.state.togglePanel(.files, infoRoom: layout.infoRoom) }
         VStack(spacing: 0) {
             FilesCard(title: split.map { "\(shellString("chatMedia", "Photos & videos")) (\($0.media.count))" } ?? shellString("chatMedia", "Photos & videos"),
@@ -47,6 +48,7 @@ struct ChatInfoFilesSection: View {
             }
         }
         .task { await session.watchAttachments() }
+        .task { await session.loadStickerNames(services?.stickers) }
     }
 }
 

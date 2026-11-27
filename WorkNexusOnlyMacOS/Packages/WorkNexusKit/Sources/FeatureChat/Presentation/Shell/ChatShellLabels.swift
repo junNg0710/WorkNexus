@@ -214,12 +214,14 @@ enum ChatShellLabels {
         return String(name[name.index(after: dot)...].uppercased().prefix(4))
     }
 
-    /// Splits a chat's attachment messages into media (images, videos) and other files.
-    static func splitAttachments(_ messages: [ChatMessage]) -> (media: [ChatMessage], files: [ChatMessage]) {
+    /// Splits a chat's attachment messages into media (images, videos) and other files. Stickers are in neither: they
+    /// are reactions, not photos (`stickerNames`: the stickers this Mac knows, for `IsStickerImage`).
+    static func splitAttachments(_ messages: [ChatMessage], stickerNames: Set<String> = []) -> (media: [ChatMessage], files: [ChatMessage]) {
         var media: [ChatMessage] = [], files: [ChatMessage] = []
+        let isSticker = IsStickerImage()
         for m in messages {
             switch m.content {
-            case .image: media.append(m)
+            case .image(let i): if !isSticker(i, knownNames: stickerNames) { media.append(m) }
             case .file(let f) where f.fileId > 0: if isVideoFile(f) { media.append(m) } else { files.append(m) }
             default: break
             }
