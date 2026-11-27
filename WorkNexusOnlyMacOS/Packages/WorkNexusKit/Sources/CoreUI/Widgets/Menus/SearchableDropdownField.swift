@@ -4,7 +4,8 @@ import SwiftUI
 /// A themed select field with a filterable popover list. Renders like the app's input fields when closed;
 /// clicking opens an anchored popover with a search box and a scrollable, keyboard-navigable list of `items`
 /// (↑ / ↓ move, Return picks, Esc closes). `searchTextOf` is the text matched against the query (default: the label);
-/// `imageOf` puts a small picture before each option (an app's icon).
+/// `imageOf` puts a small picture before each option (an app's icon). `opensAtOnce`: the list is open, its search box
+/// taking the keys, as soon as the field is there - for a dialog whose one job is this choice.
 public struct SearchableDropdownField<T: Hashable>: View {
     @Environment(\.appTheme) private var theme
     @State private var open = false
@@ -20,15 +21,16 @@ public struct SearchableDropdownField<T: Hashable>: View {
     let hintText: String; let searchHint: String; let emptyLabel: String
     let maxListHeight: CGFloat; let popoverMinWidth: CGFloat?; let labelMaxLines: Int
     let imageOf: ((T) -> Image?)?
+    let opensAtOnce: Bool
 
     public init(items: [T], value: T?, labelOf: @escaping (T) -> String, searchTextOf: ((T) -> String)? = nil,
                 hintText: String = "Select…", searchHint: String = "Search…", emptyLabel: String = "No matches",
                 maxListHeight: CGFloat = 260, popoverMinWidth: CGFloat? = nil, labelMaxLines: Int = 1,
-                imageOf: ((T) -> Image?)? = nil, onChanged: @escaping (T) -> Void) {
+                imageOf: ((T) -> Image?)? = nil, opensAtOnce: Bool = false, onChanged: @escaping (T) -> Void) {
         self.items = items; self.value = value; self.labelOf = labelOf; self.searchTextOf = searchTextOf
         self.hintText = hintText; self.searchHint = searchHint; self.emptyLabel = emptyLabel
         self.maxListHeight = maxListHeight; self.popoverMinWidth = popoverMinWidth; self.labelMaxLines = labelMaxLines
-        self.imageOf = imageOf
+        self.imageOf = imageOf; self.opensAtOnce = opensAtOnce
         self.onChanged = onChanged
     }
 
@@ -58,6 +60,12 @@ public struct SearchableDropdownField<T: Hashable>: View {
         .buttonStyle(.plain)
         .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { fieldWidth = $0 }
         .popover(isPresented: $open, arrowEdge: .bottom) { popover }
+        .task {
+            guard opensAtOnce, value == nil else { return }
+            // Once the dialog it is in has faded in: over a dialog still half there the list looked adrift.
+            try? await Task.sleep(for: .seconds(theme.motion.base))
+            if !Task.isCancelled, !open { toggle() }
+        }
     }
 
     private func toggle() {

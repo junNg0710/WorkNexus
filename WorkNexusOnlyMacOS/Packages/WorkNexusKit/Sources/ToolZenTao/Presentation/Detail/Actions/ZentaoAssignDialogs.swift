@@ -48,7 +48,7 @@ struct ZentaoAssignDialog: View {
         ZentaoActionFrame(title: ZentaoActionLooks.title(title, ticket.externalKey), icon: "person.badge.plus", submitLabel: title,
                           busy: busy, canSubmit: assignee != nil, onSubmit: submit, onClose: onClose) {
             ZentaoFieldLabel(appString("fieldAssignTo", "Assign to"))
-            ZentaoAssigneeDropdown(deps: deps, ticket: ticket, value: assignee) { assignee = $0; returnAssigns = true }
+            ZentaoAssigneeDropdown(deps: deps, ticket: ticket, value: assignee, opensAtOnce: true) { assignee = $0; returnAssigns = true }
             ZentaoFieldGap()
             ZentaoFieldLabel(appString("zentaoNote", "Note"))
             ZentaoNoteField(deps: deps, ticket: ticket, note: note)
@@ -99,7 +99,7 @@ struct ZentaoTaskAssignDialog: View {
         ZentaoActionFrame(title: ZentaoActionLooks.title(title, ticket.externalKey), icon: "person.badge.plus", submitLabel: title,
                           busy: busy, canSubmit: assignee != nil && problem == nil, onSubmit: submit, onClose: onClose) {
             ZentaoFieldLabel(appString("fieldAssignTo", "Assign to"))
-            ZentaoAssigneeDropdown(deps: deps, ticket: ticket, value: assignee) { assignee = $0; returnAssigns = true }
+            ZentaoAssigneeDropdown(deps: deps, ticket: ticket, value: assignee, opensAtOnce: true) { assignee = $0; returnAssigns = true }
             ZentaoFieldGap()
             if asksLeft {
                 ZentaoTaskHoursField(label: appString("zentaoHoursLeft", "Hours left"), text: $left)

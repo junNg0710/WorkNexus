@@ -116,9 +116,12 @@ enum ZentaoAssignees {
     }
 }
 
-/// A themed assignee picker fed by `ZentaoAssignees`; `value` is a login (`ProviderUser.account`).
+/// A themed assignee picker fed by `ZentaoAssignees`; `value` is a login (`ProviderUser.account`). `opensAtOnce`: its
+/// list of people opens, ready to search, as soon as they are loaded (the Assign dialog, which is about nothing else).
 struct ZentaoAssigneeDropdown: View {
-    let deps: ZentaoDependencies; let ticket: Ticket; let value: String?; let onChanged: (String) -> Void
+    let deps: ZentaoDependencies; let ticket: Ticket; let value: String?
+    var opensAtOnce = false
+    let onChanged: (String) -> Void
     @State private var users: ZentaoLoad<[ProviderUser]> = .loading
 
     var body: some View {
@@ -131,7 +134,7 @@ struct ZentaoAssigneeDropdown: View {
                     items: list, value: list.first { $0.account == value },
                     labelOf: { $0.displayName }, searchTextOf: { "\($0.displayName) \($0.account)" },
                     hintText: appString("taskDetailSelectUser", "Select a user"), searchHint: appString("searchUsers", "Search users…"),
-                    emptyLabel: appString("noMatchingUsers", "No matching users")) { onChanged($0.account) }
+                    emptyLabel: appString("noMatchingUsers", "No matching users"), opensAtOnce: opensAtOnce) { onChanged($0.account) }
             }
         }
         .task(id: ticket.id) {
