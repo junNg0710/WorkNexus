@@ -231,6 +231,7 @@ final class DataSupportTests: RepositoryTestCase {
         XCTAssertEqual(n.title, "Team"); XCTAssertEqual(n.subtitle, "User 31"); XCTAssertEqual(n.body, "hi @Demo there"); XCTAssertEqual(n.chatGid, "g1")
         XCTAssertEqual(ChatNotificationBridge.preview(.file(FileContent(fileId: 1, name: "a.pdf", size: 1, time: 0))), "File: a.pdf")
         XCTAssertEqual(ChatNotificationBridge.preview(.image(ImageContent(fileId: 1, name: "a.png", size: 1, time: 0))), "Photo")
+        XCTAssertEqual(ChatNotificationBridge.preview(.image(ImageContent(fileId: 1, name: "003.webp", size: 1, time: 0, width: 128, height: 128))), "Sticker")
         let counts = ChatUnreadCounter(repository: repo).counts(accountId: acc)
         var first: Int?
         for await c in counts { first = c; break }

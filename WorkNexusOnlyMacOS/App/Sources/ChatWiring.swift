@@ -198,6 +198,7 @@ final class ChatWiring {
     private static var texts: ChatNotificationTexts {
         var t = ChatNotificationTexts()
         t.photo = appString("chatPhoto", t.photo); t.file = appString("chatFile", t.file); t.message = appString("chatNewMessage", t.message)
+        t.sticker = appString("chatSticker", t.sticker)
         return t
     }
 }

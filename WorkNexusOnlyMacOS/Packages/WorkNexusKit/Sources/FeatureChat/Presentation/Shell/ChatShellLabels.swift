@@ -132,7 +132,8 @@ enum ChatShellLabels {
         case .text(let text, let markdown): return cachedLine(text, markdown: markdown)
         case .emoji(let e): return e
         case .notification(let n): return oneLine(n.title ?? stripMarkdown(n.text))
-        case .image: return shellString("chatImage", "Image")
+        // A sticker is not a photo: the row says which of the two was sent.
+        case .image(let i): return IsStickerImage()(i) ? shellString("chatSticker", "Sticker") : shellString("chatImage", "Image")
         case .file(let f): return "\(shellString("chatFile", "File")): \(f.name)"
         case .link(let url, let title): return title ?? url
         case .code(let code, _, let name):

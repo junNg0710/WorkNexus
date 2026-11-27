@@ -68,6 +68,7 @@ enum L {
     static func unknownUser(_ id: Int) -> String { fill("chatUnknownUser", "User #{id}", ["id": "\(id)"]) }
     static var jumpNotFound: String { appString("chatJumpNotFound", "Original message not found") }
     static var image: String { appString("chatImage", "Image") }
+    static var sticker: String { appString("chatSticker", "Sticker") }
     static var file: String { appString("chatFile", "File") }
     static var code: String { appString("chatCode", "Code") }
     static func reacted(_ e: String) -> String { fill("chatReacted", "Reacted {emoji}", ["emoji": e]) }

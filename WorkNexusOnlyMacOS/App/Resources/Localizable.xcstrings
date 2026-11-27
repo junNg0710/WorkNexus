@@ -19275,6 +19275,29 @@
         }
       }
     },
+    "chatSticker": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sticker"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sticker"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "贴纸"
+          }
+        }
+      }
+    },
     "chatFile": {
       "extractionState": "manual",
       "localizations": {

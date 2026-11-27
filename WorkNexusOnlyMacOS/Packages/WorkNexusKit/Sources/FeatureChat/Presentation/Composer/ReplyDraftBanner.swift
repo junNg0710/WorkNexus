@@ -34,7 +34,7 @@ struct ReplyDraftBanner: View {
     private var preview: String {
         switch message.content {
         case .text(let t, _): return DecodeEmoji()(Mentions.repair(t)).replacingOccurrences(of: #"\[@([^\]]+)\]\(@#\d+\)"#, with: "@$1", options: .regularExpression)
-        case .image: return appString("chatImage", "Image")
+        case .image(let i): return IsStickerImage()(i) ? appString("chatSticker", "Sticker") : appString("chatImage", "Image")
         case .file(let f): return f.name
         case .emoji(let e): return DecodeEmoji()(e)
         case .code: return appString("chatCode", "Code")

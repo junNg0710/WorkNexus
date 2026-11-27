@@ -40,6 +40,11 @@ final class ChatShellLabelsTests: XCTestCase {
         XCTAssertEqual(p(.text("a ```x = 1``` b", markdown: true)), "a b")
         XCTAssertEqual(p(.emoji("👍")), "👍")
         XCTAssertEqual(p(.image(ImageContent(fileId: 1, name: "a.png", size: 1, time: 1))), "Image")
+        // A sticker is told from a photo by what it is (a sticker-sized WebP / GIF, a Telegram sticker), in a pack or not.
+        XCTAssertEqual(p(.image(ImageContent(fileId: 1, name: "003.webp", size: 1, time: 1, width: 128, height: 128))), "Sticker")
+        XCTAssertEqual(p(.image(ImageContent(fileId: 1, name: "wave.gif", size: 1, time: 1, width: 240, height: 200))), "Sticker")
+        XCTAssertEqual(p(.image(ImageContent(fileId: 1, name: "photo.webp", size: 1, time: 1, width: 1600, height: 900))), "Image")
+        XCTAssertEqual(p(.image(ImageContent(fileId: 1, name: "shot.png", size: 1, time: 1, width: 128, height: 128))), "Image")
         XCTAssertEqual(p(.file(FileContent(fileId: 1, name: "spec.pdf", size: 1, time: 1))), "File: spec.pdf")
         XCTAssertEqual(p(.link(url: "https://x.y", title: nil)), "https://x.y")
         XCTAssertEqual(p(.code("let a = 1\nlet b", language: nil, name: nil)), "Code: let a = 1")

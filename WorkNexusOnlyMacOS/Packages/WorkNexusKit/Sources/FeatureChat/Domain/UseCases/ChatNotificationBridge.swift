@@ -12,7 +12,7 @@ public struct ChatNotificationPreferences: Sendable, Equatable {
 
 /// Fixed phrases used in notification previews; the host overrides them with its localized strings.
 public struct ChatNotificationTexts: Sendable {
-    public var photo = "Photo", file = "File", code = "Code", link = "Link", notification = "Notification", message = "New message"
+    public var photo = "Photo", sticker = "Sticker", file = "File", code = "Code", link = "Link", notification = "Notification", message = "New message"
     public init() {}
 }
 
@@ -90,7 +90,7 @@ public final class ChatNotificationBridge: @unchecked Sendable {
             let plain = s.replacingOccurrences(of: #"\[@([^\]]+)\]\(@#\d+\)"#, with: "@$1", options: .regularExpression)
                 .replacingOccurrences(of: #"[*~`]"#, with: "", options: .regularExpression)
             return plain.split(whereSeparator: \.isNewline).first.map(String.init) ?? plain
-        case .image: return t.photo
+        case .image(let i): return IsStickerImage()(i) ? t.sticker : t.photo
         case .file(let f): return "\(t.file): \(f.name)"
         case .emoji(let e): return e
         case .code(_, _, let name): return name.map { "\(t.code): \($0)" } ?? t.code

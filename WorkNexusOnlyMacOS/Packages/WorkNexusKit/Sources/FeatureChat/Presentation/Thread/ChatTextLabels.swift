@@ -111,7 +111,7 @@ enum ChatTextLabels {
         case .text(let t, let md): return collapse(mentionsAsAt(md ? stripMarkdown(t) : t))
         case .emoji(let e): return e
         case .notification(let n): return collapse(n.title ?? stripMarkdown(n.text))
-        case .image: return L.image
+        case .image(let i): return IsStickerImage()(i) ? L.sticker : L.image
         case .file(let f): return "\(L.file): \(f.name)"
         case .link(let u, let title): return title ?? u
         case .code(let code, _, let name):
