@@ -66,6 +66,8 @@ final class ChatWiring {
         relay.handler = { [weak self] accountId, gid in Task { @MainActor in self?.show(accountId: accountId, chatGid: gid) } }
         events.onViewProfile = { _ in nav.setWorkspaceSection("integrations") }
         events.onOpenStorage = { nav.select(.settings); nav.setSettingsSection("cache") }
+        // A message sent: the title bar's search, left open over the chat, is put away.
+        events.onMessageSent = { [shell] in shell.searchDismissTick += 1 }
         events.onEnableNotifications = { [weak self] in Task { await self?.turnOnNotifications() } }
         // "Create bug / task / todo" on a message: the chat's account is a ZenTao account, so the ticket is made there.
         // A bug or a task opens the full editor with the message filled in (product / execution are picked there); a

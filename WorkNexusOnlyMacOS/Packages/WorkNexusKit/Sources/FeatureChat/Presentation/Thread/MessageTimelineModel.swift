@@ -106,7 +106,6 @@ final class MessageTimelineModel {
         translation = MessageTranslationController(services: services)
         (windowStream, windowEvents) = AsyncStream<ChatMessageWindow>.makeStream(bufferingPolicy: .bufferingNewest(1))
         windowEvents.yield(window)
-        state.onBackOnScreen = { [weak self] in self?.backOnScreen() }
     }
 
     /// The chat is on screen again: what came in behind the other chat is shown.
@@ -118,6 +117,11 @@ final class MessageTimelineModel {
 
     /// Runs the timeline's watchers until the task is cancelled (the view's `.task`).
     func run() async {
+        // Here and not in `init`: the view builds a model every time it is made again and keeps only its first one. The
+        // ones thrown away took these over and were gone at once, so the chat was told nothing - and what came in
+        // behind another chat stayed out of the list when the chat was shown again.
+        state.onBackOnScreen = { [weak self] in self?.backOnScreen() }
+        state.onSentToChat = { [weak self] in self?.showLatestForSend() }
         defer { messagesTask?.cancel() }
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.observeWindows() }

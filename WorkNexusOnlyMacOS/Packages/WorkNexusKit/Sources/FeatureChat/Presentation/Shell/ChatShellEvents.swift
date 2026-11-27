@@ -23,6 +23,9 @@ public final class ChatShellEvents {
     /// "Create bug / task / todo" on a message: the host opens its editor started from the message (nil: not offered).
     @ObservationIgnored public var onCreateTicket: ((ChatTicketRequest) -> Void)?
 
+    /// The user sent a message in a chat: the host closes its search, whose results hang over the chat.
+    @ObservationIgnored public var onMessageSent: (() -> Void)?
+
     /// "Manage" in a chat's storage card: opens the app's storage page.
     @ObservationIgnored public var onOpenStorage: (() -> Void)?
 

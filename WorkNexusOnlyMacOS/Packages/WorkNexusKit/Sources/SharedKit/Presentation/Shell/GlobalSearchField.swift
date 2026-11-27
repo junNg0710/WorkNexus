@@ -60,6 +60,7 @@ struct GlobalSearchField: View {
         .onChange(of: scope) { _, _ in all = false; search(text) }
         .onChange(of: chosen) { _, _ in all = false; search(text) }
         .onChange(of: model.searchFocusTick) { _, _ in focused = true; search(text) }
+        .onChange(of: model.searchDismissTick) { _, _ in clear(); focused = false }
         // Another place searches other things: start over.
         .onChange(of: model.nav.rail) { _, _ in clear(); scope = ""; chosen = [:] }
         .task { model.detail.start() }

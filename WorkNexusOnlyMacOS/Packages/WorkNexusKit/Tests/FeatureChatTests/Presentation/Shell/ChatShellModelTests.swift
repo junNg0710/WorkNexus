@@ -37,6 +37,18 @@ final class ChatShellModelTests: XCTestCase {
         XCTAssertTrue(model.showTrust, "the dialog stays for a retry")
     }
 
+    /// A message sent in an open chat is told to the host, which closes the search left open over the chat.
+    func testAMessageSentInAChatIsToldToTheHost() {
+        let events = ChatShellEvents()
+        var sent = 0
+        events.onMessageSent = { sent += 1 }
+        let model = ChatShellModel(accountId: "a", selfAccount: "me", repository: ShellFakeRepository(), events: events)
+        model.apply(conversations: [ShellMake.chat("g1", name: "Team")])
+        model.select("g1")
+        model.thread?.state.noteSent(inThread: false)
+        XCTAssertEqual(sent, 1)
+    }
+
     func testSelectingAChatBuildsItsSessionOnceTheConversationIsKnown() async {
         let (model, repo) = make()
         model.select("g1")

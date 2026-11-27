@@ -51,6 +51,25 @@ final class TimelineHeldBackTests: XCTestCase {
         await eventually { model.messages.count == 6 }
     }
 
+    /// The view builds a timeline each time it is made again and keeps its first: one thrown away must not take over what
+    /// the chat tells its timeline, or the messages that came in behind another chat never show when it is back.
+    func testATimelineThrownAwayByTheViewLeavesTheShownOneListening() async throws {
+        let repo = LiveRepo()
+        let (model, state, first, task) = await loaded(repo)
+        defer { task.cancel() }
+        _ = MessageTimelineModel(state: state, services: ChatServices(chat: repo))
+        state.isOnScreen = false
+        repo.yield(first + [Make.message("m4", at: Make.t0.addingTimeInterval(4), serverId: 4)])
+        try await Task.sleep(for: .milliseconds(200))
+        XCTAssertEqual(model.messages.count, 3)
+        state.isOnScreen = true
+        XCTAssertEqual(model.messages.map(\.gid), ["m1", "m2", "m3", "m4"])
+        // A message sent still takes the list down.
+        model.away = true
+        state.noteSent(inThread: false)
+        XCTAssertEqual(model.scrollRequest?.target, .bottom)
+    }
+
     func testAChatBuiltAheadOfItsVisitLoadsItsFirstPage() async {
         let repo = LiveRepo()
         let (model, _, _, task) = await loaded(repo, onScreen: false)

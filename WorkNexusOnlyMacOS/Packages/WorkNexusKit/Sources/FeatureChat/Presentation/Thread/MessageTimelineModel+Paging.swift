@@ -104,6 +104,14 @@ extension MessageTimelineModel {
         scroll(to: .bottom, animated: false)
     }
 
+    /// The user sent a message: the list goes to its newest messages, where that message shows. Not left to the message
+    /// coming in: a window jumped far back never shows it, and a list a little short of its end stayed short, the new
+    /// message under the input. From far up it glides down; near the end it is put there, and kept there while the
+    /// message comes in - a glide in flight made the new bubble jump at the bottom edge.
+    func showLatestForSend() {
+        if window.isAround { backToLatest() } else { scroll(to: .bottom, animated: away) }
+    }
+
     /// A chat kept open behind another one goes back to how a chat opens: its newest page, at the newest message (`atEnd`:
     /// the list is there already). Not when it is shown for a message to jump to.
     func returnToLatest(atEnd: Bool) {

@@ -43,6 +43,8 @@ public final class ShellModel {
     public var editWorkspaceRequested: Workspace?
     /// Bumped by the ⌘K command when no board is on screen; the title bar's search field takes focus when it changes.
     public var searchFocusTick = 0
+    /// Bumped when the place on screen did what ends a search (a chat message was sent); the title bar's search closes.
+    public var searchDismissTick = 0
     /// Bumped by ⌘N; the rail's "+" menu opens when it changes.
     public var newTicketMenuTick = 0
     /// Window-level dialogs (`.appDialog` registers here; `AppShell` draws them over everything).

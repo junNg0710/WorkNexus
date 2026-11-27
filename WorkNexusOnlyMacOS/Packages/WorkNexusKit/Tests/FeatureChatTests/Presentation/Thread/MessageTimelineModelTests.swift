@@ -172,6 +172,38 @@ final class MessageTimelineModelTests: XCTestCase {
         await eventually("live page") { model.messages.last?.gid == "m200" }
     }
 
+    /// Sending takes the list to the newest messages, where the message shows: down from further up, and out of a window
+    /// jumped far back (which never showed the message, so the list stayed where it was).
+    func testSendingAMessageShowsTheNewestMessages() async {
+        let repo = TimelineRepo(count: 200)
+        let (model, task) = make(repo)
+        defer { task.cancel() }
+        await eventually("first page") { model.loaded }
+
+        model.state.noteSent(inThread: true)
+        XCTAssertNil(model.scrollRequest, "a message sent into a reply thread leaves the list alone")
+
+        // Near the newest message: put at the very end, without a glide.
+        model.state.noteSent(inThread: false)
+        XCTAssertEqual(model.scrollRequest?.target, .bottom)
+        XCTAssertEqual(model.scrollRequest?.animated, false)
+
+        // Scrolled far up: a glide down.
+        model.away = true
+        model.state.noteSent(inThread: false)
+        XCTAssertEqual(model.scrollRequest?.target, .bottom)
+        XCTAssertEqual(model.scrollRequest?.animated, true)
+        model.away = false
+
+        // In a window jumped far back: back to the newest page.
+        await model.jump(to: 60)
+        XCTAssertTrue(model.window.isAround)
+        model.state.noteSent(inThread: false)
+        XCTAssertEqual(model.window, .initial)
+        XCTAssertEqual(model.scrollRequest?.target, .bottom)
+        await eventually("live page") { model.messages.last?.gid == "m200" }
+    }
+
     func testAKeptChatReturnsToItsNewestPageAndMessage() async {
         let repo = TimelineRepo(count: 200)
         let (model, task) = make(repo)

@@ -13,6 +13,8 @@ struct ThreadScrollMetrics: Equatable {
     var atEnd = false
     /// Changes as rows are added, so a first page too short to fill the screen still asks for the next one.
     var contentHeight = 0
+    /// The room the list has: less when the input grows.
+    var containerHeight = 0
 
     /// How close (in points) to either end of the loaded messages the user may scroll before the next page is fetched,
     /// so it is usually there in time.
@@ -28,6 +30,7 @@ struct ThreadScrollMetrics: Equatable {
         away = below > Self.awayThreshold
         atEnd = below < 1
         contentHeight = Int(content)
+        containerHeight = Int(container)
     }
 }
 
@@ -111,6 +114,10 @@ struct MessageListScroll: View {
             } action: { _, new in
                 scrolled.metrics = new
                 if model.away != new.away { model.away = new.away }
+                // Held at the newest message, the list stays there as it grows (`ChatBottomPin`).
+                if scrolled.pin.follows(new, userScrolls: activity.userScrolls, scrolling: activity.isScrolling), !model.window.isAround {
+                    followBottom(proxy)
+                }
                 loadIfNeeded()
             }
             .onChange(of: model.loadingOlder) { _, _ in loadIfNeeded() }
@@ -131,6 +138,7 @@ struct MessageListScroll: View {
             .onChange(of: model.prependCount) { _, _ in
                 let id = restoreId
                 restoreId = nil
+                scrolled.pin.release()
                 // At once, in the update that brought the rows: a turn later the list had already been laid out - and
                 // drawn - at the top of the new page.
                 if let id { proxy.scrollTo(id, anchor: .top) }
@@ -186,6 +194,7 @@ struct MessageListScroll: View {
         positioned = true
         quietUntil = Date().addingTimeInterval(0.8)
         restoreId = nil
+        if case .message = request.target { scrolled.pin.release() }
         let touches = activity.userScrolls
         Task { @MainActor in
             // After the rows of a new window are laid out.
@@ -207,6 +216,13 @@ struct MessageListScroll: View {
                 if glides { try? await Task.sleep(for: .seconds(theme.motion.slow)) }
                 await settleAtBottom(proxy, during: request, touches: touches)
             }
+        }
+    }
+
+    /// A turn later, not inside the layout that reported the growth; not if the list was taken elsewhere meanwhile.
+    private func followBottom(_ proxy: ScrollViewProxy) {
+        Task { @MainActor in
+            if scrolled.pin.held, !scrolled.metrics.atEnd { proxy.scrollTo(Self.bottomId, anchor: .bottom) }
         }
     }
 
@@ -252,33 +268,3 @@ struct MessageListScroll: View {
     /// How many times a trip to the bottom is checked (and finished) after it was made.
     private static let settleTries = 4
 }
-
-/// The ids of the rows on screen, in a plain reference so changing them does not redraw the list.
-final class VisibleRows { var ids: Set<String> = [] }
-
-/// What the performance log says about the chat rows on screen when it notes a stutter: how many, and how many of the
-/// kinds that cost the most to draw.
-enum ChatRowsOnScreen {
-    static func describe(_ rows: [ChatListRow], visible: Set<String>) -> String {
-        var count = 0, pictures = 0, stickers = 0, videos = 0, files = 0, links = 0, long = 0, code = 0
-        for row in rows where visible.contains(row.id) {
-            count += 1
-            guard case .message(let m) = row.item else { continue }
-            switch m.content {
-            case .image(let i): if IsStickerImage()(i) { stickers += 1 } else { pictures += 1 }
-            case .file(let f): if isVideoFile(f) { videos += 1 } else { files += 1 }
-            case .text(let t, _):
-                if t.contains("http://") || t.contains("https://") { links += 1 }
-                if t.count > 400 { long += 1 }
-            case .code: code += 1
-            default: break
-            }
-        }
-        let kinds = [("pictures", pictures), ("stickers", stickers), ("videos", videos), ("files", files), ("links", links),
-                     ("long texts", long), ("code", code)].filter { $0.1 > 0 }.map { "\($0.1) \($0.0)" }
-        return "\(count) chat rows on screen" + (kinds.isEmpty ? "" : " (" + kinds.joined(separator: ", ") + ")")
-    }
-}
-
-/// The latest scroll metrics, in a plain reference so updating them does not redraw the list.
-final class ScrollMemo { var metrics = ThreadScrollMetrics() }

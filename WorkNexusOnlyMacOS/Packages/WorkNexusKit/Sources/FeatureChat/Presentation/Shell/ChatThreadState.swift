@@ -63,6 +63,19 @@ public final class ChatThreadState {
 
     public func requestJump(to serverId: Int) { jump = ChatJumpRequest(serverId: serverId) }
 
+    // MARK: sending
+
+    /// Run as the user sends a message into the chat itself: the message list goes to its newest messages.
+    @ObservationIgnored var onSentToChat: (() -> Void)?
+    /// Run on every send from this chat, a reply thread's too: the host puts away what it had open over the chat.
+    @ObservationIgnored var onSent: (() -> Void)?
+
+    /// The user just sent a message (`inThread`: into a reply thread, which the message list does not follow).
+    func noteSent(inThread: Bool) {
+        if !inThread { onSentToChat?() }
+        onSent?()
+    }
+
     // MARK: retracted, to write again
 
     /// What a message retracted here said, and what it answered.

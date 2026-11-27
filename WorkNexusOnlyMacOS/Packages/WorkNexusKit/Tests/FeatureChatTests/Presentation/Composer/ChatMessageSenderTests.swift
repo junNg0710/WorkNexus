@@ -95,6 +95,31 @@ final class ChatMessageSenderTests: XCTestCase {
         XCTAssertEqual(repo.files.first?.1, 4)
     }
 
+    /// Every kind of send says so: the list goes to the newest messages and the host closes its search. A send into a
+    /// reply thread says it to the host only.
+    func testEverySendIsToldToTheChatAndTheHost() async {
+        let repo = Recorder()
+        let (sender, state) = make(repo)
+        var toChat = 0, toHost = 0
+        state.onSentToChat = { toChat += 1 }
+        state.onSent = { toHost += 1 }
+        _ = await sender.text("hi")
+        _ = await sender.largeEmoji("👍")
+        _ = await sender.files([StagedFile(name: "a", data: Data([1])), StagedFile(name: "b", data: Data([2]))])
+        _ = await sender.code("let a = 1", language: "swift", name: nil)
+        XCTAssertEqual(toChat, 4, "once a send, however many files go with it")
+        XCTAssertEqual(toHost, 4)
+
+        let (inThread, threadState) = make(repo, threadRoot: 5)
+        var threadToChat = 0, threadToHost = 0
+        threadState.onSentToChat = { threadToChat += 1 }
+        threadState.onSent = { threadToHost += 1 }
+        _ = await inThread.text("yo")
+        _ = await inThread.largeEmoji("👍")
+        XCTAssertEqual(threadToChat, 0)
+        XCTAssertEqual(threadToHost, 2)
+    }
+
     func testStagingMimeTypes() {
         XCTAssertEqual(ChatStaging.mimeType(forName: "a.PNG"), "image/png")
         XCTAssertTrue(ChatStaging.isImageName("x.jpeg"))

@@ -20,10 +20,11 @@ struct ChatMessageSender {
     /// What the next send replies to: the picked message, else the thread root.
     var replyToId: Int? { state.replyDraft?.serverId ?? threadRootId }
 
-    /// Takes the reply target and clears the draft, as a send leaves the input.
+    /// Takes the reply target and clears the draft, as a send leaves the input - and says a message is on its way.
     private func takeReply() -> Int? {
         let id = replyToId
         state.replyDraft = nil
+        state.noteSent(inThread: threadRootId != nil)
         return id
     }
 
@@ -36,6 +37,7 @@ struct ChatMessageSender {
     /// thread) it goes as text with the reply instead.
     func largeEmoji(_ emoji: String) async -> Outcome<Void> {
         if replyToId != nil { return await text(emoji) }
+        state.noteSent(inThread: false)
         return await SendLargeEmoji(chat)(accountId: state.accountId, chatGid: state.chatGid, emoji: emoji)
     }
 

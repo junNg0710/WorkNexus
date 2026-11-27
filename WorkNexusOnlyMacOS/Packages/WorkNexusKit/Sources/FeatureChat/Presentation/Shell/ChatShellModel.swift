@@ -201,6 +201,7 @@ public final class ChatShellModel {
                                         period: { [weak self] in self?.searchPeriod ?? .all },
                                         onFailure: { [weak self] in self?.report($0) })
         session.state.users = users; session.state.selfUserId = selfUserId; session.state.roleNames = roleNames
+        session.state.onSent = { [events] in events.onMessageSent?() }
         return session
     }
 
