@@ -24,7 +24,8 @@ public enum ZentaoFormatters {
     }
 
     /// Splits "[Discovery][Change Request] Title" (or "[Mobile] [SocialFi] Title") into the title and its leading
-    /// bracketed tags, without the brackets. A title that is nothing but tags keeps them.
+    /// bracketed tags, without the brackets. A title that is nothing but tags keeps them. What set the tags apart from
+    /// the title ("[App] [Withdraw]: Title") goes with them, so the title does not start with a colon.
     public static func extractTags(_ raw: String) -> (title: String, tags: [String]) {
         var tags: [String] = []
         var rest = Substring(raw.trimmingCharacters(in: .whitespacesAndNewlines))
@@ -33,6 +34,7 @@ public enum ZentaoFormatters {
             if !inner.isEmpty { tags.append(inner) }
             rest = rest[m.upperBound...]
         }
+        if !tags.isEmpty, let m = rest.range(of: #"^[:\-–—|]+\s*"#, options: .regularExpression) { rest = rest[m.upperBound...] }
         if rest.isEmpty { return (raw.trimmingCharacters(in: .whitespacesAndNewlines), []) }
         return (String(rest), tags)
     }

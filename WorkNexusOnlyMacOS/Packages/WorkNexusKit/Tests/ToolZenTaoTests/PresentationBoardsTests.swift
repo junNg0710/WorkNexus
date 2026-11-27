@@ -448,6 +448,13 @@ final class PresentationBoardsTests: XCTestCase {
         XCTAssertEqual(ZentaoFormatters.extractTags("[Mobile] [SocialFi] Title").tags, ["Mobile", "SocialFi"])
         XCTAssertEqual(ZentaoFormatters.extractTags("[Only]").title, "[Only]")
         XCTAssertEqual(ZentaoFormatters.extractTags("Plain").tags, [])
+        // What set the tags apart from the title goes with them; a title that starts that way by itself is left alone.
+        let tagged = ZentaoFormatters.extractTags("[Wallet App] [Withdraw USDZ]: Estimated arrival time is not displayed")
+        XCTAssertEqual(tagged.title, "Estimated arrival time is not displayed")
+        XCTAssertEqual(tagged.tags, ["Wallet App", "Withdraw USDZ"])
+        XCTAssertEqual(ZentaoFormatters.extractTags("[App] - Login").title, "Login")
+        XCTAssertEqual(ZentaoFormatters.extractTags("- Plain").title, "- Plain")
+        XCTAssertEqual(ZentaoFormatters.extractTags("[Only]:").title, "[Only]:")
         XCTAssertEqual(ZentaoFormatters.extractModule("[Mobile] Title").module, "[Mobile]")
         XCTAssertEqual(ZentaoFormatters.extractModule("[Mobile] Title").title, "Title")
         XCTAssertNil(ZentaoFormatters.extractModule("Title").module)

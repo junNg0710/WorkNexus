@@ -5,8 +5,9 @@ import SharedKit
 import SwiftUI
 
 /// A ZenTao bug's or task's card on its board, kept to what triage needs: the id, severity (bugs), priority and how
-/// long ago it changed; a subtask's parent; the title without the bracketed tags ZenTao titles start with
-/// ("[Discovery]"); how late an overdue task is; the assignee. Tapping opens the detail slide-over.
+/// long ago it changed; a subtask's parent; the title as it is written, the bracketed tags it starts with too
+/// ("[Wallet App] [Withdraw]: ..." - without them a card read ": ..." and did not say what it was about); how late an
+/// overdue task is; the assignee. Tapping opens the detail slide-over.
 struct ZentaoBoardCard: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.ticketCardAccessory) private var accessory
@@ -20,7 +21,7 @@ struct ZentaoBoardCard: View {
         let picked = controller.selectedIds.contains(ticket.id)
         let selected = controller.openTicketId == ticket.id || picked
         let pending = controller.pendingTicketIds.contains(ticket.id)
-        let title = ZentaoFormatters.extractTags(ticket.title).title
+        let title = ticket.title.trimmingCharacters(in: .whitespacesAndNewlines)
         let bg = selected ? c.mix(c.card, wsColor, 0.16) : c.tintedCard(wsColor, enabled: controller.settings.companyTint)
         HoverSurface(onTap: pending ? nil : { controller.tapTicket(ticket.id, among: among) }, enabled: !pending, fill: bg,
                      border: selected ? c.accent : (theme.showOutline ? c.line : nil), cornerRadius: theme.radii.card) {
